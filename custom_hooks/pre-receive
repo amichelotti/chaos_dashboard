@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 ver=`git log --pretty=format:'%h' -n 1`
+echo "* Apply version $ver"
 echo "<font size="4">  ($ver)</font>" > ../version.html
 
 
