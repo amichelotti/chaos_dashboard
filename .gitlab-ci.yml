@@ -30,6 +30,8 @@ deploy-ubuntu1404:
     stage: deploy
     image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
     script:
+      - echo $K8S_SECRET_SSKEY > ~/.ssh/id_rsa;echo $K8S_SECRET_SSKEY)PUB > ~/.ssh/id_rsa.pub;chmod 600 ~/.ssh/id_rsa
+      
       - ver=`git log --pretty=format:'%h' -n 1`
       - echo "<font size="4">  ($ver)</font>" > version.html
       - if [ -n "$DEPLOY" ]; then if [ $CI_COMMIT_REF_NAME == "development" ] || [ "$DEPLOY" == "ALL" ];then echo "   <b><font size="4" color=\"green\">Development/Preproduction</font></b>" > target.html;scp -rv * chaos@chaost-webui1.chaos.lnf.infn.it:/var/www/html/chaos/chaos_dashboard;scp -rv * chaos@chaost-webui2.chaos.lnf.infn.it:/var/www/html/chaos/chaos_dashboard;fi;if [ $CI_COMMIT_REF_NAME == "master" ] || [ "$DEPLOY" == "ALL" ];then echo "   <b><font size="4" color=\"red\">Production</font></b>" > target.html;scp -rv * chaos@chaos-webui01.chaos.lnf.infn.it:/usr/local/chaos/chaos-distrib/html//chaos_dashboard;scp -rv * chaos@chaos-webui02.chaos.lnf.infn.it:/usr/local/chaos/chaos-distrib/html/chaos_dashboard;scp -rv * chaos@chaos-webui03.chaos.lnf.infn.it:/usr/local/chaos/chaos-distrib/html/chaos_dashboard;scp -rv * chaos@chaos-webui1.chaos.lnf.infn.it:/var/www/html/chaos/chaos_dashboard;scp -rv * chaos@chaos-webui2.chaos.lnf.infn.it:/var/www/html/chaos/chaos_dashboard;fi;fi
