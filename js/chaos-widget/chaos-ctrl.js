@@ -1906,6 +1906,8 @@
   }
 
   function jsonEnableContext(node_selected) {
+    $.contextMenu( 'destroy', '.json-key' );
+
     $.contextMenu({
       selector: '.json-key',
       build: function ($trigger, e) {
@@ -2722,6 +2724,8 @@
       generateCmdModal(tmpObj, cmdselected, curr_cu_selected);
 
     });
+    $.contextMenu( 'destroy', '.cuMenu' );
+
     $.contextMenu({
       selector: '.cuMenu',
       build: function ($trigger, e) {
@@ -4006,6 +4010,8 @@
         containment: 'window'
       }
     );
+    $.contextMenu( 'destroy', '.nodeMenu' );
+
     $.contextMenu({
       selector: '.nodeMenu',
       build: function ($trigger, e) {
@@ -4202,6 +4208,7 @@
     }
 
 
+    $.contextMenu( 'destroy', '.algoMenu' );
 
     $.contextMenu({
       selector: '.algoMenu',
@@ -4228,6 +4235,8 @@
 
 
     });
+    $.contextMenu( 'destroy', '.algoInstanceMenu' );
+
     $.contextMenu({
       selector: '.algoInstanceMenu',
       build: function ($trigger, e) {
@@ -4817,6 +4826,7 @@
     } else {
       $("#table-scroll").css('height', '');
     }
+    $.contextMenu( 'destroy', '.processMenu' );
 
     $.contextMenu({
       selector: '.processMenu',
