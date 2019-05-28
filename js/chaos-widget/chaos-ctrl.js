@@ -1233,43 +1233,7 @@
   function updateNode(tmpObj) {
     var node_list = tmpObj['elems'];
     var cutype = tmpObj.type;
-    jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-      var cnt = 0;
-      var us_list = [];
-      var cu_list = [];
-      node_list.forEach(function (elem, index) {
-        var type = data[index].ndk_type;
-        tmpObj.node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
-        if ((type == "nt_control_unit")) {
-          cu_list.push(elem);
-        } else if ((type == "nt_unit_server")) {
-          us_list.push(elem);
-        }
-      });
-      if (cu_list.length > 0) {
-        jchaos.getDesc(cu_list, function (data) {
-          var cnt = 0;
-          data.forEach(function (cu) {
-            if (cu.hasOwnProperty("instance_description")) {
-              tmpObj.node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
-              tmpObj.node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
-            }
-            cnt++;
-          });
-        });
-      }
-      if (us_list.length > 0) {
-        jchaos.node(us_list, "parent", "us", null, null, function (data) {
-          var cnt = 0;
-          data.forEach(function (us) {
-            if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
-              tmpObj.node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
-            }
-            cnt++;
-          });
-        });
-      }
-    });
+    
     jchaos.node(node_list, "health", cutype, null, null, function (data) {
       tmpObj.data = data;
       updateGenericTableDataset(tmpObj);
@@ -1942,6 +1906,8 @@
   }
 
   function jsonEnableContext(node_selected) {
+    $.contextMenu( 'destroy', '.json-key' );
+
     $.contextMenu({
       selector: '.json-key',
       build: function ($trigger, e) {
@@ -2090,8 +2056,13 @@
 
   function jsonSetup(dom, tmpObj) {
     var collapsed = options.collapsed;
-    var node_selected = tmpObj.node_selected;
-    tmpObj['json_editing'] = false;
+    var node_selected ="none";
+    if(tmpObj!=null && tmpObj.hasOwnProperty("node_selected")){
+      node_selected=tmpObj.node_selected;
+      tmpObj['json_editing'] = false;
+
+    }
+     
     $(dom).off('click');
     $(dom).off('keypress');
 
@@ -2758,6 +2729,8 @@
       generateCmdModal(tmpObj, cmdselected, curr_cu_selected);
 
     });
+    $.contextMenu( 'destroy', '.cuMenu' );
+
     $.contextMenu({
       selector: '.cuMenu',
       build: function ($trigger, e) {
@@ -3984,6 +3957,45 @@
 
   function updateNodeInterface(tmpObj) {
     var template = tmpObj.type;
+    var node_list = tmpObj['elems'];
+    var cutype = tmpObj.type;
+    jchaos.node(node_list, "desc", cutype, null, null, function (data) {
+      var cnt = 0;
+      var us_list = [];
+      var cu_list = [];
+      node_list.forEach(function (elem, index) {
+        var type = data[index].ndk_type;
+        tmpObj.node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
+        if ((type == "nt_control_unit")) {
+          cu_list.push(elem);
+        } else if ((type == "nt_unit_server")) {
+          us_list.push(elem);
+        }
+      });
+      if (cu_list.length > 0) {
+        jchaos.getDesc(cu_list, function (data) {
+          var cnt = 0;
+          data.forEach(function (cu) {
+            if (cu.hasOwnProperty("instance_description")) {
+              tmpObj.node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
+              tmpObj.node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
+            }
+            cnt++;
+          });
+        });
+      }
+      if (us_list.length > 0) {
+        jchaos.node(us_list, "parent", "us", null, null, function (data) {
+          var cnt = 0;
+          data.forEach(function (us) {
+            if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
+              tmpObj.node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
+            }
+            cnt++;
+          });
+        });
+      }
+    });
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, tmpObj, e);
     });
@@ -4003,6 +4015,8 @@
         containment: 'window'
       }
     );
+    $.contextMenu( 'destroy', '.nodeMenu' );
+
     $.contextMenu({
       selector: '.nodeMenu',
       build: function ($trigger, e) {
@@ -4199,6 +4213,7 @@
     }
 
 
+    $.contextMenu( 'destroy', '.algoMenu' );
 
     $.contextMenu({
       selector: '.algoMenu',
@@ -4225,6 +4240,8 @@
 
 
     });
+    $.contextMenu( 'destroy', '.algoInstanceMenu' );
+
     $.contextMenu({
       selector: '.algoInstanceMenu',
       build: function ($trigger, e) {
@@ -4814,6 +4831,7 @@
     } else {
       $("#table-scroll").css('height', '');
     }
+    $.contextMenu( 'destroy', '.processMenu' );
 
     $.contextMenu({
       selector: '.processMenu',
@@ -8997,7 +9015,14 @@
         menuActionsFn: function () { } /*actions on the table */
 
       };
-
+      $("#help-about").on("click",function(){
+        jchaos.basicPost("MDS", "cmd=buildInfo", function(ver){
+          //alert("version:"+JSON.stringify(ver));
+          showJson(null,"VERSION","version",ver);
+        }, function(){
+          alert("Cannot retrive version");
+        });
+      });
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
       if (options.template == "cu") {
