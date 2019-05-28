@@ -2056,8 +2056,13 @@
 
   function jsonSetup(dom, tmpObj) {
     var collapsed = options.collapsed;
-    var node_selected = tmpObj.node_selected;
-    tmpObj['json_editing'] = false;
+    var node_selected ="none";
+    if(tmpObj!=null && tmpObj.hasOwnProperty("node_selected")){
+      node_selected=tmpObj.node_selected;
+      tmpObj['json_editing'] = false;
+
+    }
+     
     $(dom).off('click');
     $(dom).off('keypress');
 
@@ -9010,7 +9015,14 @@
         menuActionsFn: function () { } /*actions on the table */
 
       };
-
+      $("#help-about").on("click",function(){
+        jchaos.basicPost("MDS", "cmd=buildInfo", function(ver){
+          //alert("version:"+JSON.stringify(ver));
+          showJson(null,"VERSION","version",ver);
+        }, function(){
+          alert("Cannot retrive version");
+        });
+      });
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
       if (options.template == "cu") {
