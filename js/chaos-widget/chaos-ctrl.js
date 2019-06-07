@@ -1294,7 +1294,7 @@
       }
     });
   }
-  function algoLoadFromFile() {
+  function algoLoadFromFile(obj) {
     getFile("Script Loading", "select the Script to load", function (script) {
       var scriptTmp = {};
       var name = script['name'];
@@ -1324,13 +1324,18 @@
       scriptTmp['eudk_script_language'] = language;
       scriptTmp['script_description'] = "Imported from " + script['name'];
       scriptTmp['default_argument'] = "";
+      if(script.hasOwnProperty("eudk_script_keepalive")){
+        scriptTmp['eudk_script_keepalive'] = script['eudk_script_keepalive'];
+      } else {
+        scriptTmp['eudk_script_keepalive'] =false;
+      }
 
       var templ = {
         $ref: "algo.json",
         format: "tabs"
       }
 
-      jsonEditWindow("Loaded", templ, scriptTmp, algoSave, tmpObj);
+      jsonEditWindow("Loaded", templ, scriptTmp, algoSave, obj);
     });
   }
   function algoSave(json, obj) {
@@ -1358,7 +1363,7 @@
     //    jchaos.variable("script", "set", proc, null);
     jchaos.search(json.script_name, "script", false, function (l) {
       var script_inst = l['found_script_list'];
-      if (script_inst.length == 0) {
+      if (!(script_inst instanceof Array) ||(script_inst.length == 0)) {
         jchaos.saveScript(json, function (data) {
           console.log("saving script:" + JSON.stringify(json));
           instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
@@ -4334,12 +4339,13 @@
       scriptTmp['eudk_script_language'] = "bash";
       scriptTmp['script_description'] = "PUT YOUR DESCRIPTION";
       scriptTmp['default_argument'] = "";
+      scriptTmp['eudk_script_keepalive'] =false;
       jsonEditWindow("NewScript", templ, scriptTmp, algoSave, tmpObj);
       return;
     } else if (cmd == "manage-script") {
       updateScriptModal(tmpObj);
     } else if (cmd == "load-script") {
-      algoLoadFromFile();
+      algoLoadFromFile(tmpObj);
     } else if (cmd == "root-script") {
       runRemoteScript(tmpObj, "Chaos Root", "CPP");
     } else if (cmd == "new-process-template") {
@@ -4585,7 +4591,7 @@
     var template = tmpObj.type;
     tmpObj['node_name_to_desc'] = {};
 
-    jchaos.search(search_string, "script", false, function (l) {
+    jchaos.search("", "script", false, function (l) {
       var list_algo = l['found_script_list'];
       list_algo.forEach(function (p) {
         var encoden = encodeName(p.script_name);
@@ -4960,6 +4966,7 @@
         });
       });
     });
+    $("#script-save").off('click');
     $("#script-save").on('click', function () {
       jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
 
@@ -4969,13 +4976,14 @@
       });
 
     });
+    $("#script-load").off('click');
     $("#script-load").on('click', function () {
       $("#mdl-script").modal("hide");
-      algoLoadFromFile();
+      algoLoadFromFile(tmpObj);
       tmpObj.node_selected = null;
 
     });
-
+    $("#script-close").off('click');
     $("#script-close").on('click', function () {
       $("#mdl-script").modal("hide");
       tmpObj.node_selected = null;
@@ -7541,7 +7549,7 @@
     html += '<a href="#" class="btn" id="script-delete">Delete</a>';
     html += '<a href="#" class="btn" id="script-load">Upload</a>';
 
-    html += '<a href="#" class="btn" id="script-save">Save</a>';
+    html += '<a href="#" class="btn" id="script-save">Download</a>';
     html += '<a href="#" class="btn" id="script-close">Close</a>';
     html += '</div>';
     html += '</div>';
