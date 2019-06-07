@@ -24,6 +24,12 @@
       "format": "textarea",
       "description": "Script code"
     },
+    "eudk_script_keepalive": {
+      "type": "boolean",
+      "default": false,
+      "description": "Restart in case of unexpected exit"
+    },
+
     "eudk_script_cmdline": {
       "type": "string",
       "format": "text",
