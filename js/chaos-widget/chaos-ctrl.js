@@ -2243,6 +2243,16 @@
 
     $("#graph-save").attr('disabled', true);
     $("#graph-run").attr('disabled', true);
+    $("#graph-close").off('click');
+    $("#graph-save").off('click');
+    $("#graph-run").off('click');
+    $("#graph-delete").off('click');
+
+    $("#graph-list-close").off('click');
+    $("#graph-list-run").off('click');
+    $("#graph-list-edit").off('click');
+    $("#graph-list-save").off('click');
+    $("#graph-list-upload").off('click');
 
     $("#graph-close").on('click', function () {
       $("#mdl-graph").modal("hide");
@@ -2289,6 +2299,30 @@
         $("#mdl-graph-list").modal("hide");
         $("#mdl-graph").modal("show");
       }
+    });
+    $("#graph-list-save").on('click', function () {
+      if ((graph_selected != null) && (high_graphs[graph_selected] != null)) {
+        var tmp={
+          graph_name:graph_selected,
+          graph_settings:high_graphs[graph_selected]
+        };
+        var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
+            saveAs(blob, graph_selected + ".json");
+      }
+    });
+    $("#graph-list-upload").on('click', function () {
+      getFile("Graph Loading", "select a graph to  upload", function (g) {
+        if(g.hasOwnProperty("graph_name")&&g.hasOwnProperty("graph_settings")){
+          high_graphs[g.graph_name]=g.graph_settings;
+          jchaos.variable("highcharts", "set", high_graphs, function(){
+            instantMessage("Graph", "Graph " + g.graph_name + " uploaded", 2000, true);
+
+          });
+
+
+        }
+      });
+
     });
     $("#graph-delete").on('click', function () {
       if (graph_selected == null) {
@@ -6424,11 +6458,14 @@
 
     html += '<div class="modal-footer">';
 
-    html += '<a href="#" class="btn" id="graph-delete">Delete</a>';
-    html += '<a href="#" class="btn" id="graph-list-run">Run</a>';
-    html += '<a href="#" class="btn" id="graph-list-edit">Edit..</a>';
+    html += '<a href="#" class="btn" title="Delete the selected Graph" id="graph-delete">Delete</a>';
+    html += '<a href="#" class="btn" title="Launch the selected Graph" tid="graph-list-run">Run</a>';
+    html += '<a href="#" class="btn" title="Save the selected Graph settings to Disk" id="graph-list-save">Download</a>';
+    html += '<a href="#" class="btn" title="Restore the Graph setting from Disk" id="graph-list-upload">Upload</a>';
 
-    html += '<a href="#" class="btn" id="graph-list-close">Close</a>';
+    html += '<a href="#" class="btn" title="Edit the Graph setting" id="graph-list-edit">Edit..</a>';
+
+    html += '<a href="#" class="btn" title="Close this modal" id="graph-list-close">Close</a>';
     html += '</div>';
     html += '</div>';
     return html;
@@ -7365,6 +7402,7 @@
     console.log("saving Graph:" + JSON.stringify(high_graphs[graphname]));
 
     jchaos.variable("highcharts", "set", high_graphs, function () {
+      instantMessage("Graph", "Graph " + graphname + " saved", 2000, true);
 
     });
     graph_selected = graphname;
