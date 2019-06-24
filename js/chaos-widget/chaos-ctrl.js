@@ -4626,6 +4626,7 @@
     tmpObj['node_name_to_desc'] = {};
 
     jchaos.search("", "script", false, function (l) {
+      if(l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)){
       var list_algo = l['found_script_list'];
       list_algo.forEach(function (p) {
         var encoden = encodeName(p.script_name);
@@ -4636,7 +4637,7 @@
           '<td>' + p.eudk_script_language + '</td>' +
           '<td>' + p.script_description + '</td>' +
           '<td>' + date + '</td></tr>');
-      });
+      });}
       $("#mdl-script").resizable().draggable();
       $("#mdl-script").width(hostWidth / 2);
 
