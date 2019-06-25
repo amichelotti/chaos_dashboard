@@ -4606,7 +4606,7 @@
         var infoServer = tmpObj.agents[server];
         var enc = encodeName(server);
         var chart = tmpObj['server_charts'][enc];
-        if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
+        if ((chart!=null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
           chart.series[0].addPoint([now, infoServer.idletime], false, false);
           chart.series[1].addPoint([now, infoServer.usertime], false, false);
           chart.series[2].addPoint([now, infoServer.systime], false, false);
@@ -4850,7 +4850,7 @@
       var parent = ordered[cnt].parent;
       var encoden = encodeName(ordered[cnt].uid);
       $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + ordered[cnt].uid + '>' +
-        '<td class="td_element" id="' + encoden + '">' + p + '</td>' +
+        '<td class="td_element" id="' + encoden + '">' + ordered[cnt].uid + '</td>' +
         '<td class="td_element">' + pname + '</td>' +
         '<td class="td_element">' + ptype + '</td>' +
         '<td class="td_element" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
