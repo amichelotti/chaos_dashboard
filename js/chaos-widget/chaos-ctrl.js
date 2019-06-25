@@ -4824,25 +4824,32 @@
 
       }
     }
+    var ordered=[];
     for (var p in tmpObj.data) {
-      var ptype = tmpObj.data[p].ptype;
-      var pname = tmpObj.data[p].pname;
+      if (tmpObj.data.hasOwnProperty(p)) {
+        ordered.push(tmpObj.data[p]);
+      }
+    }
+    ordered.sort();
+    for (var cnt=0;cnt<ordered.length;cnt++) {
+      var ptype = ordered[cnt].ptype;
+      var pname = ordered[cnt].pname;
 
-      var started_timestamp = tmpObj.data[p].start_time;
-      var end_timestamp = tmpObj.data[p].end_time;
-      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
-      var pid = tmpObj.data[p].pid;
-      var timestamp = tmpObj.data[p].ts;
-      var uptime = tmpObj.data[p].uptime;
-      var systime = parseFloat(tmpObj.data[p].systime).toFixed(3);
-      var cputime = parseFloat(tmpObj.data[p].cputime).toFixed(3);
-      var vmem = tmpObj.data[p].vmem;
-      var rmem = tmpObj.data[p].rmem;
-      var hostname = tmpObj.data[p].hostname;
-      var status = tmpObj.data[p].msg;
-      var parent = tmpObj.data[p].parent;
-      var encoden = encodeName(p);
-      $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + p + '>' +
+      var started_timestamp = ordered[cnt].start_time;
+      var end_timestamp = ordered[cnt].end_time;
+      var last_log = (ordered[cnt].ts - ordered[cnt].last_log_time);
+      var pid = ordered[cnt].pid;
+      var timestamp = ordered[cnt].ts;
+      var uptime = ordered[cnt].uptime;
+      var systime = parseFloat(ordered[cnt].systime).toFixed(3);
+      var cputime = parseFloat(ordered[cnt].cputime).toFixed(3);
+      var vmem = ordered[cnt].vmem;
+      var rmem = ordered[cnt].rmem;
+      var hostname = ordered[cnt].hostname;
+      var status = ordered[cnt].msg;
+      var parent = ordered[cnt].parent;
+      var encoden = encodeName(ordered[cnt].uid);
+      $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + ordered[cnt].uid + '>' +
         '<td class="td_element" id="' + encoden + '">' + p + '</td>' +
         '<td class="td_element">' + pname + '</td>' +
         '<td class="td_element">' + ptype + '</td>' +
