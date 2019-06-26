@@ -4591,7 +4591,13 @@
       $("#" + encoden + "_start_ts").html(started_timestamp);
       $("#" + encoden + "_end_ts").html(end_timestamp);
       $("#" + encoden + "_last_log_ts").html(last_log);
-      $("#" + encoden + "_status").html(status);
+      if(status=="RUNNING"){
+        $("#" + encoden + "_status").html('<font color="green">'+status+"</font>");
+
+      } else {
+        $("#" + encoden + "_status").html('<font color="orange">'+status+"</font>");
+
+      }
       $("#" + encoden + "_ts").html(timestamp);
       $("#" + encoden + "_uptime").html(uptime);
       $("#" + encoden + "_systime").html(systime);
@@ -4827,30 +4833,33 @@
     var ordered=[];
     for (var p in tmpObj.data) {
       if (tmpObj.data.hasOwnProperty(p)) {
-        ordered.push(tmpObj.data[p]);
+        ordered.push(p);
       }
     }
     ordered.sort();
-    for (var cnt=0;cnt<ordered.length;cnt++) {
-      var ptype = ordered[cnt].ptype;
-      var pname = ordered[cnt].pname;
 
-      var started_timestamp = ordered[cnt].start_time;
-      var end_timestamp = ordered[cnt].end_time;
-      var last_log = (ordered[cnt].ts - ordered[cnt].last_log_time);
-      var pid = ordered[cnt].pid;
-      var timestamp = ordered[cnt].ts;
-      var uptime = ordered[cnt].uptime;
-      var systime = parseFloat(ordered[cnt].systime).toFixed(3);
-      var cputime = parseFloat(ordered[cnt].cputime).toFixed(3);
-      var vmem = ordered[cnt].vmem;
-      var rmem = ordered[cnt].rmem;
-      var hostname = ordered[cnt].hostname;
-      var status = ordered[cnt].msg;
-      var parent = ordered[cnt].parent;
-      var encoden = encodeName(ordered[cnt].uid);
-      $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + ordered[cnt].uid + '>' +
-        '<td class="td_element" id="' + encoden + '">' + ordered[cnt].uid + '</td>' +
+    for (var cnt=0;cnt<ordered.length;cnt++) {
+      var obj=tmpObj.data[ordered[cnt]];
+      var ptype = obj.ptype;
+      var pname = obj.pname;
+
+      var started_timestamp = obj.start_time;
+      var end_timestamp = obj.end_time;
+      var last_log = (obj.ts - obj.last_log_time);
+      var pid = obj.pid;
+      var timestamp = obj.ts;
+      var uptime = obj.uptime;
+      var systime = parseFloat(obj.systime).toFixed(3);
+      var cputime = parseFloat(obj.cputime).toFixed(3);
+      var vmem = obj.vmem;
+      var rmem = obj.rmem;
+      var hostname = obj.hostname;
+      var status = obj.msg;
+      var parent = obj.parent;
+      var encoden = encodeName(obj.uid);
+     
+      $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
+        '<td class="td_element" id="' + encoden + '">' + obj.uid + '</td>' +
         '<td class="td_element">' + pname + '</td>' +
         '<td class="td_element">' + ptype + '</td>' +
         '<td class="td_element" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
