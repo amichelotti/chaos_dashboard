@@ -2245,11 +2245,9 @@
     $("#graph-run").attr('disabled', true);
     $("#graph-close").off('click');
     $("#graph-save").off('click');
-    $("#graph-run").off('click');
     $("#graph-delete").off('click');
 
     $("#graph-list-close").off('click');
-    $("#graph-list-run").off('click');
     $("#graph-list-edit").off('click');
     $("#graph-list-save").off('click');
     $("#graph-list-upload").off('click');
@@ -2280,6 +2278,7 @@
       $("#graph-run").removeAttr('disabled');
 
     });
+    $("#graph-run").off('click');
 
     $("#graph-run").on('click', function () {
       $("#graph-run").effect("highlight", { color: 'green' }, 1000);
@@ -2288,7 +2287,7 @@
       $("#mdl-graph").modal("hide");
 
     });
-
+    $("#graph-list-run").off('click');
     $("#graph-list-run").on('click', function () {
       runGraph();
       $("#mdl-graph-list").modal("hide");
@@ -6476,7 +6475,7 @@
     html += '<div class="modal-footer">';
 
     html += '<a href="#" class="btn" title="Delete the selected Graph" id="graph-delete">Delete</a>';
-    html += '<a href="#" class="btn" title="Launch the selected Graph" tid="graph-list-run">Run</a>';
+    html += '<a href="#" class="btn" title="Launch the selected Graph" id="graph-list-run">Run</a>';
     html += '<a href="#" class="btn" title="Save the selected Graph settings to Disk" id="graph-list-save">Download</a>';
     html += '<a href="#" class="btn" title="Restore the Graph setting from Disk" id="graph-list-upload">Upload</a>';
 
