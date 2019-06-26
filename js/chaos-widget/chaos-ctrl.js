@@ -1136,9 +1136,9 @@
     html += '<th>Instance</th>';
     html += '<th>Name</th>';
     html += '<th>Type</th>';
-    html += '<th>Start(Epoch)</th>';
-    html += '<th>End(Epoch)</th>';
-    html += '<th>LastLog(ms ago)</th>';
+    html += '<th>Start</th>';
+    html += '<th>End</th>';
+    html += '<th>LastLog(s ago)</th>';
     html += '<th>Hostname</th>';
     html += '<th>PID</th>';
     html += '<th>Status</th>';
@@ -4570,13 +4570,13 @@
     for (var p in tmpObj.data) {
       var ptype = tmpObj.data[p].ptype;
       var pname = tmpObj.data[p].pname;
-
-      var started_timestamp = new Date(Number(tmpObj.data[p].start_time));
-      var end_timestamp = tmpObj.data[p].end_time;
-      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
+      
+      var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toUTCString();
+      var end_timestamp = (tmpObj.data[p].end_time>0)? (new Date(Number(tmpObj.data[p].end_time))).toUTCString():"--";
+      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time)/1000;
       var pid = tmpObj.data[p].pid;
-      var timestamp = tmpObj.data[p].ts;
-      var uptime = tmpObj.data[p].uptime;
+      var timestamp = (new Date(Number(tmpObj.data[p].ts))).toUTCString();
+      var uptime = toHHMMSS(tmpObj.data[p].uptime);
       var systime = parseFloat(tmpObj.data[p].systime).toFixed(3);
       var cputime = parseFloat(tmpObj.data[p].cputime).toFixed(3);
       var vmem = tmpObj.data[p].vmem;
