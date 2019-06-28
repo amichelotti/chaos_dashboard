@@ -1,0 +1,20 @@
+{
+    "title":"Camera Settings",
+    "type":"object",
+	"id":"camera-settings",
+	"format":"tab",
+    "properties": {
+	
+	"cameraRefresh" : {
+		"type":"integer",
+		"default":1000,
+		"description":"Camera Refresh"
+	},
+	"cameraPerRow" : {
+		"type":"integer",
+		"default":2,
+		"description":"Number Of Cameras per row"
+	}
+}
+}
+    

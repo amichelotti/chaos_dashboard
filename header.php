@@ -34,6 +34,8 @@
 				    </li>
 				    <li><a href="#"><i class="halflings-icon user"></i> Profile</a></li>
 				    <li><a href="login.html"><i class="halflings-icon off"></i> Login</a></li>
+					<li><a id="config-settings"><i class="halflings-icon off"></i> Config..</a></li>
+
 					<li><a id="help-about"><i class="halflings-icon off"></i> About..</a></li>
 
 				</ul>

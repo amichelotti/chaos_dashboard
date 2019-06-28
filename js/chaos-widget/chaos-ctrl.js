@@ -9077,6 +9077,16 @@
         menuActionsFn: function () { } /*actions on the table */
 
       };
+      var sett=localStorage['chaos_dashboard_settings'];
+      if(!sett || sett=="null"){
+        $.getJSON( "dashboard-settings-def.json", function( json ) {
+          console.log( "Default Settings: " + JSON.stringify(json));
+          localStorage['chaos_dashboard_settings']=JSON.stringify(json);
+
+         });
+        }
+      
+
       $("#help-about").on("click",function(){
         jchaos.basicPost("MDS", "cmd=buildInfo", function(ver){
           //alert("version:"+JSON.stringify(ver));
@@ -9084,6 +9094,15 @@
         }, function(){
           alert("Cannot retrive version");
         });
+      });
+      $("#config-settings").on("click",function(){
+        var templ = {
+          $ref: "dashboard-settings.json",
+          format: "tabs"
+        }
+        var def=JSON.parse(localStorage['chaos_dashboard_settings']);
+        jsonEditWindow("Config", templ, def, function(d){localStorage['chaos_dashboard_settings']=JSON.stringify(d);}, null);
+
       });
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
