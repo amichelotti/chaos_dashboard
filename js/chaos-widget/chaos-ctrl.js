@@ -1136,9 +1136,9 @@
     html += '<th>Instance</th>';
     html += '<th>Name</th>';
     html += '<th>Type</th>';
-    html += '<th>Start(Epoch)</th>';
-    html += '<th>End(Epoch)</th>';
-    html += '<th>LastLog(ms ago)</th>';
+    html += '<th>Start</th>';
+    html += '<th>End</th>';
+    html += '<th>LastLog(s ago)</th>';
     html += '<th>Hostname</th>';
     html += '<th>PID</th>';
     html += '<th>Status</th>';
@@ -2243,6 +2243,14 @@
 
     $("#graph-save").attr('disabled', true);
     $("#graph-run").attr('disabled', true);
+    $("#graph-close").off('click');
+    $("#graph-save").off('click');
+    $("#graph-delete").off('click');
+
+    $("#graph-list-close").off('click');
+    $("#graph-list-edit").off('click');
+    $("#graph-list-save").off('click');
+    $("#graph-list-upload").off('click');
 
     $("#graph-close").on('click', function () {
       $("#mdl-graph").modal("hide");
@@ -2270,6 +2278,7 @@
       $("#graph-run").removeAttr('disabled');
 
     });
+    $("#graph-run").off('click');
 
     $("#graph-run").on('click', function () {
       $("#graph-run").effect("highlight", { color: 'green' }, 1000);
@@ -2278,7 +2287,7 @@
       $("#mdl-graph").modal("hide");
 
     });
-
+    $("#graph-list-run").off('click');
     $("#graph-list-run").on('click', function () {
       runGraph();
       $("#mdl-graph-list").modal("hide");
@@ -2289,6 +2298,30 @@
         $("#mdl-graph-list").modal("hide");
         $("#mdl-graph").modal("show");
       }
+    });
+    $("#graph-list-save").on('click', function () {
+      if ((graph_selected != null) && (high_graphs[graph_selected] != null)) {
+        var tmp={
+          graph_name:graph_selected,
+          graph_settings:high_graphs[graph_selected]
+        };
+        var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
+            saveAs(blob, graph_selected + ".json");
+      }
+    });
+    $("#graph-list-upload").on('click', function () {
+      getFile("Graph Loading", "select a graph to  upload", function (g) {
+        if(g.hasOwnProperty("graph_name")&&g.hasOwnProperty("graph_settings")){
+          high_graphs[g.graph_name]=g.graph_settings;
+          jchaos.variable("highcharts", "set", high_graphs, function(){
+            instantMessage("Graph", "Graph " + g.graph_name + " uploaded", 2000, true);
+
+          });
+
+
+        }
+      });
+
     });
     $("#graph-delete").on('click', function () {
       if (graph_selected == null) {
@@ -4536,13 +4569,13 @@
     for (var p in tmpObj.data) {
       var ptype = tmpObj.data[p].ptype;
       var pname = tmpObj.data[p].pname;
-
-      var started_timestamp = new Date(Number(tmpObj.data[p].start_time));
-      var end_timestamp = tmpObj.data[p].end_time;
-      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
+      
+      var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toUTCString();
+      var end_timestamp = (tmpObj.data[p].end_time>0)? (new Date(Number(tmpObj.data[p].end_time))).toUTCString():"--";
+      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time)/1000;
       var pid = tmpObj.data[p].pid;
-      var timestamp = tmpObj.data[p].ts;
-      var uptime = tmpObj.data[p].uptime;
+      var timestamp = (new Date(Number(tmpObj.data[p].ts))).toUTCString();
+      var uptime = toHHMMSS(tmpObj.data[p].uptime);
       var systime = parseFloat(tmpObj.data[p].systime).toFixed(3);
       var cputime = parseFloat(tmpObj.data[p].cputime).toFixed(3);
       var vmem = tmpObj.data[p].vmem;
@@ -4557,7 +4590,13 @@
       $("#" + encoden + "_start_ts").html(started_timestamp);
       $("#" + encoden + "_end_ts").html(end_timestamp);
       $("#" + encoden + "_last_log_ts").html(last_log);
-      $("#" + encoden + "_status").html(status);
+      if(status=="RUNNING"){
+        $("#" + encoden + "_status").html('<font color="green">'+status+"</font>");
+
+      } else {
+        $("#" + encoden + "_status").html('<font color="orange">'+status+"</font>");
+
+      }
       $("#" + encoden + "_ts").html(timestamp);
       $("#" + encoden + "_uptime").html(uptime);
       $("#" + encoden + "_systime").html(systime);
@@ -4572,7 +4611,7 @@
         var infoServer = tmpObj.agents[server];
         var enc = encodeName(server);
         var chart = tmpObj['server_charts'][enc];
-        if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
+        if ((chart!=null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
           chart.series[0].addPoint([now, infoServer.idletime], false, false);
           chart.series[1].addPoint([now, infoServer.usertime], false, false);
           chart.series[2].addPoint([now, infoServer.systime], false, false);
@@ -4592,6 +4631,7 @@
     tmpObj['node_name_to_desc'] = {};
 
     jchaos.search("", "script", false, function (l) {
+      if(l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)){
       var list_algo = l['found_script_list'];
       list_algo.forEach(function (p) {
         var encoden = encodeName(p.script_name);
@@ -4602,7 +4642,7 @@
           '<td>' + p.eudk_script_language + '</td>' +
           '<td>' + p.script_description + '</td>' +
           '<td>' + date + '</td></tr>');
-      });
+      });}
       $("#mdl-script").resizable().draggable();
       $("#mdl-script").width(hostWidth / 2);
 
@@ -4789,26 +4829,36 @@
 
       }
     }
+    var ordered=[];
     for (var p in tmpObj.data) {
-      var ptype = tmpObj.data[p].ptype;
-      var pname = tmpObj.data[p].pname;
+      if (tmpObj.data.hasOwnProperty(p)) {
+        ordered.push(p);
+      }
+    }
+    ordered.sort();
 
-      var started_timestamp = tmpObj.data[p].start_time;
-      var end_timestamp = tmpObj.data[p].end_time;
-      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
-      var pid = tmpObj.data[p].pid;
-      var timestamp = tmpObj.data[p].ts;
-      var uptime = tmpObj.data[p].uptime;
-      var systime = parseFloat(tmpObj.data[p].systime).toFixed(3);
-      var cputime = parseFloat(tmpObj.data[p].cputime).toFixed(3);
-      var vmem = tmpObj.data[p].vmem;
-      var rmem = tmpObj.data[p].rmem;
-      var hostname = tmpObj.data[p].hostname;
-      var status = tmpObj.data[p].msg;
-      var parent = tmpObj.data[p].parent;
-      var encoden = encodeName(p);
-      $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + p + '>' +
-        '<td class="td_element" id="' + encoden + '">' + p + '</td>' +
+    for (var cnt=0;cnt<ordered.length;cnt++) {
+      var obj=tmpObj.data[ordered[cnt]];
+      var ptype = obj.ptype;
+      var pname = obj.pname;
+
+      var started_timestamp = obj.start_time;
+      var end_timestamp = obj.end_time;
+      var last_log = (obj.ts - obj.last_log_time);
+      var pid = obj.pid;
+      var timestamp = obj.ts;
+      var uptime = obj.uptime;
+      var systime = parseFloat(obj.systime).toFixed(3);
+      var cputime = parseFloat(obj.cputime).toFixed(3);
+      var vmem = obj.vmem;
+      var rmem = obj.rmem;
+      var hostname = obj.hostname;
+      var status = obj.msg;
+      var parent = obj.parent;
+      var encoden = encodeName(obj.uid);
+     
+      $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
+        '<td class="td_element" id="' + encoden + '">' + obj.uid + '</td>' +
         '<td class="td_element">' + pname + '</td>' +
         '<td class="td_element">' + ptype + '</td>' +
         '<td class="td_element" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
@@ -6424,11 +6474,14 @@
 
     html += '<div class="modal-footer">';
 
-    html += '<a href="#" class="btn" id="graph-delete">Delete</a>';
-    html += '<a href="#" class="btn" id="graph-list-run">Run</a>';
-    html += '<a href="#" class="btn" id="graph-list-edit">Edit..</a>';
+    html += '<a href="#" class="btn" title="Delete the selected Graph" id="graph-delete">Delete</a>';
+    html += '<a href="#" class="btn" title="Launch the selected Graph" id="graph-list-run">Run</a>';
+    html += '<a href="#" class="btn" title="Save the selected Graph settings to Disk" id="graph-list-save">Download</a>';
+    html += '<a href="#" class="btn" title="Restore the Graph setting from Disk" id="graph-list-upload">Upload</a>';
 
-    html += '<a href="#" class="btn" id="graph-list-close">Close</a>';
+    html += '<a href="#" class="btn" title="Edit the Graph setting" id="graph-list-edit">Edit..</a>';
+
+    html += '<a href="#" class="btn" title="Close this modal" id="graph-list-close">Close</a>';
     html += '</div>';
     html += '</div>';
     return html;
@@ -7365,6 +7418,7 @@
     console.log("saving Graph:" + JSON.stringify(high_graphs[graphname]));
 
     jchaos.variable("highcharts", "set", high_graphs, function () {
+      instantMessage("Graph", "Graph " + graphname + " saved", 2000, true);
 
     });
     graph_selected = graphname;
