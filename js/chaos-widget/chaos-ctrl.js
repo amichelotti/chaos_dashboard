@@ -156,11 +156,11 @@
         progressbar = $("#" + id)
         var progressLabel = $(".progress-label");
         progressbar.progressbar({
-          value: false,
-          change: function () {
+          value:false,
+      /*    change: function () {
             var val = progressbar.progressbar("value");
             progressLabel.text(val + "%");
-          },
+          },*/
           complete: function () {
             $(this).parent().dialog("close");
           }
@@ -3031,8 +3031,8 @@
         jchaos.setOptions({ "timeout": 60000 });
 
         jchaos.fetchHistoryToZip(qtag, tmpObj.node_multi_selected, qstart, qstop, qtag, function (meta) {
-          $("#zipprogress").progressbar("value", parseInt(meta.percent.toFixed(2)));
-
+            $("#zipprogress").progressbar("option", {value:parseInt(meta.percent.toFixed(2))});
+            console.log("percent:"+parseInt(meta.percent.toFixed(2)));
 
         });
 
@@ -5443,6 +5443,9 @@
   }
   function generateCameraTable(node_list, template) {
     var html = '<div>';
+    html += '<table class="table table-bordered" id="camera_table-' + template + '">';
+    html += '</table>';
+
     html += '<div id="cameraName"></div>';
     html += '<img id="cameraImage" src="" />';
     html += '</div>';
