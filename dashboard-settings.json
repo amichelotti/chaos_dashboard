@@ -1,0 +1,35 @@
+{
+    "title":"Dashboard Settings",
+    "type":"object",
+	"id":"dashboard-settings",
+	"format":"tab",
+    "properties": {
+	
+	"generalRefresh" : {
+		"type":"integer",
+		"default":1000,
+		"description":"General Refresh"
+	},
+	"generalControlRefresh" : {
+		"type":"integer",
+		"default":500,
+		"description":"Default General Refresh when in control"
+	},
+	"checkLive" : {
+		"type":"integer",
+		"default":10000,
+		"description":"Live Check Refresh"
+	},
+	"defaultRestTimeout" : {
+		"type":"integer",
+		"default":5000,
+		"description":"Default Timeout Rest operation"
+	},
+	"camera":{
+		    "$ref":"camera-settings.json",
+		    "title":"Camera Settings"
+		
+	}
+}
+}
+    
