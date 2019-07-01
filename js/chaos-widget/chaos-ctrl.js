@@ -156,11 +156,11 @@
         progressbar = $("#" + id)
         var progressLabel = $(".progress-label");
         progressbar.progressbar({
-          value: false,
-          change: function () {
+          value:false,
+      /*    change: function () {
             var val = progressbar.progressbar("value");
             progressLabel.text(val + "%");
-          },
+          },*/
           complete: function () {
             $(this).parent().dialog("close");
           }
@@ -2631,7 +2631,7 @@
     $(".cucmdbase").click(function () {
       var cmd = $(this).attr("cucmdid");
       var cuselection;
-      if (node_multi_selected.length > 0) {
+      if (tmpObj.node_multi_selected.length > 0) {
         cuselection = tmpObj.node_multi_selected;
       } else {
         cuselection = tmpObj.node_selected;
@@ -3031,8 +3031,8 @@
         jchaos.setOptions({ "timeout": 60000 });
 
         jchaos.fetchHistoryToZip(qtag, tmpObj.node_multi_selected, qstart, qstop, qtag, function (meta) {
-          $("#zipprogress").progressbar("value", parseInt(meta.percent.toFixed(2)));
-
+            $("#zipprogress").progressbar("option", {value:parseInt(meta.percent.toFixed(2))});
+            console.log("percent:"+parseInt(meta.percent.toFixed(2)));
 
         });
 
@@ -5443,6 +5443,9 @@
   }
   function generateCameraTable(node_list, template) {
     var html = '<div>';
+    html += '<table class="table table-bordered" id="camera_table-' + template + '">';
+    html += '</table>';
+
     html += '<div id="cameraName"></div>';
     html += '<img id="cameraImage" src="" />';
     html += '</div>';
@@ -9077,6 +9080,16 @@
         menuActionsFn: function () { } /*actions on the table */
 
       };
+      var sett=localStorage['chaos_dashboard_settings'];
+      if(!sett || sett=="null"){
+        $.getJSON( "dashboard-settings-def.json", function( json ) {
+          console.log( "Default Settings: " + JSON.stringify(json));
+          localStorage['chaos_dashboard_settings']=JSON.stringify(json);
+
+         });
+        }
+      
+
       $("#help-about").on("click",function(){
         jchaos.basicPost("MDS", "cmd=buildInfo", function(ver){
           //alert("version:"+JSON.stringify(ver));
@@ -9084,6 +9097,15 @@
         }, function(){
           alert("Cannot retrive version");
         });
+      });
+      $("#config-settings").on("click",function(){
+        var templ = {
+          $ref: "dashboard-settings.json",
+          format: "tabs"
+        }
+        var def=JSON.parse(localStorage['chaos_dashboard_settings']);
+        jsonEditWindow("Config", templ, def, function(d){localStorage['chaos_dashboard_settings']=JSON.stringify(d);}, null);
+
       });
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
