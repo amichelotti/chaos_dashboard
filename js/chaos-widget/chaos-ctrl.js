@@ -2631,7 +2631,7 @@
     $(".cucmdbase").click(function () {
       var cmd = $(this).attr("cucmdid");
       var cuselection;
-      if (node_multi_selected.length > 0) {
+      if (tmpObj.node_multi_selected.length > 0) {
         cuselection = tmpObj.node_multi_selected;
       } else {
         cuselection = tmpObj.node_selected;
