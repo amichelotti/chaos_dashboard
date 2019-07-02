@@ -3,10 +3,11 @@
 	"generalControlRefresh" :500,
 	"checkLive" :10000,
 	"defaultRestTimeout" :5000,
-	
+	"defaultPage":30,
 	"camera":{
 		"cameraRefresh":1000,
-		"cameraPerRow" :2
+		"cameraPerRow" :2,
+		"restTimeout":6000
 	}
 		
 }

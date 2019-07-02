@@ -8,22 +8,27 @@
 	"generalRefresh" : {
 		"type":"integer",
 		"default":1000,
-		"description":"General Refresh"
+		"description":"General Refresh (ms)"
 	},
 	"generalControlRefresh" : {
 		"type":"integer",
 		"default":500,
-		"description":"Default General Refresh when in control"
+		"description":"Default General Refresh when in control (ms)"
+	},
+	"defaultPage" : {
+		"type":"integer",
+		"default":30,
+		"description":"Default History Page"
 	},
 	"checkLive" : {
 		"type":"integer",
 		"default":10000,
-		"description":"Live Check Refresh"
+		"description":"Live Check Refresh (ms)"
 	},
 	"defaultRestTimeout" : {
 		"type":"integer",
 		"default":5000,
-		"description":"Default Timeout Rest operation"
+		"description":"Default Timeout Rest operation (ms)"
 	},
 	"camera":{
 		    "$ref":"camera-settings.json",
