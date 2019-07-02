@@ -23,7 +23,8 @@ require_once('header.php');
 
 					</ul>
 				</div>
-				
+				<div id="refresh_rate_update">
+				</div>
 			</div>
 			<!-- end: Main Menu -->
 			

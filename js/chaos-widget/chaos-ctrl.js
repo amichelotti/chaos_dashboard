@@ -6,6 +6,7 @@
 (function ($) {
   var json_editor;
   var cu_templates = null;
+  var dashboard_settings=null;
   var driver_templates = [];
   var custom_group = [];
   var checkRegistration = 0;
@@ -3434,6 +3435,9 @@
     }
     tmpObj.last_check = 0;
     tmpObj.node_list_interval = setInterval(function () {
+      var now = (new Date()).getTime();
+      $("#refresh_rate_update").html('<font color="white">Update:'+tmpObj.updateRefresh+'</font>');
+
       if (tmpObj.upd_chan > -2) {
         jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
           var node_live_selected = dat;
@@ -3447,7 +3451,6 @@
       } else {
         tmpObj.updateFn(tmpObj);
       }
-      var now = (new Date()).getTime();
       if ((now - tmpObj.last_check) > tmpObj.check_interval) {
         if (tmpObj.data != null) {
           tmpObj.checkLiveFn(tmpObj);
@@ -3455,7 +3458,9 @@
 
         }
       }
-
+      tmpObj.updateRefresh=now-tmpObj.lastUpdate;
+      $("#refresh_rate_update").html('<b><font color="white">Update:'+tmpObj.updateRefresh+'</font></b>');
+      tmpObj.lastUpdate=now;
     }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
   }
@@ -3463,14 +3468,15 @@
    * 
    */
   function changeView(tmpObj, cutype) {
-    jchaos.setOptions({ "timeout": 5000 });
-    tmpObj.refresh_rate = options.Interval;
+
+    tmpObj.refresh_rate=dashboard_settings.generalControlRefresh;
 
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
       tmpObj.upd_chan = -1;
       tmpObj.type = "SCPowerSupply";
       tmpObj.generateTableFn = generatePStable;
       tmpObj.generateCmdFn = generatePSCmd;
+      
 
       tmpObj.updateFn = updatePS;
 
@@ -3489,8 +3495,8 @@
       tmpObj.updateFn = updateCameraTable;
       tmpObj.updateInterfaceFn = updateCameraInterface;
 
-      tmpObj.refresh_rate = 2 * options.Interval;
-      jchaos.setOptions({ "timeout": 6000 });
+      tmpObj.refresh_rate = dashboard_settings.camera.cameraRefresh;
+      jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
     } else if ((cutype.indexOf("SCLibera") != -1)) {
       tmpObj.type = "SCLibera";
 
@@ -3499,8 +3505,6 @@
       tmpObj.updateFn = updateBPM;
       tmpObj.generateCmdFn = generateBPMCmd;
 
-      tmpObj.refresh_rate = options.Interval;
-      jchaos.setOptions({ "timeout": 6000 });
     } else {
       tmpObj.upd_chan = 255;
       tmpObj.type = "cu";
@@ -3508,6 +3512,8 @@
       tmpObj.generateTableFn = generateGenericTable;
       tmpObj.generateCmdFn = generateGenericControl;
       tmpObj.updateFn = updateGenericCU;
+      tmpObj.refresh_rate=dashboard_settings.generalRefresh;
+
     }
   }
   function buildCUPage(tmpObj, cuids, cutype) {
@@ -6515,7 +6521,7 @@
     html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value="">';
 
     html += '<label class="label span3">Page </label>';
-    html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value="100">';
+    html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value="10">';
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -6979,6 +6985,7 @@
                 alert("Y axis cannot be as datetime!")
                 return;
               }
+              $("#query-page").val(dashboard_settings.defaultPage);
               $("#mdl-query").modal("show");
               $("#query-run").attr("graphname", graphname);
               $("#query-run").off('click');
@@ -9061,6 +9068,8 @@
         skip_fetch: 0,
         check_interval: 10000,
         last_check: 0,
+        lastUpdate:0,
+        updateRefresh:0,
         node_list_interval: null,
         node_selected: null,
         health_time_stamp_old: {},
@@ -9085,8 +9094,18 @@
         $.getJSON( "dashboard-settings-def.json", function( json ) {
           console.log( "Default Settings: " + JSON.stringify(json));
           localStorage['chaos_dashboard_settings']=JSON.stringify(json);
-
+          dashboard_settings=json;
          });
+        } else {
+          dashboard_settings=JSON.parse(sett);
+          $.getJSON( "dashboard-settings-def.json", function( json ) {
+            for (k in json){
+              if(!dashboard_settings.hasOwnProperty(k)){
+                dashboard_settings[k]=json[k];
+              }
+            }
+            localStorage['chaos_dashboard_settings']=JSON.stringify(dashboard_settings);
+           });
         }
       
 
@@ -9104,11 +9123,22 @@
           format: "tabs"
         }
         var def=JSON.parse(localStorage['chaos_dashboard_settings']);
-        jsonEditWindow("Config", templ, def, function(d){localStorage['chaos_dashboard_settings']=JSON.stringify(d);}, null);
+        jsonEditWindow("Config", templ, def, function(d){
+          dashboard_settings=d;localStorage['chaos_dashboard_settings']=JSON.stringify(d);
+          var e = jQuery.Event( 'keypress');
+          e.which=13;
+          e.keyCode=13;
+
+          $("#search-chaos").trigger(e);
+        }, null);
 
       });
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
+      templateObj.check_interval=dashboard_settings.checkLive;
+      templateObj.refresh_rate=dashboard_settings.generalRefresh;
+      jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
+
       if (options.template == "cu") {
         templateObj.buildInterfaceFn = buildCUInterface; /* build the skeleton*/
         templateObj.setupInterfaceFn = setupCU; /*create and setup table*/
@@ -9117,8 +9147,7 @@
         templateObj.generateCmdFn = generateGenericControl;
         templateObj.updateFn = updateGenericCU;
         templateObj.checkLiveFn = checkLiveCU;
-
-
+        
         /*** */
         /* Insert HTML in target DOM element */
 
@@ -9131,7 +9160,6 @@
 
         templateObj.updateFn = updateNode;
         templateObj.checkLiveFn = checkLiveCU;
-        jchaos.setOptions({ "timeout": 5000 });
 
       } else if (options.template == "process") {
         templateObj.upd_chan = -2; // custom channel update
@@ -9143,7 +9171,6 @@
         templateObj.updateInterfaceFn = updateProcessInterface;
         templateObj.updateFn = updateProcess;
 
-        jchaos.setOptions({ "timeout": 5000 });
 
       } /*else if (options.template == "ctrl") {
         var html = "";

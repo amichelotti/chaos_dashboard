@@ -8,12 +8,17 @@
 	"cameraRefresh" : {
 		"type":"integer",
 		"default":1000,
-		"description":"Camera Refresh"
+		"description":"Camera Refresh (ms)"
 	},
 	"cameraPerRow" : {
 		"type":"integer",
 		"default":2,
 		"description":"Number Of Cameras per row"
+	},
+	"restTimeout" : {
+		"type":"integer",
+		"default":6000,
+		"description":"Timeout of Rest ops (ms)"
 	}
 }
 }
