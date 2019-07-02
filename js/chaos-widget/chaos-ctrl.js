@@ -2499,7 +2499,46 @@
 
 
   function updateCameraInterface(tmpObj) {
+    var template=tmpObj.type
+    var tablename = "camera_table-" + template;
+    var cnt = 0;
+    var html = "";
+
+    
+
     updateInterfaceCU(tmpObj);
+    $("#main_table-" + template + " tbody tr").off();
+    $("#main_table-" + template + " tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table-" + template, tmpObj, e);
+      if(tmpObj.node_multi_selected instanceof Array ){
+        $("#" + tablename).find("tr:gt(0)").remove();
+        var camlist=tmpObj.node_multi_selected;
+        if(camlist instanceof Array){
+          camlist.forEach(function(key){
+            var encoden = encodeName(key);
+            if ((cnt % num_chart) == 0) {
+              if (cnt > 0) {
+                html += "</tr>"
+              }
+              html += '<tr class="row_element" id=camera-row"' + cnt + '">';
+            }
+            html += '<td class="td_element" id="camera-' + encoden + '">'
+            html += '<div><b>'+key+'</b>';
+            html += '<img id="cameraImage-'+encoden+'" src="" />';
+            html += '</div>';
+        
+            html +='</td>';
+      
+            cnt++;
+          });
+          if (cnt > 0) {
+            html += "</tr>";
+            $("#" + tablename).append(html);
+          }  
+        }
+    
+      }
+    });
     $("#triggerType").off();
     $("#triggerType").on("change", function () {
       var node_selected = tmpObj.node_selected;
@@ -5447,7 +5486,10 @@
     tmpObj.last_index_selected = $(e.currentTarget).index();
 
   }
-  function generateCameraTable(node_list, template) {
+  function generateCameraTable(tmpObj) {
+    var cu = tmpObj.elems;
+    var template = tmpObj.type;
+   
     var html = '<div>';
     html += '<table class="table table-bordered" id="camera_table-' + template + '">';
     html += '</table>';
@@ -5513,7 +5555,7 @@
     html += '</div>';
     html += '</div>';
 
-    html += generateGenericTable(node_list, template);
+    html += generateGenericTable(tmpObj);
     return html;
   }
   function configureSliderCommands(tmpObj, slname, slinput) {
@@ -6264,57 +6306,45 @@
     if (tmpObj.skip_fetch > 0) {
       tmpObj.skip_fetch--;
     } else {
-      jchaos.getChannel(tmpObj.node_selected, -1, function (d) {
-        var selected = d[0];
-        //    var selected = tmpObj.data[tmpObj.index];
-        if (selected != null && selected.hasOwnProperty("output")) {
-          $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
-          if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
-            var bin = selected.output.FRAMEBUFFER.$binary.base64;
-            var fmt = "png";
-            if (selected.hasOwnProperty("input")) {
-              if (selected.input.FMT != null) {
-                fmt = selected.input.FMT;
+      if(tmpObj.node_multi_selected instanceof Array){
+        tmpObj.node_multi_selected.forEach(function(elem){
+          jchaos.getChannel(elem, -1, function (d) {
+            var selected = d[0];
+            //    var selected = tmpObj.data[tmpObj.index];
+            if (selected != null && selected.hasOwnProperty("output")) {
+             // $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
+              if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
+                var bin = selected.output.FRAMEBUFFER.$binary.base64;
+                var fmt = "png";
+                if (selected.hasOwnProperty("input")) {
+                  if (selected.input.FMT != null) {
+                    fmt = selected.input.FMT;
+                  }
+                 /* updateCameraProperties("GAIN", selected);
+                  updateCameraProperties("WIDTH", selected);
+                  updateCameraProperties("HEIGHT", selected);
+                  updateCameraProperties("OFFSETX", selected);
+                  updateCameraProperties("OFFSETY", selected);
+                  updateCameraProperties("BRIGHTNESS", selected);
+                  updateCameraProperties("SHUTTER", selected);
+                  updateCameraProperties("CONTRAST", selected);
+                  updateCameraProperties("SHARPNESS", selected);*/
+                  
+                }
+                //$('#triggerType').val(selected.output.TRIGGER_MODE)
+    
+               // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
+                $("#cameraImage-"+encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
               }
-              updateCameraProperties("GAIN", selected);
-              updateCameraProperties("WIDTH", selected);
-              updateCameraProperties("HEIGHT", selected);
-              updateCameraProperties("OFFSETX", selected);
-              updateCameraProperties("OFFSETY", selected);
-              updateCameraProperties("BRIGHTNESS", selected);
-              updateCameraProperties("SHUTTER", selected);
-              updateCameraProperties("CONTRAST", selected);
-              updateCameraProperties("SHARPNESS", selected);
-              /*
-                        if(selected.input.hasOwnProperty('GAIN')){
-                          $("#image-GAIN").val(selected.input.GAIN);
-                          $("#slider-GAIN").val(selected.input.GAIN);
-                        }
-                        
-                        if(selected.input.hasOwnProperty('GAIN')){
-                          $("#image-GAIN").val(selected.input.GAIN);
-                          $("#slider-GAIN").val(selected.input.GAIN);
-                        }
-                        $("#image-WIDTH").val(selected.input.WIDTH);
-                        $("#image-HEIGHT").val(selected.input.HEIGHT);
-                        $("#image-OFFSETX").val(selected.input.OFFSETX);
-                        $("#image-OFFSETY").val(selected.input.OFFSETY);
-                        $("#image-BRIGHTNESS").val(selected.input.BRIGHTNESS);
-                        $("#image-SHUTTER").val(selected.input.SHUTTER);
-                        $("#image-CONTRAST").val(selected.input.CONTRAST);
-                        $("#image-SHARPNESS").val(selected.input.SHARPNESS);
-                        */
             }
-            $('#triggerType').val(selected.output.TRIGGER_MODE)
+          }, function (d) {
+            tmpObj.skip_fetch = 3;
+           // $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
+          });
 
-            $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-            $("#cameraImage").attr("src", "data:image/" + fmt + ";base64," + bin);
-          }
-        }
-      }, function (d) {
-        tmpObj.skip_fetch = 3;
-        $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
-      });
+        });
+      }
+      
     }
     jchaos.getChannel(cu, 255, function (selected) {
       tmpObj.data = selected;
