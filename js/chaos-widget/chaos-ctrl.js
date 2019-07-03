@@ -7,9 +7,6 @@
   var json_editor;
   var cu_templates = null;
   var dashboard_settings=null;
-  var driver_templates = [];
-  var custom_group = [];
-  var checkRegistration = 0;
   var interface;// interface we are looking for
   var cu_copied;
   var us_copied;
@@ -2501,8 +2498,6 @@
   function updateCameraInterface(tmpObj) {
     var template=tmpObj.type
     var tablename = "camera_table-" + template;
-    var cnt = 0;
-    var html = "";
 
     
 
@@ -2511,32 +2506,44 @@
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, tmpObj, e);
       if(tmpObj.node_multi_selected instanceof Array ){
-        $("#" + tablename).find("tr:gt(0)").remove();
+        var cnt = 0;
+
+        var html = '<table class="table table-bordered" id="'+tablename + '">';
         var camlist=tmpObj.node_multi_selected;
         if(camlist instanceof Array){
+          var html = "";
+
           camlist.forEach(function(key){
+            if(cnt<dashboard_settings.camera.maxCameraCol){
             var encoden = encodeName(key);
-            if ((cnt % num_chart) == 0) {
+            if ((cnt % dashboard_settings.camera.cameraPerRow) == 0) {
               if (cnt > 0) {
                 html += "</tr>"
               }
               html += '<tr class="row_element" id=camera-row"' + cnt + '">';
             }
             html += '<td class="td_element" id="camera-' + encoden + '">'
-            html += '<div><b>'+key+'</b>';
+         //   html += '<div><b>'+key+'</b>';
+          html += '<div>';
             html += '<img id="cameraImage-'+encoden+'" src="" />';
+            html += '<div class="top-left">'+key+'</div>';
+
             html += '</div>';
         
             html +='</td>';
       
             cnt++;
+          }
           });
+        
           if (cnt > 0) {
             html += "</tr>";
-            $("#" + tablename).append(html);
+
           }  
         }
-    
+        html+="</table>";
+        $("#cameraTable").html(html);
+
       }
     });
     $("#triggerType").off();
@@ -5491,14 +5498,13 @@
     var template = tmpObj.type;
    
     var html = '<div>';
-    html += '<table class="table table-bordered" id="camera_table-' + template + '">';
-    html += '</table>';
+   
 
-    html += '<div id="cameraName"></div>';
-    html += '<img id="cameraImage" src="" />';
+    html += '<div id="cameraTable"></div>';
     html += '</div>';
-    html += '<div class="box span12">';
+    /*html += '<div class="box span12">';
     html += '<div class="box-content">';
+
     html += '<h3 class="box-header" id=image-options>Image Options</h3>';
 
     html += '<label class="label span3" >Trigger</label>';
@@ -5554,7 +5560,7 @@
 
     html += '</div>';
     html += '</div>';
-
+*/
     html += generateGenericTable(tmpObj);
     return html;
   }
@@ -8970,7 +8976,21 @@
     });
 
   }
+  function addNewKeys(jsondst,jsonsrc){
+    for(var key in jsonsrc){
+      if(!jsondst.hasOwnProperty(key)){
+        jsondst[key]=jsonsrc[key];
+      } else if( (jsondst[key] instanceof Object) ){
+        if((jsonsrc[key] instanceof Object)){
+          jsondst[key]=addNewKeys(jsondst[key],jsonsrc[key]);
+        } else {
+          jsondst[key]=jsonsrc[key];
 
+        }
+      } 
+    }
+    return jsondst;
+  }
   function updateSnapshotTable(tmpObj, refresh) {
     var cu = tmpObj.node_selected;
     var node_multi_selected = tmpObj.node_multi_selected;
@@ -9129,12 +9149,8 @@
         } else {
           dashboard_settings=JSON.parse(sett);
           $.getJSON( "dashboard-settings-def.json", function( json ) {
-            for (k in json){
-              if(!dashboard_settings.hasOwnProperty(k)){
-                dashboard_settings[k]=json[k];
-              }
-            }
-            localStorage['chaos_dashboard_settings']=JSON.stringify(dashboard_settings);
+            dashboard_settings=addNewKeys(dashboard_settings,json);
+           localStorage['chaos_dashboard_settings']=JSON.stringify(dashboard_settings);
            });
         }
       
