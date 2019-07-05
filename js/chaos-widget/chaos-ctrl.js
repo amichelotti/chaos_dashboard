@@ -2622,6 +2622,7 @@
       if (parvalue != null) {
         try {
           cmdparam = JSON.parse(parvalue);
+          if(cmdparam instanceof Object){
           for (var key in cmdparam) {
             if ($("#" + alias + "_" + key).length) {
               var inputType = $("#" + alias + "_" + key).attr('type');
@@ -2634,6 +2635,7 @@
             }
           }
           complete_command = true;
+        }
         } catch (e) {
 
         }
@@ -6426,6 +6428,7 @@
         }
       }
     });
+    updateGenericTableDataset(tmpObj);
 
 
 
