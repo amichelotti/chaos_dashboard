@@ -5779,7 +5779,7 @@
 
 
           if (busy == 'true') {
-            $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
+            $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:"+el.system.running_cmd_alias) ;
             if (updateGenericTableDataset.count & 1) {
               $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
             } else {
@@ -5959,7 +5959,7 @@
     html += '<th>Position [mm]</th>';
     html += '<th>Setting [mm]</th>';
     html += '<th colspan="2">Saved [mm]</th>';
-    html += '<th colspan="5">Flags(On,Plim,Nlim,Home)</th>';
+    html += '<th colspan="4">Flags(On,Plim,Nlim,Home)</th>';
     html += '<th colspan="2">Alarms dev/cu</th>';
     html += '</tr>';
     html += '</thead>';
@@ -5980,7 +5980,6 @@
       html += "<td id='" + cuname + "_flag_in'></td>";
       html += "<td id='" + cuname + "_flag_out'></td>";
       html += "<td id='" + cuname + "_flag_home'></td>";
-      html += "<td id='" + cuname + "_system_busy'></td>";
 
       html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
       html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
