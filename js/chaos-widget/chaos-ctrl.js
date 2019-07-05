@@ -6128,7 +6128,7 @@
         var cuname = encodeName(elem.health.ndk_uid);
 
         $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
-        $("#" + cuname + "_input_position").html(elem.input.position);
+        $("#" + cuname + "_input_position").html(elem.input.position.toFixed(3));
         /* switch (elem.output.polarity) {
            case 1:
              $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
@@ -6371,7 +6371,7 @@
         if (elem.hasOwnProperty("output") && elem.hasOwnProperty("input") && elem.output.hasOwnProperty("current") && elem.input.hasOwnProperty("current")) {
 
           $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
-          $("#" + cuname + "_input_current").html(elem.input.current);
+          $("#" + cuname + "_input_current").html(elem.input.current.toFixed(3));
           switch (elem.output.polarity) {
             case 1:
               $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
