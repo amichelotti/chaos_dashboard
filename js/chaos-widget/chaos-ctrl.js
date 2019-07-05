@@ -2594,7 +2594,12 @@
       if ((event.which == 13)) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
-        jchaos.setSched(tmpObj.node_selected, value);
+        if(tmpObj.node_multi_selected.length > 0){
+          jchaos.setSched(tmpObj.node_multi_selected, value);
+
+        } else {
+          jchaos.setSched(tmpObj.node_selected, value);
+        }
 
       }
     });
