@@ -442,12 +442,26 @@
       dialogClass: 'no-close',
       buttons: [
         {
+          text: "download", id: 'console-download-' + pid, click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            jchaos.rmtGetConsole(server, pid, 0, -1, function (r) {
+              var str = decodeURIComponent(escape(atob(r.data.console)));
+              var name=pid+"_"+r.data.process.last_log_time;
+              var blob = new Blob([str], { type: "json;charset=utf-8" });
+              saveAs(blob, name + ".log");
+            }, function (bad) {
+              console.log("Some error getting console occur:" + bad);
+            });
+          }
+        },
+        {
           text: "update", id: 'console-update-' + pid, click: function (e) {
             // var interval=$(this).attr("refresh_time");
             stop_update = !stop_update;
 
           }
         },
+
         {
           text: "close", click: function (e) {
             // var interval=$(this).attr("refresh_time");
@@ -3482,9 +3496,14 @@
       clearInterval(tmpObj.node_list_interval);
     }
     tmpObj.last_check = 0;
+    tmpObj.updateErrors=0;
+    tmpObj.skip_fetch=0;
     tmpObj.node_list_interval = setInterval(function () {
+      if(tmpObj.skip_fetch>0){
+        return;
+      }
       var now = (new Date()).getTime();
-      $("#refresh_rate_update").html('<font color="white">Update:'+tmpObj.updateRefresh+'</font>');
+      //$("#refresh_rate_update").html('<font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font>');
 
       if (tmpObj.upd_chan > -2) {
         jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
@@ -3507,7 +3526,7 @@
         }
       }
       tmpObj.updateRefresh=now-tmpObj.lastUpdate;
-      $("#refresh_rate_update").html('<b><font color="white">Update:'+tmpObj.updateRefresh+'</font></b>');
+      $("#refresh_rate_update").html('<b><font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font></b>');
       tmpObj.lastUpdate=now;
     }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
@@ -5648,6 +5667,12 @@
 
   function updateGenericTableDataset(tmpObj) {
     var cu = tmpObj.data;
+    if(tmpObj.data instanceof Array){
+      cu=tmpObj.data;
+    } else {
+      cu=[tmpObj.data];
+
+    }
     if (updateGenericTableDataset.count == undefined) {
       updateGenericTableDataset.count = 1;
     }
@@ -6175,20 +6200,19 @@
       if (elem.health.ndk_uid == tmpObj.node_selected) {
 
         if (elem.output.powerOn) {
-          $("#scraper_setPoweron").childen().remove();
-          html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
-          html += '<i class="material-icons green">trending_down</i>';
-          html += '<p class="name-cmd">OFF</p>';
-          html += '</a>';
-          $("#scraper_setPoweron").html(html);
+          
+          $("#scraper_setPoweron").prop('disabled', true);
+          $("#scraper_setPoweroff").prop('disabled', false);
+       //   $("#scraper_setPoweron").childen().remove();
+          //html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
+          //html += '<i class="material-icons green">trending_down</i>';
+          //html += '<p class="name-cmd">OFF</p>';
+          //html += '</a>';
+          //$("#scraper_setPoweron").html(html);
         } else {
-          $("#scraper_setPoweron").childen().remove();
-
-          html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":0}>';
-          html += '<i class="material-icons red">pause</i>';
-          html += '<p class="name-cmd">ON</p>';
-          html += '</a>';
-          $("#scraper_setPoweron").html(html);
+         // $("#scraper_setPoweron").childen().remove();
+         $("#scraper_setPoweron").prop('disabled', false);
+         $("#scraper_setPoweroff").prop('disabled', true);
 
         }
       }
@@ -6308,15 +6332,29 @@
 
     }
   }
+  function notSelectedElems(tmpObj){
+    var ret=[];
+    if (! (tmpObj.node_multi_selected instanceof Array)){
+      return tmpObj['elems'];
+    }
+    
+     tmpObj['elems'].forEach(function (g){
+      if(!tmpObj.node_multi_selected.includes(g)){
+        ret.push(g);
+      }
+
+    });
+    return ret;
+  }
   function updateCameraTable(tmpObj) {
     var cu = tmpObj.elems;
 
-    if (tmpObj.skip_fetch > 0) {
-      tmpObj.skip_fetch--;
-    } else {
-      if(tmpObj.node_multi_selected instanceof Array){
+     if(tmpObj.node_multi_selected instanceof Array){
         tmpObj.node_multi_selected.forEach(function(elem){
+          tmpObj.skip_fetch++;
           jchaos.getChannel(elem, -1, function (d) {
+            if(tmpObj.skip_fetch>0)
+              tmpObj.skip_fetch--;
             var selected = d[0];
             //    var selected = tmpObj.data[tmpObj.index];
             if (selected != null && selected.hasOwnProperty("output")) {
@@ -6345,16 +6383,22 @@
                 $("#cameraImage-"+encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
               }
             }
+            tmpObj.data = d;
+            updateGenericTableDataset(tmpObj);
+
           }, function (d) {
-            tmpObj.skip_fetch = 3;
+            if(tmpObj.skip_fetch>0)
+              tmpObj.skip_fetch--;
+
+            tmpObj.updateErrors++;
            // $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
           });
 
         });
       }
       
-    }
-    jchaos.getChannel(cu, 255, function (selected) {
+    
+    jchaos.getChannel(notSelectedElems(tmpObj), 255, function (selected) {
       tmpObj.data = selected;
 
       updateGenericCU(tmpObj);
@@ -8735,6 +8779,9 @@
     return items;
   }
   function updateGenericControl(tmpObj, cu) {
+    if(cu == null){
+      return;
+    }
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("ndk_uid")) {   //if el health
       var name = cu.health.ndk_uid;
       var status = cu.health.nh_status;
@@ -9119,10 +9166,12 @@
         filter: "",
         refresh_rate: options.Interval,
         skip_fetch: 0,
+        skip_fetch_inc: 1,
         check_interval: 10000,
         last_check: 0,
         lastUpdate:0,
         updateRefresh:0,
+        updateErrors:0,
         node_list_interval: null,
         node_selected: null,
         health_time_stamp_old: {},
