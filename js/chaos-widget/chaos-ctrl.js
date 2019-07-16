@@ -984,7 +984,7 @@
     $("#name-device-alarm").html(dev_alarm.ndk_uid);
 
     $.each(dev_alarm, function (key, value) {
-      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type"&& key != "cudk_run_id"") {
+      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type"&& key != "cudk_run_id") {
         switch (value) {
           case 1:
             $("#table_device_alarm").append('<tr><td class="warning_value">' + key + '</td><td class="warning_value">' + value + '</td></tr>');
