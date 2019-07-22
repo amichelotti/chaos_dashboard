@@ -1155,11 +1155,11 @@
     html += '<th>PID</th>';
     html += '<th>Status</th>';
     html += '<th>TimeStamp</th>';
-    html += '<th>Uptime(s)</th>';
+    html += '<th>Uptime</th>';
     html += '<th>System Time</th>';
     html += '<th>User Time</th>';
     html += '<th>VMem</th>';
-    html += '<th>RMem</th>';
+    html += '<th colspan="2">RMem|%</th>';
     html += '<th>Parent</th>';
 
     html += '</tr>';
@@ -4648,11 +4648,12 @@
       var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time)/1000;
       var pid = tmpObj.data[p].pid;
       var timestamp = (new Date(Number(tmpObj.data[p].ts))).toUTCString();
-      var uptime = toHHMMSS(tmpObj.data[p].uptime);
-      var systime = parseFloat(tmpObj.data[p].systime).toFixed(3);
-      var cputime = parseFloat(tmpObj.data[p].cputime).toFixed(3);
-      var vmem = tmpObj.data[p].vmem;
-      var rmem = tmpObj.data[p].rmem;
+      var uptime = tmpObj.data[p].uptime;
+      var systime = parseFloat(tmpObj.data[p].Psys).toFixed(3);
+      var cputime = parseFloat(tmpObj.data[p].Puser).toFixed(3);
+      var vmem = tmpObj.data[p].Vmem;
+      var rmem = tmpObj.data[p].Rmem;
+      var pmem = parseFloat(tmpObj.data[p].pmem).toFixed(3);
 
       var hostname = tmpObj.data[p].hostname;
       var status = tmpObj.data[p].msg;
@@ -4676,6 +4677,8 @@
       $("#" + encoden + "_cputime").html(cputime);
       $("#" + encoden + "_vmem").html(vmem);
       $("#" + encoden + "_rmem").html(rmem);
+      $("#" + encoden + "_pmem").html(pmem);
+
       $("#" + encoden + "_parent").html(parent_str);
     }
     if (tmpObj.hasOwnProperty("server_charts")) {
@@ -4685,10 +4688,12 @@
         var enc = encodeName(server);
         var chart = tmpObj['server_charts'][enc];
         if ((chart!=null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
-          chart.series[0].addPoint([now, infoServer.idletime], false, false);
-          chart.series[1].addPoint([now, infoServer.usertime], false, false);
-          chart.series[2].addPoint([now, infoServer.systime], false, false);
-          chart.series[3].addPoint([now, infoServer.iowait], false, false);
+          chart.series[0].addPoint([now, infoServer.idle], false, false);
+          chart.series[1].addPoint([now, infoServer.user], false, false);
+          chart.series[2].addPoint([now, infoServer.sys], false, false);
+          chart.series[3].addPoint([now, infoServer.io], false, false);
+          chart.series[4].addPoint([now, infoServer.pmem], false, false);
+
           chart.redraw();
         }
       }
@@ -4868,6 +4873,9 @@
         }, {
           name: 'iow',
           data: []
+        }, {
+          name: 'mem',
+          data: []
         }]
       };
       $("#" + graph_table).find("tr:gt(0)").remove();
@@ -4925,6 +4933,7 @@
       var cputime = parseFloat(obj.cputime).toFixed(3);
       var vmem = obj.vmem;
       var rmem = obj.rmem;
+      var pmem = obj.pmem;
       var hostname = obj.hostname;
       var status = obj.msg;
       var parent = obj.parent;
@@ -4946,6 +4955,7 @@
         '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>' +
         '<td class="td_element" id="' + encoden + '_vmem">' + vmem + '</td>' +
         '<td class="td_element" id="' + encoden + '_rmem">' + rmem + '</td>' +
+        '<td class="td_element" id="' + encoden + '_pmem">' + pmem + '</td>' +
         '<td class="td_element" id="' + encoden + '_parent">' + parent + '</td></tr>'
       );
 
@@ -5168,10 +5178,12 @@
         */
       jchaos.rmtListProcess(server + ":8071", function (r) {
         if (r.hasOwnProperty("info")) {
-          agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
-          agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
-          agent_obj[server]['systime'] = parseFloat(r.info.systime);
-          agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
+          agent_obj[server]['idle'] = parseFloat(r.info.idle);
+          agent_obj[server]['user'] = parseFloat(r.info.user);
+          agent_obj[server]['sys'] = parseFloat(r.info.sys);
+          agent_obj[server]['io'] = parseFloat(r.info.io);
+          agent_obj[server]['pmem'] = parseFloat(r.info.pmem);
+
           agent_obj[server]['ts'] = r.info.ts;
         }
 
