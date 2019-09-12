@@ -442,12 +442,26 @@
       dialogClass: 'no-close',
       buttons: [
         {
+          text: "download", id: 'console-download-' + pid, click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            jchaos.rmtGetConsole(server, pid, 0, -1, function (r) {
+              var str = decodeURIComponent(escape(atob(r.data.console)));
+              var name=pid+"_"+r.data.process.last_log_time;
+              var blob = new Blob([str], { type: "json;charset=utf-8" });
+              saveAs(blob, name + ".log");
+            }, function (bad) {
+              console.log("Some error getting console occur:" + bad);
+            });
+          }
+        },
+        {
           text: "update", id: 'console-update-' + pid, click: function (e) {
             // var interval=$(this).attr("refresh_time");
             stop_update = !stop_update;
 
           }
         },
+
         {
           text: "close", click: function (e) {
             // var interval=$(this).attr("refresh_time");
@@ -970,7 +984,7 @@
     $("#name-device-alarm").html(dev_alarm.ndk_uid);
 
     $.each(dev_alarm, function (key, value) {
-      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type") {
+      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type"&& key != "cudk_run_id") {
         switch (value) {
           case 1:
             $("#table_device_alarm").append('<tr><td class="warning_value">' + key + '</td><td class="warning_value">' + value + '</td></tr>');
@@ -1141,11 +1155,11 @@
     html += '<th>PID</th>';
     html += '<th>Status</th>';
     html += '<th>TimeStamp</th>';
-    html += '<th>Uptime(s)</th>';
+    html += '<th>Uptime</th>';
     html += '<th>System Time</th>';
     html += '<th>User Time</th>';
     html += '<th>VMem</th>';
-    html += '<th>RMem</th>';
+    html += '<th colspan="2">RMem|%</th>';
     html += '<th>Parent</th>';
 
     html += '</tr>';
@@ -2594,7 +2608,7 @@
       if ((event.which == 13)) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
-        jchaos.setSched(tmpObj.node_selected, value);
+        jchaos.setSched(tmpObj.node_multi_selected, value);
 
       }
     });
@@ -3482,9 +3496,14 @@
       clearInterval(tmpObj.node_list_interval);
     }
     tmpObj.last_check = 0;
+    tmpObj.updateErrors=0;
+    tmpObj.skip_fetch=0;
     tmpObj.node_list_interval = setInterval(function () {
+      if(tmpObj.skip_fetch>0){
+        return;
+      }
       var now = (new Date()).getTime();
-      $("#refresh_rate_update").html('<font color="white">Update:'+tmpObj.updateRefresh+'</font>');
+      //$("#refresh_rate_update").html('<font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font>');
 
       if (tmpObj.upd_chan > -2) {
         jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
@@ -3507,7 +3526,7 @@
         }
       }
       tmpObj.updateRefresh=now-tmpObj.lastUpdate;
-      $("#refresh_rate_update").html('<b><font color="white">Update:'+tmpObj.updateRefresh+'</font></b>');
+      $("#refresh_rate_update").html('<b><font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font></b>');
       tmpObj.lastUpdate=now;
     }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
@@ -4629,11 +4648,12 @@
       var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time)/1000;
       var pid = tmpObj.data[p].pid;
       var timestamp = (new Date(Number(tmpObj.data[p].ts))).toUTCString();
-      var uptime = toHHMMSS(tmpObj.data[p].uptime);
-      var systime = parseFloat(tmpObj.data[p].systime).toFixed(3);
-      var cputime = parseFloat(tmpObj.data[p].cputime).toFixed(3);
-      var vmem = tmpObj.data[p].vmem;
-      var rmem = tmpObj.data[p].rmem;
+      var uptime = tmpObj.data[p].uptime;
+      var systime = parseFloat(tmpObj.data[p].Psys).toFixed(3);
+      var cputime = parseFloat(tmpObj.data[p].Puser).toFixed(3);
+      var vmem = tmpObj.data[p].Vmem;
+      var rmem = tmpObj.data[p].Rmem;
+      var pmem = parseFloat(tmpObj.data[p].pmem).toFixed(3);
 
       var hostname = tmpObj.data[p].hostname;
       var status = tmpObj.data[p].msg;
@@ -4657,6 +4677,8 @@
       $("#" + encoden + "_cputime").html(cputime);
       $("#" + encoden + "_vmem").html(vmem);
       $("#" + encoden + "_rmem").html(rmem);
+      $("#" + encoden + "_pmem").html(pmem);
+
       $("#" + encoden + "_parent").html(parent_str);
     }
     if (tmpObj.hasOwnProperty("server_charts")) {
@@ -4666,10 +4688,12 @@
         var enc = encodeName(server);
         var chart = tmpObj['server_charts'][enc];
         if ((chart!=null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
-          chart.series[0].addPoint([now, infoServer.idletime], false, false);
-          chart.series[1].addPoint([now, infoServer.usertime], false, false);
-          chart.series[2].addPoint([now, infoServer.systime], false, false);
-          chart.series[3].addPoint([now, infoServer.iowait], false, false);
+          chart.series[0].addPoint([now, infoServer.idle], false, false);
+          chart.series[1].addPoint([now, infoServer.user], false, false);
+          chart.series[2].addPoint([now, infoServer.sys], false, false);
+          chart.series[3].addPoint([now, infoServer.io], false, false);
+          chart.series[4].addPoint([now, infoServer.pmem], false, false);
+
           chart.redraw();
         }
       }
@@ -4849,6 +4873,9 @@
         }, {
           name: 'iow',
           data: []
+        }, {
+          name: 'mem',
+          data: []
         }]
       };
       $("#" + graph_table).find("tr:gt(0)").remove();
@@ -4906,6 +4933,7 @@
       var cputime = parseFloat(obj.cputime).toFixed(3);
       var vmem = obj.vmem;
       var rmem = obj.rmem;
+      var pmem = obj.pmem;
       var hostname = obj.hostname;
       var status = obj.msg;
       var parent = obj.parent;
@@ -4927,6 +4955,7 @@
         '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>' +
         '<td class="td_element" id="' + encoden + '_vmem">' + vmem + '</td>' +
         '<td class="td_element" id="' + encoden + '_rmem">' + rmem + '</td>' +
+        '<td class="td_element" id="' + encoden + '_pmem">' + pmem + '</td>' +
         '<td class="td_element" id="' + encoden + '_parent">' + parent + '</td></tr>'
       );
 
@@ -5096,7 +5125,15 @@
   }
   function updateProcess(tmpObj) {
     updateProcessList(tmpObj, function (t) {
-      if (JSON.stringify(t['elems']) !== JSON.stringify(t['old_elems'])) {
+      var new_ele;
+      var old_ele;
+      if( t['elems'] instanceof Array){
+        new_ele=t['elems'].sort();
+      }
+      if(t['old_elems'] instanceof Array){
+        old_ele=t['old_elems'].sort();
+      }
+      if (JSON.stringify(new_ele) !== JSON.stringify(old_ele)) {
         updateProcessInterface(t);
         t['old_elems'] = t['elems'];
 
@@ -5141,10 +5178,12 @@
         */
       jchaos.rmtListProcess(server + ":8071", function (r) {
         if (r.hasOwnProperty("info")) {
-          agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
-          agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
-          agent_obj[server]['systime'] = parseFloat(r.info.systime);
-          agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
+          agent_obj[server]['idle'] = parseFloat(r.info.idle);
+          agent_obj[server]['user'] = parseFloat(r.info.user);
+          agent_obj[server]['sys'] = parseFloat(r.info.sys);
+          agent_obj[server]['io'] = parseFloat(r.info.io);
+          agent_obj[server]['pmem'] = parseFloat(r.info.pmem);
+
           agent_obj[server]['ts'] = r.info.ts;
         }
 
@@ -5471,17 +5510,23 @@
       $(".row_element").removeClass("row_snap_selected");
       tmpObj.node_multi_selected = [];
       tmpObj.node_multi_selected.push(tmpObj.node_selected);
+    } else {
+      if(!tmpObj.node_multi_selected.includes(tmpObj.node_selected)){
+        tmpObj.node_multi_selected.push(tmpObj.node_selected);
+      }
+
     }
     $(e.currentTarget).addClass("row_snap_selected");
 
     if (e.shiftKey) {
       var nrows = $(e.currentTarget).index();
       if (tmpObj.last_index_selected != -1) {
+        tmpObj.node_multi_selected=[];
         //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
         if (nrows > tmpObj.last_index_selected) {
           //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
           $("#" + id + " tr").slice(tmpObj.last_index_selected + 1, nrows + 1).addClass("row_snap_selected");
-          for (var cnt = tmpObj.last_index_selected; cnt < nrows; cnt++) {
+          for (var cnt = tmpObj.last_index_selected; cnt <= nrows; cnt++) {
             tmpObj.node_multi_selected.push(node_list[cnt]);
 
           }
@@ -5648,6 +5693,12 @@
 
   function updateGenericTableDataset(tmpObj) {
     var cu = tmpObj.data;
+    if(tmpObj.data instanceof Array){
+      cu=tmpObj.data;
+    } else {
+      cu=[tmpObj.data];
+
+    }
     if (updateGenericTableDataset.count == undefined) {
       updateGenericTableDataset.count = 1;
     }
@@ -5779,7 +5830,7 @@
 
 
           if (busy == 'true') {
-            $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
+            $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:"+el.system.running_cmd_alias) ;
             if (updateGenericTableDataset.count & 1) {
               $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
             } else {
@@ -6128,7 +6179,7 @@
         var cuname = encodeName(elem.health.ndk_uid);
 
         $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
-        $("#" + cuname + "_input_position").html(elem.input.position);
+        $("#" + cuname + "_input_position").html(elem.input.position.toFixed(3));
         /* switch (elem.output.polarity) {
            case 1:
              $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
@@ -6175,20 +6226,19 @@
       if (elem.health.ndk_uid == tmpObj.node_selected) {
 
         if (elem.output.powerOn) {
-          $("#scraper_setPoweron").childen().remove();
-          html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
-          html += '<i class="material-icons green">trending_down</i>';
-          html += '<p class="name-cmd">OFF</p>';
-          html += '</a>';
-          $("#scraper_setPoweron").html(html);
+          
+          $("#scraper_setPoweron").prop('disabled', true);
+          $("#scraper_setPoweroff").prop('disabled', false);
+       //   $("#scraper_setPoweron").childen().remove();
+          //html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
+          //html += '<i class="material-icons green">trending_down</i>';
+          //html += '<p class="name-cmd">OFF</p>';
+          //html += '</a>';
+          //$("#scraper_setPoweron").html(html);
         } else {
-          $("#scraper_setPoweron").childen().remove();
-
-          html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":0}>';
-          html += '<i class="material-icons red">pause</i>';
-          html += '<p class="name-cmd">ON</p>';
-          html += '</a>';
-          $("#scraper_setPoweron").html(html);
+         // $("#scraper_setPoweron").childen().remove();
+         $("#scraper_setPoweron").prop('disabled', false);
+         $("#scraper_setPoweroff").prop('disabled', true);
 
         }
       }
@@ -6308,15 +6358,31 @@
 
     }
   }
+  function notSelectedElems(tmpObj){
+    var ret=[];
+    if (! (tmpObj.node_multi_selected instanceof Array)){
+      return tmpObj['elems'];
+    }
+    
+     tmpObj['elems'].forEach(function (g){
+      if(!tmpObj.node_multi_selected.includes(g)){
+        ret.push(g);
+      }
+
+    });
+    return ret;
+  }
   function updateCameraTable(tmpObj) {
     var cu = tmpObj.elems;
 
-    if (tmpObj.skip_fetch > 0) {
-      tmpObj.skip_fetch--;
-    } else {
-      if(tmpObj.node_multi_selected instanceof Array){
+     if(tmpObj.node_multi_selected instanceof Array){
+        tmpObj.data=[];
+        var cnt=0;
         tmpObj.node_multi_selected.forEach(function(elem){
+          tmpObj.skip_fetch++;
           jchaos.getChannel(elem, -1, function (d) {
+            if(tmpObj.skip_fetch>0)
+              tmpObj.skip_fetch--;
             var selected = d[0];
             //    var selected = tmpObj.data[tmpObj.index];
             if (selected != null && selected.hasOwnProperty("output")) {
@@ -6345,16 +6411,27 @@
                 $("#cameraImage-"+encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
               }
             }
+            var cindex = tmpObj.node_name_to_index[elem];
+
+            tmpObj.data[cindex]=d[0];
+            if(++cnt==tmpObj.node_multi_selected.length){
+              updateGenericTableDataset(tmpObj);
+            }
+            
+
           }, function (d) {
-            tmpObj.skip_fetch = 3;
+            if(tmpObj.skip_fetch>0)
+              tmpObj.skip_fetch--;
+
+            tmpObj.updateErrors++;
            // $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
           });
 
         });
       }
       
-    }
-    jchaos.getChannel(cu, 255, function (selected) {
+    
+    jchaos.getChannel(notSelectedElems(tmpObj), 255, function (selected) {
       tmpObj.data = selected;
 
       updateGenericCU(tmpObj);
@@ -6371,7 +6448,7 @@
         if (elem.hasOwnProperty("output") && elem.hasOwnProperty("input") && elem.output.hasOwnProperty("current") && elem.input.hasOwnProperty("current")) {
 
           $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
-          $("#" + cuname + "_input_current").html(elem.input.current);
+          $("#" + cuname + "_input_current").html(elem.input.current.toFixed(3));
           switch (elem.output.polarity) {
             case 1:
               $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
@@ -8709,7 +8786,9 @@
       }
     } else if (name != null && name != "") {
       items['load'] = { name: "Load", icon: "load" };
-
+      items['init'] = { name: "Init", icon: "init" };
+      items['unload'] = { name: "Unload", icon: "unload" };
+      items['deinit'] = { name: "Deinit", icon: "deinit" };
     }
     items['history-cu'] = { name: "Retrive History for...", icon: "histo" };
 
@@ -8735,6 +8814,9 @@
     return items;
   }
   function updateGenericControl(tmpObj, cu) {
+    if(cu == null){
+      return;
+    }
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("ndk_uid")) {   //if el health
       var name = cu.health.ndk_uid;
       var status = cu.health.nh_status;
@@ -9119,10 +9201,12 @@
         filter: "",
         refresh_rate: options.Interval,
         skip_fetch: 0,
+        skip_fetch_inc: 1,
         check_interval: 10000,
         last_check: 0,
         lastUpdate:0,
         updateRefresh:0,
+        updateErrors:0,
         node_list_interval: null,
         node_selected: null,
         health_time_stamp_old: {},
