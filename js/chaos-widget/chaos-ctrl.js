@@ -3097,6 +3097,10 @@
             $("#zipprogress").progressbar("option", {value:parseInt(meta.percent.toFixed(2))});
             console.log("percent:"+parseInt(meta.percent.toFixed(2)));
 
+        },function(msg){
+          $("#zipprogress").parent().remove();
+
+          instantMessage("fetchHistoryToZip ", "failed:"+msg, 3000, false);
         });
 
         $("#query-close").on("click", function () {
