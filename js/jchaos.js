@@ -517,7 +517,7 @@
 			return jchaos.mdsBase("node", opt, handleFunc, nok);
 		}
 
-		jchaos.loadScript = function (_name, seqid, handleFunc) {
+		jchaos.loadScript = function (_name, seqid, handleFunc,errFunc) {
 			var opt = {};
 			var value = {
 				"seq": seqid,
@@ -526,7 +526,7 @@
 			opt['name'] = "";
 			opt['what'] = "load";
 			opt['value'] = value;
-			return jchaos.mdsBase("script", opt, handleFunc);
+			return jchaos.mdsBase("script", opt, handleFunc,errFunc);
 		}
 		jchaos.manageInstanceScript = function (script_name, script_seq, instance_name, create, handleFunc) {
 			var opt = {};
@@ -965,7 +965,7 @@
 
 		}
 
-		jchaos.fetchHistoryToZip = function (zipname, cams, start, stop, tagsv, updateCall) {
+		jchaos.fetchHistoryToZip = function (zipname, cams, start, stop, tagsv, updateCall,errCall) {
 			var vcams;
 			if (cams instanceof Array) {
 				vcams = cams;
@@ -1005,6 +1005,13 @@
 						}
 					} else {
 						console.log("Nothing found");
+						updateCall(
+							{
+								percent: 0
+							});
+							if(typeof errCall == "function"){
+								errCall("Nothing found from "+start +" to:"+stop);
+							}
 					}
 				}, tagsv);
 			});

@@ -3097,6 +3097,10 @@
             $("#zipprogress").progressbar("option", {value:parseInt(meta.percent.toFixed(2))});
             console.log("percent:"+parseInt(meta.percent.toFixed(2)));
 
+        },function(msg){
+          $("#zipprogress").parent().remove();
+
+          instantMessage("fetchHistoryToZip ", "failed:"+msg, 3000, false);
         });
 
         $("#query-close").on("click", function () {
@@ -3963,7 +3967,7 @@
 
       confirm("Delete Algorithm", "Your are deleting Algorithm: " + node_selected, "Ok", function () {
         jchaos.rmScript(node_name_to_desc[node_selected], function (data) {
-          instantMessage("Remove Script", "removed " + node_selected, 1000);
+          instantMessage("Remove Script", "removed:" + node_selected, 2000);
 
         });
 
@@ -4552,8 +4556,8 @@
     var server = null;
     var serverlist = tmpObj['agents'];
     for (var key in serverlist) {
-      if (serverlist[key].idletime > maxIdle) {
-        maxIdle = serverlist[key].idletime;
+      if (serverlist[key].idle > maxIdle) {
+        maxIdle = serverlist[key].idle;
         server = key;
       }
     };
@@ -5006,7 +5010,7 @@
     $("#script-delete").on('click', function () {
       console.log("delete " + tmpObj.node_selected);
       jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function (data) {
-        instantMessage("Remove Script", "removed " + tmpObj.node_selected, 2000, true);
+        instantMessage("Remove Script", "removed:" + tmpObj.node_selected, 2000, true);
         updateScriptModal(tmpObj);
 
       });
@@ -5021,11 +5025,16 @@
           format: "tabs"
         }
         $("#mdl-script").modal("hide");
+        if(!data.hasOwnProperty('eudk_script_content')){
+          instantMessage("Load Script", tmpObj.node_selected+ " has no content" , 4000, false);
+          return;
+        }
         tmpObj.node_selected = null;
         data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
         jsonEditWindow(tmpObj.node_selected, templ, data, algoSave, tmpObj);
 
-      });
+      },function(data){        instantMessage("Load Script", "failed:" +  JSON.stringify(data), 4000, false);
+    });
 
     });
     $("#script-run").off('click');
@@ -5178,10 +5187,10 @@
         */
       jchaos.rmtListProcess(server + ":8071", function (r) {
         if (r.hasOwnProperty("info")) {
-          agent_obj[server]['idle'] = parseFloat(r.info.idle);
-          agent_obj[server]['user'] = parseFloat(r.info.user);
-          agent_obj[server]['sys'] = parseFloat(r.info.sys);
-          agent_obj[server]['io'] = parseFloat(r.info.io);
+          agent_obj[server]['idle'] = r.info.hasOwnProperty("idletime")?parseFloat(r.info.idletime):parseFloat(r.info.idle);
+          agent_obj[server]['user'] = r.info.hasOwnProperty("usertime")?parseFloat(r.info.usertime):parseFloat(r.info.user);
+          agent_obj[server]['sys'] = r.info.hasOwnProperty("systime")?parseFloat(r.info.systime):parseFloat(r.info.sys);
+          agent_obj[server]['io'] = r.info.hasOwnProperty("iowait")?parseFloat(r.info.iowait):parseFloat(r.info.io);
           agent_obj[server]['pmem'] = parseFloat(r.info.pmem);
 
           agent_obj[server]['ts'] = r.info.ts;
