@@ -965,7 +965,7 @@
 
 		}
 
-		jchaos.fetchHistoryToZip = function (zipname, cams, start, stop, tagsv, updateCall) {
+		jchaos.fetchHistoryToZip = function (zipname, cams, start, stop, tagsv, updateCall,errCall) {
 			var vcams;
 			if (cams instanceof Array) {
 				vcams = cams;
@@ -1005,6 +1005,13 @@
 						}
 					} else {
 						console.log("Nothing found");
+						updateCall(
+							{
+								percent: 0
+							});
+							if(typeof errCall == "function"){
+								errCall("Nothing found from "+start +" to:"+stop);
+							}
 					}
 				}, tagsv);
 			});
