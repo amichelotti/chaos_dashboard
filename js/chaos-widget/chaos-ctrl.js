@@ -5832,10 +5832,17 @@
           }
           $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
 
-          if ((status == 'Start') && el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
-            $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
-            $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
+          if(status == 'Start'){
+            if (updateGenericTableDataset.count & 1) {
+              if(el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state){
+                $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
+                $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
+              } else if(el.system.hasOwnProperty("dsndk_storage_type")&& (el.system.dsndk_storage_type&0x1 )){
+                $("#" + name_id + "_health_status").html('<i class="material-icons verde">save</i>');
+              }
+            } 
           }
+         
 
 
           if (busy == 'true') {
