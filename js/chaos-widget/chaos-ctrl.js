@@ -2787,7 +2787,7 @@
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
       var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
-      jchaos.setProperty(node_multi_selected[0], [{ "dsndk_storage_type": storage_type }],
+      jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
         function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
         function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
@@ -2798,7 +2798,7 @@
       var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
 
-      jchaos.setProperty(node_multi_selected[0], [{ "dsndk_storage_type": storage_type }],
+      jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
         function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); }
         , function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
@@ -2807,7 +2807,7 @@
       var node_multi_selected = tmpObj.node_multi_selected;
 
       jchaos.node(node_multi_selected, "killcmd", "cu", null, null, function () {
-        instantMessage("Clear Current Command", node_multi_selected[0] + ":Clearing last command OK", 1000, true);
+        instantMessage("Clear Current Command", node_multi_selected + ":Clearing last command OK", 1000, true);
       }, function () {
         instantMessage("ERROR Clear Current Command", node_multi_selected[0] + ":Clearing last command ", 3000, false);
       });
