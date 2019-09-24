@@ -2788,7 +2788,7 @@
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
       var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
-      jchaos.setProperty(node_multi_selected[0], [{ "dsndk_storage_type": storage_type }],
+      jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
         function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
         function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
@@ -2799,7 +2799,7 @@
       var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
 
-      jchaos.setProperty(node_multi_selected[0], [{ "dsndk_storage_type": storage_type }],
+      jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
         function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); }
         , function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
@@ -2808,7 +2808,7 @@
       var node_multi_selected = tmpObj.node_multi_selected;
 
       jchaos.node(node_multi_selected, "killcmd", "cu", null, null, function () {
-        instantMessage("Clear Current Command", node_multi_selected[0] + ":Clearing last command OK", 1000, true);
+        instantMessage("Clear Current Command", node_multi_selected + ":Clearing last command OK", 1000, true);
       }, function () {
         instantMessage("ERROR Clear Current Command", node_multi_selected[0] + ":Clearing last command ", 3000, false);
       });
@@ -5833,10 +5833,17 @@
           }
           $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
 
-          if ((status == 'Start') && el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
-            $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
-            $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
+          if(status == 'Start'){
+            if (updateGenericTableDataset.count & 1) {
+              if(el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state){
+                $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
+                $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
+              } else if(el.system.hasOwnProperty("dsndk_storage_type")&& (el.system.dsndk_storage_type&0x1 )){
+                $("#" + name_id + "_health_status").html('<i class="material-icons verde">save</i>');
+              }
+            } 
           }
+         
 
 
           if (busy == 'true') {
