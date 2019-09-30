@@ -4648,11 +4648,11 @@
       var ptype = tmpObj.data[p].ptype;
       var pname = tmpObj.data[p].pname;
       
-      var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toUTCString();
-      var end_timestamp = (tmpObj.data[p].end_time>0)? (new Date(Number(tmpObj.data[p].end_time))).toUTCString():"--";
+      var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toLocaleString();
+      var end_timestamp = (tmpObj.data[p].end_time>0)? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString():"--";
       var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time)/1000;
       var pid = tmpObj.data[p].pid;
-      var timestamp = (new Date(Number(tmpObj.data[p].ts))).toUTCString();
+      var timestamp = (new Date(Number(tmpObj.data[p].ts))).toLocaleString();
       var uptime = tmpObj.data[p].uptime;
       var systime = parseFloat(tmpObj.data[p].Psys).toFixed(3);
       var cputime = parseFloat(tmpObj.data[p].Puser).toFixed(3);
@@ -5729,7 +5729,7 @@
           el.tmUtm = toHHMMSS(el.health.nh_upt);
           status = el.health.nh_status;
           $("#" + name_id + "_health_uptime").html(el.tmUtm);
-          $("#" + name_id + "_health_timestamp").html(new Date(el.tmStamp).toUTCString());
+          $("#" + name_id + "_health_timestamp").html(new Date(el.tmStamp).toLocaleString());
           $("#" + name_id + "_health_usertime").html(el.usrTime);
           $("#" + name_id + "_health_systemtime").html(el.systTime);
           $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
@@ -9265,6 +9265,20 @@
           showJson(null,"VERSION","version",ver);
         }, function(){
           alert("Cannot retrive version");
+        });
+      });
+
+      $("#help-clients").on("click",function(){
+        jchaos.basicPost("clients", "", function(ver){
+          //alert("version:"+JSON.stringify(ver));
+          ver.forEach(function(ele,i){
+            var tt=ele.lastConnection/1000;
+            ver[i]['updated']=(new Date(Number(tt))).toLocaleString() ;
+          });
+        
+          showJson(null,"CLIENTS","Clients",ver);
+        }, function(){
+          alert("Cannot retrive Client List");
         });
       });
       $("#config-settings").on("click",function(){
