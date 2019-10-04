@@ -7088,7 +7088,7 @@
       counter="";
     function cb(start, end) {
       'M/DD hh:mm A'
-      $('#reportrange'+counter).html(start.format('MMMM D, YYYY hh:mm') + ' - ' + end.format('MMMM D, YYYY hh:mm'));
+      $('#reportrange'+counter).html(start.format('MMMM D, YYYY HH:mm') + ' - ' + end.format('MMMM D, YYYY HH:mm'));
     }
 
     $('#reportrange'+counter).daterangepicker({
@@ -7114,16 +7114,16 @@
     $('#reportrange'+counter).on('apply.daterangepicker', function(ev, picker) {
       //do something, like clearing an input
      // $('#daterange').val('');
-     var start=new Date(picker.startDate.format('MMMM D, YYYY hh:mm'));
-     var end=new Date(picker.endDate.format('MMMM D, YYYY hh:mm'));
-     console.log(picker.startDate.format('MMMM D, YYYY hh:mm'));
-     console.log(picker.endDate.format('MMMM D, YYYY hh:mm'));
+     var start=new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
+     var end=new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
+     console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
+     console.log(picker.endDate.format('MMMM D, YYYY HH:mm'));
     
       var qtag = $("#query-tag").val();
       var page = $("#query-page").val();
       $('#query-start').val(start.getTime());
       $('#query-stop').val(end.getTime());
-      if(counter!=""){
+      if(counter!==""){
         runQueryToGraph(graphname,start.getTime(),end.getTime(),qtag,page);
       }
 

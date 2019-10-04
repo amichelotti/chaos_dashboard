@@ -87,7 +87,7 @@
 			echo '<script src="'.$main_dir.'/js/jsoneditor.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/FileSaver.js"></script>';			
 			echo '<script src="'.$main_dir.'/js/jszip.min.js"></script>';			
-			echo '<script src="'.$main_dir.'/js/datejszip.min.js"></script>';			
+			//echo '<script src="'.$main_dir.'/js/datejszip.min.js"></script>';			
 
 			echo '<script type="text/javascript" src="/js/daterangepicker/moment.min.js"></script>';
 			echo '<script type="text/javascript" src="/js/daterangepicker/daterangepicker.js"></script>';
