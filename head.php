@@ -87,6 +87,11 @@
 			echo '<script src="'.$main_dir.'/js/jsoneditor.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/FileSaver.js"></script>';			
 			echo '<script src="'.$main_dir.'/js/jszip.min.js"></script>';			
+			echo '<script src="'.$main_dir.'/js/datejszip.min.js"></script>';			
+
+			echo '<script type="text/javascript" src="/js/daterangepicker/moment.min.js"></script>';
+			echo '<script type="text/javascript" src="/js/daterangepicker/daterangepicker.js"></script>';
+			echo '<link href="' .$main_dir. '/js/daterangepicker/daterangepicker.css" rel="stylesheet">';
 
 			echo '<script src="'.$main_dir.'/js/json-viewer/jquery.json-viewer.js"></script>';			
 			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-ctrl.js"></script>';
