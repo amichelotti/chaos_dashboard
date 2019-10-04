@@ -3058,6 +3058,7 @@
 
     } else if (cmd == "history-cu") {
       $("#mdl-query").modal("show");
+
       var names = findTagsOf(tmpObj, currsel);
       element_sel("#select-tag", names, 0);
       $("#select-tag").off('click');
@@ -7380,7 +7381,6 @@
                 return;
               }
               $("#mdl-query").modal("show");
-              initializeTimePicker(graphname,null);
              /* $('input[name="datetimes"]').daterangepicker({
                 timePicker: true,
                 timePicker24Hour:true,
@@ -9510,6 +9510,7 @@
 
       $("#menu-dashboard").html(generateMenuBox());
       $("#query-page").val(dashboard_settings.defaultPage);
+      initializeTimePicker();
 
       //jsonSetup($(this));
       $(".savetofile").on("click", function (e) {
