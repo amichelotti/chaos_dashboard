@@ -59,6 +59,9 @@ require_once('header.php');
 
 <script>
 function getUrlVars() {
+//	var search = location.search.substring(1);
+//	return JSON.parse('{"' + search.replace(/&/g, '","').replace(/=/g,'":') + '}', function(key, value) { return key===""?value:decodeURIComponent(value) })
+
     var vars = {};
     var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
         vars[key] = value;
@@ -67,24 +70,55 @@ function getUrlVars() {
 }
 
 	var params=getUrlVars();
-	if(!params.hasOwnProperty("name")){
-		alert ("graph \"name\" parameter must be given as GET parameter");
-
-	} 
-	var gname=params['name'];
-	var av_graphs = jchaos.variable("highcharts", "get", null, null);
-    var opt = av_graphs[gname];
-    if (!(opt instanceof Object)) {
-      alert("\"" + gname + "\" not a valid graph ");
-      
-    }
+	var jsonparm={};
+	var ngraph=0;
 	for(var i in params){
-		console.log("parameter "+i+ " ="+params[i]);
+		
+		console.log(i +" ->" +decodeURIComponent(params[i]));
+		try{
+			var obj=JSON.parse(decodeURIComponent(params[i]));
+			jsonparm[i]=obj;
+			ngraph++;
+		} catch(m){
+			alert("Error parsing JSON:"+params[i]+ " err:"+m);
+		}
 	}
+	
 	var hostWidth = $(window).width();
 	var hostHeight = $(window).height();
-	
-	$(this).createGraphDialog("graph",gname,{title:gname,width:hostWidth/2,height:hostHeight});
+	var av_graphs = jchaos.variable("highcharts", "get", null, null);
+	$(this).initSettings();
+
+	console.log("current window "+hostWidth+"x"+hostHeight);
+	console.log("graph params"+JSON.stringify(jsonparm));
+
+	for(var elem in jsonparm){
+    	var opt = av_graphs[elem];
+    	if (!(opt instanceof Object)) {
+      		alert("\"" + elem + "\" not a valid graph ");
+      
+    	}
+		var gwidth=hostWidth/ngraph;
+		var gheight=hostHeight/ngraph;
+		var dopt={};
+		if(jsonparm[elem].hasOwnProperty("width")){
+			gwidth=jsonparm[elem].width;
+			delete jsonparm[elem]['width'];
+		}
+		if(jsonparm[elem].hasOwnProperty("height")){
+			gheight=jsonparm[elem].height;
+			delete jsonparm[elem]['height'];
+		}
+		dopt={title:elem,width:gwidth,height:gheight};
+		console.log("graph "+gwidth+"x"+gheight);
+		for(var jj in jsonparm[elem]){
+			dopt[jj]=jsonparm[elem][jj];
+
+		}
+
+		$(this).createGraphDialog("graph",elem,dopt);
+	}
+
 </script>
 	
 

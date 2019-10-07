@@ -7205,14 +7205,17 @@
     }
     var html="";
       //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
-      html += '<div id="graph-' + id + '" style="height: 100%; width: 100%">';
-      html += '</div>';
+      html += '<div class="row-fluid" style="height: 100%; width: 100%">';
+      //html += '<div id="createGraphDialog-' + id + '" style="height: 100%; width: 100%">';
+      html += '<div id="createGraphDialog-' + id + '" class="span10" style="height: 100%; width: 100%">';
+      html +='</div>';
       
-      html +='<div id="reportrange-'+id+'" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+      html +='<div id="reportrange-'+id+'" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
       html +='<i class="fa fa-calendar"></i>&nbsp';
       html +='<span></span> <i class="fa fa-caret-down"></i>';
       html +='</div>';
       html += '</div>';
+
     $("#"+id).children().remove();
     $("#"+id).append(html);
     dlg_opt={
@@ -7239,7 +7242,7 @@
 
       },id);
 
-      var chart = new Highcharts.chart("graph-" + id, opt.highchart_opt);
+      var chart = new Highcharts.chart("createGraphDialog-" + id, opt.highchart_opt);
       var start_time = (new Date()).getTime();
       console.log("New Graph:" + gname + " has been created");
 
@@ -7555,6 +7558,8 @@
     for(var i in options){
       dlg_opt[i]=options[i];
     }
+    console.log("dialog options:" + JSON.stringify(dlg_opt));
+
     $("#"+id).dialog(dlg_opt);
   }
   function runGraph(gname) {
@@ -9412,6 +9417,27 @@
   $.fn.createGraphDialog=function(id,gname,options){
     return createGraphDialog(id,gname,options);
   }
+  
+  function initSettings(){
+    var sett=localStorage['chaos_dashboard_settings'];
+    if(!sett || sett=="null"){
+      $.getJSON( "dashboard-settings-def.json", function( json ) {
+        console.log( "Default Settings: " + JSON.stringify(json));
+        localStorage['chaos_dashboard_settings']=JSON.stringify(json);
+        dashboard_settings=json;
+       });
+      } else {
+        dashboard_settings=JSON.parse(sett);
+        $.getJSON( "dashboard-settings-def.json", function( json ) {
+          dashboard_settings=addNewKeys(dashboard_settings,json);
+         localStorage['chaos_dashboard_settings']=JSON.stringify(dashboard_settings);
+         });
+      }
+    
+  }
+  $.fn.initSettings=function(){
+    initSettings();
+  }
   $.fn.chaosDashboard = function (opt) {
     main_dom = this;
     options = opt || {};
@@ -9465,21 +9491,7 @@
         menuActionsFn: function () { } /*actions on the table */
 
       };
-      var sett=localStorage['chaos_dashboard_settings'];
-      if(!sett || sett=="null"){
-        $.getJSON( "dashboard-settings-def.json", function( json ) {
-          console.log( "Default Settings: " + JSON.stringify(json));
-          localStorage['chaos_dashboard_settings']=JSON.stringify(json);
-          dashboard_settings=json;
-         });
-        } else {
-          dashboard_settings=JSON.parse(sett);
-          $.getJSON( "dashboard-settings-def.json", function( json ) {
-            dashboard_settings=addNewKeys(dashboard_settings,json);
-           localStorage['chaos_dashboard_settings']=JSON.stringify(dashboard_settings);
-           });
-        }
-      
+      initSettings();
 
       $("#help-about").on("click",function(){
         jchaos.basicPost("MDS", "cmd=buildInfo", function(ver){
