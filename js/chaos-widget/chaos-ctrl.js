@@ -7245,7 +7245,7 @@
 
       var chart = new Highcharts.chart("createGraphDialog-" + id, opt.highchart_opt);
       var start_time = (new Date()).getTime();
-      console.log("New Graph:" + gname + " has been created");
+      console.log("New Graph:" + gname + " has been created :"+JSON.stringify(opt));
 
       active_plots[gname] = {
         graphname: gname,
@@ -7607,6 +7607,7 @@
           title: opt.name + "-" + count,
           width: opt.width,
           hright: opt.height,
+          height:opt.height,
           resizable: true,
           dialogClass: 'no-close'
       };
@@ -9273,7 +9274,7 @@
 
       $(this).addClass("row_snap_selected");
       graph_selected = $(this).attr("id");
-      var html='Graph Selected: <a href=/chaos_graph.php?'+graph_selected+'={\"width\":'+high_graphs[graph_selected].width+',\"height\":'+high_graphs[graph_selected].height+'} target="_blank">'+ graph_selected +'</a>';
+      var html='Graph Selected:<a href=/chaos_graph.php?'+graph_selected+'={\"width\":'+high_graphs[graph_selected].width+',\"height\":'+high_graphs[graph_selected].height+'} target="_blank"><strong>'+ graph_selected +'</strong></a>';
       //$(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
       $(list_graphs).html(html);
       //$("#graph-link").html();
