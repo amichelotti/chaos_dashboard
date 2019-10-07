@@ -3058,47 +3058,12 @@
 
     } else if (cmd == "history-cu") {
       $("#mdl-query").modal("show");
-
-      var names = findTagsOf(tmpObj, currsel);
-      element_sel("#select-tag", names, 0);
-      $("#select-tag").off('click');
-      $("#select-tag").on("click", function () {
-        var tagname = $("#select-tag option:selected").val();
-        $("#query-tag").val(tagname);
-        var tags = jchaos.variable("tags", "get", null, null);
-        if (tags.hasOwnProperty(tagname)) {
-          var tag = tags[tagname];
-          var desc = tag['tag_desc'];
-          // $("#query-start").val(tagname);
-          $("#query-tag").attr('title', desc);
-        }
-
-      });
-      $("#query-close").off('click');
-      $("#query-close").on("click", function () {
-        $("#mdl-query").modal("hide");
-
-      });
-      $("#query-run").off('click');
-      $("#query-run").on("click", function () {
-        var vcameras = [];
-        var qstart = $("#query-start").val();
-        var qstop = $("#query-stop").val();
-        var qtag = $("#query-tag").val();
-        var page = $("#query-page").val();
-        $("#mdl-query").modal("hide");
-        jchaos.options.history_page_len = Number(page);
-        /* node_multi_selected.forEach(function(elem){
-           var enc=encodeName(elem);
-           if(node_name_to_desc[enc].hasOwnProperty('instance_description') && node_name_to_desc[enc].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[enc].instance_description.control_unit_implementation.indexOf("Camera"))){
-             vcameras.push(elem);
-           }
- 
-         });*/
+      createQueryDialog(function(query){
+        //query call back
         progressBar("Retrive and Zip", "zipprogress", "zipping");
         jchaos.setOptions({ "timeout": 60000 });
 
-        jchaos.fetchHistoryToZip(qtag, tmpObj.node_multi_selected, qstart, qstop, qtag, function (meta) {
+        jchaos.fetchHistoryToZip(query.tag, tmpObj.node_multi_selected, query.start, query.stop, query.tag, function (meta) {
             $("#zipprogress").progressbar("option", {value:parseInt(meta.percent.toFixed(2))});
             console.log("percent:"+parseInt(meta.percent.toFixed(2)));
 
@@ -3109,7 +3074,25 @@
         });
 
         
+      },function(){
+        // open CB 
+        var names = findTagsOf(tmpObj, currsel);
+        element_sel("#select-tag", names, 0);
+        $("#select-tag").on("click", function () {
+          var tagname = $("#select-tag option:selected").val();
+          $("#query-tag").val(tagname);
+          var tags = jchaos.variable("tags", "get", null, null);
+          if (tags.hasOwnProperty(tagname)) {
+            var tag = tags[tagname];
+            var desc = tag['tag_desc'];
+            // $("#query-start").val(tagname);
+            $("#query-tag").attr('title', desc);
+          }
+  
+        });
+
       });
+      
     } else {
       jchaos.sendCUCmd(tmpObj.node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
@@ -6645,7 +6628,7 @@
     html += '<div class="box-content">';
     html += '<h3 class="box-header">Query options</h3>';
 
-    html +='<div id="reportrange" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
+    html +='<div id="reportrange-" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
     html +='<i class="fa fa-calendar"></i>&nbsp';
     html +='<span></span> <i class="fa fa-caret-down"></i>';
     html +='</div>';
@@ -7083,17 +7066,17 @@
 
   }
 
-  function initializeTimePicker(graphname,counter){
+  function initializeTimePicker(queryfn,id){
     var start = moment().subtract(1, 'days');
     var end = moment();
-    if(counter==null)
-      counter="";
+    if(id==null)
+      id="";
     function cb(start, end) {
       'M/DD hh:mm A'
-      $('#reportrange'+counter).html(start.format('MMMM D, YYYY HH:mm') + ' - ' + end.format('MMMM D, YYYY HH:mm'));
+      $('#reportrange-'+id).html(start.format('MMMM D, YYYY HH:mm') + ' - ' + end.format('MMMM D, YYYY HH:mm'));
     }
 
-    $('#reportrange'+counter).daterangepicker({
+    $('#reportrange-'+id).daterangepicker({
         startDate: start,
         endDate: end,
         timePicker: true,
@@ -7115,25 +7098,464 @@
     }, cb);
 
     cb(start, end);
-    $('#reportrange'+counter).off('apply.daterangepicker');
-    $('#reportrange'+counter).on('apply.daterangepicker', function(ev, picker) {
-      //do something, like clearing an input
-     // $('#daterange').val('');
-     var start=new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
-     var end=new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
-     console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
-     console.log(picker.endDate.format('MMMM D, YYYY HH:mm'));
+    if(typeof queryfn === "function"){
+    $('#reportrange-'+id).off('apply.daterangepicker');
+    $('#reportrange-'+id).on('apply.daterangepicker', function(ev, picker) {
+      queryfn(ev,picker);
     
-      var qtag = $("#query-tag").val();
-      var page = $("#query-page").val();
-      $('#query-start').val(start.getTime());
-      $('#query-stop').val(end.getTime());
-      if(counter!==""){
-        runQueryToGraph(graphname,start.getTime(),end.getTime(),qtag,page);
-      }
-
     });
+    };
 
+  }
+
+  function createQueryDialog(querycb,opencb){
+    if(typeof query_params === "undefined"){
+      query_params={
+      page:dashboard_settings.defaultPage,
+      start:0,
+      stop:"NOW",
+      tag:""
+      };
+    }
+   
+    /*var html = '<div class="modal fade draggable" id="dlg-query">';
+
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3>Query History</h3>';
+    html += '</div>';
+
+    html += '<div class="modal-body">';
+    */
+    var html ="";
+    html += '<div class="row-fluid">';
+
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<h3 class="box-header">Query options</h3>';
+
+    html +='<div id="reportrange-query" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+    html +='<i class="fa fa-calendar"></i>&nbsp';
+    html +='<span></span> <i class="fa fa-caret-down"></i>';
+    html +='</div>';
+    
+    html += '<label class="label span3">Start </label>';
+    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value='+query_params.start+'>';
+    html += '<label class="label span3">Stop </label>';
+    html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value='+query_params.stop+'>';
+    
+    html += '<label class="label span3">Available Tag</label>';
+    html += '<select class="span9" id="select-tag" title="Existing tags"></select>';
+    html += '<label class="label span3">Tag Name </label>';
+    html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value='+query_params.tag+'>';
+
+    html += '<label class="label span3">Page </label>';
+    html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value='+query_params.page+'>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    
+    var opt={
+      modal: false, title: "Query Options", zIndex: 10000, autoOpen: true,
+      width: 'auto', resizable: true
+    }
+    createCustomDialog(opt,html,"Run",function(){
+     
+      query_params['page']=$("#query-page").val();
+      query_params['start']=$("#query-start").val();
+      query_params['stop']=$("#query-stop").val();
+      query_params['tag']=$("#query-tag").val();
+      querycb(query_params)
+
+    },"Cancel",null,function(){
+      //open handle
+
+      initializeTimePicker(function(ev,picker){
+          //do something, like clearing an input
+     // $('#daterange').val('');
+        var start=new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
+        var end=new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
+        query_params['start']=start;
+        query_params['stop']=end;
+
+        console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
+        console.log(picker.endDate.format('MMMM D, YYYY HH:mm')); 
+        $('#query-start').val(start.getTime());
+        $('#query-stop').val(end.getTime());
+      },"query");
+      if(typeof opencb === "function"){
+        opencb();
+      }
+    });
+  }
+  function createGraphDialog(id,gname,options){
+    var av_graphs = jchaos.variable("highcharts", "get", null, null);
+    var opt = av_graphs[gname];
+    if (!(opt instanceof Object)) {
+      alert("\"" + gname + "\" not a valid graph ");
+      return;
+    }
+    if(options.hasOwnProperty("width")){
+      opt.width=options.width;
+
+    }
+    if(options.hasOwnProperty("height")){
+      opt.height=options.height;
+      
+    }
+    var html="";
+      //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
+      html += '<div id="graph-' + id + '" style="height: 100%; width: 100%">';
+      html += '</div>';
+      
+      html +='<div id="reportrange-'+id+'" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+      html +='<i class="fa fa-calendar"></i>&nbsp';
+      html +='<span></span> <i class="fa fa-caret-down"></i>';
+      html +='</div>';
+      html += '</div>';
+    $("#"+id).children().remove();
+    $("#"+id).append(html);
+    dlg_opt={
+      open: function () {
+      initializeTimePicker(function(ev,picker){
+          //do something, like clearing an input
+     // $('#daterange').val('');
+        var start=new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
+        var end=new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
+        if(typeof query_params === "undefined"){
+          query_params={
+          page:dashboard_settings.defaultPage,
+          start:0,
+          stop:"NOW",
+          tag:""
+          };
+        }
+        query_params['start']=start;
+        query_params['stop']=end;
+
+        console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
+        console.log(picker.endDate.format('MMMM D, YYYY HH:mm')); 
+        runQueryToGraph(gname,query_params.start,query_params.stop,query_params.tag,query_params.page);
+
+      },id);
+
+      var chart = new Highcharts.chart("graph-" + id, opt.highchart_opt);
+      var start_time = (new Date()).getTime();
+      console.log("New Graph:" + gname + " has been created");
+
+      active_plots[gname] = {
+        graphname: gname,
+        graph: chart,
+        highchart_opt: opt.highchart_opt,
+        dialog: id,
+        start_time: start_time
+      };
+
+    },
+    buttons: [
+      {
+        text: "Live",
+        click: function (e) {
+
+          console.log("Start  Live Graph:" + gname);
+          console.log("graph options:" + JSON.stringify(opt));
+
+          if (active_plots[gname].hasOwnProperty('interval')) {
+            clearInterval(active_plots[gname].interval);
+            delete active_plots[gname].interval;
+            $(e.target).html("Continue Live");
+            return;
+          }
+          $(e.target).html("Pause Live");
+          var chart = active_plots[gname]['graph'];
+          var seriesLength = chart.series.length;
+
+          for (var i = seriesLength - 1; i > -1; i--) {
+            chart.series[i].setData([]);
+          }
+          var timebuffer = Number(opt.highchart_opt['timebuffer']) * 1000;
+          active_plots[gname].start_time = (new Date()).getTime();
+          var refresh = setInterval(function () {
+            var data = jchaos.getChannel(opt.culist, -1, null);
+            var set = [];
+            var x, y;
+            var cnt = 0;
+            var tr = opt.trace;
+            var enable_shift = false;
+            var targetDate=new Date();
+
+            for (k in tr) {
+              if ((tr[k].x == null)) {
+                x = null;
+              } else if ((tr[k].x.origin == "timestamp")) {
+                
+                x = targetDate.getTime()-(targetDate.getTimezoneOffset()*60*1000); // current time
+                if (opt.highchart_opt.shift && ((targetDate.getTime() - active_plots[gname].start_time) > timebuffer)) {
+                  enable_shift = true;
+                }
+              } else if (tr[k].x.const != null) {
+                x = tr[k].x.const;
+              } else if (tr[k].x.var != null) {
+                x = getValueFromCUList(data, tr[k].x);
+
+              } else {
+                x = null;
+              }
+              if ((tr[k].y == null)) {
+                y = null;
+              } else if ((tr[k].y.origin == "timestamp")) {
+                y =  targetDate.getTime()-(targetDate.getTimezoneOffset()*60*1000);
+              } else if (tr[k].y.const != null) {
+                y = tr[k].y.const;
+              } else if (tr[k].y.var != null) {
+                y = getValueFromCUList(data, tr[k].y);
+
+              } else {
+                y = null;
+              }
+              if (opt.highchart_opt['tracetype'] == "multi") {
+                if ((y instanceof Array)) {
+                  var inc;
+                  if (x == null) {
+                    x = 0;
+                    inc = 1;
+                  } else {
+                    inc = 1.0 / y.length;
+                  }
+
+                  var set = [];
+
+                  for (var cntt = 0; cntt < y.length; cntt++) {
+                    set.push([x + inc * cntt, y[cntt]]);
+                  }
+
+
+                  chart.series[cnt].setData(set, true, true, true);
+
+                } else if (x instanceof Array) {
+                  var inc;
+                  var set = [];
+                  if (y == null) {
+                    y = 0;
+                    inc = 1;
+                  } else {
+                    inc = 1.0 / x.length;
+                  }
+                  if (tr[k].y.origin == "histogram") {
+                    set.push(x[cntt]);
+
+                    chart.series[cnt + 1].setData(set, true, true, true);
+
+                  } else {
+                    for (var cntt = 0; cntt < y.length; cntt++) {
+                      set.push([x[cntt], y + (inc * cntt)]);
+                    }
+                    chart.series[cnt].setData(set, true, true, true);
+
+                  }
+
+                } else {
+                  if (tr[k].y.origin == "histogram") {
+                    if ($.isNumeric(x)) {
+                      chart.series[cnt + 1].addPoint(x, false, false);
+                    }
+
+                  } else {
+                    chart.series[cnt].addPoint([x, y], false, enable_shift);
+                  }
+                }
+                if (tr[k].y.origin == "histogram") {
+                  cnt += 2;
+
+                } else {
+                  cnt++;
+                }
+              } else {
+                // single
+                if ((y instanceof Array)) {
+                  var inc = 1.0 / y.length;
+                  var xx = x;
+
+                  y.forEach(function (item, index) {
+                    if (x == null) {
+                      set.push([index, item]);
+
+                    } else {
+                      set.push([xx, item]);
+                      xx = (xx + inc);
+                    }
+
+                  });
+
+                } else if (x instanceof Array) {
+                  var inc = 1.0 / y;
+                  var yy = y;
+
+                  x.forEach(function (item, index) {
+                    if (y == null) {
+                      set.push([item, index]);
+
+                    } else {
+                      set.push([item, yy]);
+
+                      yy = (yy + inc);
+                    }
+                  });
+
+                } else {
+                  if (tr[k].y.origin == "histogram") {
+                    if ($.isNumeric(x)) {
+                      set.push(x);
+                    }
+                  } else {
+                    set.push({ x, y });
+                  }
+                }
+              }
+              if (opt.highchart_opt['tracetype'] == "single") {
+                chart.series[0].setData(set, true, true, true);
+              }
+            }
+
+            chart.redraw();
+          }, opt.update);
+          active_plots[gname]['interval'] = refresh;
+
+        }
+      },
+      {
+        text: "Query..",
+        click: function () {
+
+          console.log("Start  History Graph:" + gname);
+         
+          if (opt.highchart_opt.yAxis.type == "datetime") {
+            alert("Y axis cannot be as datetime!")
+            return;
+          }
+         /* $('input[name="datetimes"]').daterangepicker({
+            timePicker: true,
+            timePicker24Hour:true,
+            linkedCalendars:false,
+            startDate: moment().startOf('hour'),
+            endDate: moment().startOf('hour').add(32, 'hour'),
+            locale: {
+              format: 'DD/M hh:mm A'
+            }
+          });*/
+          createQueryDialog(function(query){
+            runQueryToGraph(gname,query.start,query.stop,query.tag,query.page);
+          });
+          
+          $("#query-yesterday").off('click');
+          $("#query-yesterday").on("click", function () {
+            $("#mdl-query").modal("hide");
+
+            var yesterday=new Date();
+            yesterday.setDate(yesterday.getDate()-1);
+            yesterday.setHours(0);
+            yesterday.setMinutes(0);
+            yesterday.setSeconds(0);
+            yesterday.setMilliseconds(1);
+
+            var qstart = yesterday.getTime();
+            yesterday.setHours(23);
+            yesterday.setMinutes(59);
+            yesterday.setSeconds(59);
+            yesterday.setMilliseconds(999);
+
+            var qstop = yesterday.getTime();
+            var qtag = $("#query-tag").val();
+            var page = $("#query-page").val();
+            
+            runQueryToGraph(gname,qstart,qstop,qtag,page);
+          });
+
+          $("#query-today").off('click');
+          $("#query-today").on("click", function () {
+            $("#mdl-query").modal("hide");
+
+            var today=new Date();
+            today.setHours(0);
+            today.setMinutes(0);
+            today.setSeconds(0);
+            today.setMilliseconds(1);
+
+            var qstart = today.getTime();
+            today.setHours(23);
+            today.setMinutes(59);
+            today.setSeconds(59);
+            today.setMilliseconds(999);
+
+            var qstop = today.getTime();
+            var qtag = $("#query-tag").val();
+            var page = $("#query-page").val();
+            runQueryToGraph(gname,qstart,qstop,qtag,page);
+          });
+        }
+      }, {
+        text: "Save",
+        click: function () {
+          var graph_opt = high_graphs[gname];
+          var chart = active_plots[gname]['graph'];
+          var obj = {};
+          if (chart.series instanceof Array) {
+            chart.series.forEach(function (item) {
+              obj[item.name] = [];
+              item.data.forEach(function (dat) {
+                var x = dat.x;
+                var y = dat.y;
+                obj[item.name].push([x, y]);
+              });
+            });
+            var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
+            saveAs(blob, gname + ".json");
+          }
+        }
+      }, {
+        text: "Load",
+        click: function () {
+          var graph_opt = high_graphs[gname];
+          var chart = active_plots[gname]['graph'];
+          getFile("TRACE LOAD", "select the trace to load", function (data) {
+            //console.log("loaded:"+JSON.stringify(data));
+
+            for (var key in data) {
+              var newseries = {};
+
+              var xy = data[key];
+              newseries['name'] = key;
+              newseries['data'] = xy;
+              chart.addSeries(newseries);
+              /*xy.forEach(function(c){
+                chart.series[index].addPoint(c, false, false);
+              });*/
+
+            }
+
+          });
+        }
+
+      }, {
+        text: "Close",
+        click: function () {
+          console.log("Removing graph:" + gname);
+
+          clearInterval(active_plots[gname].interval);
+          delete active_plots[gname]['graph'];
+          delete active_plots[gname];
+
+          $(this).dialog('close');
+        }
+      }]
+
+
+
+  }
+    for(var i in options){
+      dlg_opt[i]=options[i];
+    }
+    $("#"+id).dialog(dlg_opt);
   }
   function runGraph(gname) {
     if (gname == null || gname == "") {
@@ -7172,357 +7594,19 @@
       if (active_plots.hasOwnProperty(k)) count++;
     }
     if (count < 10) {
-     
+      var options={
+          modal: false,
+          draggable: true,
+          closeOnEscape: false,
+          title: opt.name + "-" + count,
+          width: opt.width,
+          hright: opt.height,
+          resizable: true,
+          dialogClass: 'no-close'
+      };
+      createGraphDialog("dialog-"+count,gname,options);
       
-     $("#dialog-" + count).dialog({
-        modal: false,
-        draggable: true,
-        closeOnEscape: false,
-        title: opt.name + "-" + count,
-        width: opt.width,
-        hright: opt.height,
-        resizable: true,
-        dialogClass: 'no-close',
-        open: function () {
-          $("#graph-" + count).css('width', opt.width);
-          $("#graph-" + count).css('height', opt.height);
-          initializeTimePicker(gname,count);
-
-          var chart = new Highcharts.chart("graph-" + count, opt.highchart_opt);
-          $(this).attr("graphname", gname);
-          var start_time = (new Date()).getTime();
-          console.log("New Graph(" + count + "):" + gname + " has been created");
-
-          active_plots[gname] = {
-            graphname: gname,
-            graph: chart,
-            highchart_opt: opt.highchart_opt,
-            dialog: count,
-            start_time: start_time
-          };
-
-        },
-        buttons: [
-          {
-            text: "Live",
-            click: function (e) {
-
-              var graphname = $(this).attr("graphname");
-              console.log("Start  Live Graph:" + graphname);
-              console.log("graph options:" + JSON.stringify(opt));
-
-              if (active_plots[graphname].hasOwnProperty('interval')) {
-                clearInterval(active_plots[graphname].interval);
-                delete active_plots[graphname].interval;
-                $(e.target).html("Continue Live");
-                return;
-              }
-              $(e.target).html("Pause Live");
-              var chart = active_plots[graphname]['graph'];
-              var seriesLength = chart.series.length;
-
-              for (var i = seriesLength - 1; i > -1; i--) {
-                chart.series[i].setData([]);
-              }
-              var timebuffer = Number(opt.highchart_opt['timebuffer']) * 1000;
-              high_graphs[graphname].start_time = (new Date()).getTime();
-              var refresh = setInterval(function () {
-                var data = jchaos.getChannel(opt.culist, -1, null);
-                var set = [];
-                var x, y;
-                var cnt = 0;
-                var tr = opt.trace;
-                var enable_shift = false;
-                var targetDate=new Date();
-
-                for (k in tr) {
-                  if ((tr[k].x == null)) {
-                    x = null;
-                  } else if ((tr[k].x.origin == "timestamp")) {
-                    
-                    x = targetDate.getTime()-(targetDate.getTimezoneOffset()*60*1000); // current time
-                    if (opt.highchart_opt.shift && ((targetDate.getTime() - high_graphs[graphname].start_time) > timebuffer)) {
-                      enable_shift = true;
-                    }
-                  } else if (tr[k].x.const != null) {
-                    x = tr[k].x.const;
-                  } else if (tr[k].x.var != null) {
-                    x = getValueFromCUList(data, tr[k].x);
-
-                  } else {
-                    x = null;
-                  }
-                  if ((tr[k].y == null)) {
-                    y = null;
-                  } else if ((tr[k].y.origin == "timestamp")) {
-                    y =  targetDate.getTime()-(targetDate.getTimezoneOffset()*60*1000);
-                  } else if (tr[k].y.const != null) {
-                    y = tr[k].y.const;
-                  } else if (tr[k].y.var != null) {
-                    y = getValueFromCUList(data, tr[k].y);
-
-                  } else {
-                    y = null;
-                  }
-                  if (opt.highchart_opt['tracetype'] == "multi") {
-                    if ((y instanceof Array)) {
-                      var inc;
-                      if (x == null) {
-                        x = 0;
-                        inc = 1;
-                      } else {
-                        inc = 1.0 / y.length;
-                      }
-
-                      var set = [];
-
-                      for (var cntt = 0; cntt < y.length; cntt++) {
-                        set.push([x + inc * cntt, y[cntt]]);
-                      }
-
-
-                      chart.series[cnt].setData(set, true, true, true);
-
-                    } else if (x instanceof Array) {
-                      var inc;
-                      var set = [];
-                      if (y == null) {
-                        y = 0;
-                        inc = 1;
-                      } else {
-                        inc = 1.0 / x.length;
-                      }
-                      if (tr[k].y.origin == "histogram") {
-                        set.push(x[cntt]);
-
-                        chart.series[cnt + 1].setData(set, true, true, true);
-
-                      } else {
-                        for (var cntt = 0; cntt < y.length; cntt++) {
-                          set.push([x[cntt], y + (inc * cntt)]);
-                        }
-                        chart.series[cnt].setData(set, true, true, true);
-
-                      }
-
-                    } else {
-                      if (tr[k].y.origin == "histogram") {
-                        if ($.isNumeric(x)) {
-                          chart.series[cnt + 1].addPoint(x, false, false);
-                        }
-
-                      } else {
-                        chart.series[cnt].addPoint([x, y], false, enable_shift);
-                      }
-                    }
-                    if (tr[k].y.origin == "histogram") {
-                      cnt += 2;
-
-                    } else {
-                      cnt++;
-                    }
-                  } else {
-                    // single
-                    if ((y instanceof Array)) {
-                      var inc = 1.0 / y.length;
-                      var xx = x;
-
-                      y.forEach(function (item, index) {
-                        if (x == null) {
-                          set.push([index, item]);
-
-                        } else {
-                          set.push([xx, item]);
-                          xx = (xx + inc);
-                        }
-
-                      });
-
-                    } else if (x instanceof Array) {
-                      var inc = 1.0 / y;
-                      var yy = y;
-
-                      x.forEach(function (item, index) {
-                        if (y == null) {
-                          set.push([item, index]);
-
-                        } else {
-                          set.push([item, yy]);
-
-                          yy = (yy + inc);
-                        }
-                      });
-
-                    } else {
-                      if (tr[k].y.origin == "histogram") {
-                        if ($.isNumeric(x)) {
-                          set.push(x);
-                        }
-                      } else {
-                        set.push({ x, y });
-                      }
-                    }
-                  }
-                  if (opt.highchart_opt['tracetype'] == "single") {
-                    chart.series[0].setData(set, true, true, true);
-                  }
-                }
-
-                chart.redraw();
-              }, opt.update);
-              active_plots[graphname]['interval'] = refresh;
-
-            }
-          },
-          {
-            text: "Query..",
-            click: function () {
-
-              var graphname = $(this).attr("graphname");
-              console.log("Start  History Graph:" + graphname);
-             
-              if (opt.highchart_opt.yAxis.type == "datetime") {
-                alert("Y axis cannot be as datetime!")
-                return;
-              }
-              $("#mdl-query").modal("show");
-             /* $('input[name="datetimes"]').daterangepicker({
-                timePicker: true,
-                timePicker24Hour:true,
-                linkedCalendars:false,
-                startDate: moment().startOf('hour'),
-                endDate: moment().startOf('hour').add(32, 'hour'),
-                locale: {
-                  format: 'DD/M hh:mm A'
-                }
-              });*/
-              $("#query-close").off('click');
-                $("#query-close").on("click", function () {
-                $("#mdl-query").modal("hide");
-
-              });
-              $("#query-run").attr("graphname", graphname);
-              $("#query-run").off('click');
-              $("#query-run").on("click", function () {
-
-                var graphname = $(this).attr("graphname");
-
-                var qstart = $("#query-start").val();
-                var qstop = $("#query-stop").val();
-                var qtag = $("#query-tag").val();
-                var page = $("#query-page").val();
-                runQueryToGraph(graphname,qstart,qstop,qtag,page);
-
-              });
-              $("#query-yesterday").off('click');
-              $("#query-yesterday").on("click", function () {
-                $("#mdl-query").modal("hide");
-
-                //var graphname = $(this).attr("graphname");
-                var yesterday=new Date();
-                yesterday.setDate(yesterday.getDate()-1);
-                yesterday.setHours(0);
-                yesterday.setMinutes(0);
-                yesterday.setSeconds(0);
-                yesterday.setMilliseconds(1);
-
-                var qstart = yesterday.getTime();
-                yesterday.setHours(23);
-                yesterday.setMinutes(59);
-                yesterday.setSeconds(59);
-                yesterday.setMilliseconds(999);
-
-                var qstop = yesterday.getTime();
-                var qtag = $("#query-tag").val();
-                var page = $("#query-page").val();
-                
-                runQueryToGraph(gname,qstart,qstop,qtag,page);
-              });
-
-              $("#query-today").off('click');
-              $("#query-today").on("click", function () {
-                $("#mdl-query").modal("hide");
-
-                var today=new Date();
-                today.setHours(0);
-                today.setMinutes(0);
-                today.setSeconds(0);
-                today.setMilliseconds(1);
-
-                var qstart = today.getTime();
-                today.setHours(23);
-                today.setMinutes(59);
-                today.setSeconds(59);
-                today.setMilliseconds(999);
-
-                var qstop = today.getTime();
-                var qtag = $("#query-tag").val();
-                var page = $("#query-page").val();
-                runQueryToGraph(gname,qstart,qstop,qtag,page);
-              });
-            }
-          }, {
-            text: "Save",
-            click: function () {
-              var graphname = $(this).attr("graphname");
-              var graph_opt = high_graphs[graphname];
-              var chart = active_plots[graphname]['graph'];
-              var obj = {};
-              if (chart.series instanceof Array) {
-                chart.series.forEach(function (item) {
-                  obj[item.name] = [];
-                  item.data.forEach(function (dat) {
-                    var x = dat.x;
-                    var y = dat.y;
-                    obj[item.name].push([x, y]);
-                  });
-                });
-                var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
-                saveAs(blob, graphname + ".json");
-              }
-            }
-          }, {
-            text: "Load",
-            click: function () {
-              var graphname = $(this).attr("graphname");
-              var graph_opt = high_graphs[graphname];
-              var chart = active_plots[graphname]['graph'];
-              getFile("TRACE LOAD", "select the trace to load", function (data) {
-                //console.log("loaded:"+JSON.stringify(data));
-
-                for (var key in data) {
-                  var newseries = {};
-
-                  var xy = data[key];
-                  newseries['name'] = key;
-                  newseries['data'] = xy;
-                  chart.addSeries(newseries);
-                  /*xy.forEach(function(c){
-                    chart.series[index].addPoint(c, false, false);
-                  });*/
-
-                }
-
-              });
-            }
-
-          }, {
-            text: "Close",
-            click: function () {
-              var graphname = $(this).attr("graphname");
-              console.log("Removing graph:" + graphname);
-
-              clearInterval(active_plots[graphname].interval);
-              delete active_plots[graphname]['graph'];
-              delete active_plots[graphname];
-
-              $(this).dialog('close');
-            }
-          }]
-
-
-
-      });
+     
     } else {
       alert("Too many graph dialog opened");
     }
@@ -8243,15 +8327,18 @@
     var html = "";
     for (var cnt = 0; cnt < 10; cnt++) {
       html += '<div id="dialog-' + cnt + '" class="cugraph hide" grafname="' + cnt + '" style="z-index: 1000;">';
+      html += "</div>";
       
+      /*
       html += '<div id="graph-' + cnt + '" style="height: 380px; width: 580px;z-index: 1000;">';
       html += '</div>';
       
-      html +='<div id="reportrange'+cnt+'" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
+      html +='<div id="reportrange-'+cnt+'" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
       html +='<i class="fa fa-calendar"></i>&nbsp';
       html +='<span></span> <i class="fa fa-caret-down"></i>';
       html +='</div>';
       html += '</div>';
+      */
     }
 
     html += generateDataSet();
@@ -8261,7 +8348,7 @@
     html += generateLog();
     html += generateGraphTable();
     html += generateGraphList();
-    html += generateQueryTable();
+  //  html += generateQueryTable();
 
 
     return html;
@@ -8651,41 +8738,62 @@
       });
 
   }
-  function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
-    var ret = true;
-    $('<div></div>').appendTo('body')
-      .html('<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>')
-      .dialog({
-        modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
-        width: 'auto', resizable: true,
-        buttons: [
-          {
-            id: "confirm-yes",
-            text: butyes,
-            click: function (e) {
-              if (typeof yeshandle === "function") {
-                yeshandle($("#getEntryWindow_name").val());
-              }
-              $(this).dialog("close");
-
-
+  function createCustomDialog(opt,html, butyes, yeshandle, cancelText,nohandle,open_handle,close_handle){
+    var dlg_opt={
+      buttons: [
+        {
+          id: "confirm-yes",
+          text: butyes,
+          click: function (e) {
+            if (typeof yeshandle === "function") {
+              yeshandle();
             }
-          },
-          {
-            id: "confirm-no",
-            text: cancelText,
-            click: function (e) {
-              if (typeof nohandle === "function") {
-                nohandle();
-              }
-              $(this).dialog("close");
+            $(this).dialog("close");
+          }
+        },
+        {
+          id: "confirm-no",
+          text: cancelText,
+          click: function (e) {
+            if (typeof nohandle === "function") {
+              nohandle();
             }
-          }],
-        close: function (event, ui) {
+            $(this).dialog("close");
+          }
+        }],
+      open: function (event, ui) {
+        if(typeof open_handle === "function"){
+          open_handle(event,ui);
+        } 
+      },
+      close: function (event, ui) {
+        if(typeof close_handle === "function"){
+          close_handle(event,ui);
+        } else {
           $(this).remove();
         }
-      });
+      }
+    }
+    for(var i in opt){
+      dlg_opt[i]=opt[i];
+    }
+    $('<div></div>').appendTo('body')
+      .html(html)
+      .dialog(dlg_opt);
 
+  }
+  function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
+    var html='<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>';
+    var opt={
+      modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
+      width: 'auto', resizable: true
+    }
+    createCustomDialog(opt,html, butyes, function(){
+      if (typeof yeshandle === "function") {
+        yeshandle($("#getEntryWindow_name").val());
+      }
+    }, cancelText);
+    
   }
 
   function getNEntryWindow(hmsg, def_msg_v, def_text_v, butyes, yeshandle, cancelText) {
@@ -8700,79 +8808,30 @@
     } else {
       return;
     }
-    $('<div></div>').appendTo('body')
-      .html(htmp)
-      .dialog({
-        modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
-        width: 'auto', resizable: true,
-        buttons: [
-          {
-            id: "confirm-yes",
-            text: butyes,
-            click: function (e) {
-              if (typeof yeshandle === "function") {
-                var answ = [];
-                var cnt = 0;
-                def_text_v.forEach(function (item) {
-                  answ.push($("#getEntryWindow_name_" + cnt).val());
-                  cnt++;
-                });
-                yeshandle(answ);
-              }
-              $(this).dialog("close");
-            }
-          },
-          {
-            id: "confirm-no",
-            text: cancelText,
-            click: function (e) {
-              if (typeof nohandle === "function") {
-                nohandle();
-              }
-              $(this).dialog("close");
-            }
-          }],
-        close: function (event, ui) {
-          $(this).remove();
-        }
-      });
-
+    var opt={
+      modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
+      width: 'auto', resizable: true
+    }
+    createCustomDialog(opt,htmp, butyes, function(){
+      if (typeof yeshandle === "function") {
+        var answ = [];
+        var cnt = 0;
+        def_text_v.forEach(function (item) {
+          answ.push($("#getEntryWindow_name_" + cnt).val());
+          cnt++;
+        });
+        yeshandle(answ);
+      }
+    }, cancelText);
+ 
   }
   function confirm(hmsg, msg, butyes, yeshandle, butno, nohandle) {
     var ret = true;
-    $('<div></div>').appendTo('body')
-      .html('<div><h6>' + msg + '</h6></div>')
-      .dialog({
-        modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
-        width: 'auto', resizable: false,
-        buttons: [
-          {
-            id: "confirm-yes",
-            text: butyes,
-            click: function (e) {
-              if (typeof yeshandle === "function") {
-                yeshandle();
-              }
-              $(this).dialog("close");
-
-
-            }
-          },
-          {
-            id: "confirm-no",
-            text: butno,
-            click: function (e) {
-              if (typeof nohandle === "function") {
-                nohandle();
-              }
-              $(this).dialog("close");
-            }
-          }],
-        close: function (event, ui) {
-          $(this).remove();
-        }
-      });
-
+    var html='<div><h6>' + msg + '</h6></div>';
+    createCustomDialog({
+      modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
+      width: 'auto', resizable: false},butyes,yeshandle,butno,nohandle);
+    
   }
   function type2Alias(t) {
     switch (t) {
@@ -9347,6 +9406,12 @@
   $.fn.getValueFromCUList = function (culist, path) {
     return getValueFromCUList(culist, path);
   }
+  $.fn.runQueryToGraph=function(gname,start,stop,qtag,page){
+    return runQueryToGraph(gname,start,stop,qtag,page);
+  }
+  $.fn.createGraphDialog=function(id,gname,options){
+    return createGraphDialog(id,gname,options);
+  }
   $.fn.chaosDashboard = function (opt) {
     main_dom = this;
     options = opt || {};
@@ -9515,7 +9580,7 @@
 
       $("#menu-dashboard").html(generateMenuBox());
       $("#query-page").val(dashboard_settings.defaultPage);
-      initializeTimePicker();
+   //   initializeTimePicker();
 
       //jsonSetup($(this));
       $(".savetofile").on("click", function (e) {
