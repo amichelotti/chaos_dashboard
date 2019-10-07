@@ -6593,6 +6593,7 @@
     html += '</thead>';
     html += '</table>';
     html += '</div>';
+    html += '<div id="graph-link"></div>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -9272,7 +9273,10 @@
 
       $(this).addClass("row_snap_selected");
       graph_selected = $(this).attr("id");
-      $(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
+      var html='Graph Selected: <a href=/chaos_graph.php?'+graph_selected+'={\"width\":'+high_graphs[graph_selected].width+',\"height\":'+high_graphs[graph_selected].height+'} target="_blank">'+ graph_selected +'</a>';
+      //$(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
+      $(list_graphs).html(html);
+      //$("#graph-link").html();
       if (high_graphs[graph_selected].trace instanceof Array) {
         trace_list = high_graphs[graph_selected].trace;
       } else {
