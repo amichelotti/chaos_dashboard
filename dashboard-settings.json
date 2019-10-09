@@ -17,7 +17,7 @@
 	},
 	"defaultPage" : {
 		"type":"integer",
-		"default":30,
+		"default":1000,
 		"description":"Default History Page"
 	},
 	"checkLive" : {
