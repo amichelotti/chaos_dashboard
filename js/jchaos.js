@@ -557,7 +557,7 @@
 			opt['value'] = value;
 			return jchaos.mdsBase("script", opt, handleFunc);
 		}
-		jchaos.searchScriptInstance = function (script_name, search_string, handleFunc) {
+		jchaos.searchScriptInstance = function (script_name, search_string, handleFunc,errfunc) {
 			var opt = {};
 			var script_desc = {};
 			script_desc['script_name'] = script_name;
@@ -566,7 +566,7 @@
 			opt['name'] = "";
 			opt['what'] = "searchInstance";
 			opt['value'] = script_desc;
-			return jchaos.mdsBase("script", opt, handleFunc);
+			return jchaos.mdsBase("script", opt, handleFunc,errfunc);
 		}
 		jchaos.updateScriptInstance = function (script_instance, script_base_description, handleFunc) {
 			var opt = {};

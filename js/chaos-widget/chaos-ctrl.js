@@ -6,7 +6,7 @@
 (function ($) {
   var json_editor;
   var cu_templates = null;
-  var dashboard_settings=null;
+  var dashboard_settings = null;
   var interface;// interface we are looking for
   var cu_copied;
   var us_copied;
@@ -153,11 +153,11 @@
         progressbar = $("#" + id)
         var progressLabel = $(".progress-label");
         progressbar.progressbar({
-          value:false,
-      /*    change: function () {
-            var val = progressbar.progressbar("value");
-            progressLabel.text(val + "%");
-          },*/
+          value: false,
+          /*    change: function () {
+                var val = progressbar.progressbar("value");
+                progressLabel.text(val + "%");
+              },*/
           complete: function () {
             $(this).parent().dialog("close");
           }
@@ -445,11 +445,11 @@
             // var interval=$(this).attr("refresh_time");
             jchaos.rmtGetConsole(server, pid, 0, -1, function (r) {
               var str = decodeURIComponent(escape(atob(r.data.console)));
-              var name=pid+"_"+r.data.process.last_log_time;
+              var name = pid + "_" + r.data.process.last_log_time;
               var blob = new Blob([str], { type: "json;charset=utf-8" });
               saveAs(blob, name + ".log");
             }, function (bad) {
-              console.log("Some error getting console occur:" + bad);
+              console.log("Some error getting console occur:" + JSON.stringify(bad));
             });
           }
         },
@@ -500,11 +500,11 @@
             this.echo('');
           }
         }, {
-            greetings: 'Remote Console',
-            name: 'Remote Console',
-            height: 600
+          greetings: 'Remote Console',
+          name: 'Remote Console',
+          height: 600
 
-          });
+        });
         var last_log_time = 0;
         update = setInterval(function () {
           if (stop_update) {
@@ -516,14 +516,15 @@
 
             jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function (r) {
               if (r.data.process.last_log_time != last_log_time) {
-                var str = decodeURIComponent(escape(atob(r.data.console)));
+              //  var str = decodeURIComponent(escape(atob(r.data.console)));
+              var str = atob(r.data.console);
                 $('#console-' + pid).terminal().echo(str);
                 consoleParam.fromline = Number(r.data.process.output_line) - 1;
               }
               last_log_time = r.data.process.last_log_time;
 
             }, function (bad) {
-              console.log("Some error getting console occur:" + bad);
+              console.log("Some error getting console occur:" + JSON.stringify(bad));
             });
 
           }
@@ -983,7 +984,7 @@
     $("#name-device-alarm").html(dev_alarm.ndk_uid);
 
     $.each(dev_alarm, function (key, value) {
-      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type"&& key != "cudk_run_id") {
+      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
         switch (value) {
           case 1:
             $("#table_device_alarm").append('<tr><td class="warning_value">' + key + '</td><td class="warning_value">' + value + '</td></tr>');
@@ -1244,7 +1245,7 @@
   function updateNode(tmpObj) {
     var node_list = tmpObj['elems'];
     var cutype = tmpObj.type;
-    
+
     jchaos.node(node_list, "health", cutype, null, null, function (data) {
       tmpObj.data = data;
       updateGenericTableDataset(tmpObj);
@@ -1335,10 +1336,10 @@
       scriptTmp['eudk_script_language'] = language;
       scriptTmp['script_description'] = "Imported from " + script['name'];
       scriptTmp['default_argument'] = "";
-      if(script.hasOwnProperty("eudk_script_keepalive")){
+      if (script.hasOwnProperty("eudk_script_keepalive")) {
         scriptTmp['eudk_script_keepalive'] = script['eudk_script_keepalive'];
       } else {
-        scriptTmp['eudk_script_keepalive'] =false;
+        scriptTmp['eudk_script_keepalive'] = false;
       }
 
       var templ = {
@@ -1374,7 +1375,7 @@
     //    jchaos.variable("script", "set", proc, null);
     jchaos.search(json.script_name, "script", false, function (l) {
       var script_inst = l['found_script_list'];
-      if (!(script_inst instanceof Array) ||(script_inst.length == 0)) {
+      if (!(script_inst instanceof Array) || (script_inst.length == 0)) {
         jchaos.saveScript(json, function (data) {
           console.log("saving script:" + JSON.stringify(json));
           instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
@@ -1922,7 +1923,7 @@
   }
 
   function jsonEnableContext(node_selected) {
-    $.contextMenu( 'destroy', '.json-key' );
+    $.contextMenu('destroy', '.json-key');
 
     $.contextMenu({
       selector: '.json-key',
@@ -2072,13 +2073,13 @@
 
   function jsonSetup(dom, tmpObj) {
     var collapsed = options.collapsed;
-    var node_selected ="none";
-    if(tmpObj!=null && tmpObj.hasOwnProperty("node_selected")){
-      node_selected=tmpObj.node_selected;
+    var node_selected = "none";
+    if (tmpObj != null && tmpObj.hasOwnProperty("node_selected")) {
+      node_selected = tmpObj.node_selected;
       tmpObj['json_editing'] = false;
 
     }
-     
+
     $(dom).off('click');
     $(dom).off('keypress');
 
@@ -2199,7 +2200,7 @@
         if (info.yAxis.type != null && info.yAxis.type != "") {
           $("#ytype").val(info.yAxis.type);
         }
-        
+
         $("#ymax").val(info.yAxis.max);
         $("#ymin").val(info.yAxis.min);
         $("#graph-width").val(high_graphs[graph_selected].width);
@@ -2312,19 +2313,19 @@
     });
     $("#graph-list-save").on('click', function () {
       if ((graph_selected != null) && (high_graphs[graph_selected] != null)) {
-        var tmp={
-          graph_name:graph_selected,
-          graph_settings:high_graphs[graph_selected]
+        var tmp = {
+          graph_name: graph_selected,
+          graph_settings: high_graphs[graph_selected]
         };
         var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
-            saveAs(blob, graph_selected + ".json");
+        saveAs(blob, graph_selected + ".json");
       }
     });
     $("#graph-list-upload").on('click', function () {
       getFile("Graph Loading", "select a graph to  upload", function (g) {
-        if(g.hasOwnProperty("graph_name")&&g.hasOwnProperty("graph_settings")){
-          high_graphs[g.graph_name]=g.graph_settings;
-          jchaos.variable("highcharts", "set", high_graphs, function(){
+        if (g.hasOwnProperty("graph_name") && g.hasOwnProperty("graph_settings")) {
+          high_graphs[g.graph_name] = g.graph_settings;
+          jchaos.variable("highcharts", "set", high_graphs, function () {
             instantMessage("Graph", "Graph " + g.graph_name + " uploaded", 2000, true);
 
           });
@@ -2509,52 +2510,52 @@
 
 
   function updateCameraInterface(tmpObj) {
-    var template=tmpObj.type
+    var template = tmpObj.type
     var tablename = "camera_table-" + template;
 
-    
+
 
     updateInterfaceCU(tmpObj);
     $("#main_table-" + template + " tbody tr").off();
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, tmpObj, e);
-      if(tmpObj.node_multi_selected instanceof Array ){
+      if (tmpObj.node_multi_selected instanceof Array) {
         var cnt = 0;
 
-        var html = '<table class="table table-bordered" id="'+tablename + '">';
-        var camlist=tmpObj.node_multi_selected;
-        if(camlist instanceof Array){
+        var html = '<table class="table table-bordered" id="' + tablename + '">';
+        var camlist = tmpObj.node_multi_selected;
+        if (camlist instanceof Array) {
           var html = "";
 
-          camlist.forEach(function(key){
-            if(cnt<dashboard_settings.camera.maxCameraCol){
-            var encoden = encodeName(key);
-            if ((cnt % dashboard_settings.camera.cameraPerRow) == 0) {
-              if (cnt > 0) {
-                html += "</tr>"
+          camlist.forEach(function (key) {
+            if (cnt < dashboard_settings.camera.maxCameraCol) {
+              var encoden = encodeName(key);
+              if ((cnt % dashboard_settings.camera.cameraPerRow) == 0) {
+                if (cnt > 0) {
+                  html += "</tr>"
+                }
+                html += '<tr class="row_element" id=camera-row"' + cnt + '">';
               }
-              html += '<tr class="row_element" id=camera-row"' + cnt + '">';
-            }
-            html += '<td class="td_element" id="camera-' + encoden + '">'
-         //   html += '<div><b>'+key+'</b>';
-          html += '<div>';
-            html += '<img id="cameraImage-'+encoden+'" src="" />';
-            html += '<div class="top-left">'+key+'</div>';
+              html += '<td class="td_element" id="camera-' + encoden + '">'
+              //   html += '<div><b>'+key+'</b>';
+              html += '<div>';
+              html += '<img id="cameraImage-' + encoden + '" src="" />';
+              html += '<div class="top-left">' + key + '</div>';
 
-            html += '</div>';
-        
-            html +='</td>';
-      
-            cnt++;
-          }
+              html += '</div>';
+
+              html += '</td>';
+
+              cnt++;
+            }
           });
-        
+
           if (cnt > 0) {
             html += "</tr>";
 
-          }  
+          }
         }
-        html+="</table>";
+        html += "</table>";
         $("#cameraTable").html(html);
 
       }
@@ -2635,20 +2636,20 @@
       if (parvalue != null) {
         try {
           cmdparam = JSON.parse(parvalue);
-          if(cmdparam instanceof Object){
-          for (var key in cmdparam) {
-            if ($("#" + alias + "_" + key).length) {
-              var inputType = $("#" + alias + "_" + key).attr('type');
-              if (inputType == "number") {
-                cmdparam[key] = Number($("#" + alias + "_" + key).val());
-              } else {
-                cmdparam[key] = $("#" + alias + "_" + key).val();
+          if (cmdparam instanceof Object) {
+            for (var key in cmdparam) {
+              if ($("#" + alias + "_" + key).length) {
+                var inputType = $("#" + alias + "_" + key).attr('type');
+                if (inputType == "number") {
+                  cmdparam[key] = Number($("#" + alias + "_" + key).val());
+                } else {
+                  cmdparam[key] = $("#" + alias + "_" + key).val();
 
+                }
               }
             }
+            complete_command = true;
           }
-          complete_command = true;
-        }
         } catch (e) {
 
         }
@@ -2829,7 +2830,7 @@
       generateCmdModal(tmpObj, cmdselected, curr_cu_selected);
 
     });
-    $.contextMenu( 'destroy', '.cuMenu' );
+    $.contextMenu('destroy', '.cuMenu');
 
     $.contextMenu({
       selector: '.cuMenu',
@@ -3056,25 +3057,35 @@
         }
       });
 
+    } else if (cmd == "history-cu-root") {
+      createQueryDialog(function (query) {
+       // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
+        //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
+        //console.log("start:"+start_s + " end:"+end_s);
+       // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
+        var args = "(\"" + tmpObj.node_multi_selected[0] + "\","+ query.start + "," + query.stop + ","+query.chunk+","+query.page+")";
+
+        runScript("CU2Tree.C", args);
+        })
+
     } else if (cmd == "history-cu") {
-      $("#mdl-query").modal("show");
-      createQueryDialog(function(query){
+      createQueryDialog(function (query) {
         //query call back
         progressBar("Retrive and Zip", "zipprogress", "zipping");
         jchaos.setOptions({ "timeout": 60000 });
 
         jchaos.fetchHistoryToZip(query.tag, tmpObj.node_multi_selected, query.start, query.stop, query.tag, function (meta) {
-            $("#zipprogress").progressbar("option", {value:parseInt(meta.percent.toFixed(2))});
-            console.log("percent:"+parseInt(meta.percent.toFixed(2)));
+          $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
+          console.log("percent:" + parseInt(meta.percent.toFixed(2)));
 
-        },function(msg){
+        }, function (msg) {
           $("#zipprogress").parent().remove();
 
-          instantMessage("fetchHistoryToZip ", "failed:"+msg, 3000, false);
+          instantMessage("fetchHistoryToZip ", "failed:" + msg, 3000, false);
         });
 
-        
-      },function(){
+
+      }, function () {
         // open CB 
         var names = findTagsOf(tmpObj, currsel);
         element_sel("#select-tag", names, 0);
@@ -3088,11 +3099,11 @@
             // $("#query-start").val(tagname);
             $("#query-tag").attr('title', desc);
           }
-  
+
         });
 
       });
-      
+
     } else {
       jchaos.sendCUCmd(tmpObj.node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
@@ -3254,7 +3265,7 @@
 
     return html;
   }
-  function updateProcessServer(tmpObj) {
+  function updateProcessServer(tmpObj,cb) {
     jchaos.search("", "agent", true, function (ag) {
       var agent_obj = {};
       var agent_list = [];
@@ -3268,6 +3279,9 @@
         }
       });
       tmpObj['agent_list'] = agent_list;
+      if(typeof cb === "function"){
+        cb(tmpObj);
+      }
     });
   }
   function setupProcess(tempObj) {
@@ -3484,10 +3498,10 @@
       clearInterval(tmpObj.node_list_interval);
     }
     tmpObj.last_check = 0;
-    tmpObj.updateErrors=0;
-    tmpObj.skip_fetch=0;
+    tmpObj.updateErrors = 0;
+    tmpObj.skip_fetch = 0;
     tmpObj.node_list_interval = setInterval(function () {
-      if(tmpObj.skip_fetch>0){
+      if (tmpObj.skip_fetch > 0) {
         return;
       }
       var now = (new Date()).getTime();
@@ -3513,9 +3527,9 @@
 
         }
       }
-      tmpObj.updateRefresh=now-tmpObj.lastUpdate;
-      $("#refresh_rate_update").html('<b><font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font></b>');
-      tmpObj.lastUpdate=now;
+      tmpObj.updateRefresh = now - tmpObj.lastUpdate;
+      $("#refresh_rate_update").html('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Errors:' + tmpObj.updateErrors + '</p></font></b>');
+      tmpObj.lastUpdate = now;
     }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
   }
@@ -3524,14 +3538,14 @@
    */
   function changeView(tmpObj, cutype) {
 
-    tmpObj.refresh_rate=dashboard_settings.generalControlRefresh;
+    tmpObj.refresh_rate = dashboard_settings.generalControlRefresh;
 
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
       tmpObj.upd_chan = -1;
       tmpObj.type = "SCPowerSupply";
       tmpObj.generateTableFn = generatePStable;
       tmpObj.generateCmdFn = generatePSCmd;
-      
+
 
       tmpObj.updateFn = updatePS;
 
@@ -3567,7 +3581,7 @@
       tmpObj.generateTableFn = generateGenericTable;
       tmpObj.generateCmdFn = generateGenericControl;
       tmpObj.updateFn = updateGenericCU;
-      tmpObj.refresh_rate=dashboard_settings.generalRefresh;
+      tmpObj.refresh_rate = dashboard_settings.generalRefresh;
 
     }
   }
@@ -3758,28 +3772,28 @@
         var cuname;
         var def_obj;
 
-        if(config.hasOwnProperty("cu_desc") && config.cu_desc.hasOwnProperty("ndk_uid")){
-          cuname=config.cu_desc.ndk_uid;
-          def_obj=config.cu_desc;
-        } else if(config.hasOwnProperty("ndk_uid")){
-          cuname=config.ndk_uid;
-          def_obj=config;
+        if (config.hasOwnProperty("cu_desc") && config.cu_desc.hasOwnProperty("ndk_uid")) {
+          cuname = config.cu_desc.ndk_uid;
+          def_obj = config.cu_desc;
+        } else if (config.hasOwnProperty("ndk_uid")) {
+          cuname = config.ndk_uid;
+          def_obj = config;
 
         } else {
           alert("Invalid CU");
           return;
         }
-        confirm("Add CU " +cuname, "Add CU to " + node_selected + "?", "Add", function () {
-            var templ = {
-              $ref: "cu.json",
-              format: "tabs"
-            }
-            // editorFn = newCuSave;
-            def_obj.ndk_parent = node_selected;
-            //jsonEdit(templ, tmp);
-            jsonEditWindow("New CU", templ, def_obj, newCuSave, tmpObj);
+        confirm("Add CU " + cuname, "Add CU to " + node_selected + "?", "Add", function () {
+          var templ = {
+            $ref: "cu.json",
+            format: "tabs"
+          }
+          // editorFn = newCuSave;
+          def_obj.ndk_parent = node_selected;
+          //jsonEdit(templ, tmp);
+          jsonEditWindow("New CU", templ, def_obj, newCuSave, tmpObj);
 
-          
+
         }, "Cancel", function () {
         });
 
@@ -4114,7 +4128,7 @@
         containment: 'window'
       }
     );
-    $.contextMenu( 'destroy', '.nodeMenu' );
+    $.contextMenu('destroy', '.nodeMenu');
 
     $.contextMenu({
       selector: '.nodeMenu',
@@ -4312,7 +4326,7 @@
     }
 
 
-    $.contextMenu( 'destroy', '.algoMenu' );
+    $.contextMenu('destroy', '.algoMenu');
 
     $.contextMenu({
       selector: '.algoMenu',
@@ -4339,7 +4353,7 @@
 
 
     });
-    $.contextMenu( 'destroy', '.algoInstanceMenu' );
+    $.contextMenu('destroy', '.algoInstanceMenu');
 
     $.contextMenu({
       selector: '.algoInstanceMenu',
@@ -4433,7 +4447,7 @@
       scriptTmp['eudk_script_language'] = "bash";
       scriptTmp['script_description'] = "PUT YOUR DESCRIPTION";
       scriptTmp['default_argument'] = "";
-      scriptTmp['eudk_script_keepalive'] =false;
+      scriptTmp['eudk_script_keepalive'] = false;
       jsonEditWindow("NewScript", templ, scriptTmp, algoSave, tmpObj);
       return;
     } else if (cmd == "manage-script") {
@@ -4535,68 +4549,102 @@
       })
     };
   }
-  function findBestServer(tmpObj) {
+  function findBestServer(func) {
+    var kk={};
     var maxIdle = 0;
     var server = null;
-    var serverlist = tmpObj['agents'];
-    for (var key in serverlist) {
-      if (serverlist[key].idle > maxIdle) {
-        maxIdle = serverlist[key].idle;
-        server = key;
-      }
-    };
+    if (typeof func == "function") {
+      updateProcessServer(kk,function(kk){
+
+      updateProcessList(kk, function (tt) {
+        var serverlist = tt['agents'];
+        for (var key in serverlist) {
+          if (serverlist[key].idle > maxIdle) {
+            maxIdle = serverlist[key].idle;
+            server = key;
+          }
+        }
+        func(server);
+      });
+    });
+    } else if(typeof func == "object"){
+      updateProcessServer(func);
+
+      var serverlist = func['agents'];
+      for (var key in serverlist) {
+        if (serverlist[key].idle > maxIdle) {
+          maxIdle = serverlist[key].idle;
+          server = key;
+        }
+      };
+    }
     return server;
   }
   function runRemoteApp(tmpObj, app) {
     var best_server;
 
   }
-  function runRemoteScript(tmpObj, name, language) {
+  function runRemoteScript(tmpObj, name, language, additional_args) {
     var launch_arg = "";
     var chaos_prefix = "";
-    var server = findBestServer(tmpObj);
-    if (server == null) {
-      alert("NO Server Available");
-      return;
-    }
-    jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
-      if (r.err != 0) {
-        instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
+    findBestServer(function (server) {
+      if (server == null) {
+        alert("NO Server Available");
         return;
-      } else {
-        chaos_prefix = r.data.value;
-        if (language == "CPP") {
-          launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg";
-        } else if (language == "bash") {
-          launch_arg = "bash ";
-        } else if (language == "nodejs") {
-          launch_arg = "node ";
-
-        } else if (language == "python") {
-          launch_arg = "python ";
-
-        } else {
-          launch_arg = language;
-        }
-
-        getEntryWindow(name, "Additional args", '', "Run", function (parm) {
-
-          jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "", function (r) {
-            console.log("Script running onto:" + server + " :" + JSON.stringify(r));
-            var node_selected = tmpObj.node_selected;
-            instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
-          }, function (bad) {
-            console.log("Some error getting loading script:" + bad);
-            instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
-
-          });
-        }, "Cancel");
       }
-    }, function (bad) {
-      console.log("Some error getting environment:" + bad);
-      instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+      jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+        if (r.err != 0) {
+          instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
+          return;
+        } else {
+          chaos_prefix = r.data.value;
+          if (language == "CPP") {
+            launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg";
+          } else if (language == "bash") {
+            launch_arg = "bash ";
+          } else if (language == "nodejs") {
+            launch_arg = "node ";
 
+          } else if (language == "python") {
+            launch_arg = "python ";
+
+          } else {
+            launch_arg = language;
+          }
+          if (typeof additional_args === "undefined") {
+
+
+            getEntryWindow(name, "Additional args", '', "Run", function (parm) {
+              
+              jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "", function (r) {
+                console.log("Script running onto:" + server + " :" + JSON.stringify(r));
+                var node_selected = tmpObj.node_selected;
+                instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
+                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+              }, function (bad) {
+                console.log("Some error getting loading script:" + bad);
+                instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+
+              });
+            }, "Cancel");
+          } else {
+            jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + additional_args, language, "", function (r) {
+              console.log("Script running onto:" + server + " :" + JSON.stringify(r));
+              var node_selected = tmpObj.node_selected;
+              instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
+              getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+            }, function (bad) {
+              console.log("Some error getting loading script:" + bad);
+              instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+
+            });
+          }
+        }
+      }, function (bad) {
+        console.log("Some error getting environment:" + bad);
+        instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+
+      });
     });
   }
   function updateProcessMenu(tmpObj, node_name) {
@@ -4630,10 +4678,10 @@
     for (var p in tmpObj.data) {
       var ptype = tmpObj.data[p].ptype;
       var pname = tmpObj.data[p].pname;
-      
+
       var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toLocaleString();
-      var end_timestamp = (tmpObj.data[p].end_time>0)? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString():"--";
-      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time)/1000;
+      var end_timestamp = (tmpObj.data[p].end_time > 0) ? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString() : "--";
+      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time) / 1000;
       var pid = tmpObj.data[p].pid;
       var timestamp = (new Date(Number(tmpObj.data[p].ts))).toLocaleString();
       var uptime = tmpObj.data[p].uptime;
@@ -4652,11 +4700,11 @@
       $("#" + encoden + "_start_ts").html(started_timestamp);
       $("#" + encoden + "_end_ts").html(end_timestamp);
       $("#" + encoden + "_last_log_ts").html(last_log);
-      if(status=="RUNNING"){
-        $("#" + encoden + "_status").html('<font color="green">'+status+"</font>");
+      if (status == "RUNNING") {
+        $("#" + encoden + "_status").html('<font color="green">' + status + "</font>");
 
       } else {
-        $("#" + encoden + "_status").html('<font color="orange">'+status+"</font>");
+        $("#" + encoden + "_status").html('<font color="orange">' + status + "</font>");
 
       }
       $("#" + encoden + "_ts").html(timestamp);
@@ -4675,7 +4723,7 @@
         var infoServer = tmpObj.agents[server];
         var enc = encodeName(server);
         var chart = tmpObj['server_charts'][enc];
-        if ((chart!=null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
+        if ((chart != null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
           chart.series[0].addPoint([now, infoServer.idle], false, false);
           chart.series[1].addPoint([now, infoServer.user], false, false);
           chart.series[2].addPoint([now, infoServer.sys], false, false);
@@ -4697,18 +4745,19 @@
     tmpObj['node_name_to_desc'] = {};
 
     jchaos.search("", "script", false, function (l) {
-      if(l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)){
-      var list_algo = l['found_script_list'];
-      list_algo.forEach(function (p) {
-        var encoden = encodeName(p.script_name);
-        var date = new Date(p.seq);
-        tmpObj.node_name_to_desc[p.script_name] = p;
-        $("#table_script").append('<tr class="row_element" title="' + p.script_description + '" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
-          '<td>' + p.script_name + '</td>' +
-          '<td>' + p.eudk_script_language + '</td>' +
-          '<td>' + p.script_description + '</td>' +
-          '<td>' + date + '</td></tr>');
-      });}
+      if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
+        var list_algo = l['found_script_list'];
+        list_algo.forEach(function (p) {
+          var encoden = encodeName(p.script_name);
+          var date = new Date(p.seq);
+          tmpObj.node_name_to_desc[p.script_name] = p;
+          $("#table_script").append('<tr class="row_element" title="' + p.script_description + '" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
+            '<td>' + p.script_name + '</td>' +
+            '<td>' + p.eudk_script_language + '</td>' +
+            '<td>' + p.script_description + '</td>' +
+            '<td>' + date + '</td></tr>');
+        });
+      }
       $("#mdl-script").resizable().draggable();
       $("#mdl-script").width(hostWidth / 2);
 
@@ -4798,7 +4847,79 @@
     }
   }
 
+function runScript(name,parm){
+  jchaos.search(name, "script", false, function (l) {
+    if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
+      if(l.found_script_list.length>0){
+        var seq=l.found_script_list[0].seq;
+        console.log("found script:"+JSON.stringify(l.found_script_list[0]));
+        jchaos.loadScript(name, seq, function (jsonscript) {
+          findBestServer(function(server){
+            console.log("best server:"+server);
 
+            jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
+              if (r.err != 0) {
+                instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);
+              } else {
+                instantMessage("Script loaded onto:" + server, 2000, false);
+                if(r.data.hasOwnProperty('path')) {
+                  var path = r.data.path;
+                  var workingdir = r.data.workingdir;
+                  var launch_arg = "";
+                  var name = jsonscript['script_name'];
+                  var language = jsonscript['eudk_script_language'];
+                  var defargs = jsonscript['default_argument']
+                  var chaos_prefix = "";
+                  jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+                    if (r.err != 0) {
+                      instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
+                      return;
+                    } else {
+                      chaos_prefix = r.data.value;
+                      if (language == "CPP") {findBestServer
+                        launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm + "\"";
+                      } else if (language == "bash") {
+                        launch_arg = "bash " + path + parm;
+                      } else if (language == "nodejs") {
+                        launch_arg = "node " + path + parm;
+    
+                      } else if (language == "python") {
+                        launch_arg = "python " + path + parm;
+    
+                      } else {
+                        launch_arg = language + " " + path + parm;
+                      }
+                      jchaos.rmtCreateProcess(server + ":8071", name, launch_arg, language, workingdir, function (r) {
+                        console.log("Script running onto:" + server + " :" + JSON.stringify(r));
+                        instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 3000, true);
+                      }, function (bad) {
+                        console.log("Some error getting loading script:" + bad);
+                        instantMessage("Script " + name, "Failed to start " + bad, 4000, false);
+    
+                      });
+      
+                        
+                    }
+                  }, function (bad) {
+                    console.log("Some error getting environment:" + bad);
+                    instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+      
+                  });
+              }
+    
+            }
+            }, function (bad) {
+              console.log("Some error  loading script:" + bad);
+              instantMessage("Load Script", "Exception  loading:" + bad, 5000, false);
+    
+            });
+        });
+      });
+      }
+        
+      };
+    });
+}
   function updateProcessInterface(tmpObj) {
     //  updateProcessList(tmpObj);
     var tablename = "main_table-" + tmpObj.template;
@@ -4898,7 +5019,7 @@
 
       }
     }
-    var ordered=[];
+    var ordered = [];
     for (var p in tmpObj.data) {
       if (tmpObj.data.hasOwnProperty(p)) {
         ordered.push(p);
@@ -4906,8 +5027,8 @@
     }
     ordered.sort();
 
-    for (var cnt=0;cnt<ordered.length;cnt++) {
-      var obj=tmpObj.data[ordered[cnt]];
+    for (var cnt = 0; cnt < ordered.length; cnt++) {
+      var obj = tmpObj.data[ordered[cnt]];
       var ptype = obj.ptype;
       var pname = obj.pname;
 
@@ -4926,7 +5047,7 @@
       var status = obj.msg;
       var parent = obj.parent;
       var encoden = encodeName(obj.uid);
-     
+
       $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
         '<td class="td_element" id="' + encoden + '">' + obj.uid + '</td>' +
         '<td class="td_element">' + pname + '</td>' +
@@ -4958,7 +5079,7 @@
     } else {
       $("#table-scroll").css('height', '');
     }
-    $.contextMenu( 'destroy', '.processMenu' );
+    $.contextMenu('destroy', '.processMenu');
 
     $.contextMenu({
       selector: '.processMenu',
@@ -5009,16 +5130,17 @@
           format: "tabs"
         }
         $("#mdl-script").modal("hide");
-        if(!data.hasOwnProperty('eudk_script_content')){
-          instantMessage("Load Script", tmpObj.node_selected+ " has no content" , 4000, false);
+        if (!data.hasOwnProperty('eudk_script_content')) {
+          instantMessage("Load Script", tmpObj.node_selected + " has no content", 4000, false);
           return;
         }
         tmpObj.node_selected = null;
         data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
         jsonEditWindow(tmpObj.node_selected, templ, data, algoSave, tmpObj);
 
-      },function(data){        instantMessage("Load Script", "failed:" +  JSON.stringify(data), 4000, false);
-    });
+      }, function (data) {
+        instantMessage("Load Script", "failed:" + JSON.stringify(data), 4000, false);
+      });
 
     });
     $("#script-run").off('click');
@@ -5120,11 +5242,11 @@
     updateProcessList(tmpObj, function (t) {
       var new_ele;
       var old_ele;
-      if( t['elems'] instanceof Array){
-        new_ele=t['elems'].sort();
+      if (t['elems'] instanceof Array) {
+        new_ele = t['elems'].sort();
       }
-      if(t['old_elems'] instanceof Array){
-        old_ele=t['old_elems'].sort();
+      if (t['old_elems'] instanceof Array) {
+        old_ele = t['old_elems'].sort();
       }
       if (JSON.stringify(new_ele) !== JSON.stringify(old_ele)) {
         updateProcessInterface(t);
@@ -5171,10 +5293,10 @@
         */
       jchaos.rmtListProcess(server + ":8071", function (r) {
         if (r.hasOwnProperty("info")) {
-          agent_obj[server]['idle'] = r.info.hasOwnProperty("idletime")?parseFloat(r.info.idletime):parseFloat(r.info.idle);
-          agent_obj[server]['user'] = r.info.hasOwnProperty("usertime")?parseFloat(r.info.usertime):parseFloat(r.info.user);
-          agent_obj[server]['sys'] = r.info.hasOwnProperty("systime")?parseFloat(r.info.systime):parseFloat(r.info.sys);
-          agent_obj[server]['io'] = r.info.hasOwnProperty("iowait")?parseFloat(r.info.iowait):parseFloat(r.info.io);
+          agent_obj[server]['idle'] = r.info.hasOwnProperty("idletime") ? parseFloat(r.info.idletime) : parseFloat(r.info.idle);
+          agent_obj[server]['user'] = r.info.hasOwnProperty("usertime") ? parseFloat(r.info.usertime) : parseFloat(r.info.user);
+          agent_obj[server]['sys'] = r.info.hasOwnProperty("systime") ? parseFloat(r.info.systime) : parseFloat(r.info.sys);
+          agent_obj[server]['io'] = r.info.hasOwnProperty("iowait") ? parseFloat(r.info.iowait) : parseFloat(r.info.io);
           agent_obj[server]['pmem'] = parseFloat(r.info.pmem);
 
           agent_obj[server]['ts'] = r.info.ts;
@@ -5504,7 +5626,7 @@
       tmpObj.node_multi_selected = [];
       tmpObj.node_multi_selected.push(tmpObj.node_selected);
     } else {
-      if(!tmpObj.node_multi_selected.includes(tmpObj.node_selected)){
+      if (!tmpObj.node_multi_selected.includes(tmpObj.node_selected)) {
         tmpObj.node_multi_selected.push(tmpObj.node_selected);
       }
 
@@ -5514,7 +5636,7 @@
     if (e.shiftKey) {
       var nrows = $(e.currentTarget).index();
       if (tmpObj.last_index_selected != -1) {
-        tmpObj.node_multi_selected=[];
+        tmpObj.node_multi_selected = [];
         //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
         if (nrows > tmpObj.last_index_selected) {
           //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
@@ -5536,9 +5658,9 @@
   function generateCameraTable(tmpObj) {
     var cu = tmpObj.elems;
     var template = tmpObj.type;
-   
+
     var html = '<div>';
-   
+
 
     html += '<div id="cameraTable"></div>';
     html += '</div>';
@@ -5686,10 +5808,10 @@
 
   function updateGenericTableDataset(tmpObj) {
     var cu = tmpObj.data;
-    if(tmpObj.data instanceof Array){
-      cu=tmpObj.data;
+    if (tmpObj.data instanceof Array) {
+      cu = tmpObj.data;
     } else {
-      cu=[tmpObj.data];
+      cu = [tmpObj.data];
 
     }
     if (updateGenericTableDataset.count == undefined) {
@@ -5816,21 +5938,21 @@
           }
           $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
 
-          if(status == 'Start'){
+          if (status == 'Start') {
             if (updateGenericTableDataset.count & 1) {
-              if(el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state){
+              if (el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
                 $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
                 $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
-              } else if(el.system.hasOwnProperty("dsndk_storage_type")&& (el.system.dsndk_storage_type&0x1 )){
+              } else if (el.system.hasOwnProperty("dsndk_storage_type") && (el.system.dsndk_storage_type & 0x1)) {
                 $("#" + name_id + "_health_status").html('<i class="material-icons verde">save</i>');
               }
-            } 
+            }
           }
-         
+
 
 
           if (busy == 'true') {
-            $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:"+el.system.running_cmd_alias) ;
+            $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:" + el.system.running_cmd_alias);
             if (updateGenericTableDataset.count & 1) {
               $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
             } else {
@@ -6226,19 +6348,19 @@
       if (elem.health.ndk_uid == tmpObj.node_selected) {
 
         if (elem.output.powerOn) {
-          
+
           $("#scraper_setPoweron").prop('disabled', true);
           $("#scraper_setPoweroff").prop('disabled', false);
-       //   $("#scraper_setPoweron").childen().remove();
+          //   $("#scraper_setPoweron").childen().remove();
           //html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
           //html += '<i class="material-icons green">trending_down</i>';
           //html += '<p class="name-cmd">OFF</p>';
           //html += '</a>';
           //$("#scraper_setPoweron").html(html);
         } else {
-         // $("#scraper_setPoweron").childen().remove();
-         $("#scraper_setPoweron").prop('disabled', false);
-         $("#scraper_setPoweroff").prop('disabled', true);
+          // $("#scraper_setPoweron").childen().remove();
+          $("#scraper_setPoweron").prop('disabled', false);
+          $("#scraper_setPoweroff").prop('disabled', true);
 
         }
       }
@@ -6358,14 +6480,14 @@
 
     }
   }
-  function notSelectedElems(tmpObj){
-    var ret=[];
-    if (! (tmpObj.node_multi_selected instanceof Array)){
+  function notSelectedElems(tmpObj) {
+    var ret = [];
+    if (!(tmpObj.node_multi_selected instanceof Array)) {
       return tmpObj['elems'];
     }
-    
-     tmpObj['elems'].forEach(function (g){
-      if(!tmpObj.node_multi_selected.includes(g)){
+
+    tmpObj['elems'].forEach(function (g) {
+      if (!tmpObj.node_multi_selected.includes(g)) {
         ret.push(g);
       }
 
@@ -6375,62 +6497,62 @@
   function updateCameraTable(tmpObj) {
     var cu = tmpObj.elems;
 
-     if(tmpObj.node_multi_selected instanceof Array){
-        tmpObj.data=[];
-        var cnt=0;
-        tmpObj.node_multi_selected.forEach(function(elem){
-          tmpObj.skip_fetch++;
-          jchaos.getChannel(elem, -1, function (d) {
-            if(tmpObj.skip_fetch>0)
-              tmpObj.skip_fetch--;
-            var selected = d[0];
-            //    var selected = tmpObj.data[tmpObj.index];
-            if (selected != null && selected.hasOwnProperty("output")) {
-             // $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
-              if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
-                var bin = selected.output.FRAMEBUFFER.$binary.base64;
-                var fmt = "png";
-                if (selected.hasOwnProperty("input")) {
-                  if (selected.input.FMT != null) {
-                    fmt = selected.input.FMT;
-                  }
-                 /* updateCameraProperties("GAIN", selected);
-                  updateCameraProperties("WIDTH", selected);
-                  updateCameraProperties("HEIGHT", selected);
-                  updateCameraProperties("OFFSETX", selected);
-                  updateCameraProperties("OFFSETY", selected);
-                  updateCameraProperties("BRIGHTNESS", selected);
-                  updateCameraProperties("SHUTTER", selected);
-                  updateCameraProperties("CONTRAST", selected);
-                  updateCameraProperties("SHARPNESS", selected);*/
-                  
+    if (tmpObj.node_multi_selected instanceof Array) {
+      tmpObj.data = [];
+      var cnt = 0;
+      tmpObj.node_multi_selected.forEach(function (elem) {
+        tmpObj.skip_fetch++;
+        jchaos.getChannel(elem, -1, function (d) {
+          if (tmpObj.skip_fetch > 0)
+            tmpObj.skip_fetch--;
+          var selected = d[0];
+          //    var selected = tmpObj.data[tmpObj.index];
+          if (selected != null && selected.hasOwnProperty("output")) {
+            // $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
+            if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
+              var bin = selected.output.FRAMEBUFFER.$binary.base64;
+              var fmt = "png";
+              if (selected.hasOwnProperty("input")) {
+                if (selected.input.FMT != null) {
+                  fmt = selected.input.FMT;
                 }
-                //$('#triggerType').val(selected.output.TRIGGER_MODE)
-    
-               // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-                $("#cameraImage-"+encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
+                /* updateCameraProperties("GAIN", selected);
+                 updateCameraProperties("WIDTH", selected);
+                 updateCameraProperties("HEIGHT", selected);
+                 updateCameraProperties("OFFSETX", selected);
+                 updateCameraProperties("OFFSETY", selected);
+                 updateCameraProperties("BRIGHTNESS", selected);
+                 updateCameraProperties("SHUTTER", selected);
+                 updateCameraProperties("CONTRAST", selected);
+                 updateCameraProperties("SHARPNESS", selected);*/
+
               }
+              //$('#triggerType').val(selected.output.TRIGGER_MODE)
+
+              // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
+              $("#cameraImage-" + encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
             }
-            var cindex = tmpObj.node_name_to_index[elem];
+          }
+          var cindex = tmpObj.node_name_to_index[elem];
 
-            tmpObj.data[cindex]=d[0];
-            if(++cnt==tmpObj.node_multi_selected.length){
-              updateGenericTableDataset(tmpObj);
-            }
-            
+          tmpObj.data[cindex] = d[0];
+          if (++cnt == tmpObj.node_multi_selected.length) {
+            updateGenericTableDataset(tmpObj);
+          }
 
-          }, function (d) {
-            if(tmpObj.skip_fetch>0)
-              tmpObj.skip_fetch--;
 
-            tmpObj.updateErrors++;
-           // $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
-          });
+        }, function (d) {
+          if (tmpObj.skip_fetch > 0)
+            tmpObj.skip_fetch--;
 
+          tmpObj.updateErrors++;
+          // $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
         });
-      }
-      
-    
+
+      });
+    }
+
+
     jchaos.getChannel(notSelectedElems(tmpObj), 255, function (selected) {
       tmpObj.data = selected;
 
@@ -6629,35 +6751,38 @@
     html += '<div class="box-content">';
     html += '<h3 class="box-header">Query options</h3>';
 
-    html +='<div id="reportrange-" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
-    html +='<i class="fa fa-calendar"></i>&nbsp';
-    html +='<span></span> <i class="fa fa-caret-down"></i>';
-    html +='</div>';
-    
+    html += '<div id="reportrange-" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
+    html += '<i class="fa fa-calendar"></i>&nbsp';
+    html += '<span></span> <i class="fa fa-caret-down"></i>';
+    html += '</div>';
+
     html += '<label class="label span3">Start </label>';
     html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value="">';
     html += '<label class="label span3">Stop </label>';
     html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value="NOW">';
-    
+
     html += '<label class="label span3">Available Tag</label>';
     html += '<select class="span9" id="select-tag" title="Existing tags"></select>';
     html += '<label class="label span3">Tag Name </label>';
     html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value="">';
 
     html += '<label class="label span3">Page </label>';
-    html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value="10">';
+    html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=30>';
+    html += '<label class="label span3">Query chunk </label>';
+    html += '<input class="input-xlarge focused span9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
+    
     html += '</div>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
 
     html += '<div class="modal-footer">';
-    
-    
-  /*
-    html += '<a href="#" class="btn" id="query-yesterday">Yesterday</a>';
-    html += '<a href="#" class="btn" id="query-today">Today</a>';
-    */
+
+
+    /*
+      html += '<a href="#" class="btn" id="query-yesterday">Yesterday</a>';
+      html += '<a href="#" class="btn" id="query-today">Today</a>';
+      */
     html += '<a href="#" class="btn" id="query-run">Run</a>';
     html += '<a href="#" class="btn" id="query-close">Close</a>';
     html += '</div>';
@@ -6865,8 +6990,8 @@
     return 0;
   }
 
-  function runQueryToGraph(gname,start,stop,qtag,page){
-   
+  function runQueryToGraph(gname, start, stop, qtag, page) {
+
     var av_graphs = jchaos.variable("highcharts", "get", null, null);
     if (!(av_graphs[gname] instanceof Object)) {
       alert("\"" + gname + "\" not a valid graph ");
@@ -6876,14 +7001,12 @@
       alert("\"" + gname + "\" not a valid graph ");
       return;
     }
-    $("#mdl-query").modal("hide");
-
     jchaos.options.history_page_len = Number(page);
     jchaos.options.updateEachCall = true;
     jchaos.setOptions({ "timeout": 60000 });
     $("#query-start").val(start);
     $("#query-stop").val(stop);
-    
+
     if (stop == "" || stop == "NOW") {
       stop = (new Date()).getTime();
     }
@@ -6891,7 +7014,7 @@
       clearInterval(active_plots[gname].interval);
       delete active_plots[gname].interval;
     }
-    var graph_opt=av_graphs[gname];
+    var graph_opt = av_graphs[gname];
     var tr = graph_opt.trace;
     var chart = active_plots[gname]['graph'];
     var dirlist = [];
@@ -6991,8 +7114,8 @@
       }
     } else {
       // no correlation simple plot
-      var targetDate=new Date();
-      var time_off=(targetDate.getTimezoneOffset()*60*1000);
+      var targetDate = new Date();
+      var time_off = (targetDate.getTimezoneOffset() * 60 * 1000);
       graph_opt.culist.forEach(function (item) {
         console.log("to retrive CU:" + item);
 
@@ -7022,7 +7145,7 @@
                   ele_count = 0;
                   data.Y.forEach(function (ds) {
                     if (ds.hasOwnProperty(variable)) {
-                      var ts = data.X[ele_count++]-time_off;
+                      var ts = data.X[ele_count++] - time_off;
                       var tmp = ds[variable];
 
                       if (index != null) {
@@ -7067,58 +7190,59 @@
 
   }
 
-  function initializeTimePicker(queryfn,id){
+  function initializeTimePicker(queryfn, id) {
     var start = moment().subtract(1, 'days');
     var end = moment();
-    if(id==null)
-      id="";
+    if (id == null)
+      id = "";
     function cb(start, end) {
       'M/DD hh:mm A'
-      $('#reportrange-'+id).html(start.format('MMMM D, YYYY HH:mm') + ' - ' + end.format('MMMM D, YYYY HH:mm'));
+      $('#reportrange-' + id).html(start.format('MMMM D, YYYY HH:mm') + ' - ' + end.format('MMMM D, YYYY HH:mm'));
     }
 
-    $('#reportrange-'+id).daterangepicker({
-        startDate: start,
-        endDate: end,
-        timePicker: true,
-        timePicker24Hour:true,
-        linkedCalendars:false,
-        timePickerSeconds: true,
+    $('#reportrange-' + id).daterangepicker({
+      startDate: start,
+      endDate: end,
+      timePicker: true,
+      timePicker24Hour: true,
+      linkedCalendars: false,
+      timePickerSeconds: true,
 
-        ranges: {
-           'Today': [moment().startOf('day'), moment()],
-           'Last 1h': [moment().subtract(1, 'hours'), moment()],
-           'Last 6h': [moment().subtract(6, 'hours'), moment()],
-           'Yesterday': [moment().startOf('day').subtract(1, 'days'), moment().startOf('day').subtract(1, 'days').endOf('day')],
-           'Last 2 Days': [moment().startOf('day').subtract(2, 'days'), moment().startOf('day')],
-           'Last 7 Days': [moment().startOf('day').subtract(6, 'days'), moment()],
-           'Last 30 Days': [moment().startOf('day').subtract(29, 'days'), moment()],
-           'This Month': [moment().startOf('month'), moment().endOf('month')],
-           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-        }
+      ranges: {
+        'Today': [moment().startOf('day'), moment()],
+        'Last 1h': [moment().subtract(1, 'hours'), moment()],
+        'Last 6h': [moment().subtract(6, 'hours'), moment()],
+        'Yesterday': [moment().startOf('day').subtract(1, 'days'), moment().startOf('day').subtract(1, 'days').endOf('day')],
+        'Last 2 Days': [moment().startOf('day').subtract(2, 'days'), moment().startOf('day')],
+        'Last 7 Days': [moment().startOf('day').subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().startOf('day').subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      }
     }, cb);
 
     cb(start, end);
-    if(typeof queryfn === "function"){
-    $('#reportrange-'+id).off('apply.daterangepicker');
-    $('#reportrange-'+id).on('apply.daterangepicker', function(ev, picker) {
-      queryfn(ev,picker);
-    
-    });
+    if (typeof queryfn === "function") {
+      $('#reportrange-' + id).off('apply.daterangepicker');
+      $('#reportrange-' + id).on('apply.daterangepicker', function (ev, picker) {
+        queryfn(ev, picker);
+
+      });
     };
 
   }
 
-  function createQueryDialog(querycb,opencb){
-    if(typeof query_params === "undefined"){
-      query_params={
-      page:dashboard_settings.defaultPage,
-      start:0,
-      stop:"NOW",
-      tag:""
+  function createQueryDialog(querycb, opencb) {
+    if (typeof query_params === "undefined") {
+      query_params = {
+        page: dashboard_settings.defaultPage,
+        start: 0,
+        stop: "NOW",
+        tag: "",
+        chunk:3600
       };
     }
-   
+
     /*var html = '<div class="modal fade draggable" id="dlg-query">';
 
     html += '<div class="modal-header">';
@@ -7128,440 +7252,443 @@
 
     html += '<div class="modal-body">';
     */
-    var html ="";
+    var html = "";
     html += '<div class="row-fluid">';
 
     html += '<div class="box span12">';
     html += '<div class="box-content">';
     html += '<h3 class="box-header">Query options</h3>';
 
-    html +='<div id="reportrange-query" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
-    html +='<i class="fa fa-calendar"></i>&nbsp';
-    html +='<span></span> <i class="fa fa-caret-down"></i>';
-    html +='</div>';
-    
+    html += '<div id="reportrange-query" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+    html += '<i class="fa fa-calendar"></i>&nbsp';
+    html += '<span></span> <i class="fa fa-caret-down"></i>';
+    html += '</div>';
+
     html += '<label class="label span3">Start </label>';
-    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value='+query_params.start+'>';
+    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value=' + query_params.start + '>';
     html += '<label class="label span3">Stop </label>';
-    html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value='+query_params.stop+'>';
-    
+    html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
+
     html += '<label class="label span3">Available Tag</label>';
     html += '<select class="span9" id="select-tag" title="Existing tags"></select>';
     html += '<label class="label span3">Tag Name </label>';
-    html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value='+query_params.tag+'>';
+    html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value=' + query_params.tag + '>';
 
     html += '<label class="label span3">Page </label>';
-    html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value='+query_params.page+'>';
+    html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
+    html += '<label class="label span3">Query chunk </label>';
+    html += '<input class="input-xlarge focused span9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
+   
     html += '</div>';
     html += '</div>';
     html += '</div>';
-    
-    var opt={
+
+    var opt = {
       modal: false, title: "Query Options", zIndex: 10000, autoOpen: true,
       width: 'auto', resizable: true
     }
-    createCustomDialog(opt,html,"Run",function(){
-     
-      query_params['page']=$("#query-page").val();
-      query_params['start']=$("#query-start").val();
-      query_params['stop']=$("#query-stop").val();
-      query_params['tag']=$("#query-tag").val();
+    createCustomDialog(opt, html, "Run", function () {
+
+      query_params['page'] = $("#query-page").val();
+      query_params['start'] = $("#query-start").val();
+      query_params['stop'] = $("#query-stop").val();
+      query_params['tag'] = $("#query-tag").val();
+      query_params['chunk'] = $("#query-chunk").val();
+
       querycb(query_params)
 
-    },"Cancel",null,function(){
+    }, "Cancel", null, function () {
       //open handle
 
-      initializeTimePicker(function(ev,picker){
-          //do something, like clearing an input
-     // $('#daterange').val('');
-        var start=new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
-        var end=new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
-        query_params['start']=start;
-        query_params['stop']=end;
+      initializeTimePicker(function (ev, picker) {
+        //do something, like clearing an input
+        // $('#daterange').val('');
+        var start = new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
+        var end = new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
+        query_params['start'] = start;
+        query_params['stop'] = end;
 
         console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
-        console.log(picker.endDate.format('MMMM D, YYYY HH:mm')); 
+        console.log(picker.endDate.format('MMMM D, YYYY HH:mm'));
         $('#query-start').val(start.getTime());
         $('#query-stop').val(end.getTime());
-      },"query");
-      if(typeof opencb === "function"){
+      }, "query");
+      if (typeof opencb === "function") {
         opencb();
       }
     });
   }
-  function createGraphDialog(id,gname,options){
+  function createGraphDialog(id, gname, options) {
     var av_graphs = jchaos.variable("highcharts", "get", null, null);
     var opt = av_graphs[gname];
     if (!(opt instanceof Object)) {
       alert("\"" + gname + "\" not a valid graph ");
       return;
     }
-    if(options.hasOwnProperty("width")){
-      opt.width=options.width;
+    if (options.hasOwnProperty("width")) {
+      opt.width = options.width;
 
     }
-    if(options.hasOwnProperty("height")){
-      opt.height=options.height;
-      
-    }
-    var html="";
-      //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
-      html += '<div class="row-fluid" style="height: 100%; width: 100%">';
-      //html += '<div id="createGraphDialog-' + id + '" style="height: 100%; width: 100%">';
-      html += '<div id="createGraphDialog-' + id + '" class="span10" style="height: 100%; width: 100%">';
-      html +='</div>';
-      
-      html +='<div id="reportrange-'+id+'" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
-      html +='<i class="fa fa-calendar"></i>&nbsp';
-      html +='<span></span> <i class="fa fa-caret-down"></i>';
-      html +='</div>';
-      html += '</div>';
+    if (options.hasOwnProperty("height")) {
+      opt.height = options.height;
 
-    $("#"+id).children().remove();
-    $("#"+id).append(html);
-    dlg_opt={
+    }
+    var html = "";
+    //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
+    html += '<div class="row-fluid" style="height: 100%; width: 100%">';
+    //html += '<div id="createGraphDialog-' + id + '" style="height: 100%; width: 100%">';
+    html += '<div id="createGraphDialog-' + id + '" class="span10" style="height: 100%; width: 100%">';
+    html += '</div>';
+
+    html += '<div id="reportrange-' + id + '" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+    html += '<i class="fa fa-calendar"></i>&nbsp';
+    html += '<span></span> <i class="fa fa-caret-down"></i>';
+    html += '</div>';
+    html += '</div>';
+
+    $("#" + id).children().remove();
+    $("#" + id).append(html);
+    dlg_opt = {
       open: function () {
-      initializeTimePicker(function(ev,picker){
+        initializeTimePicker(function (ev, picker) {
           //do something, like clearing an input
-     // $('#daterange').val('');
-        var start=new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
-        var end=new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
-        if(typeof query_params === "undefined"){
-          query_params={
-          page:dashboard_settings.defaultPage,
-          start:0,
-          stop:"NOW",
-          tag:""
-          };
-        }
-        query_params['start']=start;
-        query_params['stop']=end;
-
-        console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
-        console.log(picker.endDate.format('MMMM D, YYYY HH:mm')); 
-        runQueryToGraph(gname,query_params.start,query_params.stop,query_params.tag,query_params.page);
-
-      },id);
-
-      var chart = new Highcharts.chart("createGraphDialog-" + id, opt.highchart_opt);
-      var start_time = (new Date()).getTime();
-      console.log("New Graph:" + gname + " has been created :"+JSON.stringify(opt));
-
-      active_plots[gname] = {
-        graphname: gname,
-        graph: chart,
-        highchart_opt: opt.highchart_opt,
-        dialog: id,
-        start_time: start_time
-      };
-
-    },
-    buttons: [
-      {
-        text: "Live",
-        click: function (e) {
-
-          console.log("Start  Live Graph:" + gname);
-          console.log("graph options:" + JSON.stringify(opt));
-
-          if (active_plots[gname].hasOwnProperty('interval')) {
-            clearInterval(active_plots[gname].interval);
-            delete active_plots[gname].interval;
-            $(e.target).html("Continue Live");
-            return;
+          // $('#daterange').val('');
+          var start = new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
+          var end = new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
+          if (typeof query_params === "undefined") {
+            query_params = {
+              page: dashboard_settings.defaultPage,
+              start: 0,
+              stop: "NOW",
+              tag: ""
+            };
           }
-          $(e.target).html("Pause Live");
-          var chart = active_plots[gname]['graph'];
-          var seriesLength = chart.series.length;
+          query_params['start'] = start;
+          query_params['stop'] = end;
 
-          for (var i = seriesLength - 1; i > -1; i--) {
-            chart.series[i].setData([]);
-          }
-          var timebuffer = Number(opt.highchart_opt['timebuffer']) * 1000;
-          active_plots[gname].start_time = (new Date()).getTime();
-          var refresh = setInterval(function () {
-            var data = jchaos.getChannel(opt.culist, -1, null);
-            var set = [];
-            var x, y;
-            var cnt = 0;
-            var tr = opt.trace;
-            var enable_shift = false;
-            var targetDate=new Date();
+          console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
+          console.log(picker.endDate.format('MMMM D, YYYY HH:mm'));
+          runQueryToGraph(gname, query_params.start, query_params.stop, query_params.tag, query_params.page);
 
-            for (k in tr) {
-              if ((tr[k].x == null)) {
-                x = null;
-              } else if ((tr[k].x.origin == "timestamp")) {
-                
-                x = targetDate.getTime()-(targetDate.getTimezoneOffset()*60*1000); // current time
-                if (opt.highchart_opt.shift && ((targetDate.getTime() - active_plots[gname].start_time) > timebuffer)) {
-                  enable_shift = true;
+        }, id);
+
+        var chart = new Highcharts.chart("createGraphDialog-" + id, opt.highchart_opt);
+        var start_time = (new Date()).getTime();
+        console.log("New Graph:" + gname + " has been created :" + JSON.stringify(opt));
+
+        active_plots[gname] = {
+          graphname: gname,
+          graph: chart,
+          highchart_opt: opt.highchart_opt,
+          dialog: id,
+          start_time: start_time
+        };
+
+      },
+      buttons: [
+        {
+          text: "Live",
+          click: function (e) {
+
+            console.log("Start  Live Graph:" + gname);
+            console.log("graph options:" + JSON.stringify(opt));
+
+            if (active_plots[gname].hasOwnProperty('interval')) {
+              clearInterval(active_plots[gname].interval);
+              delete active_plots[gname].interval;
+              $(e.target).html("Continue Live");
+              return;
+            }
+            $(e.target).html("Pause Live");
+            var chart = active_plots[gname]['graph'];
+            var seriesLength = chart.series.length;
+
+            for (var i = seriesLength - 1; i > -1; i--) {
+              chart.series[i].setData([]);
+            }
+            var timebuffer = Number(opt.highchart_opt['timebuffer']) * 1000;
+            active_plots[gname].start_time = (new Date()).getTime();
+            var refresh = setInterval(function () {
+              var data = jchaos.getChannel(opt.culist, -1, null);
+              var set = [];
+              var x, y;
+              var cnt = 0;
+              var tr = opt.trace;
+              var enable_shift = false;
+              var targetDate = new Date();
+
+              for (k in tr) {
+                if ((tr[k].x == null)) {
+                  x = null;
+                } else if ((tr[k].x.origin == "timestamp")) {
+
+                  x = targetDate.getTime() - (targetDate.getTimezoneOffset() * 60 * 1000); // current time
+                  if (opt.highchart_opt.shift && ((targetDate.getTime() - active_plots[gname].start_time) > timebuffer)) {
+                    enable_shift = true;
+                  }
+                } else if (tr[k].x.const != null) {
+                  x = tr[k].x.const;
+                } else if (tr[k].x.var != null) {
+                  x = getValueFromCUList(data, tr[k].x);
+
+                } else {
+                  x = null;
                 }
-              } else if (tr[k].x.const != null) {
-                x = tr[k].x.const;
-              } else if (tr[k].x.var != null) {
-                x = getValueFromCUList(data, tr[k].x);
+                if ((tr[k].y == null)) {
+                  y = null;
+                } else if ((tr[k].y.origin == "timestamp")) {
+                  y = targetDate.getTime() - (targetDate.getTimezoneOffset() * 60 * 1000);
+                } else if (tr[k].y.const != null) {
+                  y = tr[k].y.const;
+                } else if (tr[k].y.var != null) {
+                  y = getValueFromCUList(data, tr[k].y);
 
-              } else {
-                x = null;
-              }
-              if ((tr[k].y == null)) {
-                y = null;
-              } else if ((tr[k].y.origin == "timestamp")) {
-                y =  targetDate.getTime()-(targetDate.getTimezoneOffset()*60*1000);
-              } else if (tr[k].y.const != null) {
-                y = tr[k].y.const;
-              } else if (tr[k].y.var != null) {
-                y = getValueFromCUList(data, tr[k].y);
-
-              } else {
-                y = null;
-              }
-              if (opt.highchart_opt['tracetype'] == "multi") {
-                if ((y instanceof Array)) {
-                  var inc;
-                  if (x == null) {
-                    x = 0;
-                    inc = 1;
-                  } else {
-                    inc = 1.0 / y.length;
-                  }
-
-                  var set = [];
-
-                  for (var cntt = 0; cntt < y.length; cntt++) {
-                    set.push([x + inc * cntt, y[cntt]]);
-                  }
-
-
-                  chart.series[cnt].setData(set, true, true, true);
-
-                } else if (x instanceof Array) {
-                  var inc;
-                  var set = [];
-                  if (y == null) {
-                    y = 0;
-                    inc = 1;
-                  } else {
-                    inc = 1.0 / x.length;
-                  }
-                  if (tr[k].y.origin == "histogram") {
-                    set.push(x[cntt]);
-
-                    chart.series[cnt + 1].setData(set, true, true, true);
-
-                  } else {
-                    for (var cntt = 0; cntt < y.length; cntt++) {
-                      set.push([x[cntt], y + (inc * cntt)]);
+                } else {
+                  y = null;
+                }
+                if (opt.highchart_opt['tracetype'] == "multi") {
+                  if ((y instanceof Array)) {
+                    var inc;
+                    if (x == null) {
+                      x = 0;
+                      inc = 1;
+                    } else {
+                      inc = 1.0 / y.length;
                     }
+
+                    var set = [];
+
+                    for (var cntt = 0; cntt < y.length; cntt++) {
+                      set.push([x + inc * cntt, y[cntt]]);
+                    }
+
+
                     chart.series[cnt].setData(set, true, true, true);
 
-                  }
-
-                } else {
-                  if (tr[k].y.origin == "histogram") {
-                    if ($.isNumeric(x)) {
-                      chart.series[cnt + 1].addPoint(x, false, false);
-                    }
-
-                  } else {
-                    chart.series[cnt].addPoint([x, y], false, enable_shift);
-                  }
-                }
-                if (tr[k].y.origin == "histogram") {
-                  cnt += 2;
-
-                } else {
-                  cnt++;
-                }
-              } else {
-                // single
-                if ((y instanceof Array)) {
-                  var inc = 1.0 / y.length;
-                  var xx = x;
-
-                  y.forEach(function (item, index) {
-                    if (x == null) {
-                      set.push([index, item]);
-
-                    } else {
-                      set.push([xx, item]);
-                      xx = (xx + inc);
-                    }
-
-                  });
-
-                } else if (x instanceof Array) {
-                  var inc = 1.0 / y;
-                  var yy = y;
-
-                  x.forEach(function (item, index) {
+                  } else if (x instanceof Array) {
+                    var inc;
+                    var set = [];
                     if (y == null) {
-                      set.push([item, index]);
+                      y = 0;
+                      inc = 1;
+                    } else {
+                      inc = 1.0 / x.length;
+                    }
+                    if (tr[k].y.origin == "histogram") {
+                      set.push(x[cntt]);
+
+                      chart.series[cnt + 1].setData(set, true, true, true);
 
                     } else {
-                      set.push([item, yy]);
+                      for (var cntt = 0; cntt < y.length; cntt++) {
+                        set.push([x[cntt], y + (inc * cntt)]);
+                      }
+                      chart.series[cnt].setData(set, true, true, true);
 
-                      yy = (yy + inc);
                     }
-                  });
 
-                } else {
-                  if (tr[k].y.origin == "histogram") {
-                    if ($.isNumeric(x)) {
-                      set.push(x);
-                    }
                   } else {
-                    set.push({ x, y });
+                    if (tr[k].y.origin == "histogram") {
+                      if ($.isNumeric(x)) {
+                        chart.series[cnt + 1].addPoint(x, false, false);
+                      }
+
+                    } else {
+                      chart.series[cnt].addPoint([x, y], false, enable_shift);
+                    }
+                  }
+                  if (tr[k].y.origin == "histogram") {
+                    cnt += 2;
+
+                  } else {
+                    cnt++;
+                  }
+                } else {
+                  // single
+                  if ((y instanceof Array)) {
+                    var inc = 1.0 / y.length;
+                    var xx = x;
+
+                    y.forEach(function (item, index) {
+                      if (x == null) {
+                        set.push([index, item]);
+
+                      } else {
+                        set.push([xx, item]);
+                        xx = (xx + inc);
+                      }
+
+                    });
+
+                  } else if (x instanceof Array) {
+                    var inc = 1.0 / y;
+                    var yy = y;
+
+                    x.forEach(function (item, index) {
+                      if (y == null) {
+                        set.push([item, index]);
+
+                      } else {
+                        set.push([item, yy]);
+
+                        yy = (yy + inc);
+                      }
+                    });
+
+                  } else {
+                    if (tr[k].y.origin == "histogram") {
+                      if ($.isNumeric(x)) {
+                        set.push(x);
+                      }
+                    } else {
+                      set.push({ x, y });
+                    }
                   }
                 }
+                if (opt.highchart_opt['tracetype'] == "single") {
+                  chart.series[0].setData(set, true, true, true);
+                }
               }
-              if (opt.highchart_opt['tracetype'] == "single") {
-                chart.series[0].setData(set, true, true, true);
-              }
-            }
 
-            chart.redraw();
-          }, opt.update);
-          active_plots[gname]['interval'] = refresh;
+              chart.redraw();
+            }, opt.update);
+            active_plots[gname]['interval'] = refresh;
 
-        }
-      },
-      {
-        text: "Query..",
-        click: function () {
-
-          console.log("Start  History Graph:" + gname);
-         
-          if (opt.highchart_opt.yAxis.type == "datetime") {
-            alert("Y axis cannot be as datetime!")
-            return;
           }
-         /* $('input[name="datetimes"]').daterangepicker({
-            timePicker: true,
-            timePicker24Hour:true,
-            linkedCalendars:false,
-            startDate: moment().startOf('hour'),
-            endDate: moment().startOf('hour').add(32, 'hour'),
-            locale: {
-              format: 'DD/M hh:mm A'
+        },
+        {
+          text: "Query..",
+          click: function () {
+
+            console.log("Start  History Graph:" + gname);
+
+            if (opt.highchart_opt.yAxis.type == "datetime") {
+              alert("Y axis cannot be as datetime!")
+              return;
             }
-          });*/
-          createQueryDialog(function(query){
-            runQueryToGraph(gname,query.start,query.stop,query.tag,query.page);
-          });
-          
-          $("#query-yesterday").off('click');
-          $("#query-yesterday").on("click", function () {
-            $("#mdl-query").modal("hide");
-
-            var yesterday=new Date();
-            yesterday.setDate(yesterday.getDate()-1);
-            yesterday.setHours(0);
-            yesterday.setMinutes(0);
-            yesterday.setSeconds(0);
-            yesterday.setMilliseconds(1);
-
-            var qstart = yesterday.getTime();
-            yesterday.setHours(23);
-            yesterday.setMinutes(59);
-            yesterday.setSeconds(59);
-            yesterday.setMilliseconds(999);
-
-            var qstop = yesterday.getTime();
-            var qtag = $("#query-tag").val();
-            var page = $("#query-page").val();
-            
-            runQueryToGraph(gname,qstart,qstop,qtag,page);
-          });
-
-          $("#query-today").off('click');
-          $("#query-today").on("click", function () {
-            $("#mdl-query").modal("hide");
-
-            var today=new Date();
-            today.setHours(0);
-            today.setMinutes(0);
-            today.setSeconds(0);
-            today.setMilliseconds(1);
-
-            var qstart = today.getTime();
-            today.setHours(23);
-            today.setMinutes(59);
-            today.setSeconds(59);
-            today.setMilliseconds(999);
-
-            var qstop = today.getTime();
-            var qtag = $("#query-tag").val();
-            var page = $("#query-page").val();
-            runQueryToGraph(gname,qstart,qstop,qtag,page);
-          });
-        }
-      }, {
-        text: "Save",
-        click: function () {
-          var graph_opt = high_graphs[gname];
-          var chart = active_plots[gname]['graph'];
-          var obj = {};
-          if (chart.series instanceof Array) {
-            chart.series.forEach(function (item) {
-              obj[item.name] = [];
-              item.data.forEach(function (dat) {
-                var x = dat.x;
-                var y = dat.y;
-                obj[item.name].push([x, y]);
-              });
+            /* $('input[name="datetimes"]').daterangepicker({
+               timePicker: true,
+               timePicker24Hour:true,
+               linkedCalendars:false,
+               startDate: moment().startOf('hour'),
+               endDate: moment().startOf('hour').add(32, 'hour'),
+               locale: {
+                 format: 'DD/M hh:mm A'
+               }
+             });*/
+            createQueryDialog(function (query) {
+              runQueryToGraph(gname, query.start, query.stop, query.tag, query.page);
             });
-            var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
-            saveAs(blob, gname + ".json");
+
+            $("#query-yesterday").off('click');
+            $("#query-yesterday").on("click", function () {
+
+              var yesterday = new Date();
+              yesterday.setDate(yesterday.getDate() - 1);
+              yesterday.setHours(0);
+              yesterday.setMinutes(0);
+              yesterday.setSeconds(0);
+              yesterday.setMilliseconds(1);
+
+              var qstart = yesterday.getTime();
+              yesterday.setHours(23);
+              yesterday.setMinutes(59);
+              yesterday.setSeconds(59);
+              yesterday.setMilliseconds(999);
+
+              var qstop = yesterday.getTime();
+              var qtag = $("#query-tag").val();
+              var page = $("#query-page").val();
+
+              runQueryToGraph(gname, qstart, qstop, qtag, page);
+            });
+
+            $("#query-today").off('click');
+            $("#query-today").on("click", function () {
+
+              var today = new Date();
+              today.setHours(0);
+              today.setMinutes(0);
+              today.setSeconds(0);
+              today.setMilliseconds(1);
+
+              var qstart = today.getTime();
+              today.setHours(23);
+              today.setMinutes(59);
+              today.setSeconds(59);
+              today.setMilliseconds(999);
+
+              var qstop = today.getTime();
+              var qtag = $("#query-tag").val();
+              var page = $("#query-page").val();
+              runQueryToGraph(gname, qstart, qstop, qtag, page);
+            });
           }
-        }
-      }, {
-        text: "Load",
-        click: function () {
-          var graph_opt = high_graphs[gname];
-          var chart = active_plots[gname]['graph'];
-          getFile("TRACE LOAD", "select the trace to load", function (data) {
-            //console.log("loaded:"+JSON.stringify(data));
-
-            for (var key in data) {
-              var newseries = {};
-
-              var xy = data[key];
-              newseries['name'] = key;
-              newseries['data'] = xy;
-              chart.addSeries(newseries);
-              /*xy.forEach(function(c){
-                chart.series[index].addPoint(c, false, false);
-              });*/
-
+        }, {
+          text: "Save",
+          click: function () {
+            var graph_opt = high_graphs[gname];
+            var chart = active_plots[gname]['graph'];
+            var obj = {};
+            if (chart.series instanceof Array) {
+              chart.series.forEach(function (item) {
+                obj[item.name] = [];
+                item.data.forEach(function (dat) {
+                  var x = dat.x;
+                  var y = dat.y;
+                  obj[item.name].push([x, y]);
+                });
+              });
+              var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
+              saveAs(blob, gname + ".json");
             }
+          }
+        }, {
+          text: "Load",
+          click: function () {
+            var graph_opt = high_graphs[gname];
+            var chart = active_plots[gname]['graph'];
+            getFile("TRACE LOAD", "select the trace to load", function (data) {
+              //console.log("loaded:"+JSON.stringify(data));
 
-          });
-        }
+              for (var key in data) {
+                var newseries = {};
 
-      }, {
-        text: "Close",
-        click: function () {
-          console.log("Removing graph:" + gname);
+                var xy = data[key];
+                newseries['name'] = key;
+                newseries['data'] = xy;
+                chart.addSeries(newseries);
+                /*xy.forEach(function(c){
+                  chart.series[index].addPoint(c, false, false);
+                });*/
 
-          clearInterval(active_plots[gname].interval);
-          delete active_plots[gname]['graph'];
-          delete active_plots[gname];
+              }
 
-          $(this).dialog('close');
-        }
-      }]
+            });
+          }
+
+        }, {
+          text: "Close",
+          click: function () {
+            console.log("Removing graph:" + gname);
+
+            clearInterval(active_plots[gname].interval);
+            delete active_plots[gname]['graph'];
+            delete active_plots[gname];
+
+            $(this).dialog('close');
+          }
+        }]
 
 
 
-  }
-    for(var i in options){
-      dlg_opt[i]=options[i];
+    }
+    for (var i in options) {
+      dlg_opt[i] = options[i];
     }
     console.log("dialog options:" + JSON.stringify(dlg_opt));
 
-    $("#"+id).dialog(dlg_opt);
+    $("#" + id).dialog(dlg_opt);
   }
   function runGraph(gname) {
     if (gname == null || gname == "") {
@@ -7576,7 +7703,7 @@
       return;
     }
     /// fix things before
-   
+
     if (!$.isNumeric(opt.highchart_opt.xAxis.max)) {
       opt.highchart_opt.xAxis.max = null;
     }
@@ -7600,20 +7727,20 @@
       if (active_plots.hasOwnProperty(k)) count++;
     }
     if (count < 10) {
-      var options={
-          modal: false,
-          draggable: true,
-          closeOnEscape: false,
-          title: opt.name + "-" + count,
-          width: opt.width,
-          hright: opt.height,
-          height:opt.height,
-          resizable: true,
-          dialogClass: 'no-close'
+      var options = {
+        modal: false,
+        draggable: true,
+        closeOnEscape: false,
+        title: opt.name + "-" + count,
+        width: opt.width,
+        hright: opt.height,
+        height: opt.height,
+        resizable: true,
+        dialogClass: 'no-close'
       };
-      createGraphDialog("dialog-"+count,gname,options);
-      
-     
+      createGraphDialog("dialog-" + count, gname, options);
+
+
     } else {
       alert("Too many graph dialog opened");
     }
@@ -8335,7 +8462,7 @@
     for (var cnt = 0; cnt < 10; cnt++) {
       html += '<div id="dialog-' + cnt + '" class="cugraph hide" grafname="' + cnt + '" style="z-index: 1000;">';
       html += "</div>";
-      
+
       /*
       html += '<div id="graph-' + cnt + '" style="height: 380px; width: 580px;z-index: 1000;">';
       html += '</div>';
@@ -8355,7 +8482,7 @@
     html += generateLog();
     html += generateGraphTable();
     html += generateGraphList();
-  //  html += generateQueryTable();
+    //  html += generateQueryTable();
 
 
     return html;
@@ -8745,8 +8872,8 @@
       });
 
   }
-  function createCustomDialog(opt,html, butyes, yeshandle, cancelText,nohandle,open_handle,close_handle){
-    var dlg_opt={
+  function createCustomDialog(opt, html, butyes, yeshandle, cancelText, nohandle, open_handle, close_handle) {
+    var dlg_opt = {
       buttons: [
         {
           id: "confirm-yes",
@@ -8769,20 +8896,20 @@
           }
         }],
       open: function (event, ui) {
-        if(typeof open_handle === "function"){
-          open_handle(event,ui);
-        } 
+        if (typeof open_handle === "function") {
+          open_handle(event, ui);
+        }
       },
       close: function (event, ui) {
-        if(typeof close_handle === "function"){
-          close_handle(event,ui);
+        if (typeof close_handle === "function") {
+          close_handle(event, ui);
         } else {
           $(this).remove();
         }
       }
     }
-    for(var i in opt){
-      dlg_opt[i]=opt[i];
+    for (var i in opt) {
+      dlg_opt[i] = opt[i];
     }
     $('<div></div>').appendTo('body')
       .html(html)
@@ -8790,17 +8917,17 @@
 
   }
   function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
-    var html='<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>';
-    var opt={
+    var html = '<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>';
+    var opt = {
       modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
       width: 'auto', resizable: true
     }
-    createCustomDialog(opt,html, butyes, function(){
+    createCustomDialog(opt, html, butyes, function () {
       if (typeof yeshandle === "function") {
         yeshandle($("#getEntryWindow_name").val());
       }
     }, cancelText);
-    
+
   }
 
   function getNEntryWindow(hmsg, def_msg_v, def_text_v, butyes, yeshandle, cancelText) {
@@ -8815,11 +8942,11 @@
     } else {
       return;
     }
-    var opt={
+    var opt = {
       modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
       width: 'auto', resizable: true
     }
-    createCustomDialog(opt,htmp, butyes, function(){
+    createCustomDialog(opt, htmp, butyes, function () {
       if (typeof yeshandle === "function") {
         var answ = [];
         var cnt = 0;
@@ -8830,15 +8957,16 @@
         yeshandle(answ);
       }
     }, cancelText);
- 
+
   }
   function confirm(hmsg, msg, butyes, yeshandle, butno, nohandle) {
     var ret = true;
-    var html='<div><h6>' + msg + '</h6></div>';
+    var html = '<div><h6>' + msg + '</h6></div>';
     createCustomDialog({
       modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
-      width: 'auto', resizable: false},butyes,yeshandle,butno,nohandle);
-    
+      width: 'auto', resizable: false
+    }, html,butyes, yeshandle, butno, nohandle);
+
   }
   function type2Alias(t) {
     switch (t) {
@@ -9030,7 +9158,8 @@
       items['unload'] = { name: "Unload", icon: "unload" };
       items['deinit'] = { name: "Deinit", icon: "deinit" };
     }
-    items['history-cu'] = { name: "Retrive History for...", icon: "histo" };
+    items['history-cu'] = { name: "Retrive JSON History for...", icon: "histo" };
+    items['history-cu-root'] = { name: "Retrive Root Tree History for...", icon: "histo" };
 
     items['sep2'] = "---------";
     //node_name_to_desc[node_multi_selected[0]]
@@ -9054,7 +9183,7 @@
     return items;
   }
   function updateGenericControl(tmpObj, cu) {
-    if(cu == null){
+    if (cu == null) {
       return;
     }
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("ndk_uid")) {   //if el health
@@ -9274,7 +9403,7 @@
 
       $(this).addClass("row_snap_selected");
       graph_selected = $(this).attr("id");
-      var html='Graph Selected:<a href=/chaos_graph.php?'+graph_selected+'={\"width\":'+high_graphs[graph_selected].width+',\"height\":'+high_graphs[graph_selected].height+'} target="_blank"><strong>'+ graph_selected +'</strong></a>';
+      var html = 'Graph Selected:<a href=/chaos_graph.php?' + graph_selected + '={\"width\":' + high_graphs[graph_selected].width + ',\"height\":' + high_graphs[graph_selected].height + '} target="_blank"><strong>' + graph_selected + '</strong></a>';
       //$(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
       $(list_graphs).html(html);
       //$("#graph-link").html();
@@ -9304,18 +9433,18 @@
     });
 
   }
-  function addNewKeys(jsondst,jsonsrc){
-    for(var key in jsonsrc){
-      if(!jsondst.hasOwnProperty(key)){
-        jsondst[key]=jsonsrc[key];
-      } else if( (jsondst[key] instanceof Object) ){
-        if((jsonsrc[key] instanceof Object)){
-          jsondst[key]=addNewKeys(jsondst[key],jsonsrc[key]);
+  function addNewKeys(jsondst, jsonsrc) {
+    for (var key in jsonsrc) {
+      if (!jsondst.hasOwnProperty(key)) {
+        jsondst[key] = jsonsrc[key];
+      } else if ((jsondst[key] instanceof Object)) {
+        if ((jsonsrc[key] instanceof Object)) {
+          jsondst[key] = addNewKeys(jsondst[key], jsonsrc[key]);
         } else {
-          jsondst[key]=jsonsrc[key];
+          jsondst[key] = jsonsrc[key];
 
         }
-      } 
+      }
     }
     return jsondst;
   }
@@ -9416,31 +9545,31 @@
   $.fn.getValueFromCUList = function (culist, path) {
     return getValueFromCUList(culist, path);
   }
-  $.fn.runQueryToGraph=function(gname,start,stop,qtag,page){
-    return runQueryToGraph(gname,start,stop,qtag,page);
+  $.fn.runQueryToGraph = function (gname, start, stop, qtag, page) {
+    return runQueryToGraph(gname, start, stop, qtag, page);
   }
-  $.fn.createGraphDialog=function(id,gname,options){
-    return createGraphDialog(id,gname,options);
+  $.fn.createGraphDialog = function (id, gname, options) {
+    return createGraphDialog(id, gname, options);
   }
-  
-  function initSettings(){
-    var sett=localStorage['chaos_dashboard_settings'];
-    if(!sett || sett=="null"){
-      $.getJSON( "dashboard-settings-def.json", function( json ) {
-        console.log( "Default Settings: " + JSON.stringify(json));
-        localStorage['chaos_dashboard_settings']=JSON.stringify(json);
-        dashboard_settings=json;
-       });
-      } else {
-        dashboard_settings=JSON.parse(sett);
-        $.getJSON( "dashboard-settings-def.json", function( json ) {
-          dashboard_settings=addNewKeys(dashboard_settings,json);
-         localStorage['chaos_dashboard_settings']=JSON.stringify(dashboard_settings);
-         });
-      }
-    
+
+  function initSettings() {
+    var sett = localStorage['chaos_dashboard_settings'];
+    if (!sett || sett == "null") {
+      $.getJSON("dashboard-settings-def.json", function (json) {
+        console.log("Default Settings: " + JSON.stringify(json));
+        localStorage['chaos_dashboard_settings'] = JSON.stringify(json);
+        dashboard_settings = json;
+      });
+    } else {
+      dashboard_settings = JSON.parse(sett);
+      $.getJSON("dashboard-settings-def.json", function (json) {
+        dashboard_settings = addNewKeys(dashboard_settings, json);
+        localStorage['chaos_dashboard_settings'] = JSON.stringify(dashboard_settings);
+      });
+    }
+
   }
-  $.fn.initSettings=function(){
+  $.fn.initSettings = function () {
     initSettings();
   }
   $.fn.chaosDashboard = function (opt) {
@@ -9474,9 +9603,9 @@
         skip_fetch_inc: 1,
         check_interval: 10000,
         last_check: 0,
-        lastUpdate:0,
-        updateRefresh:0,
-        updateErrors:0,
+        lastUpdate: 0,
+        updateRefresh: 0,
+        updateErrors: 0,
         node_list_interval: null,
         node_selected: null,
         health_time_stamp_old: {},
@@ -9498,39 +9627,39 @@
       };
       initSettings();
 
-      $("#help-about").on("click",function(){
-        jchaos.basicPost("MDS", "cmd=buildInfo", function(ver){
+      $("#help-about").on("click", function () {
+        jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
           //alert("version:"+JSON.stringify(ver));
-          showJson(null,"VERSION","version",ver);
-        }, function(){
+          showJson(null, "VERSION", "version", ver);
+        }, function () {
           alert("Cannot retrive version");
         });
       });
 
-      $("#help-clients").on("click",function(){
-        jchaos.basicPost("clients", "", function(ver){
+      $("#help-clients").on("click", function () {
+        jchaos.basicPost("clients", "", function (ver) {
           //alert("version:"+JSON.stringify(ver));
-          ver.forEach(function(ele,i){
-            var tt=ele.lastConnection/1000;
-            ver[i]['updated']=(new Date(Number(tt))).toLocaleString() ;
+          ver.forEach(function (ele, i) {
+            var tt = ele.lastConnection / 1000;
+            ver[i]['updated'] = (new Date(Number(tt))).toLocaleString();
           });
-        
-          showJson(null,"CLIENTS","Clients",ver);
-        }, function(){
+
+          showJson(null, "CLIENTS", "Clients", ver);
+        }, function () {
           alert("Cannot retrive Client List");
         });
       });
-      $("#config-settings").on("click",function(){
+      $("#config-settings").on("click", function () {
         var templ = {
           $ref: "dashboard-settings.json",
           format: "tabs"
         }
-        var def=JSON.parse(localStorage['chaos_dashboard_settings']);
-        jsonEditWindow("Config", templ, def, function(d){
-          dashboard_settings=d;localStorage['chaos_dashboard_settings']=JSON.stringify(d);
-          var e = jQuery.Event( 'keypress');
-          e.which=13;
-          e.keyCode=13;
+        var def = JSON.parse(localStorage['chaos_dashboard_settings']);
+        jsonEditWindow("Config", templ, def, function (d) {
+          dashboard_settings = d; localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
+          var e = jQuery.Event('keypress');
+          e.which = 13;
+          e.keyCode = 13;
 
           $("#search-chaos").trigger(e);
         }, null);
@@ -9538,8 +9667,8 @@
       });
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
-      templateObj.check_interval=dashboard_settings.checkLive;
-      templateObj.refresh_rate=dashboard_settings.generalRefresh;
+      templateObj.check_interval = dashboard_settings.checkLive;
+      templateObj.refresh_rate = dashboard_settings.generalRefresh;
       jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
 
       if (options.template == "cu") {
@@ -9550,7 +9679,7 @@
         templateObj.generateCmdFn = generateGenericControl;
         templateObj.updateFn = updateGenericCU;
         templateObj.checkLiveFn = checkLiveCU;
-        
+
         /*** */
         /* Insert HTML in target DOM element */
 
@@ -9597,7 +9726,7 @@
 
       $("#menu-dashboard").html(generateMenuBox());
       $("#query-page").val(dashboard_settings.defaultPage);
-   //   initializeTimePicker();
+      //   initializeTimePicker();
 
       //jsonSetup($(this));
       $(".savetofile").on("click", function (e) {
