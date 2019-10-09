@@ -4,6 +4,9 @@
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
  */
 (function ($) {
+
+  // library jquery chaos control studio
+  var jqccs={};
   var json_editor;
   var cu_templates = null;
   var dashboard_settings = null;
@@ -429,11 +432,15 @@
   }
 
 
-  function getConsole(msghead, pid, server, lines, consolen, refresh) {
+  function getConsole(msghead, pid, server, lines, consolen, refresh, type) {
     var update;
     var data;
     var stop_update = false;
-    var instant = $('<div id=console-' + pid + '></div>').dialog({
+    var html = '<div id=console-' + pid + '></div>';
+
+    html += '<div class="row-fluid"><label class="span4">Console buffering:</label><input class="span4" id="buffer-update" type="text" title="Remote flush Update(bytes)" value=1 /></div>';
+
+    var opt = {
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
       title: msghead,
@@ -481,13 +488,29 @@
       },
       open: function (e) {
         console.log(msghead + "opening terminal refresh:" + refresh);
-        $(e.target).parent().css('background-color', 'black');
-
+        //$(e.target).parent().css('background-color', 'black');
+        $('#console-' + pid).css('background-color', 'black')
         var consoleParam = {
           "uid": pid,
           "fromline": 0,
           "toline": -1
         };
+        $("#buffer-update").keypress(function (e) {
+          if (e.keyCode == 13) {
+            var update = Number($("#buffer-update").val());
+            var prop = {
+              uid: pid,
+              consoleBuffering: update
+            }
+            jchaos.rmtSetProp(server, prop, function () {
+              instantMessage("Remote Console Buffering ", "Updated " + update, 2000, null, null, true);
+
+            }, function () {
+              instantMessage("Remote Console Buffering ", "Failed " + update, 2000, null, null, false);
+
+            });
+          }
+        });
         $('#console-' + pid).terminal(function (command) {
           if (command !== '') {
             jchaos.rmtSetConsole(server, pid, command, function (r) {
@@ -516,8 +539,8 @@
 
             jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function (r) {
               if (r.data.process.last_log_time != last_log_time) {
-              //  var str = decodeURIComponent(escape(atob(r.data.console)));
-              var str = atob(r.data.console);
+                //  var str = decodeURIComponent(escape(atob(r.data.console)));
+                var str = atob(r.data.console);
                 $('#console-' + pid).terminal().echo(str);
                 consoleParam.fromline = Number(r.data.process.output_line) - 1;
               }
@@ -531,7 +554,21 @@
           //$(this).attr("refresh_time",update);
         }, refresh);
       }
-    });
+    };
+    if (typeof type !== "undefined" && (type == "CPP")) {
+      opt['buttons'].push({
+        text: "Root EXIT", click: function (e) {
+          // var interval=$(this).attr("refresh_time");
+          jchaos.rmtSetConsole(server, pid, ".exit", function (r) {
+
+          }, function (bad) {
+            console.log("Some error getting console occur:" + bad);
+          }, server);
+        }
+      }
+      )
+    }
+    createCustomDialog(opt, html);
   }
 
   function showPicture(msghead, fmt, cuname, refresh) {
@@ -3059,14 +3096,14 @@
 
     } else if (cmd == "history-cu-root") {
       createQueryDialog(function (query) {
-       // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
+        // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
         //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
         //console.log("start:"+start_s + " end:"+end_s);
-       // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
-        var args = "(\"" + tmpObj.node_multi_selected[0] + "\","+ query.start + "," + query.stop + ","+query.chunk+","+query.page+")";
+        // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
+        var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
 
         runScript("CU2Tree.C", args);
-        })
+      })
 
     } else if (cmd == "history-cu") {
       createQueryDialog(function (query) {
@@ -3265,7 +3302,8 @@
 
     return html;
   }
-  function updateProcessServer(tmpObj,cb) {
+  
+  function updateProcessServer(tmpObj, cb) {
     jchaos.search("", "agent", true, function (ag) {
       var agent_obj = {};
       var agent_list = [];
@@ -3279,7 +3317,7 @@
         }
       });
       tmpObj['agent_list'] = agent_list;
-      if(typeof cb === "function"){
+      if (typeof cb === "function") {
         cb(tmpObj);
       }
     });
@@ -4404,7 +4442,7 @@
       //   var agentn = tmpObj[node_selected].parent;
       var server = tmpObj.data[node_selected].hostname + ":8071";
       var friendname = tmpObj.data[node_selected].pname;
-      getConsole(tmpObj.data[node_selected].hostname + ":" + friendname + "(" + node_selected + ")", node_selected, server, 2, console, 1000);
+      getConsole(tmpObj.data[node_selected].hostname + ":" + friendname + "(" + node_selected + ")", node_selected, server, 2, console, 1000, tmpObj.data[node_selected].ptype);
 
     } else if (cmd == "download-output") {
       var server = tmpObj.data[node_selected].hostname + ":8071";
@@ -4550,24 +4588,24 @@
     };
   }
   function findBestServer(func) {
-    var kk={};
+    var kk = {};
     var maxIdle = 0;
     var server = null;
     if (typeof func == "function") {
-      updateProcessServer(kk,function(kk){
+      updateProcessServer(kk, function (kk) {
 
-      updateProcessList(kk, function (tt) {
-        var serverlist = tt['agents'];
-        for (var key in serverlist) {
-          if (serverlist[key].idle > maxIdle) {
-            maxIdle = serverlist[key].idle;
-            server = key;
+        updateProcessList(kk, function (tt) {
+          var serverlist = tt['agents'];
+          for (var key in serverlist) {
+            if (serverlist[key].idle > maxIdle) {
+              maxIdle = serverlist[key].idle;
+              server = key;
+            }
           }
-        }
-        func(server);
+          func(server);
+        });
       });
-    });
-    } else if(typeof func == "object"){
+    } else if (typeof func == "object") {
       updateProcessServer(func);
 
       var serverlist = func['agents'];
@@ -4615,12 +4653,12 @@
 
 
             getEntryWindow(name, "Additional args", '', "Run", function (parm) {
-              
+
               jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "", function (r) {
                 console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                 var node_selected = tmpObj.node_selected;
                 instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000, language);
               }, function (bad) {
                 console.log("Some error getting loading script:" + bad);
                 instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -4632,7 +4670,7 @@
               console.log("Script running onto:" + server + " :" + JSON.stringify(r));
               var node_selected = tmpObj.node_selected;
               instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-              getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+              getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000), language;
             }, function (bad) {
               console.log("Some error getting loading script:" + bad);
               instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -4654,7 +4692,7 @@
     // var cindex = tmpObj.node_name_to_index[node_name];
     items['new-script'] = { name: "New Script..." };
     items['load-script'] = { name: "Load Script from file..." };
-    items['manage-script'] = { name: "Manage Script..." };
+    items['manage-script'] = { name: "Manage/Run Script..." };
     items['purge-script'] = { name: "Purge END scripts" };
     var prorunsub = processRunSubMenu(tmpObj);
     var protemsub = processAppTemplateSubMenu(tmpObj);
@@ -4847,79 +4885,16 @@
     }
   }
 
-function runScript(name,parm){
-  jchaos.search(name, "script", false, function (l) {
-    if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
-      if(l.found_script_list.length>0){
-        var seq=l.found_script_list[0].seq;
-        console.log("found script:"+JSON.stringify(l.found_script_list[0]));
-        jchaos.loadScript(name, seq, function (jsonscript) {
-          findBestServer(function(server){
-            console.log("best server:"+server);
+  function runScript(name, parm) {
+    jchaos.runScript(name,parm,function(ok){
+      instantMessage("runScript:"+JSON.stringify(ok), 2000, true);
 
-            jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
-              if (r.err != 0) {
-                instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);
-              } else {
-                instantMessage("Script loaded onto:" + server, 2000, false);
-                if(r.data.hasOwnProperty('path')) {
-                  var path = r.data.path;
-                  var workingdir = r.data.workingdir;
-                  var launch_arg = "";
-                  var name = jsonscript['script_name'];
-                  var language = jsonscript['eudk_script_language'];
-                  var defargs = jsonscript['default_argument']
-                  var chaos_prefix = "";
-                  jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
-                    if (r.err != 0) {
-                      instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
-                      return;
-                    } else {
-                      chaos_prefix = r.data.value;
-                      if (language == "CPP") {findBestServer
-                        launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm + "\"";
-                      } else if (language == "bash") {
-                        launch_arg = "bash " + path + parm;
-                      } else if (language == "nodejs") {
-                        launch_arg = "node " + path + parm;
-    
-                      } else if (language == "python") {
-                        launch_arg = "python " + path + parm;
-    
-                      } else {
-                        launch_arg = language + " " + path + parm;
-                      }
-                      jchaos.rmtCreateProcess(server + ":8071", name, launch_arg, language, workingdir, function (r) {
-                        console.log("Script running onto:" + server + " :" + JSON.stringify(r));
-                        instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 3000, true);
-                      }, function (bad) {
-                        console.log("Some error getting loading script:" + bad);
-                        instantMessage("Script " + name, "Failed to start " + bad, 4000, false);
-    
-                      });
-      
-                        
-                    }
-                  }, function (bad) {
-                    console.log("Some error getting environment:" + bad);
-                    instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
-      
-                  });
-              }
-    
-            }
-            }, function (bad) {
-              console.log("Some error  loading script:" + bad);
-              instantMessage("Load Script", "Exception  loading:" + bad, 5000, false);
-    
-            });
-        });
-      });
-      }
-        
-      };
+    },function(bad){
+      instantMessage("runScript:"+bad, 2000, false);
+
     });
-}
+    
+  }
   function updateProcessInterface(tmpObj) {
     //  updateProcessList(tmpObj);
     var tablename = "main_table-" + tmpObj.template;
@@ -5146,72 +5121,11 @@ function runScript(name,parm){
     $("#script-run").off('click');
     $("#script-run").on('click', function () {
       $("#mdl-script").modal("hide");
-
       jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
-        loadScriptOnServer(tmpObj, data, null, function (p) {
-          if (tmpObj.hasOwnProperty("agents") && p.data.hasOwnProperty('path')) {
-            var path = p.data.path;
-            var workingdir = p.data.workingdir;
-            tmpObj.node_name_to_desc[tmpObj.node_selected]['workingdir'] = workingdir;
-            var launch_arg = "";
-            var name = data['script_name'];
-            var language = data['eudk_script_language'];
-            var defargs = data['default_argument']
-            var serverlist = tmpObj['agents'];
-            var maxIdle = 0;
-            var server = null;
-            var chaos_prefix = "";
-            server = findBestServer(tmpObj);
-            if (server == null) {
-              alert("NO Server Available");
-              return;
-            }
-
-            jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
-              if (r.err != 0) {
-                instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
-                return;
-              } else {
-                chaos_prefix = r.data.value;
-
-
-                getEntryWindow(data['script_name'], "Additional args", defargs, "Run", function (parm) {
-                  if (language == "CPP") {
-                    launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm + "\"";
-                  } else if (language == "bash") {
-                    launch_arg = "bash " + path + parm;
-                  } else if (language == "nodejs") {
-                    launch_arg = "node " + path + parm;
-
-                  } else if (language == "python") {
-                    launch_arg = "python " + path + parm;
-
-                  } else {
-                    launch_arg = language + " " + path + parm;
-                  }
-                  jchaos.rmtCreateProcess(server + ":8071", name, launch_arg, language, workingdir, function (r) {
-                    console.log("Script running onto:" + server + " :" + JSON.stringify(r));
-                    var node_selected = tmpObj.node_selected;
-                    instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                    getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
-                  }, function (bad) {
-                    console.log("Some error getting loading script:" + bad);
-                    instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
-
-                  });
-                }, "Cancel");
-              }
-            }, function (bad) {
-              console.log("Some error getting environment:" + bad);
-              instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
-
-            });
-
-          } else {
-            instantMessage("Script " + name, "Failed to Load ", 2000, false);
-
-          }
-        });
+        var defargs = data['default_argument']
+        getEntryWindow(data['script_name'], "Additional args", defargs, "Run", function (parm) {
+          runScript(tmpObj.node_selected, parm);
+        }, "Cancel");
       });
     });
     $("#script-save").off('click');
@@ -6770,7 +6684,7 @@ function runScript(name,parm){
     html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=30>';
     html += '<label class="label span3">Query chunk </label>';
     html += '<input class="input-xlarge focused span9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
-    
+
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -7239,7 +7153,7 @@ function runScript(name,parm){
         start: 0,
         stop: "NOW",
         tag: "",
-        chunk:3600
+        chunk: 3600
       };
     }
 
@@ -7278,7 +7192,7 @@ function runScript(name,parm){
     html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
     html += '<label class="label span3">Query chunk </label>';
     html += '<input class="input-xlarge focused span9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
-   
+
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -7937,147 +7851,8 @@ function runScript(name,parm){
 
   }
 
-  function restoreFullConfig(config, configToRestore) {
-    if (!(configToRestore instanceof Array)) {
-      return;
-    }
-    configToRestore.forEach(function (sel) {
-
-      if (sel == "us") {
-        if (config.hasOwnProperty('us') && (config.us instanceof Array)) {
-          config.us.forEach(function (data) {
-            confirm("US " + data.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
-              if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
-                data.us_desc.cu_desc.forEach(function (item) {
-                  jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
-                });
-                node_selected = data.us_desc.ndk_uid;
-
-                unitServerSave(data.us_desc);
-
-              }
-            }, "Join", function () { unitServerSave(data.us_desc); });
-
-          });
-        } else if (config.hasOwnProperty("us_desc")) {
-          var templ = {
-            $ref: "us.json",
-            format: "tabs"
-          }
-          confirm("Add US " + config.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
-            if (config.us_desc.hasOwnProperty("cu_desc") && (config.us_desc.cu_desc instanceof Array)) {
-              config.us_desc.cu_desc.forEach(function (item) {
-                jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
-              });
-              node_selected = config.us_desc.ndk_uid;
-              // editorFn = unitServerSave;
-              //jsonEdit(templ, config.us_desc);
-              jsonEditWindow("US Editor", templ, config.us_desc, unitServerSave, tmpObj);
-
-            }
-          }, "Join", function () {
-            // editorFn = unitServerSave;
-            //jsonEdit(templ, config.us_desc);
-            jsonEditWindow("US Editor Join", templ, config.us_desc, unitServerSave, tmpObj);
-
-          });
-        } else if (config.hasOwnProperty("cu_desc")) {
-
-          var parent = config.cu_desc.ndk_parent;
-
-
-          confirm("Add CU " + config.cu_desc.ndk_uid, "Add CU to " + parent + "?", "Add", function () {
-            if (config.hasOwnProperty("cu_desc")) {
-              var templ = {
-                $ref: "cu.json",
-                format: "tabs"
-              }
-              //editorFn = newCuSave;
-              var tmp = config.cu_desc;
-              //jsonEdit(templ, tmp);
-              jsonEditWindow("New CU Editor", templ, tmp, newCuSave, tmpObj);
-
-            }
-          }, "Cancel", function () {
-          });
-        }
-      }
-      if ((sel == "agents") && config.hasOwnProperty('agents') && (config.agents instanceof Array)) {
-        config.agents.forEach(function (json) {
-          agentSave(node_selected, json.info);
-        });
-      }
-      if ((sel == "snapshots") && config.hasOwnProperty('snapshots') && (config.snapshots instanceof Array)) {
-        config.snapshots.forEach(function (json) {
-          jchaos.snapshot(json.name, "set", "", json.dataset, function (d) {
-            console.log("restoring snapshot '" + json.name + "' created:" + json.ts);
-          });
-        });
-      }
-      if ((sel == "graphs") && config.hasOwnProperty('graphs') && (config.graphs instanceof Object)) {
-        jchaos.variable("highcharts", "set", config.graphs, function (s) {
-          console.log("restoring graphs:" + JSON.stringify(config.graphs));
-          high_graphs = config.graph;
-        });
-
-      }
-      if ((sel == "custom_group") && config.hasOwnProperty('custom_group') && (config.custom_group instanceof Array)) {
-        jchaos.variable("custom_group", "set", config.custom_group, function (s) {
-          console.log("restoring custom groups:" + JSON.stringify(config.custom_group));
-          custom_group = config.custom_group;
-        });
-
-      }
-      if ((sel == "cu_templates") && (config instanceof Object) && (!config.hasOwnProperty("cu_desc"))) {
-
-        jchaos.variable("cu_templates", "set", config, function (s) {
-          console.log("restoring CU templates:" + JSON.stringify(config));
-          cu_templates = config;
-        });
-
-      }
-    });
-  }
-  function saveFullConfig(name) {
-    //find all US
-    var obj = {};
-    obj['agents'] = [];
-    var agent_list = jchaos.search("", "agent", false, false);
-    agent_list.forEach(function (item) {
-      var agent = {
-        "name": item,
-      };
-      var info = jchaos.node(item, "info", "agent", "", null);
-      agent['info'] = info;
-      obj['agents'].push(agent);
-      ;
-    });
-    obj['us'] = [];
-    var us_list = jchaos.search("", "us", false, false);
-    us_list.forEach(function (item) {
-      var data = jchaos.node(item, "get", "us", "", null);
-      obj['us'].push(data);
-
-    });
-    // snapshots
-    obj['snapshots'] = [];
-    var snaplist = jchaos.search("", "snapshots", false);
-    snaplist.forEach(function (item) {
-      var snap = {
-        snap: item,
-      };
-      var dataset = jchaos.snapshot(item.name, "load", null, "");
-      snap['dataset'] = dataset;
-      obj['snapshots'].push(snap);
-    });
-    // graphs
-
-    obj['graphs'] = jchaos.variable("highcharts", "get", null, null);
-    obj['cu_templates'] = jchaos.variable("cu_templates", "get", null, null);
-    var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
-    saveAs(blob, "configuration.json");
-  }
-
+  
+  
 
   function generateScriptAdminModal() {
     var html = '<div class="modal hide fade" id="mdl-script">';
@@ -8873,41 +8648,53 @@ function runScript(name,parm){
 
   }
   function createCustomDialog(opt, html, butyes, yeshandle, cancelText, nohandle, open_handle, close_handle) {
+
     var dlg_opt = {
-      buttons: [
-        {
-          id: "confirm-yes",
-          text: butyes,
-          click: function (e) {
-            if (typeof yeshandle === "function") {
-              yeshandle();
-            }
-            $(this).dialog("close");
-          }
-        },
-        {
-          id: "confirm-no",
-          text: cancelText,
-          click: function (e) {
-            if (typeof nohandle === "function") {
-              nohandle();
-            }
-            $(this).dialog("close");
-          }
-        }],
-      open: function (event, ui) {
-        if (typeof open_handle === "function") {
-          open_handle(event, ui);
-        }
-      },
-      close: function (event, ui) {
-        if (typeof close_handle === "function") {
-          close_handle(event, ui);
-        } else {
-          $(this).remove();
-        }
+    };
+    dlg_opt['buttons'] = [];
+    dlg_opt['close'] = function (event, ui) {
+      if (typeof close_handle === "function") {
+        close_handle(event, ui);
+      } else {
+        $(this).remove();
       }
     }
+    dlg_opt['open'] = function (event, ui) {
+      if (typeof open_handle === "function") {
+        open_handle(event, ui);
+      }
+    }
+    if (opt.hasOwnProperty('buttons') && (opt.buttons instanceof Array)) {
+      opt.buttons.forEach(function (elem) {
+        dlg_opt['buttons'].push(elem);
+      });
+      delete opt.buttons;
+    }
+    if (butyes != null && butyes != "") {
+      dlg_opt['buttons'].push({
+        id: "confirm-yes",
+        text: butyes,
+        click: function (e) {
+          if (typeof yeshandle === "function") {
+            yeshandle();
+          }
+          $(this).dialog("close");
+        }
+      });
+    }
+    if (cancelText != null && cancelText != "") {
+      dlg_opt['buttons'].push({
+        id: "confirm-no",
+        text: cancelText,
+        click: function (e) {
+          if (typeof nohandle === "function") {
+            nohandle();
+          }
+          $(this).dialog("close");
+        }
+      });
+    }
+
     for (var i in opt) {
       dlg_opt[i] = opt[i];
     }
@@ -8965,7 +8752,7 @@ function runScript(name,parm){
     createCustomDialog({
       modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
       width: 'auto', resizable: false
-    }, html,butyes, yeshandle, butno, nohandle);
+    }, html, butyes, yeshandle, butno, nohandle);
 
   }
   function type2Alias(t) {
@@ -9524,6 +9311,7 @@ function runScript(name,parm){
   $.fn.generateMenuBox = function () {
     $(this).html(generateMenuBox());
   }
+  
   $.fn.generateQueryTable = function () {
     $(this).html(generateQueryTable());
   }
@@ -9533,12 +9321,8 @@ function runScript(name,parm){
   $.fn.editActions = function () {
     actionJsonEditor();
   }
-  $.fn.saveFullConfig = function () {
-    saveFullConfig();
-  }
-  $.fn.restoreFullConfig = function (json, opt) {
-    restoreFullConfig(json, opt);
-  }
+  
+  
   $.fn.getFile = function (msghead, msg, handler) {
     return getFile(msghead, msg, handler);
   }
@@ -9749,5 +9533,16 @@ function runScript(name,parm){
         }
       });
     });
+  }
+
+
+  if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+
+
+    module.exports = $(this);
+
+  } else {
+    window.jqccs=jqccs;
+    
   }
 })(jQuery);
