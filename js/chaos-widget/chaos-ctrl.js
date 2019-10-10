@@ -3925,6 +3925,16 @@
           })
         }, "Joke", function () { });
       return;
+    } else if (cmd == "shutdown-node") {
+      confirm("Do you want to IMMEDIATELY SHUTDOWN", "Pay attention ANY CU will be killed as well", "Kill",
+        function () {
+          jchaos.node(node_selected, "shutdown", "us", function () {
+            instantMessage("US SHUTDOWN", "Killing " + node_selected + "", 1000, true);
+          }, function () {
+            instantMessage("US SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+          })
+        }, "Joke", function () { });
+      return;
     } else if (cmd == "restart-node") {
       confirm("Do you want to RESTART?", "Pay attention ANY CU will be restarted as well", "Restart",
         function () {
@@ -8853,7 +8863,9 @@
         items['start-node'] = { name: "Start US ..." };
         items['stop-node'] = { name: "Stop US ..." };
         items['restart-node'] = { name: "Restart US ..." };
-        items['kill-node'] = { name: "Kill US ..." };
+        items['kill-node'] = { name: "Kill US (via agent) ..." };
+        items['shutdown-node'] = { name: "Shutdown immediately US  ..." };
+
         items['console-node'] = { name: "Console US ..." };
 
 
