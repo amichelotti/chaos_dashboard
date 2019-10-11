@@ -714,7 +714,12 @@
 
 			return dev_array;
 		}
-
+/**
+ * getChannel
+ * \brief retrive the specified live channel
+ * @param devs CU names
+ * @params channel_id (0: output, 1: input, 2:custom,3:system, 4: health, 5 cu alarm, 6 dev alarms)
+ */
 		jchaos.getChannel = function (devs, channel_id, handleFunc, badfunc) {
 
 			var dev_array = jchaos.convertArray2CSV(devs);
@@ -763,6 +768,46 @@
 				"value": { "properties": [{ "cudk_bypass_state": value }] }
 			};
 			return jchaos.mdsBase("node", opt, handleFunc);
+		}
+		/***
+		 * storageLive
+		 * \brief enable/disable live cu
+		 * @param dev list of cu
+		 * @param enable enable disable
+		 * @param handleFunc call back to call if success
+		 * @param errFunc callback to call if error 
+		 */
+		jchaos.storageLive = function(dev,enable, handleFunc, errFunc){
+			jchaos.getChannel(dev,3,function(cus){
+				cus.forEach(function(elem,index){
+					if(elem.hasOwnProperty('dsndk_storage_type')){
+						var val=Number(elem.dsndk_storage_type);
+						val = (val&0x1)|(enable<<1);
+						jchaos.setProperty(cus[index].ndk_uid,[{ "dsndk_storage_type": val}]);
+							
+					}
+				})
+				handleFunc();},errFunc);
+		}
+		/***
+		 * storageHisto
+		 * \brief enable/disable history cu
+		 * @param dev list of cu
+		 * @param enable enable disable
+		 * @param handleFunc call back to call if success
+		 * @param errFunc callback to call if error 
+		 */
+		jchaos.storageHisto = function(dev,enable, handleFunc, errFunc){
+			jchaos.getChannel(dev,3,function(cus){
+				cus.forEach(function(elem,index){
+					if(elem.hasOwnProperty('dsndk_storage_type')){
+						var val=Number(elem.dsndk_storage_type);
+						val = (val&0x2)|(enable&1);
+						jchaos.setProperty(cus[index].ndk_uid,[{ "dsndk_storage_type": val}]);
+							
+					}
+				})
+				handleFunc();},errFunc);
 		}
 		jchaos.setProperty = function (dev, prop, handleFunc, errFunc) {
 			var opt = {

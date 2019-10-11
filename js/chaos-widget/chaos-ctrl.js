@@ -1178,6 +1178,7 @@
 
     html += '<div class="box span12" id="container-main-table">';
     html += '<div class="box-content span12">';
+    html += '<div class="row-fluid"><label class="span1">Search:</label><input class="input-xlarge focused" id="process_search" class="span5" type="text" title="Search a Process" value=""></div>';
 
     html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header processMenu">';
@@ -2336,6 +2337,19 @@
       $("#mdl-graph").modal("hide");
 
     });
+    $("#graph_search").off('keypress');
+    $("#graph_search").on('keypress', function (event) {
+        var t = $(event.target);
+        var value = $(t).attr("value");
+        updateGraph( value);
+     // if ((event.which == 13)) {
+        //  var name = $(t).attr("cuname");
+       // var value = $(t).attr("value");
+       // updateGraph( value);
+
+     // }
+    
+    });
     $("#graph-list-run").off('click');
     $("#graph-list-run").on('click', function () {
       runGraph(graph_selected);
@@ -2396,7 +2410,7 @@
         graph_selected = null;
         jchaos.variable("highcharts", "set", high_graphs, null);
 
-        updateGraph();
+        updateGraph( $("#graph_search").val());
       }, "Cancel", function () {
         $("#mdl-graph-list").modal("show");
 
@@ -2949,6 +2963,7 @@
     if (cmd == "quit") {
       return;
     }
+    var node_multi_selected=tmpObj.node_multi_selected
     var currsel = tmpObj.node_multi_selected[0];
     if (cmd == "snapshot-cu") {
       var instUnique = (new Date()).getTime();
@@ -2971,7 +2986,7 @@
         format: "tabs"
       }
       var def = {};
-      def['tag_elements'] = tmpObj.node_multi_selected;
+      def['tag_elements'] = node_multi_selected;
       def['tag_type'] = "CYCLE";
       def['tag_name'] = "NONAME_" + (new Date()).getTime();
       def['tag_duration'] = 1;
@@ -3066,6 +3081,27 @@
       openControl("Control ", tmpObj, desc.instance_description.control_unit_implementation, 1000);
 
 
+    } else if(cmd=="live-cu-disable"){
+      jchaos.storageLive(node_multi_selected, 0,
+      function () { instantMessage("Live CU disabled", node_multi_selected[0] , 2000, true); },
+      function () { instantMessage("Error Live CU disabled", node_multi_selected[0] , 2000, false); });
+
+    
+    } else if(cmd=="live-cu-enable"){
+      jchaos.storageLive(node_multi_selected, 1,
+        function () { instantMessage("Live CU enabled", node_multi_selected[0] , 2000, true); },
+        function () { instantMessage("Error Live CU enabled", node_multi_selected[0] , 2000, false); });
+  
+    } else if(cmd=="histo-cu-disable"){
+      jchaos.storageHisto(node_multi_selected, 0,
+        function () { instantMessage("History CU disabled", node_multi_selected[0] , 2000, true); },
+        function () { instantMessage("Error History CU disabled", node_multi_selected[0] , 2000, false); });
+  
+    } else if(cmd=="histo-cu-enable"){
+      jchaos.storageHisto(node_multi_selected, 1,
+        function () { instantMessage("History CU disabled", node_multi_selected[0] , 2000, true); },
+        function () { instantMessage("Error History CU disabled", node_multi_selected[0] , 2000, false); });
+  
     } else if (cmd == "show-dataset") {
       showDataset(currsel, currsel, 1000, tmpObj);
     } else if (cmd == "show-desc") {
@@ -3336,7 +3372,7 @@
     tempObj['update-server-interval'] = setInterval(function () {
       updateProcessServer(tempObj);
     }, 10000);
-
+  
     updateProcessList(tempObj, function (tmpObj) {
       updateProcessTable(tmpObj);
       var proclist = tmpObj.data;
@@ -3444,7 +3480,13 @@
 
     });
 
-
+    $("#process_search").off('keypress');
+    $("#process_search").on('keypress', function (event) {
+        var t = $(event.target);
+        var value = $(t).attr("value");
+        tempObj['filter']=value; 
+        updateProcessInterface(tempObj);
+    });
 
   }
 
@@ -3911,14 +3953,14 @@
       alert("Not Implemented, try with Edit.. ");
       return;
     } else if (cmd == "start-node") {
-      jchaos.node(node_selected, "start", "us", function () {
+      jchaos.node(node_multi_selected, "start", "us", function () {
         instantMessage("US START", "Starting " + node_selected + " via agent", 1000, true);
       }, function () {
         instantMessage("ERROR US START", "Starting " + node_selected + " via agent", 1000, false);
       });
       return;
     } else if (cmd == "stop-node") {
-      jchaos.node(node_selected, "stop", "us", function () {
+      jchaos.node(node_multi_selected, "stop", "us", function () {
         instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000, true);
 
       }, function () {
@@ -4734,8 +4776,12 @@
     var tablename = "main_table-" + tmpObj.template;
     var template = tmpObj.type;
     for (var p in tmpObj.data) {
-      var ptype = tmpObj.data[p].ptype;
       var pname = tmpObj.data[p].pname;
+
+      if(tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))){
+        continue;
+      }
+      var ptype = tmpObj.data[p].ptype;
 
       var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toLocaleString();
       var end_timestamp = (tmpObj.data[p].end_time > 0) ? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString() : "--";
@@ -5027,6 +5073,9 @@
       var ptype = obj.ptype;
       var pname = obj.pname;
 
+      if(tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))){
+        continue;
+      }
       var started_timestamp = obj.start_time;
       var end_timestamp = obj.end_time;
       var last_log = (obj.ts - obj.last_log_time);
@@ -6621,6 +6670,9 @@
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
     html += '<h3 id="list_graphs">List Graphs</h3>';
+    
+    html += '<div class="row-fluid"><label class="span2">Search:</label><input class="input-xlarge focused" id="graph_search" class="span5" type="text" title="Search a graph" value=""></div>';
+
     html += '</div>';
 
     html += '<div class="modal-body">';
@@ -6649,7 +6701,6 @@
     html += '</thead>';
     html += '</table>';
     html += '</div>';
-    html += '<div id="graph-link"></div>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -7252,12 +7303,19 @@
       }
     });
   }
-  function createGraphDialog(id, gname, options) {
+  function createGraphDialog(gname, id, options) {
     var av_graphs = jchaos.variable("highcharts", "get", null, null);
     var opt = av_graphs[gname];
+    if(typeof active_plots === "undefined"){
+      active_plots={};
+    }
     if (!(opt instanceof Object)) {
       alert("\"" + gname + "\" not a valid graph ");
       return;
+    }
+    if(typeof options ==="undefined"){
+      options= {modal: false, title: gname, zIndex: 10000, autoOpen: true,
+      width: opt.width, height:opt.height,resizable: true}
     }
     if (options.hasOwnProperty("width")) {
       opt.width = options.width;
@@ -7268,20 +7326,28 @@
 
     }
     var html = "";
+    var idname=gname;
+    var html_target="<div></div>";
     //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
     html += '<div class="row-fluid" style="height: 100%; width: 100%">';
     //html += '<div id="createGraphDialog-' + id + '" style="height: 100%; width: 100%">';
-    html += '<div id="createGraphDialog-' + id + '" class="span10" style="height: 100%; width: 100%">';
+    if(typeof id === "string"){
+      idname = id;
+      html_target="#"+id;
+    } 
+    html += '<div id="createGraphDialog-' + idname + '" class="span10" style="height: 100%; width: 100%">';
     html += '</div>';
 
-    html += '<div id="reportrange-' + id + '" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+    html += '<div id="reportrange-' + idname + '" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
     html += '<i class="fa fa-calendar"></i>&nbsp';
     html += '<span></span> <i class="fa fa-caret-down"></i>';
     html += '</div>';
     html += '</div>';
+    if(typeof id === "string"){
 
-    $("#" + id).children().remove();
-    $("#" + id).append(html);
+      $(html_target).children().remove();
+      $(html_target).append(html);
+    }
     dlg_opt = {
       open: function () {
         initializeTimePicker(function (ev, picker) {
@@ -7304,17 +7370,17 @@
           console.log(picker.endDate.format('MMMM D, YYYY HH:mm'));
           runQueryToGraph(gname, query_params.start, query_params.stop, query_params.tag, query_params.page);
 
-        }, id);
+        }, idname);
 
-        var chart = new Highcharts.chart("createGraphDialog-" + id, opt.highchart_opt);
+        var chart = new Highcharts.chart("createGraphDialog-" + idname, opt.highchart_opt);
         var start_time = (new Date()).getTime();
         console.log("New Graph:" + gname + " has been created :" + JSON.stringify(opt));
-
+       
         active_plots[gname] = {
           graphname: gname,
           graph: chart,
           highchart_opt: opt.highchart_opt,
-          dialog: id,
+          dialog: idname,
           start_time: start_time
         };
 
@@ -7514,49 +7580,7 @@
               runQueryToGraph(gname, query.start, query.stop, query.tag, query.page);
             });
 
-            $("#query-yesterday").off('click');
-            $("#query-yesterday").on("click", function () {
-
-              var yesterday = new Date();
-              yesterday.setDate(yesterday.getDate() - 1);
-              yesterday.setHours(0);
-              yesterday.setMinutes(0);
-              yesterday.setSeconds(0);
-              yesterday.setMilliseconds(1);
-
-              var qstart = yesterday.getTime();
-              yesterday.setHours(23);
-              yesterday.setMinutes(59);
-              yesterday.setSeconds(59);
-              yesterday.setMilliseconds(999);
-
-              var qstop = yesterday.getTime();
-              var qtag = $("#query-tag").val();
-              var page = $("#query-page").val();
-
-              runQueryToGraph(gname, qstart, qstop, qtag, page);
-            });
-
-            $("#query-today").off('click');
-            $("#query-today").on("click", function () {
-
-              var today = new Date();
-              today.setHours(0);
-              today.setMinutes(0);
-              today.setSeconds(0);
-              today.setMilliseconds(1);
-
-              var qstart = today.getTime();
-              today.setHours(23);
-              today.setMinutes(59);
-              today.setSeconds(59);
-              today.setMilliseconds(999);
-
-              var qstop = today.getTime();
-              var qtag = $("#query-tag").val();
-              var page = $("#query-page").val();
-              runQueryToGraph(gname, qstart, qstop, qtag, page);
-            });
+          
           }
         }, {
           text: "Save",
@@ -7605,10 +7629,13 @@
           text: "Close",
           click: function () {
             console.log("Removing graph:" + gname);
-
-            clearInterval(active_plots[gname].interval);
-            delete active_plots[gname]['graph'];
-            delete active_plots[gname];
+            if(active_plots.hasOwnProperty(gname)){
+              if(active_plots[gname].hasOwnProperty('interval')){
+                clearInterval(active_plots[gname].interval);
+              }
+              delete active_plots[gname]['graph'];
+              delete active_plots[gname];
+          }
 
             $(this).dialog('close');
           }
@@ -7621,8 +7648,13 @@
       dlg_opt[i] = options[i];
     }
     console.log("dialog options:" + JSON.stringify(dlg_opt));
-
-    $("#" + id).dialog(dlg_opt);
+    if(typeof id === "undefined"){
+      $('<div></div>').appendTo('body')
+      .html(html)
+      .dialog(dlg_opt);
+    } else {
+      $(html_target).dialog(dlg_opt);
+    }
   }
   function runGraph(gname) {
     if (gname == null || gname == "") {
@@ -7672,7 +7704,7 @@
         resizable: true,
         dialogClass: 'no-close'
       };
-      createGraphDialog("dialog-" + count, gname, options);
+      createGraphDialog(gname,"dialog-" + count,  options);
 
 
     } else {
@@ -8996,8 +9028,20 @@
 
       items['show-picture'] = { name: "Show as Picture.." };
     }
+    items['sep3'] = "---------";
 
-
+    if (cu != null && cu.hasOwnProperty('system') && cu.system.hasOwnProperty("dsndk_storage_type")) {
+      if (cu.system.dsndk_storage_type & 0x2) {
+        items['live-cu-disable'] = { name: "Disable Live", icon: "live" };
+      } else {
+        items['live-cu-enable'] = { name: "Enable Live", icon: "live" };
+      }
+      if (cu.system.dsndk_storage_type & 0x1) {
+        items['histo-cu-disable'] = { name: "Disable History", icon: "live" };
+      } else {
+        items['histo-cu-enable'] = { name: "Enable History", icon: "live" };
+      }
+    }
     return items;
   }
   function updateGenericControl(tmpObj, cu) {
@@ -9206,13 +9250,16 @@
 
     });
   }
-  function updateGraph() {
+  function updateGraph( graph_filt) {
     high_graphs = jchaos.variable("highcharts", "get", null, null);
     $("#table_graph").find("tr:gt(0)").remove();
-
+    if(typeof graph_filt !=="string"){
+      graph_filt="";
+    }
     for (g in high_graphs) {
-      $('#table_graph').append('<tr class="row_element" id="' + g + '"><td>' + g + '</td><td>' + high_graphs[g].time + '</td><td>' + high_graphs[g].highchart_opt.chart.type + '</td></tr>');
-
+      if(g.includes(graph_filt)){
+        $('#table_graph').append('<tr class="row_element" id="' + g + '"><td>' + g + '</td><td>' + high_graphs[g].time + '</td><td>' + high_graphs[g].highchart_opt.chart.type + '</td></tr>');
+      }
     }
 
     $("#table_graph tbody tr").click(function (e) {
@@ -9360,11 +9407,12 @@
   $.fn.getValueFromCUList = function (culist, path) {
     return getValueFromCUList(culist, path);
   }
-  $.fn.runQueryToGraph = function (gname, start, stop, qtag, page) {
+  jqccs.runQueryToGraph = function (gname, start, stop, qtag, page) {
     return runQueryToGraph(gname, start, stop, qtag, page);
   }
-  $.fn.createGraphDialog = function (id, gname, options) {
-    return createGraphDialog(id, gname, options);
+
+  jqccs.createGraphDialog = function (gname,id,  options) {
+    return createGraphDialog(gname,id,  options);
   }
 
   function initSettings() {
@@ -9384,7 +9432,8 @@
     }
 
   }
-  $.fn.initSettings = function () {
+
+  jqccs.initSettings = function () {
     initSettings();
   }
   $.fn.chaosDashboard = function (opt) {

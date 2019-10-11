@@ -120,7 +120,14 @@ function newWindow(id, name,sizex,sizey) {
 	 methods.forEach(function(elem){
 		methods_full.push("jchaos."+elem);
 	 });
-	
+	 methods=Object.getOwnPropertyNames(jqccs).filter(function(property) {
+        return typeof jqccs[property] == 'function';
+	});
+	methods.forEach(function(elem){
+		methods_full.push("jqccs."+elem);
+	 });
+	 jqccs.initSettings();
+
 	  $('#terminal').terminal(function(command) {
         if (command !== '') {
             try {
