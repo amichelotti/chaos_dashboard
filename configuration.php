@@ -91,13 +91,13 @@ require_once('header.php');
 	 //$("#upload_selection").multiSelect("select_all");
 
 	  $("#save-configuration").on("click",function(){
-		  $(this).saveFullConfig();
+		  jchaos.saveFullConfig();
 	  });
 	  $('#upload-file').on('change', function() {
 		var reader = new FileReader();
 		reader.onload = function(e) {
 		var cmdselected = $("#upload_selection").val();
-		$(this).restoreFullConfig(JSON.parse(e.target.result),cmdselected);
+		jchaos.restoreFullConfig(JSON.parse(e.target.result),cmdselected);
 		
 
 	};
