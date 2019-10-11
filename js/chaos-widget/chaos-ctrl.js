@@ -1196,8 +1196,8 @@
     html += '<th>Uptime</th>';
     html += '<th>System Time</th>';
     html += '<th>User Time</th>';
-    html += '<th>VMem</th>';
-    html += '<th colspan="2">RMem|%</th>';
+    html += '<th>VMem(KB)</th>';
+    html += '<th colspan="2">RMem(KB)|%</th>';
     html += '<th>Parent</th>';
 
     html += '</tr>';
@@ -4791,15 +4791,15 @@
       var uptime = tmpObj.data[p].uptime;
       var systime = parseFloat(tmpObj.data[p].Psys).toFixed(3);
       var cputime = parseFloat(tmpObj.data[p].Puser).toFixed(3);
-      var vmem = tmpObj.data[p].Vmem;
-      var rmem = tmpObj.data[p].Rmem;
+      var vmem = parseFloat(tmpObj.data[p].Vmem/1024).toFixed(3);
+      var rmem = tmpObj.data[p].Rmem/1024;
       var pmem = parseFloat(tmpObj.data[p].pmem).toFixed(3);
 
       var hostname = tmpObj.data[p].hostname;
       var status = tmpObj.data[p].msg;
       var parent = tmpObj.data[p].parent;
       var infoServer = tmpObj.agents[hostname];
-      var parent_str = parent + " (" + infoServer.idletime + ")";
+      var parent_str = parent;
       var encoden = encodeName(p);
       $("#" + encoden + "_start_ts").html(started_timestamp);
       $("#" + encoden + "_end_ts").html(end_timestamp);
@@ -9192,7 +9192,7 @@
           } else if (elem.hasOwnProperty("name")) {
             name = elem.name;
           }
-          if (name !== 'undefined') {
+          if (typeof name === "string") {
             cu_name_to_saved[name] = elem;
             var node_name_to_desc = tmpObj.node_name_to_desc;
             if (node_name_to_desc[name] == null) {
