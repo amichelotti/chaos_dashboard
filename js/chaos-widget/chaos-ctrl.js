@@ -3895,6 +3895,16 @@
 
 
       return;
+    } else if (cmd == "shutdown-nt_control_unit") {
+      confirm("Do you want to IMMEDIATELY SHUTDOWN CU/EU:"+node_selected, "Pay attention ANY CU of the same US will be killed as well", "Kill",
+        function () {
+          jchaos.node(node_selected, "shutdown", "uscu", function () {
+            instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, true);
+          }, function () {
+            instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+          })
+        }, "Joke", function () { });
+      return;
     } else if (cmd == "shutdown-nt_unit_server") {
       confirm("Do you want to IMMEDIATELY SHUTDOWN US:"+node_selected, "Pay attention ANY CU will be killed as well", "Kill",
         function () {
@@ -8868,9 +8878,6 @@
     var node = tmpObj.node_name_to_desc[node_name];
     if (interface == "us") {
       items['new-nt_unit_server'] = { name: "New  Unit Server..." };
-      if(node_selected != null && node_selected !=""){
-        items['shutdown-nt_unit_server'] = { name: "Shutdown immediately US  ..." };
-      }
 
       if ((us_copied != null) && us_copied.hasOwnProperty("ndk_uid")) {
         items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
@@ -8894,7 +8901,6 @@
       items['del-' + node_type] = { name: "Del " + node_selected };
       items['copy-' + node_type] = { name: "Copy " + node_selected };
       items['save-' + node_type] = { name: "Save To Disk " + node_selected };
-      items['shutdown-' + node_type] = { name: "Shutdown " + node_selected };
 
       var cutypes = cuCreateSubMenu();
       items['fold1'] = { name: "New  Control Unit", "items": cutypes };
@@ -8934,16 +8940,16 @@
       if (us_copied != null && us_copied.ndk_uid != "") {
         items['agent-act'] = "---------";
         items['associate-node'] = { name: "Associate " + us_copied.ndk_uid + "..." };
-        if(node_selected != null && node_selected !=""){
-          items['shutdown-node'] = { name: "Shutdown immediately Agent ..." };
-        }
+        
 
         items['agent-act'] = "---------";
       }
-      items['shutdown-' + node_type] = { name: "Shutdown " + node_selected };
 
     }
+    if(node_selected != null && node_selected !=""){
 
+      items['shutdown-' + node_type] = { name: "Shutdown " + node_selected };
+    }
     return items;
   }
 
