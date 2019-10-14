@@ -6996,6 +6996,7 @@
       alert("\"" + gname + "\" not a valid graph ");
       return;
     }
+    var items=0;
     jchaos.options.history_page_len = Number(page);
     jchaos.options.updateEachCall = true;
     jchaos.setOptions({ "timeout": 60000 });
@@ -7035,12 +7036,14 @@
       correlation = true;
     }
     var histdataset = {};
+    $("#info-download-"+gname).html("retrieving data..")
 
     if (correlation) {
       for (k in tr) {
         histdataset[tr[k].name] = { x: [], tx: [], y: [], ty: [] };
       }
       // download all data before.
+
       for (var v in graph_opt.culist) {
         var item = graph_opt.culist[v];
         for (var dir in dirlist) {
@@ -7056,6 +7059,8 @@
                 if (data.Y[0].hasOwnProperty(variable)) {
                   var cnt = 0;
                   console.log("X acquiring " + trname + " path:" + tr[k].x.origin + " items:" + data.Y.length);
+                  items+=data.Y.length;
+                  $("#info-download-"+gname).html(items)
 
                   data.Y.forEach(function (ds) {
                     if (tr[k].x.index != null && tr[k].x.index != "-1") {
@@ -7076,6 +7081,8 @@
                 if (data.Y[0].hasOwnProperty(variable)) {
                   var cnt = 0;
                   console.log("Y acquiring " + trname + " path:" + tr[k].y.origin + " items:" + data.Y.length);
+                  items+=data.Y.length;
+                  $("#info-download-"+gname).html(items)
 
                   data.Y.forEach(function (ds) {
                     if (tr[k].y.index != null && tr[k].y.index != "-1") {
@@ -7135,6 +7142,9 @@
                 if (tr[k].y.cu === item) {
                   //iterate on the datasets
                   console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
+                  items+=data.Y.length;
+                  $("#info-download-"+gname).html(items)
+
                   var variable = tr[k].y.var;
                   var index = tr[k].y.index;
                   ele_count = 0;
@@ -7348,10 +7358,11 @@
     html += '<div id="createGraphDialog-' + idname + '" class="span10" style="height: 100%; width: 100%">';
     html += '</div>';
 
-    html += '<div id="reportrange-' + idname + '" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+    html += '<div id="reportrange-' + idname + '" class="span8" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
     html += '<i class="fa fa-calendar"></i>&nbsp';
     html += '<span></span> <i class="fa fa-caret-down"></i>';
     html += '</div>';
+    html += '<div id="info-download-'+gname +'" class="span3" />' 
     html += '</div>';
     if(typeof id === "string"){
 
