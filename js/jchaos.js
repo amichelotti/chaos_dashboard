@@ -997,6 +997,10 @@
 				if(tagsv.length > 0){
 					opt['tags'] = tagsv;
 				}
+			} else if(tagsv instanceof Object){
+				for(var k in tagsv){
+					opt[k]=tagsv[k];
+				}
 			}
 
 			opt['channel'] = channel;
@@ -1004,11 +1008,11 @@
 			if (varname !== "undefined" && (typeof varname !== "string")) {
 				opt['var'] = varname;
 			}
-			if (tagsv !== "undefined") {
-				if (tagsv instanceof Array) {
-					opt["tags"] = tagsv;
-				} else if(tagsv!="") {
+			if (opt['tags'] !== "undefined") {
+				if ((typeof opt['tags'] ==="string") && (opt['tags']!="")) {
 					opt["tags"] = [tagsv];
+				} else {
+					delete opt["tags"];
 				}
 			}
 
@@ -1078,7 +1082,7 @@
 			opt['runid'] = runid;
 
 			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd + "&parm=" + JSON.stringify(opt);
-			console.log("getHistory (seqid:" + seq + " runid:" + runid + ") start:" + opt.start + " end:" + opt.end + " page:" + opt.page);
+			//console.log("getHistory (seqid:" + seq + " runid:" + runid + ") start:" + opt.start + " end:" + opt.end + " page:" + opt.page);
 			jchaos.basicPost("CU", str_url_cu, function (datav) {
 				var ret = true;
 				if ((opt.var != null) && (opt.var != "")) {

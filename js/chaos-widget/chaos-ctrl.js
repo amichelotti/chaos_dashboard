@@ -4801,9 +4801,9 @@
       var uptime = tmpObj.data[p].uptime;
       var systime = parseFloat(tmpObj.data[p].Psys).toFixed(3);
       var cputime = parseFloat(tmpObj.data[p].Puser).toFixed(3);
-      var vmem = parseFloat(tmpObj.data[p].Vmem/1024).toFixed(3);
+      var vmem = parseFloat(tmpObj.data[p].Vmem/1024).toFixed(1);
       var rmem = tmpObj.data[p].Rmem/1024;
-      var pmem = parseFloat(tmpObj.data[p].pmem).toFixed(3);
+      var pmem = parseFloat(tmpObj.data[p].pmem).toFixed(2);
 
       var hostname = tmpObj.data[p].hostname;
       var status = tmpObj.data[p].msg;
@@ -6985,27 +6985,57 @@
     return 0;
   }
 
-  function runQueryToGraph(gname, start, stop, qtag, page) {
+  function runQueryToGraph(gname, start, stop, options) {
+
 
     var av_graphs = jchaos.variable("highcharts", "get", null, null);
     if (!(av_graphs[gname] instanceof Object)) {
       alert("\"" + gname + "\" not a valid graph ");
       return;
     }
+    var qtag="";
+    var page=30;
+    var chunk=3600;
+    var autoreduction=1;
+    if(options.hasOwnProperty("tag")){
+      qtag=options.tag;
+    }
+    if(options.hasOwnProperty("page")){
+      page=options.page;
+    }
+    if(options.hasOwnProperty("chunk")){
+      chunk=options.chunk;
+    }
+    if(options.hasOwnProperty("reduction")){
+      autoreduction=Number(options.reduction);
+    }
+
     if (!(active_plots[gname] instanceof Object)) {
       alert("\"" + gname + "\" not a valid graph ");
       return;
     }
     var items=0;
+    if (stop == "" || stop == "NOW") {
+      stop = (new Date()).getTime();
+    }
+
+    if(typeof chunk!=="number"){
+      chunk=stop-start;
+    }
+    if(typeof start!=="number"){
+      start=Number(start);
+    }
+    if(typeof stop!=="number"){
+      stop=Number(stop);
+    }
+    chunk=chunk*1000; // in ms
+
     jchaos.options.history_page_len = Number(page);
     jchaos.options.updateEachCall = true;
     jchaos.setOptions({ "timeout": 60000 });
     $("#query-start").val(start);
     $("#query-stop").val(stop);
 
-    if (stop == "" || stop == "NOW") {
-      stop = (new Date()).getTime();
-    }
     if (active_plots[gname].hasOwnProperty("interval") && (active_plots[gname].interval != null)) {
       clearInterval(active_plots[gname].interval);
       delete active_plots[gname].interval;
@@ -7018,16 +7048,32 @@
     for (var i = seriesLength - 1; i > -1; i--) {
       chart.series[i].setData([]);
     }
+    var projections={};
+    var query_opt={
+      tags:qtag,
+      maxpoints:graph_opt.width
+    };
+    query_opt['reduction']=autoreduction;
+    
+    graph_opt.culist.forEach(function (item) {
+      projections[item]={
+        0:["dpck_ats"],
+        1:["dpck_ats"],
+        4:["dpck_ats"]
+      }
+    });
     graph_opt.culist.forEach(function (item) {
       for (k in tr) {
         if (tr[k].x.cu === item) {
           dirlist[tr[k].x.dir] = dir2channel(tr[k].x.dir);
           console.log("X Trace " + tr[k].name + " path:" + tr[k].x.origin);
-
+          projections[item][dir2channel(tr[k].x.dir)].push(tr[k].x.var);
         }
         if (tr[k].y.cu === item) {
           dirlist[tr[k].y.dir] = dir2channel(tr[k].y.dir);
           console.log("Y Trace " + tr[k].name + " path:" + tr[k].y.origin);
+          projections[item][dir2channel(tr[k].y.dir)].push(tr[k].y.var);
+
         }
       }
     });
@@ -7047,9 +7093,11 @@
       for (var v in graph_opt.culist) {
         var item = graph_opt.culist[v];
         for (var dir in dirlist) {
-          console.log("Retrive correlation data CU:" + item + " direction:" + dirlist[dir]);
-
-          jchaos.getHistory(item, dirlist[dir], start, stop, "", function (data) {
+          
+          for(var start_chunk=start;start_chunk<stop;start_chunk+=chunk){
+            var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
+            query_opt['projection']=projections[item][dirlist[dir]];
+          jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", function (data) {
 
             for (k in tr) {
               var trname = tr[k].name;
@@ -7060,7 +7108,11 @@
                   var cnt = 0;
                   console.log("X acquiring " + trname + " path:" + tr[k].x.origin + " items:" + data.Y.length);
                   items+=data.Y.length;
-                  $("#info-download-"+gname).html(items)
+                  if(data.Y.length<page){
+                    $("#info-download-"+gname).html("<b>"+items+"</b>").css('color', 'black');
+                  } else {
+                    $("#info-download-"+gname).html(items).css('color', 'green');
+                  }
 
                   data.Y.forEach(function (ds) {
                     if (tr[k].x.index != null && tr[k].x.index != "-1") {
@@ -7082,7 +7134,11 @@
                   var cnt = 0;
                   console.log("Y acquiring " + trname + " path:" + tr[k].y.origin + " items:" + data.Y.length);
                   items+=data.Y.length;
-                  $("#info-download-"+gname).html(items)
+                  if(data.Y.length<page){
+                    $("#info-download-"+gname).html("<b>"+items+"</b>").css('color', 'black');
+                  } else {
+                    $("#info-download-"+gname).html(items).css('color', 'green');
+                  }
 
                   data.Y.forEach(function (ds) {
                     if (tr[k].y.index != null && tr[k].y.index != "-1") {
@@ -7098,7 +7154,8 @@
                 }
               }
             }
-          }, qtag);
+          }, query_opt);
+        }
         }
       };
       // ok plot
@@ -7123,8 +7180,12 @@
 
         for (var dir in dirlist) {
           var dataset = [];
+          for(var start_chunk=start;start_chunk<stop;start_chunk+=chunk){
+            var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
 
-          jchaos.getHistory(item, dirlist[dir], start, stop, "", function (data) {
+            query_opt['projection']=projections[item][dirlist[dir]];
+
+          jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", function (data) {
             var cnt = 0, ele_count = 0;
             for (k in tr) {
               if (tr[k].y.origin == "histogram") {
@@ -7141,9 +7202,13 @@
               } else {
                 if (tr[k].y.cu === item) {
                   //iterate on the datasets
-                  console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
+               //   console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
                   items+=data.Y.length;
-                  $("#info-download-"+gname).html(items)
+                  if(data.Y.length<page){
+                    $("#info-download-"+gname).html("<b>"+items+"</b>").css('color', 'black');
+                  } else {
+                    $("#info-download-"+gname).html(items).css('color', 'green');
+                  }
 
                   var variable = tr[k].y.var;
                   var index = tr[k].y.index;
@@ -7188,7 +7253,8 @@
             chart.redraw();
             // true until close if false the history loop retrive breaks
             return active_plots.hasOwnProperty(gname);
-          }, qtag);
+          }, query_opt);
+        }
         }
       });
     }
@@ -7242,9 +7308,10 @@
       query_params = {
         page: dashboard_settings.defaultPage,
         start: 0,
-        stop: "NOW",
+        stop: (new Date()).getTime(),
         tag: "",
-        chunk: 3600
+        chunk: dashboard_settings.defaultChunk,
+        reduction:false
       };
     }
 
@@ -7282,8 +7349,9 @@
     html += '<label class="label span3">Page </label>';
     html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
     html += '<label class="label span3">Query chunk </label>';
-    html += '<input class="input-xlarge focused span9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
-
+    html += '<input class="input-xlarge focused span9" id="query-chunk" title="Cut the query in chunk of the given seconds" type="number" value=3600>';
+    html += '<label class="label span3">Data Factor reduction</label>';
+    html += '<input class="input-xlarge focused span9" type="number" name="query-reduction" title="Reduction Factor" value=1/>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -7298,7 +7366,8 @@
       query_params['start'] = $("#query-start").val();
       query_params['stop'] = $("#query-stop").val();
       query_params['tag'] = $("#query-tag").val();
-      query_params['chunk'] = $("#query-chunk").val();
+      query_params['chunk'] = Number($("#query-chunk").val());
+      query_params['reduction'] = Number($("#query-reductionk").val());
 
       querycb(query_params)
 
@@ -7355,14 +7424,16 @@
       idname = id;
       html_target="#"+id;
     } 
-    html += '<div id="createGraphDialog-' + idname + '" class="span10" style="height: 100%; width: 100%">';
-    html += '</div>';
-
     html += '<div id="reportrange-' + idname + '" class="span8" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
     html += '<i class="fa fa-calendar"></i>&nbsp';
     html += '<span></span> <i class="fa fa-caret-down"></i>';
     html += '</div>';
-    html += '<div id="info-download-'+gname +'" class="span3" />' 
+    html += '<div class="span2">count:</div>' 
+    html += '<div id="info-download-'+gname +'" class="span2" />' 
+    
+    html += '<div id="createGraphDialog-' + idname + '" class="span10" style="height: 100%; width: 100%">';
+    html += '</div>';
+
     html += '</div>';
     if(typeof id === "string"){
 
@@ -7380,8 +7451,9 @@
             query_params = {
               page: dashboard_settings.defaultPage,
               start: 0,
-              stop: "NOW",
-              tag: ""
+              stop: (new Date()).getTime(),
+              tag: "",
+              chunk:dashboard_settings.defaultChunk
             };
           }
           query_params['start'] = start;
@@ -7389,7 +7461,7 @@
 
           console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
           console.log(picker.endDate.format('MMMM D, YYYY HH:mm'));
-          runQueryToGraph(gname, query_params.start, query_params.stop, query_params.tag, query_params.page);
+          runQueryToGraph(gname, query_params.start, query_params.stop,{tag:query_params.tag, page:query_params.page,chunck:query_params.chunk});
 
         }, idname);
 
@@ -7598,7 +7670,7 @@
                }
              });*/
             createQueryDialog(function (query) {
-              runQueryToGraph(gname, query.start, query.stop, query.tag, query.page);
+              runQueryToGraph(gname, query.start, query.stop, {tag:query.tag, page:query.page,chunck:query.chunk,reduction:query.reduction});
             });
 
           
@@ -9424,8 +9496,8 @@
   $.fn.getValueFromCUList = function (culist, path) {
     return getValueFromCUList(culist, path);
   }
-  jqccs.runQueryToGraph = function (gname, start, stop, qtag, page) {
-    return runQueryToGraph(gname, start, stop, qtag, page);
+  jqccs.runQueryToGraph = function (gname, start, stop, options) {
+    return runQueryToGraph(gname, start, stop,options);
   }
 
   jqccs.createGraphDialog = function (gname,id,  options) {
@@ -9607,6 +9679,8 @@
 
       $("#menu-dashboard").html(generateMenuBox());
       $("#query-page").val(dashboard_settings.defaultPage);
+      $("#query-chunk").val(dashboard_settings.defaultChunk);
+
       //   initializeTimePicker();
 
       //jsonSetup($(this));
