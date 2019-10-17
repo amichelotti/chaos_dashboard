@@ -211,6 +211,7 @@
 					} catch (err) {
 						var str = "jchaos.basicPost Error parsing json '" + err + "' body returned:'" + request.responseText + "' post:'" + params + "'";
 						console.error(str);
+						throw str;
 						return null;
 					}
 				}
@@ -251,8 +252,8 @@
 							//console.error(str);
 							console.log(str);
 							//throw str;
-							if (handleFuncErr != null && (typeof handleFuncErr === "function")) {
-								handleFuncErr(request.responseText);
+							if ((typeof handleFuncErr === "function")) {
+								handleFuncErr(str);
 							} else {
 								if (could_make_async) {
 									handleFunc(request.responseText);
@@ -974,10 +975,11 @@
 		 * @param {string[] tags optional} tagsv 
 
 		 */
-		jchaos.getHistory = function (devs, channel, start, stop, varname, handleFunc, tagsv) {
+		jchaos.getHistory = function (devs, channel, start, stop, varname, handleFunc, tagsv,funcerr) {
 			var result = {
 				X: [],
-				Y: []
+				Y: [],
+				nitems:0
 			};
 			var opt = {};
 			//var regex=/^[0-9]+$/;
@@ -1004,7 +1006,9 @@
 			}
 
 			opt['channel'] = channel;
-			opt['page'] = jchaos.options.history_page_len;
+			if(!opt.hasOwnProperty('page')){
+				opt['page'] = jchaos.options.history_page_len;
+			}
 			if (varname !== "undefined" && (typeof varname !== "string")) {
 				opt['var'] = varname;
 			}
@@ -1016,7 +1020,7 @@
 				}
 			}
 
-			jchaos.getHistoryBase(devs, opt, 1, 0, result, handleFunc);
+			jchaos.getHistoryBase(devs, opt, 0, 0, result, handleFunc,funcerr);
 
 		}
 
@@ -1074,7 +1078,7 @@
 
 		}
 
-		jchaos.getHistoryBase = function (devs, opt, seq, runid, result, handleFunc) {
+		jchaos.getHistoryBase = function (devs, opt, seq, runid, result, handleFunc,funcErr) {
 			var cmd = "queryhst";
 			var dev_array = jchaos.convertArray2CSV(devs);
 
@@ -1085,6 +1089,9 @@
 			//console.log("getHistory (seqid:" + seq + " runid:" + runid + ") start:" + opt.start + " end:" + opt.end + " page:" + opt.page);
 			jchaos.basicPost("CU", str_url_cu, function (datav) {
 				var ret = true;
+				if(datav.data instanceof Array){
+					result['nitems']+=datav.data.length;
+
 				if ((opt.var != null) && (opt.var != "")) {
 					datav.data.forEach(function (ele) {
 						result.X.push(Number(ele.ts));
@@ -1097,21 +1104,37 @@
 					});
 
 				}
+			}
+			result['devs']=devs;
+			result['query']=opt;
+			result['end']=datav.end;
+			result['runid']=datav.runid;
+			result['seqid']=datav.seqid;
 				if (jchaos.options.updateEachCall) {
+					if(datav.hasOwnProperty("count")){
+						result["count"]=datav.count;
+					}
 					ret = handleFunc(result);
 					result.X = [];
 					result.Y = [];
+					
 				} else {
 					if (datav.end == 1) {
 						// update if 0 or something else
+						if(datav.hasOwnProperty("count")){
+							result["count"]=datav.count;
+						}
 						handleFunc(result);
 
 					}
 				}
 				if (ret && (datav.end == 0)) {
-					jchaos.getHistoryBase(devs, opt, datav.seqid, datav.runid, result, handleFunc);
+					if(datav.hasOwnProperty("count")){
+						opt["count"]=datav.count;
+					}
+					jchaos.getHistoryBase(devs, opt, datav.seqid+1, datav.runid, result, handleFunc,funcErr);
 				}
-			});
+			},funcErr);
 		}
 
 

@@ -7006,7 +7006,7 @@
     if(options.hasOwnProperty("chunk")){
       chunk=options.chunk;
     }
-    if(options.hasOwnProperty("reduction")){
+    if(options.hasOwnProperty("reduction") && (typeof options.reduction === "number")){
       autoreduction=Number(options.reduction);
     }
 
@@ -7030,7 +7030,6 @@
     }
     chunk=chunk*1000; // in ms
 
-    jchaos.options.history_page_len = Number(page);
     jchaos.options.updateEachCall = true;
     jchaos.setOptions({ "timeout": 60000 });
     $("#query-start").val(start);
@@ -7051,10 +7050,11 @@
     var projections={};
     var query_opt={
       tags:qtag,
-      maxpoints:graph_opt.width
+      maxpoints:graph_opt.width,
+      page:Number(page)
     };
     query_opt['reduction']=autoreduction;
-    
+    query_opt['count']=0;
     graph_opt.culist.forEach(function (item) {
       projections[item]={
         0:["dpck_ats"],
@@ -7097,7 +7097,7 @@
           for(var start_chunk=start;start_chunk<stop;start_chunk+=chunk){
             var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
             query_opt['projection']=projections[item][dirlist[dir]];
-          jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", function (data) {
+            jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", function (data) {
 
             for (k in tr) {
               var trname = tr[k].name;
@@ -7108,7 +7108,7 @@
                   var cnt = 0;
                   console.log("X acquiring " + trname + " path:" + tr[k].x.origin + " items:" + data.Y.length);
                   items+=data.Y.length;
-                  if(data.Y.length<page){
+                  if(data.end){
                     $("#info-download-"+gname).html("<b>"+items+"</b>").css('color', 'black');
                   } else {
                     $("#info-download-"+gname).html(items).css('color', 'green');
@@ -7154,6 +7154,7 @@
                 }
               }
             }
+            query_opt['count']=data.count;
           }, query_opt);
         }
         }
@@ -7180,90 +7181,121 @@
 
         for (var dir in dirlist) {
           var dataset = [];
-          for(var start_chunk=start;start_chunk<stop;start_chunk+=chunk){
-            var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
+          var start_chunk=start;
+          
+          var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
 
             query_opt['projection']=projections[item][dirlist[dir]];
 
-          jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", function (data) {
-            var cnt = 0, ele_count = 0;
-            for (k in tr) {
-              if (tr[k].y.origin == "histogram") {
-                if (tr[k].x.cu === item) {
-                  var variable = tr[k].x.var;
-
-                  data.Y.forEach(function (ds) {
-                    //dataset.push(ds[variable]);
-                    chart.series[cnt + 1].addPoint(ds[variable], false, false);
-
-                  });
-                }
-                cnt += 2;
-              } else {
-                if (tr[k].y.cu === item) {
-                  //iterate on the datasets
-               //   console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
-                  items+=data.Y.length;
-                  if(data.Y.length<page){
-                    $("#info-download-"+gname).html("<b>"+items+"</b>").css('color', 'black');
-                  } else {
-                    $("#info-download-"+gname).html(items).css('color', 'green');
-                  }
-
-                  var variable = tr[k].y.var;
-                  var index = tr[k].y.index;
-                  ele_count = 0;
-                  data.Y.forEach(function (ds) {
-                    if (ds.hasOwnProperty(variable)) {
-                      var ts = data.X[ele_count++] - time_off;
-                      var tmp = ds[variable];
-
-                      if (index != null) {
-                        if (tmp.hasOwnProperty("$binary")) {
-                          tmp = convertBinaryToArrays(tmp);
-                        }
-
-                        if (index == "-1") {
-                          var incr = 1.0 / tmp.length;
-                          var dataset = [];
-                          for (var cntt = 0; cntt < tmp.length; cntt++) {
-                            var t = ts + incr * cntt;
-                            var v = Number(tmp[cntt]);
-                            dataset.push([t, v]);
-                            chart.series[cnt].addPoint([t, v], false, false);
-                          }
-                          // chart.series[cnt].setData(dataset, true, true, true);
-                          chart.redraw();
-
-                        } else {
-                          chart.series[cnt].addPoint([ts, Number(tmp[index])], false, false);
-                        }
-
-                      } else {
-                        chart.series[cnt].addPoint([ts, Number(tmp)], false, false);
-
-                      }
-                    }
-                  });
-                }
-                cnt++;
+            var download_handler=function (data) {
+              var dev=data['devs'];
+              var qstop=data['query']['end']
+              var cnt = 0, ele_count = 0;
+              if(!data.hasOwnProperty("nitems")){
               }
+              for (k in tr) {
+                if (tr[k].y.origin == "histogram") {
+                  if (tr[k].x.cu === dev) {
+                    var variable = tr[k].x.var;
+  
+                    data.Y.forEach(function (ds) {
+                      //dataset.push(ds[variable]);
+                      chart.series[cnt + 1].addPoint(ds[variable], false, false);
+  
+                    });
+                  }
+                  cnt += 2;
+                } else {
+                  if (tr[k].y.cu === dev) {
+                    //iterate on the datasets
+                 //   console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
+                    items+=data.Y.length;
+                    var txt="items:"+data.nitems+" runid:"+data.runid + " done:"+(stop*100.0/qstop);
+                    if(data.end && (qstop==stop)){
+                      $("#info-download-"+gname).html("<b>"+txt+"</b>").css('color', 'black');
+                    } else {
+                      $("#info-download-"+gname).html(txt).css('color', 'green');
+                    }
+  
+                    var variable = tr[k].y.var;
+                    var index = tr[k].y.index;
+                    ele_count = 0;
+                    data.Y.forEach(function (ds) {
+                      if (ds.hasOwnProperty(variable)) {
+                        var ts = data.X[ele_count++] - time_off;
+                        var tmp = ds[variable];
+  
+                        if (index != null) {
+                          if (tmp.hasOwnProperty("$binary")) {
+                            tmp = convertBinaryToArrays(tmp);
+                          }
+  
+                          if (index == "-1") {
+                            var incr = 1.0 / tmp.length;
+                            var dataset = [];
+                            for (var cntt = 0; cntt < tmp.length; cntt++) {
+                              var t = ts + incr * cntt;
+                              var v = Number(tmp[cntt]);
+                              dataset.push([t, v]);
+                              chart.series[cnt].addPoint([t, v], false, false);
+                            }
+                            // chart.series[cnt].setData(dataset, true, true, true);
+                            chart.redraw();
+  
+                          } else {
+                            chart.series[cnt].addPoint([ts, Number(tmp[index])], false, false);
+                          }
+  
+                        } else {
+                          chart.series[cnt].addPoint([ts, Number(tmp)], false, false);
+  
+                        }
+                      }
+                    });
+                  }
+                  cnt++;
+                }
+  
+              }
+              chart.redraw();
+              query_opt['count']=data.count;
+              start_chunk+=chunk;
+              if(start_chunk<stop){
+                var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
 
-            }
-            chart.redraw();
-            // true until close if false the history loop retrive breaks
-            return active_plots.hasOwnProperty(gname);
-          }, query_opt);
-        }
-        }
+                jchaos.getHistory(dev, dirlist[dir], start_chunk, stop_chunk, "",download_handler , query_opt,function(err){
+                  alert(err);
+                });
+
+              }
+              // true until close if false the history loop retrive breaks
+              return true;
+            };
+            jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "",download_handler , query_opt,function(err){
+              alert(err);
+            });
+        
+        
+      }
       });
     }
 
   }
 
   function initializeTimePicker(queryfn, id) {
-    var start = moment().subtract(1, 'days');
-    var end = moment();
+    if (typeof query_params === "undefined") {
+      query_params = {
+        page: dashboard_settings.defaultPage,
+        start: (new Date()).getTime() - 3600000,
+        stop: (new Date()).getTime(),
+        tag: "",
+        chunk: dashboard_settings.defaultChunk,
+        reduction:1
+      };
+    }
+
+    var start = moment(query_params.start);
+    var end = moment(query_params.stop); //moment();
     if (id == null)
       id = "";
     function cb(start, end) {
@@ -7274,6 +7306,7 @@
     $('#reportrange-' + id).daterangepicker({
       startDate: start,
       endDate: end,
+      autoUpdateInput:true,
       timePicker: true,
       timePicker24Hour: true,
       linkedCalendars: false,
@@ -7311,7 +7344,7 @@
         stop: (new Date()).getTime(),
         tag: "",
         chunk: dashboard_settings.defaultChunk,
-        reduction:false
+        reduction:1
       };
     }
 
@@ -7351,7 +7384,7 @@
     html += '<label class="label span3">Query chunk </label>';
     html += '<input class="input-xlarge focused span9" id="query-chunk" title="Cut the query in chunk of the given seconds" type="number" value=3600>';
     html += '<label class="label span3">Data Factor reduction</label>';
-    html += '<input class="input-xlarge focused span9" type="number" name="query-reduction" title="Reduction Factor" value=1/>';
+    html += '<input class="input-xlarge focused span9" type="number" id="query-reduction" title="Reduction Factor" value=1>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -7362,12 +7395,16 @@
     }
     createCustomDialog(opt, html, "Run", function () {
 
-      query_params['page'] = $("#query-page").val();
-      query_params['start'] = $("#query-start").val();
-      query_params['stop'] = $("#query-stop").val();
+      query_params['page'] = Number($("#query-page").val());
+      if(typeof $("#query-start").val() === "number"){
+       query_params['start'] = Number($("#query-start").val());
+      }
+      if(typeof $("#query-stop").val() === "number"){
+        query_params['stop'] = Number($("#query-stop").val());
+      }
       query_params['tag'] = $("#query-tag").val();
       query_params['chunk'] = Number($("#query-chunk").val());
-      query_params['reduction'] = Number($("#query-reductionk").val());
+      query_params['reduction'] = Number($("#query-reduction").val());
 
       querycb(query_params)
 
@@ -7379,13 +7416,21 @@
         // $('#daterange').val('');
         var start = new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
         var end = new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
-        query_params['start'] = start;
-        query_params['stop'] = end;
+        if(typeof start.getTime() === "number" ){
+          query_params['start'] = start.getTime();
+          $('#query-start').val(start.getTime());
+
+        }
+
+        if(typeof end.getTime() === "number" ){
+          query_params['stop'] = end.getTime();
+          $('#query-stop').val(end.getTime());
+
+        }
+
 
         console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
         console.log(picker.endDate.format('MMMM D, YYYY HH:mm'));
-        $('#query-start').val(start.getTime());
-        $('#query-stop').val(end.getTime());
       }, "query");
       if (typeof opencb === "function") {
         opencb();
