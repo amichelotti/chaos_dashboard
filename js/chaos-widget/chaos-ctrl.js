@@ -3111,6 +3111,26 @@
         showJson(tmpObj, "Description " + currsel, currsel, data[0]);
       });
 
+    }  else if (cmd == "show-tags") {
+        jchaos.variable("tags", "get", null,function(tags){
+        var names=[];
+        for (var key in tags) {
+            var elems = tags[key].tag_elements;
+            elems.forEach(function (elem) {
+              if (elem == currsel) {
+                names.push(tags[key]);
+              }
+            });
+          }
+          if(names.length){
+            showJson(null, "Tags of " + currsel, currsel, names);
+          } else {
+            alert("No tag associated to "+currsel);
+          }
+
+        });
+      
+
     } else if (cmd == "show-picture") {
       jchaos.getChannel(currsel, -1, function (imdata) {
         var cu = imdata[0];
@@ -3168,9 +3188,10 @@
           var tags = jchaos.variable("tags", "get", null, null);
           if (tags.hasOwnProperty(tagname)) {
             var tag = tags[tagname];
-            var desc = tag['tag_desc'];
+            var desc = "<b>" + tag['tag_desc'] + "</b> involved:"+JSON.stringify(tag['tag_elements']);
             // $("#query-start").val(tagname);
             $("#query-tag").attr('title', desc);
+            $("#select-tag").attr('title', desc);
           }
 
         });
@@ -3820,9 +3841,15 @@
         jchaos.node(cu_copied.ndk_uid, "set", "cu", node_selected, copia, function () { });
       }, "Copy", function () {
 
-        jchaos.node(cu_copied.ndk_uid + "_copied", "set", "cu", node_selected, copia, function () {
-          alert("Copied and renamed:\"" + cu_copied.ndk_uid + "_copied" + "\"");
-        });
+        var def_obj=copia;
+        var templ = {
+          $ref: "cu.json",
+          format: "tabs"
+        }
+        def_obj['ndk_uid'] = copia.ndk_uid + "_copied";
+        def_obj['ndk_parent'] = node_selected;
+        //jsonEdit(templ, tmp);
+        jsonEditWindow("Copied CU", templ, def_obj, newCuSave, tmpObj);
 
       });
       return;
@@ -3898,10 +3925,12 @@
     } else if (cmd == "shutdown-nt_control_unit") {
       confirm("Do you want to IMMEDIATELY SHUTDOWN CU/EU:"+node_selected, "Pay attention ANY CU of the same US will be killed as well", "Kill",
         function () {
-          jchaos.node(node_selected, "shutdown", "uscu", function () {
+          jchaos.node(node_selected, "shutdown", "cu", function () {
             instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, true);
           }, function () {
             instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+          },function(){
+            // handle error ok
           })
         }, "Joke", function () { });
       return;
@@ -3912,6 +3941,8 @@
             instantMessage("US SHUTDOWN", "Killing " + node_selected + "", 1000, true);
           }, function () {
             instantMessage("US SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+          },function(){
+            // handle error ok
           })
         }, "Joke", function () { });
       return;
@@ -3922,6 +3953,8 @@
             instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, true);
           }, function () {
             instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+          },function(){
+            // handle error ok
           })
         }, "Joke", function () { });
       return;
@@ -7410,7 +7443,6 @@
 
     }, "Cancel", null, function () {
       //open handle
-
       initializeTimePicker(function (ev, picker) {
         //do something, like clearing an input
         // $('#daterange').val('');
@@ -9142,7 +9174,7 @@
       items['unload'] = { name: "Unload", icon: "unload" };
       items['deinit'] = { name: "Deinit", icon: "deinit" };
     }
-    items['history-cu'] = { name: "Retrive JSON History for...", icon: "histo" };
+    items['history-cu'] = { name: "Retrive zip History for...", icon: "histo" };
     items['history-cu-root'] = { name: "Retrive Root Tree History for...", icon: "histo" };
 
     items['sep2'] = "---------";
@@ -9159,6 +9191,7 @@
 
       items['show-dataset'] = { name: "Show/Plot Dataset" };
       items['show-desc'] = { name: "Show Description" };
+      items['show-tags'] = { name: "Show Tags info" };
 
       items['show-picture'] = { name: "Show as Picture.." };
     }

@@ -22,6 +22,40 @@
 			console_err: function (str) { console.error(str); }
 
 		};
+
+		/***
+		 * 
+		 */
+		jchaos.createMotor=function(name,endOphandler,switchHandler){
+
+			var obj={
+				name:name,
+				lastpos:0,
+				limit1:false,
+				limit2:false,
+				home:false,
+
+				// move absolute
+				mov:function(pos){
+
+				},
+				// move relative
+				movr:function(pos){
+
+				},
+				// do home
+				gohome:function(){
+
+				},
+				pos:function(){
+
+				}
+			}
+			return obj;
+		}
+
+
+		 /*****************************/
 		jchaos.setOptions = function (opt) {
 			
 			for (var attrname in opt) { jchaos.options[attrname] = opt[attrname]; }
