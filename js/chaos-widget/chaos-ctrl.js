@@ -1452,49 +1452,7 @@
 
 
   }
-  function newCuSave(json, obj) {
-    var node_selected = obj.node_selected;
-    if ((node_selected == null || node_selected == "")) {
-      if (json.ndk_parent == "") {
-        alert("not US selected!");
-        return 1;
-      } else {
-        console.log("using US specified into CU:" + json.ndk_parent);
-        var us_list = jchaos.search(json.ndk_parent, "us", false, false);
-        if (us_list.length == 0) {
-          alert("US specified in CU does not exist (create before)");
-          return -1;
-        }
-        node_selected = json.ndk_parent;
-      }
-    }
-    if (!json.hasOwnProperty("control_unit_implementation") || json.control_unit_implementation == "") {
-      alert("You must specify a valid implementation 'control_unit_implementation'");
-      return 1;
-    }
-    if (!json.hasOwnProperty("ndk_uid") || json.ndk_uid == "") {
-      alert("You must specify a valid UID 'ndk_uid'");
-      return 1;
-    }
-    if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
-      jchaos.node(node_selected, "get", "us", "", null, function (data) {
-        console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
-        json.ndk_parent = node_selected;
-        if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
-          data.us_desc.cu_desc.push(json);
-        } else {
-          data.us_desc["cu_desc"] = [json];
-        }
-        jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
-          console.log("unitServer save: \"" + name + "\" value:" + JSON.stringify(json));
-        });
-      });
-    } else {
-      alert("missing required field ndk_uid");
-      return 1;
-    }
-    return 0;
-  }
+  
   function newMCCuSave(json, obj) {
     var node_selected = obj.node_selected;
     if ((node_selected == null || node_selected == "")) {
@@ -1577,52 +1535,7 @@
     return 0;
   }
 
-  function unitServerSave(json, obj) {
-    if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
-      alert("no ndk_uid key found");
-      return 1;
-    }
-    if (json.ndk_uid == "") {
-      alert("US name cannot be empty");
-      return 2;
-    }
-    var node_selected = json.ndk_uid;
-    if (node_selected == null || node_selected == "") {
-      alert("not US selected!");
-      return 3;
-    }
-
-    var data = jchaos.node(node_selected, "get", "us", "", null, null);
-
-
-    if ((data instanceof Object) && data.hasOwnProperty("us_desc")) {
-      if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
-        data.us_desc.cu_desc.forEach(function (item) {
-          var found = false;
-          // remove just the cu not present in new configuration
-          json.cu_desc.forEach(function (items) {
-            if (items.ndk_uid == item.ndk_uid) {
-              found = true;
-            }
-          });
-          if (found == false) {
-            console.log("deleting cu:\"" + item.ndk_uid + "\"");
-            jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
-
-          }
-        });
-
-      }
-    }
-
-    json.cu_desc.forEach(function (item) {
-      item.ndk_parent = node_selected;
-    });
-    jchaos.node(node_selected, "set", "us", "", json, function (data) {
-      console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
-    });
-    return 0;
-  }
+  
   function cuSave(json, obj) {
 
     if ((json != null) && json.hasOwnProperty("ndk_uid")) {
@@ -1640,60 +1553,7 @@
     return 0;
   }
 
-  function agentSave(json, obj) {
-    // remove all the associations
-    if (obj != null) {
-      var node_selected = obj.node_selected;
-      var list_to_remove = [];
-      jchaos.node(node_selected, "info", "agent", "", null, function (data) {
-        if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
-          //rimuovi tutte le associazioni precedenti.
-          data.andk_node_associated.forEach(function (item) {
-            if (item.hasOwnProperty("ndk_uid")) {
-              var found = false;
-              if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
-                json.andk_node_associated.forEach(function (tostay) {
-                  if (tostay.ndk_uid == item.ndk_uid) {
-                    found = true;
-                  }
-                });
-
-              }
-              if (found == false) {
-                list_to_remove.push(item.ndk_uid);
-              }
-            }
-          });
-          list_to_remove.forEach(function (item) {
-            console.log("Agent remove association " + item);
-            jchaos.node(node_selected, "del", "agent", item, function (daa) { });
-          });
-        }
-      });
-    }
-
-    if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
-      json.andk_node_associated.forEach(function (item) {
-        jchaos.node(node_selected, "set", "agent", null, item, function (data) {
-          console.log("agent save: \"" + node_selected + "\" value:" + JSON.stringify(json));
-          if (item.node_log_at_launch) {
-            jchaos.node(item.ndk_uid, "enablelog", "agent", null, null, function (data) {
-            });
-          } else {
-            jchaos.node(item.ndk_uid, "disablelog", "agent", null, null, function (data) {
-
-            });
-          }
-          return 0;
-        });
-      });
-    } else {
-      alert("No andk_node_associated field found");
-      return 0;
-
-    }
-  }
-
+  
   /***
    * 
    */
@@ -3731,7 +3591,7 @@
         if (data != null) {
           // editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, agentSave, tmpObj);
+          jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj);
           /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
              //rimuovi tutte le associazioni precedenti.
              data.andk_node_associated.forEach(function (item) {
@@ -3770,7 +3630,7 @@
         if (data.hasOwnProperty("us_desc")) {
           //    editorFn = unitServerSave;
           //    jsonEdit(templ, data.us_desc);
-          jsonEditWindow("US Editor", templ, data.us_desc, unitServerSave, tmpObj);
+          jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj);
 
         }
       });
@@ -3782,7 +3642,7 @@
       }
       //editorFn = unitServerSave;
       //jsonEdit(templ, null);
-      jsonEditWindow("US Editor", templ, null, unitServerSave, tmpObj);
+      jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj);
 
       return;
     } else if (cmd == "del-nt_unit_server") {
@@ -3849,7 +3709,7 @@
         def_obj['ndk_uid'] = copia.ndk_uid + "_copied";
         def_obj['ndk_parent'] = node_selected;
         //jsonEdit(templ, tmp);
-        jsonEditWindow("Copied CU", templ, def_obj, newCuSave, tmpObj);
+        jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj);
 
       });
       return;
@@ -3895,10 +3755,10 @@
             $ref: "cu.json",
             format: "tabs"
           }
-          // editorFn = newCuSave;
+          // editorFn = jchaos.newCuSave;
           def_obj.ndk_parent = node_selected;
           //jsonEdit(templ, tmp);
-          jsonEditWindow("New CU", templ, def_obj, newCuSave, tmpObj);
+          jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj);
 
 
         }, "Cancel", function () {
@@ -3915,7 +3775,7 @@
       }
       //var def = {};
       //def['ndk_parent']=node_selected;
-      //editorFn = newCuSave;
+      //editorFn = jchaos.newCuSave;
       //jsonEdit(templ, template);
       jsonEditWindow("New MemCache import CU", templ, null, newMCCuSave, tmpObj);
 
@@ -3972,9 +3832,9 @@
             $ref: "cu.json",
             format: "tabs"
           }
-          // editorFn = newCuSave;
+          // editorFn = jchaos.newCuSave;
           // jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, newCuSave, tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj);
 
         } else {
           // custom
@@ -3985,9 +3845,9 @@
           }
           template["ndk_parent"] = node_selected;
 
-          //editorFn = newCuSave;
+          //editorFn = jchaos.newCuSave;
           //jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, newCuSave, tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj);
 
         }
       }
@@ -4073,7 +3933,7 @@
           }
           //editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, agentSave, tmpObj);
+          jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj);
 
         };
       });

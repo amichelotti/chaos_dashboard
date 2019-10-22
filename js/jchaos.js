@@ -1238,6 +1238,148 @@
 	}
   }
   
+  jchaos.agentSave=function (json, obj) {
+    // remove all the associations
+    if (obj != null) {
+      var node_selected = obj.node_selected;
+      var list_to_remove = [];
+      jchaos.node(node_selected, "info", "agent", "", null, function (data) {
+        if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
+          //rimuovi tutte le associazioni precedenti.
+          data.andk_node_associated.forEach(function (item) {
+            if (item.hasOwnProperty("ndk_uid")) {
+              var found = false;
+              if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
+                json.andk_node_associated.forEach(function (tostay) {
+                  if (tostay.ndk_uid == item.ndk_uid) {
+                    found = true;
+                  }
+                });
+
+              }
+              if (found == false) {
+                list_to_remove.push(item.ndk_uid);
+              }
+            }
+          });
+          list_to_remove.forEach(function (item) {
+            console.log("Agent remove association " + item);
+            jchaos.node(node_selected, "del", "agent", item, function (daa) { });
+          });
+        }
+      });
+    }
+
+    if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
+      json.andk_node_associated.forEach(function (item) {
+        jchaos.node(node_selected, "set", "agent", null, item, function (data) {
+          console.log("agent save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+          if (item.node_log_at_launch) {
+            jchaos.node(item.ndk_uid, "enablelog", "agent", null, null, function (data) {
+            });
+          } else {
+            jchaos.node(item.ndk_uid, "disablelog", "agent", null, null, function (data) {
+
+            });
+          }
+          return 0;
+        });
+      });
+    } 
+  }
+
+
+   jchaos.unitServerSave=function(json, obj) {
+    if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
+      alert("no ndk_uid key found");
+      return 1;
+    }
+    if (json.ndk_uid == "") {
+      alert("US name cannot be empty");
+      return 2;
+    }
+    var node_selected = json.ndk_uid;
+    if (node_selected == null || node_selected == "") {
+      alert("not US selected!");
+      return 3;
+    }
+
+    var data = jchaos.node(node_selected, "get", "us", "", null, null);
+
+
+    if ((data instanceof Object) && data.hasOwnProperty("us_desc")) {
+      if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+        data.us_desc.cu_desc.forEach(function (item) {
+          var found = false;
+          // remove just the cu not present in new configuration
+          json.cu_desc.forEach(function (items) {
+            if (items.ndk_uid == item.ndk_uid) {
+              found = true;
+            }
+          });
+          if ((found == false) &&(item.ndk_uid!="")) {
+            console.log("deleting cu:\"" + item.ndk_uid + "\"");
+            jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
+
+          }
+        });
+
+      }
+    }
+
+    json.cu_desc.forEach(function (item) {
+      item.ndk_parent = node_selected;
+    });
+    jchaos.node(node_selected, "set", "us", "", json, function (data) {
+      console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+    });
+    return 0;
+  }
+
+
+  jchaos.newCuSave=function(json, obj) {
+    var node_selected = obj.node_selected;
+    if ((node_selected == null || node_selected == "")) {
+      if (json.ndk_parent == "") {
+        alert("not US selected!");
+        return 1;
+      } else {
+        console.log("using US specified into CU:" + json.ndk_parent);
+        var us_list = jchaos.search(json.ndk_parent, "us", false, false);
+        if (us_list.length == 0) {
+          alert("US specified in CU does not exist (create before)");
+          return -1;
+        }
+        node_selected = json.ndk_parent;
+      }
+    }
+    if (!json.hasOwnProperty("control_unit_implementation") || json.control_unit_implementation == "") {
+      alert("You must specify a valid implementation 'control_unit_implementation'");
+      return 1;
+    }
+    if (!json.hasOwnProperty("ndk_uid") || json.ndk_uid == "") {
+      alert("You must specify a valid UID 'ndk_uid'");
+      return 1;
+    }
+    if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
+      jchaos.node(node_selected, "get", "us", "", null, function (data) {
+        console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
+        json.ndk_parent = node_selected;
+        if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+          data.us_desc.cu_desc.push(json);
+        } else {
+          data.us_desc["cu_desc"] = [json];
+        }
+        jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
+          console.log("unitServer save: \"" + name + "\" value:" + JSON.stringify(json));
+        });
+      });
+    } else {
+      alert("missing required field ndk_uid");
+      return 1;
+    }
+    return 0;
+  }
   /**
    * restoreFullConfig
    * @brief Restore a previously saved configuration
@@ -1245,6 +1387,7 @@
    * @param configToRestore: choose the items to restore
    */
   jchaos.restoreFullConfig = function (config, configToRestore) {
+	  var node_selected="";
 		if (!(configToRestore instanceof Array)) {
 		  return;
 		}
@@ -1253,65 +1396,38 @@
 		  if (sel == "us") {
 			if (config.hasOwnProperty('us') && (config.us instanceof Array)) {
 			  config.us.forEach(function (data) {
-				confirm("US " + data.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
 				  if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
 					data.us_desc.cu_desc.forEach(function (item) {
 					  jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
 					});
 					node_selected = data.us_desc.ndk_uid;
 	
-					unitServerSave(data.us_desc);
-	
+					jchaos.unitServerSave(data.us_desc);
 				  }
-				}, "Join", function () { unitServerSave(data.us_desc); });
-	
 			  });
 			} else if (config.hasOwnProperty("us_desc")) {
-			  var templ = {
-				$ref: "us.json",
-				format: "tabs"
-			  }
-			  confirm("Add US " + config.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
-				if (config.us_desc.hasOwnProperty("cu_desc") && (config.us_desc.cu_desc instanceof Array)) {
+			 	if (config.us_desc.hasOwnProperty("cu_desc") && (config.us_desc.cu_desc instanceof Array)) {
 				  config.us_desc.cu_desc.forEach(function (item) {
 					jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
 				  });
 				  node_selected = config.us_desc.ndk_uid;
-				  // editorFn = unitServerSave;
-				  //jsonEdit(templ, config.us_desc);
-				  jsonEditWindow("US Editor", templ, config.us_desc, unitServerSave, tmpObj);
+				  jchaos.unitServerSave(config.us_desc);
 	
 				}
-			  }, "Join", function () {
-				// editorFn = unitServerSave;
-				//jsonEdit(templ, config.us_desc);
-				jsonEditWindow("US Editor Join", templ, config.us_desc, unitServerSave, tmpObj);
-	
-			  });
+			  };
 			} else if (config.hasOwnProperty("cu_desc")) {
 	
 			  var parent = config.cu_desc.ndk_parent;
-	
-	
-			  confirm("Add CU " + config.cu_desc.ndk_uid, "Add CU to " + parent + "?", "Add", function () {
 				if (config.hasOwnProperty("cu_desc")) {
-				  var templ = {
-					$ref: "cu.json",
-					format: "tabs"
-				  }
-				  //editorFn = newCuSave;
-				  var tmp = config.cu_desc;
+				 var tmp = config.cu_desc;
 				  //jsonEdit(templ, tmp);
-				  jsonEditWindow("New CU Editor", templ, tmp, newCuSave, tmpObj);
-	
+				  jchaos.newCuSave(tmp);	
 				}
-			  }, "Cancel", function () {
-			  });
 			}
-		  }
 		  if ((sel == "agents") && config.hasOwnProperty('agents') && (config.agents instanceof Array)) {
 			config.agents.forEach(function (json) {
-			  agentSave(node_selected, json.info);
+				
+			  jchaos.agentSave(json.name, json.info);
 			});
 		  }
 		  if ((sel == "snapshots") && config.hasOwnProperty('snapshots') && (config.snapshots instanceof Array)) {
