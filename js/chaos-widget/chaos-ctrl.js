@@ -2012,11 +2012,11 @@
         var id = this.id;
         var attr = id.split("-")[1];
         var value = $("#" + id).val();
-        jchaos.setAttribute(node_selected, attr, value, function () {
-          instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, true)
+        jchaos.setAttribute(tmpObj.node_selected, attr, value, function () {
+          instantMessage(tmpObj.node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, true)
 
         }, function () {
-          instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, false)
+          instantMessage(tmpObj.node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
         });
         tmpObj['json_editing'] = false;
@@ -9241,6 +9241,9 @@
     }
   }
   function updateLog(cu) {
+    if((typeof cu === "undefined") || (cu == null)){
+      cu="";
+    }
     $("#table_logs").find("tr:gt(0)").remove();
     //var logtype= $( "input[name=log]:radio" );
     var logtype = $("#logtype option:selected").val();

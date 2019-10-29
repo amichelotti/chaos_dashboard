@@ -969,7 +969,35 @@
 		 * 
 		 * */
 		jchaos.sendCUCmd = function (devs, cmd, param, handleFunc, handleFuncErr) {
-			jchaos.sendCUFullCmd(devs, cmd, param, 0, 0, handleFunc, handleFuncErr);
+			if((cmd instanceof Object )&& ((typeof param === "function")|| (typeof param ==="undefined"))){
+				// all coded into cmd, handlefunc
+				var parm="";
+				var prio=0;
+				var mode=0;
+				var cm="";
+				handleFuncErr=handleFunc;
+				handleFunc=param;
+				if(cmd.hasOwnProperty('cmd')){
+					cm=cmd['cmd'];
+				} else {
+					throw("'cmd' must be specified");
+				}
+				if(cmd.hasOwnProperty('param')){
+					parm=cmd['param'];
+				}
+				if(cmd.hasOwnProperty('prio')){
+					prio=cmd['param'];
+				}
+				if(cmd.hasOwnProperty('mode')){
+					mode=cmd['mode'];
+				}
+				
+				jchaos.sendCUFullCmd(devs, cm, parm, mode, prio, handleFunc, handleFuncErr);
+
+			} else {
+				
+				jchaos.sendCUFullCmd(devs, cmd, param, 0, 0, handleFunc, handleFuncErr);
+			}
 		}
 		jchaos.sendCUFullCmd = function (devs, cmd, param, force, prio, handleFunc, handleFuncErr) {
 			var dev_array = jchaos.convertArray2CSV(devs);
@@ -993,6 +1021,8 @@
 			if (params != "") {
 				str_url_cu = str_url_cu + "&parm=" + params;
 			}
+			jchaos.print("sending command: "+str_url_cu  );
+
 			if ((typeof handleFunc !== "function")) {
 				return jchaos.basicPost("CU", str_url_cu, null);
 			}
