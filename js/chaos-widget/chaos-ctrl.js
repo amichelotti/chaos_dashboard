@@ -11,8 +11,8 @@
   var cu_templates = null;
   var dashboard_settings = null;
   var interface;// interface we are looking for
-  var cu_copied;
-  var us_copied;
+  var cu_copied={};
+  var us_copied={};
   var algo_copied;
   var save_obj;
   var snap_selected = "";
@@ -1695,6 +1695,12 @@
       updateLog(tempObj.node_selected);
       //$("#mdl-log").modal("show");
     });
+    $("#log_search").off('keypress');
+    $("#log_search").keypress(function(e){
+      var sel = $("#log_search").val();
+      updateLog(sel);
+    });
+    $("#log-search-go").off('click');
     $("#log-search-go").click(function () {
       var sel = $("#log_search").val();
       updateLog(sel);
@@ -1704,6 +1710,8 @@
       $("#mdl-log").modal("hide");
 
     });
+    $("#mdl-log").resizable().draggable();
+
   }
   function snapSetup(tmpObj) {
     var node_multi_selected = tmpObj.node_multi_selected;
@@ -2468,6 +2476,31 @@
         }
         html += "</table>";
         $("#cameraTable").html(html);
+        camlist.forEach(function (key) {
+          var encoden = encodeName(key);
+
+          $("#cameraImage-" + encoden).on('click',function(){
+            $("#cameraImage-" + encoden).cropper({
+              aspectRatio: 16 / 9,
+              crop: function(event) {
+                console.log(event.detail.x);
+                console.log(event.detail.y);
+                console.log(event.detail.width);
+                console.log(event.detail.height);
+                console.log(event.detail.rotate);
+                console.log(event.detail.scaleX);
+                console.log(event.detail.scaleY);
+              },
+              ready() {
+                // Do something here
+                // ...
+            
+                // And then
+                this.cropper.crop();
+              }
+            });
+          })
+        });
 
       }
     });
@@ -3694,7 +3727,7 @@
 
       copia.ndk_parent = node_selected;
       confirm("Move or Copy", "Copy or Moving CU: \"" + cu_copied.ndk_uid + "\" into US:\"" + node_selected + "\"", "Move", function () {
-        if (off_line[cu_copied.ndk_uid] == false) {
+        if (tmpObj.off_line[cu_copied.ndk_uid] == false) {
           alert("CU " + cu_copied.ndk_uid + " cannot be MOVED if alive, please bring it to 'unload' state");
           return;
         }
@@ -6417,6 +6450,28 @@
 
               // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
               $("#cameraImage-" + encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
+             /* $("#cameraImage-" + encodeName(elem)).one("load", function() {
+                if(typeof tmpObj['selectArea-'+ encodeName(elem)] === "undefined"){
+                  tmpObj['selectArea-'+ encodeName(elem)]={};
+                $('#cameraImage-' + encodeName(elem)).cropper({
+                  aspectRatio: 16 / 9,
+                  crop: function(event) {
+                    console.log(event.detail.x);
+                    console.log(event.detail.y);
+                    console.log(event.detail.width);
+                    console.log(event.detail.height);
+                    console.log(event.detail.rotate);
+                    console.log(event.detail.scaleX);
+                    console.log(event.detail.scaleY);
+                  }
+                });
+              }
+                // do stuff
+              })*/
+             /* if(typeof tmpObj['selectArea-'+ encodeName(elem)] === "undefined"){
+                tmpObj['selectArea-'+ encodeName(elem)]={};
+                
+            }*/
             }
           }
           var cindex = tmpObj.node_name_to_index[elem];
@@ -6439,7 +6494,7 @@
     }
 
 
-    jchaos.getChannel(notSelectedElems(tmpObj), 255, function (selected) {
+    jchaos.getChannel(tmpObj['elems'], 255, function (selected) {
       tmpObj.data = selected;
 
       updateGenericCU(tmpObj);
@@ -8116,7 +8171,7 @@
     return html;
   }
   function generateLog() {
-    var html = '<div class="modal hide fade" id="mdl-log">';
+    var html = '<div class="modal hide fade resizable" id="mdl-log">';
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
     html += '<h3 id="list_logs">List logs</h3>';
