@@ -441,7 +441,7 @@
     html += '<div class="row-fluid"><label class="span4">Console buffering:</label><input class="span4" id="buffer-update" type="text" title="Remote flush Update(bytes)" value=1 /></div>';
 
     var opt = {
-      minWidth: hostWidth / 4,
+      minWidth: hostWidth / 2,
       minHeight: hostHeight / 4,
       title: msghead,
       resizable: true,
@@ -1710,7 +1710,8 @@
       $("#mdl-log").modal("hide");
 
     });
-    $("#mdl-log").resizable().draggable();
+    //$("#mdl-log").resizable().draggable();
+    $("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true});
 
   }
   function snapSetup(tmpObj) {
