@@ -1710,8 +1710,12 @@
       $("#mdl-log").modal("hide");
 
     });
-    //$("#mdl-log").resizable().draggable();
-    $("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true});
+  /*  $( "#mdl-log" ).on( "dialogfocus", function( event, ui ) {
+      $("#mdl-log").dialog( "option", "width", hostWidth / 2 ).resizable().draggable();
+    } );
+    */
+    $("#mdl-log").resizable().draggable();
+    //$("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true,hide:true});
 
   }
   function snapSetup(tmpObj) {
