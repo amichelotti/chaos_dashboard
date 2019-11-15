@@ -6,13 +6,13 @@
 (function ($) {
 
   // library jquery chaos control studio
-  var jqccs={};
+  var jqccs = {};
   var json_editor;
   var cu_templates = null;
   var dashboard_settings = null;
   var interface;// interface we are looking for
-  var cu_copied={};
-  var us_copied={};
+  var cu_copied = {};
+  var us_copied = {};
   var algo_copied;
   var save_obj;
   var snap_selected = "";
@@ -1452,7 +1452,7 @@
 
 
   }
-  
+
   function newMCCuSave(json, obj) {
     var node_selected = obj.node_selected;
     if ((node_selected == null || node_selected == "")) {
@@ -1535,7 +1535,7 @@
     return 0;
   }
 
-  
+
   function cuSave(json, obj) {
 
     if ((json != null) && json.hasOwnProperty("ndk_uid")) {
@@ -1553,7 +1553,7 @@
     return 0;
   }
 
-  
+
   /***
    * 
    */
@@ -1696,7 +1696,7 @@
       //$("#mdl-log").modal("show");
     });
     $("#log_search").off('keypress');
-    $("#log_search").keypress(function(e){
+    $("#log_search").keypress(function (e) {
       var sel = $("#log_search").val();
       updateLog(sel);
     });
@@ -1712,7 +1712,7 @@
     });
 
     $("#mdl-log").resizable().draggable();
-   // $("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true});
+    // $("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true});
 
   }
   function snapSetup(tmpObj) {
@@ -2209,16 +2209,16 @@
     });
     $("#graph_search").off('keypress');
     $("#graph_search").on('keypress', function (event) {
-        var t = $(event.target);
-        var value = $(t).attr("value");
-        updateGraph( value);
-     // if ((event.which == 13)) {
-        //  var name = $(t).attr("cuname");
-       // var value = $(t).attr("value");
-       // updateGraph( value);
+      var t = $(event.target);
+      var value = $(t).attr("value");
+      updateGraph(value);
+      // if ((event.which == 13)) {
+      //  var name = $(t).attr("cuname");
+      // var value = $(t).attr("value");
+      // updateGraph( value);
 
-     // }
-    
+      // }
+
     });
     $("#graph-list-run").off('click');
     $("#graph-list-run").on('click', function () {
@@ -2280,7 +2280,7 @@
         graph_selected = null;
         jchaos.variable("highcharts", "set", high_graphs, null);
 
-        updateGraph( $("#graph_search").val());
+        updateGraph($("#graph_search").val());
       }, "Cancel", function () {
         $("#mdl-graph-list").modal("show");
 
@@ -2455,12 +2455,12 @@
                 if (cnt > 0) {
                   html += "</tr>"
                 }
-                html += '<tr class="row_element" id=camera-row"' + cnt + '" cuname="'+key+'">';
+                html += '<tr class="row_element" id=camera-row"' + cnt + '">';
               }
-              html += '<td class="td_element cameraMenu" id="camera-' + encoden + '">'
+              html += '<td class="td_element cameraMenu" id="camera-' + encoden + '" cuname="' + key + '" >'
               //   html += '<div><b>'+key+'</b>';
               html += '<div>';
-              html += '<img id="cameraImage-' + encoden + '" cuname="'+key+'" src="" />';
+              html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
               html += '<div class="top-left">' + key + '</div>';
 
               html += '</div>';
@@ -2481,75 +2481,107 @@
         camlist.forEach(function (key) {
           var encoden = encodeName(key);
 
-          $("#cameraImage-" + encoden).on('click',function(){
+          $("#cameraImage-" + encoden).on('click', function () {
             $("#cameraImage-" + encoden).cropper({
               aspectRatio: 16 / 9,
-              crop: function(event) {
-                tmpObj['crop']={};
-                tmpObj['crop'][encoden]=event.detail;
-                $(this).attr['cropping']=event.detail;
-                console.log(event.detail.x);
+              crop: function (event) {
+                tmpObj['crop'] = {};
+                tmpObj['crop'][key] = event.detail;
+
+                /*console.log(event.detail.x);
                 console.log(event.detail.y);
                 console.log(event.detail.width);
                 console.log(event.detail.height);
                 console.log(event.detail.rotate);
                 console.log(event.detail.scaleX);
-                console.log(event.detail.scaleY);
+                console.log(event.detail.scaleY);*/
               },
               ready() {
                 // Do something here
                 // ...
-            
+
                 // And then
                 this.cropper.crop();
               }
             });
           })
         });
-        $.contextMenu('destroy', '.cropper-container');
+        $.contextMenu('destroy', '.cameraMenu');
 
         $.contextMenu({
-          selector: '.cropper-container',
+          selector: '.cameraMenu',
           build: function ($trigger, e) {
-            var name = $(e.currentTarget.element).attr("cuname");
+            var name = $(e.currentTarget).attr("cuname");
             var cuitem = {};
-            if(typeof $(e.currentTarget).attr('cropping') ==="object"){
-              var c=$(e.currentTarget).attr('cropping');
-              cuitem['set-roi']={name:"Set Camera ROI:("+c.x+","+c.y+") size:"+c.width+"x"+c.height};
+            if (tmpObj.hasOwnProperty('crop')) {
+              var crop_obj = tmpObj['crop'][name];
+              if (typeof crop_obj === "object") {
+                crop_obj['cu'] = name;
+                cuitem['set-roi'] = { name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+              }
+            
             }
+            cuitem['exit-crop'] = { name: "Exit cropping", cu: name };
             cuitem['sep1'] = "---------";
-    
+            var ele=jchaos.getChannel(name,1,null);
+            var el=ele[0];
+            for(var k in el){
+                if(!(k.startsWith("dpck")||k.startsWith("ndk")||k.startsWith("cudk"))){
+                  cuitem['set-'+k] = { name: "Set "+k, type:"text",value:el[k],events:(function(k){
+                    var events= {
+                      keyup: function(e) {
+                      // add some fancy key handling here?
+                        if(e.keyCode==13){
+                          jchaos.setAttribute(name,k,e.target.value,function(){
+                            instantMessage("Setting ", "\"" + k + "\"=\"" + e.target.value + "\" sent", 3000);
+                          });
+                        }   
+                  } 
+                }
+              return events;})(k)
+            }
+          }
+        }  
+          
+            
+
+            cuitem['sep2'] = "---------";
+
             cuitem['quit'] = {
               name: "Quit", icon: function () {
                 return 'context-menu-icon context-menu-icon-quit';
               }
-            };
-    
-            return {
-    
-              callback: function (cmd, options) {
 
+            };
+
+            return {
+
+              callback: function (cmd, options) {
+                executeCameraMenuCmd(tmpObj, cmd, options);
                 return;
-              }
+              },
+              items: cuitem
             }
           }
-      
-    });
-    $("#triggerType").off();
-    $("#triggerType").on("change", function () {
-      var node_selected = tmpObj.node_selected;
-      var value = $("#triggerType option:selected").val();
-      var attr = "TRIGGER_MODE";
-      jchaos.setAttribute(node_selected, attr, value, function () {
-        instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 2000, null, null, true)
 
-      }, function () {
-        instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 3000, null, null, false)
+        });
+        $("#triggerType").off();
+        $("#triggerType").on("change", function () {
+          var node_selected = tmpObj.node_selected;
+          var value = $("#triggerType option:selected").val();
+          var attr = "TRIGGER_MODE";
+          jchaos.setAttribute(node_selected, attr, value, function () {
+            instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 2000, null, null, true)
 
-      });
-    });
+          }, function () {
+            instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 3000, null, null, false)
 
-  }})}
+          });
+        });
+
+      }
+    })
+  }
   /****
    * 
    * Setup CU Interface
@@ -2868,6 +2900,7 @@
     });
 
   }
+
   function findTagsOf(tmpObj, currsel) {
     var names = [];
     var tags = jchaos.variable("tags", "get", null, null);
@@ -2882,12 +2915,35 @@
     }
     return names;
   }
+  function executeCameraMenuCmd(tmpObj, cmd, opt) {
+    if (cmd == 'set-roi') {
+      var crop_opt=opt.items[cmd].crop_opt;
 
+      console.log("CROP_OBJ:" + JSON.stringify(crop_opt));
+      var x=crop_opt.x.toFixed();
+      var y=crop_opt.y.toFixed();
+      var width=crop_opt.width.toFixed();
+      var height=crop_opt.height.toFixed();
+      jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
+        jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
+          jchaos.setAttribute(crop_opt.cu, "WIDTH",String(width) , function () {
+            jchaos.setAttribute(crop_opt.cu, "HEIGHT",String(height), function () {
+              instantMessage("ROI "+crop_opt.cu, "("+x+","+y+") "+width+"x"+height, 3000, true);
+
+            });
+          });
+        });
+      });
+    } else if (cmd == 'exit-crop') {
+      var encoden = encodeName(opt.items[cmd].cu);
+      $("#cameraImage-" + encoden).cropper('destroy');
+    }
+  }
   function executeCUMenuCmd(tmpObj, cmd, opt) {
     if (cmd == "quit") {
       return;
     }
-    var node_multi_selected=tmpObj.node_multi_selected
+    var node_multi_selected = tmpObj.node_multi_selected
     var currsel = tmpObj.node_multi_selected[0];
     if (cmd == "snapshot-cu") {
       var instUnique = (new Date()).getTime();
@@ -3005,27 +3061,27 @@
       openControl("Control ", tmpObj, desc.instance_description.control_unit_implementation, 1000);
 
 
-    } else if(cmd=="live-cu-disable"){
+    } else if (cmd == "live-cu-disable") {
       jchaos.storageLive(node_multi_selected, 0,
-      function () { instantMessage("Live CU disabled", node_multi_selected[0] , 2000, true); },
-      function () { instantMessage("Error Live CU disabled", node_multi_selected[0] , 2000, false); });
+        function () { instantMessage("Live CU disabled", node_multi_selected[0], 2000, true); },
+        function () { instantMessage("Error Live CU disabled", node_multi_selected[0], 2000, false); });
 
-    
-    } else if(cmd=="live-cu-enable"){
+
+    } else if (cmd == "live-cu-enable") {
       jchaos.storageLive(node_multi_selected, 1,
-        function () { instantMessage("Live CU enabled", node_multi_selected[0] , 2000, true); },
-        function () { instantMessage("Error Live CU enabled", node_multi_selected[0] , 2000, false); });
-  
-    } else if(cmd=="histo-cu-disable"){
+        function () { instantMessage("Live CU enabled", node_multi_selected[0], 2000, true); },
+        function () { instantMessage("Error Live CU enabled", node_multi_selected[0], 2000, false); });
+
+    } else if (cmd == "histo-cu-disable") {
       jchaos.storageHisto(node_multi_selected, 0,
-        function () { instantMessage("History CU disabled", node_multi_selected[0] , 2000, true); },
-        function () { instantMessage("Error History CU disabled", node_multi_selected[0] , 2000, false); });
-  
-    } else if(cmd=="histo-cu-enable"){
+        function () { instantMessage("History CU disabled", node_multi_selected[0], 2000, true); },
+        function () { instantMessage("Error History CU disabled", node_multi_selected[0], 2000, false); });
+
+    } else if (cmd == "histo-cu-enable") {
       jchaos.storageHisto(node_multi_selected, 1,
-        function () { instantMessage("History CU disabled", node_multi_selected[0] , 2000, true); },
-        function () { instantMessage("Error History CU disabled", node_multi_selected[0] , 2000, false); });
-  
+        function () { instantMessage("History CU disabled", node_multi_selected[0], 2000, true); },
+        function () { instantMessage("Error History CU disabled", node_multi_selected[0], 2000, false); });
+
     } else if (cmd == "show-dataset") {
       showDataset(currsel, currsel, 1000, tmpObj);
     } else if (cmd == "show-desc") {
@@ -3035,25 +3091,25 @@
         showJson(tmpObj, "Description " + currsel, currsel, data[0]);
       });
 
-    }  else if (cmd == "show-tags") {
-        jchaos.variable("tags", "get", null,function(tags){
-        var names=[];
+    } else if (cmd == "show-tags") {
+      jchaos.variable("tags", "get", null, function (tags) {
+        var names = [];
         for (var key in tags) {
-            var elems = tags[key].tag_elements;
-            elems.forEach(function (elem) {
-              if (elem == currsel) {
-                names.push(tags[key]);
-              }
-            });
-          }
-          if(names.length){
-            showJson(null, "Tags of " + currsel, currsel, names);
-          } else {
-            alert("No tag associated to "+currsel);
-          }
+          var elems = tags[key].tag_elements;
+          elems.forEach(function (elem) {
+            if (elem == currsel) {
+              names.push(tags[key]);
+            }
+          });
+        }
+        if (names.length) {
+          showJson(null, "Tags of " + currsel, currsel, names);
+        } else {
+          alert("No tag associated to " + currsel);
+        }
 
-        });
-      
+      });
+
 
     } else if (cmd == "show-picture") {
       jchaos.getChannel(currsel, -1, function (imdata) {
@@ -3112,7 +3168,7 @@
           var tags = jchaos.variable("tags", "get", null, null);
           if (tags.hasOwnProperty(tagname)) {
             var tag = tags[tagname];
-            var desc = "<b>" + tag['tag_desc'] + "</b> involved:"+JSON.stringify(tag['tag_elements']);
+            var desc = "<b>" + tag['tag_desc'] + "</b> involved:" + JSON.stringify(tag['tag_elements']);
             // $("#query-start").val(tagname);
             $("#query-tag").attr('title', desc);
             $("#select-tag").attr('title', desc);
@@ -3122,6 +3178,8 @@
 
       });
 
+    } else if(cnd=='set-roi'){
+      return executeCameraMenuCmd(tmpObj,cmd,opt);
     } else {
       jchaos.sendCUCmd(tmpObj.node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
@@ -3283,7 +3341,7 @@
 
     return html;
   }
-  
+
   function updateProcessServer(tmpObj, cb) {
     jchaos.search("", "agent", true, function (ag) {
       var agent_obj = {};
@@ -3317,7 +3375,7 @@
     tempObj['update-server-interval'] = setInterval(function () {
       updateProcessServer(tempObj);
     }, 10000);
-  
+
     updateProcessList(tempObj, function (tmpObj) {
       updateProcessTable(tmpObj);
       var proclist = tmpObj.data;
@@ -3427,10 +3485,10 @@
 
     $("#process_search").off('keypress');
     $("#process_search").on('keypress', function (event) {
-        var t = $(event.target);
-        var value = $(t).attr("value");
-        tempObj['filter']=value; 
-        updateProcessInterface(tempObj);
+      var t = $(event.target);
+      var value = $(t).attr("value");
+      tempObj['filter'] = value;
+      updateProcessInterface(tempObj);
     });
 
   }
@@ -3453,7 +3511,7 @@
 
     node_live_selected.forEach(function (elem, index) {
       var curr_time;
-      var name;
+      var name = "";
       if (elem.hasOwnProperty("dpck_ats")) {
         curr_time = elem.dpck_ats;
       } else if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("dpck_ats")) {
@@ -3468,21 +3526,29 @@
       } else if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("ndk_uid")) {
         name = elem.output.ndk_uid;
       }
+      var ename = encodeName(name);
+
       if ((curr_time != null) && (name != null)) {
-        var diff = (curr_time - tmpObj.health_time_stamp_old[name]);
-        var ename = encodeName(name);
-        if (diff != 0) {
-          $("#" + ename).css('color', 'green');
-          $("#" + ename).find('td').css('color', 'green');
-
-          tmpObj.off_line[name] = 0;
-
+        if (tmpObj.health_time_stamp_old.hasOwnProperty(name) && ((tmpObj.health_time_stamp_old[name] == 0) || (tmpObj.health_time_stamp_old[name] == null))) {
+          tmpObj.off_line[name] = 2; // just contacted;
+          tmpObj.health_time_stamp_old[name] = curr_time;
+          $("#" + ename).css('color', 'orange');
+          $("#" + ename).find('td').css('color', 'orange');
         } else {
-          $("#" + ename).css('color', 'black');
-          $("#" + ename).find('td').css('color', 'black');
-          tmpObj.off_line[name] = 1;
+          var diff = (curr_time - tmpObj.health_time_stamp_old[name]);
+          if (diff != 0) {
+            $("#" + ename).css('color', 'green');
+            $("#" + ename).find('td').css('color', 'green');
+
+            tmpObj.off_line[name] = 0;
+
+          } else {
+            $("#" + ename).css('color', 'black');
+            $("#" + ename).find('td').css('color', 'black');
+            tmpObj.off_line[name] = 1;
+          }
+          tmpObj.health_time_stamp_old[name] = curr_time;
         }
-        tmpObj.health_time_stamp_old[name] = curr_time;
       }
 
     });
@@ -3504,7 +3570,7 @@
     node_list.forEach(function (elem, id) {
       tmpObj.index = -1;
       tmpObj.health_time_stamp_old[elem] = 0;
-      tmpObj.off_line[elem] = 0;
+      tmpObj.off_line[elem] = 2;
       tmpObj.node_name_to_index[elem] = id;
     });
     tmpObj.node_selected = null;
@@ -3758,14 +3824,14 @@
 
       copia.ndk_parent = node_selected;
       confirm("Move or Copy", "Copy or Moving CU: \"" + cu_copied.ndk_uid + "\" into US:\"" + node_selected + "\"", "Move", function () {
-        if (tmpObj.off_line[cu_copied.ndk_uid] == false) {
+        if (tmpObj.off_line[cu_copied.ndk_uid] == 0) {
           alert("CU " + cu_copied.ndk_uid + " cannot be MOVED if alive, please bring it to 'unload' state");
           return;
         }
         jchaos.node(cu_copied.ndk_uid, "set", "cu", node_selected, copia, function () { });
       }, "Copy", function () {
 
-        var def_obj=copia;
+        var def_obj = copia;
         var templ = {
           $ref: "cu.json",
           format: "tabs"
@@ -3847,37 +3913,37 @@
 
       return;
     } else if (cmd == "shutdown-nt_control_unit") {
-      confirm("Do you want to IMMEDIATELY SHUTDOWN CU/EU:"+node_selected, "Pay attention ANY CU of the same US will be killed as well", "Kill",
+      confirm("Do you want to IMMEDIATELY SHUTDOWN CU/EU:" + node_selected, "Pay attention ANY CU of the same US will be killed as well", "Kill",
         function () {
           jchaos.node(node_selected, "shutdown", "cu", function () {
             instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, true);
           }, function () {
             instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, false);
-          },function(){
+          }, function () {
             // handle error ok
           })
         }, "Joke", function () { });
       return;
     } else if (cmd == "shutdown-nt_unit_server") {
-      confirm("Do you want to IMMEDIATELY SHUTDOWN US:"+node_selected, "Pay attention ANY CU will be killed as well", "Kill",
+      confirm("Do you want to IMMEDIATELY SHUTDOWN US:" + node_selected, "Pay attention ANY CU will be killed as well", "Kill",
         function () {
           jchaos.node(node_selected, "shutdown", "us", function () {
             instantMessage("US SHUTDOWN", "Killing " + node_selected + "", 1000, true);
           }, function () {
             instantMessage("US SHUTDOWN", "Killing " + node_selected + "", 1000, false);
-          },function(){
+          }, function () {
             // handle error ok
           })
         }, "Joke", function () { });
       return;
     } else if (cmd == "shutdown-nt_agent") {
-      confirm("Do you want to IMMEDIATELY SHUTDOWN AGENT:"+node_selected, "Pay attention ANY US/CU will be killed as well", "Kill",
+      confirm("Do you want to IMMEDIATELY SHUTDOWN AGENT:" + node_selected, "Pay attention ANY US/CU will be killed as well", "Kill",
         function () {
           jchaos.node(node_selected, "shutdown", "agent", function () {
             instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, true);
           }, function () {
             instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, false);
-          },function(){
+          }, function () {
             // handle error ok
           })
         }, "Joke", function () { });
@@ -3954,7 +4020,7 @@
           })
         }, "Joke", function () { });
       return;
-    }  else if (cmd == "restart-node") {
+    } else if (cmd == "restart-node") {
       confirm("Do you want to RESTART?", "Pay attention ANY CU will be restarted as well", "Restart",
         function () {
           jchaos.node(node_selected, "restart", "us", function () {
@@ -4745,7 +4811,7 @@
     for (var p in tmpObj.data) {
       var pname = tmpObj.data[p].pname;
 
-      if(tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))){
+      if (tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))) {
         continue;
       }
       var ptype = tmpObj.data[p].ptype;
@@ -4758,8 +4824,8 @@
       var uptime = tmpObj.data[p].uptime;
       var systime = parseFloat(tmpObj.data[p].Psys).toFixed(3);
       var cputime = parseFloat(tmpObj.data[p].Puser).toFixed(3);
-      var vmem = parseFloat(tmpObj.data[p].Vmem/1024).toFixed(1);
-      var rmem = tmpObj.data[p].Rmem/1024;
+      var vmem = parseFloat(tmpObj.data[p].Vmem / 1024).toFixed(1);
+      var rmem = tmpObj.data[p].Rmem / 1024;
       var pmem = parseFloat(tmpObj.data[p].pmem).toFixed(2);
 
       var hostname = tmpObj.data[p].hostname;
@@ -4919,14 +4985,14 @@
   }
 
   function runScript(name, parm) {
-    jchaos.runScript(name,parm,function(ok){
-      instantMessage("runScript:"+JSON.stringify(ok), 2000, true);
+    jchaos.runScript(name, parm, function (ok) {
+      instantMessage("runScript:" + JSON.stringify(ok), 2000, true);
 
-    },function(bad){
-      instantMessage("runScript:"+bad, 2000, false);
+    }, function (bad) {
+      instantMessage("runScript:" + bad, 2000, false);
 
     });
-    
+
   }
   function updateProcessInterface(tmpObj) {
     //  updateProcessList(tmpObj);
@@ -5040,7 +5106,7 @@
       var ptype = obj.ptype;
       var pname = obj.pname;
 
-      if(tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))){
+      if (tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))) {
         continue;
       }
       var started_timestamp = obj.start_time;
@@ -5792,9 +5858,18 @@
             var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
             $("#" + name_id + "_health_pband").html(band.toFixed(3));
           }
-          if ((tmpObj.off_line[name_device_db] > 0) && (status != "Unload")) {
-            status = "Dead";
+          if (status != "Unload") {
+            switch (tmpObj.off_line[name_device_db]) {
+              case 1:
+                status = "Dead";
+                break;
+              case 2:
+                status = "Checking";
+                break;
+
+            }
           }
+
           $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
 
 
@@ -5827,12 +5902,15 @@
           } else if (status == "Load") {
             $("#" + name_id + "_health_status").html('<i class="material-icons verde">power</i>');
 
+          } else if (tmpObj.off_line[name_device_db] == 2) {
+            $("#" + name_id + "_health_status").html('<i class="material-icons">update</i>');
+
           } else {
             $("#" + name_id + "_health_status").html('<i class="material-icons red">block</i>');
 
           }
         }
-        if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
+        if (el.hasOwnProperty('system') && (tmpObj.off_line[name_device_db] == 0)) {   //if el system
           var busy = $.trim(el.system.busy);
           var dev_alarm = Number(el.system.cudk_dalrm_lvl);
           var cu_alarm = Number(el.system.cudk_calrm_lvl);
@@ -6448,7 +6526,7 @@
     var cu = tmpObj.elems;
 
     if (tmpObj.node_multi_selected instanceof Array) {
-      tmpObj.data = [];
+
       var cnt = 0;
       tmpObj.node_multi_selected.forEach(function (elem) {
         tmpObj.skip_fetch++;
@@ -6481,28 +6559,28 @@
 
               // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
               $("#cameraImage-" + encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
-             /* $("#cameraImage-" + encodeName(elem)).one("load", function() {
-                if(typeof tmpObj['selectArea-'+ encodeName(elem)] === "undefined"){
-                  tmpObj['selectArea-'+ encodeName(elem)]={};
-                $('#cameraImage-' + encodeName(elem)).cropper({
-                  aspectRatio: 16 / 9,
-                  crop: function(event) {
-                    console.log(event.detail.x);
-                    console.log(event.detail.y);
-                    console.log(event.detail.width);
-                    console.log(event.detail.height);
-                    console.log(event.detail.rotate);
-                    console.log(event.detail.scaleX);
-                    console.log(event.detail.scaleY);
-                  }
-                });
-              }
-                // do stuff
-              })*/
-             /* if(typeof tmpObj['selectArea-'+ encodeName(elem)] === "undefined"){
-                tmpObj['selectArea-'+ encodeName(elem)]={};
-                
-            }*/
+              /* $("#cameraImage-" + encodeName(elem)).one("load", function() {
+                 if(typeof tmpObj['selectArea-'+ encodeName(elem)] === "undefined"){
+                   tmpObj['selectArea-'+ encodeName(elem)]={};
+                 $('#cameraImage-' + encodeName(elem)).cropper({
+                   aspectRatio: 16 / 9,
+                   crop: function(event) {
+                     console.log(event.detail.x);
+                     console.log(event.detail.y);
+                     console.log(event.detail.width);
+                     console.log(event.detail.height);
+                     console.log(event.detail.rotate);
+                     console.log(event.detail.scaleX);
+                     console.log(event.detail.scaleY);
+                   }
+                 });
+               }
+                 // do stuff
+               })*/
+              /* if(typeof tmpObj['selectArea-'+ encodeName(elem)] === "undefined"){
+                 tmpObj['selectArea-'+ encodeName(elem)]={};
+                 
+             }*/
             }
           }
           var cindex = tmpObj.node_name_to_index[elem];
@@ -6659,7 +6737,7 @@
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
     html += '<h3 id="list_graphs">List Graphs</h3>';
-    
+
     html += '<div class="row-fluid"><label class="span2">Search:</label><input class="input-xlarge focused" id="graph_search" class="span5" type="text" title="Search a graph" value=""></div>';
 
     html += '</div>';
@@ -6972,42 +7050,42 @@
       alert("\"" + gname + "\" not a valid graph ");
       return;
     }
-    var qtag="";
-    var page=30;
-    var chunk=3600;
-    var autoreduction=1;
-    if(options.hasOwnProperty("tag")){
-      qtag=options.tag;
+    var qtag = "";
+    var page = 30;
+    var chunk = 3600;
+    var autoreduction = 1;
+    if (options.hasOwnProperty("tag")) {
+      qtag = options.tag;
     }
-    if(options.hasOwnProperty("page")){
-      page=options.page;
+    if (options.hasOwnProperty("page")) {
+      page = options.page;
     }
-    if(options.hasOwnProperty("chunk")){
-      chunk=options.chunk;
+    if (options.hasOwnProperty("chunk")) {
+      chunk = options.chunk;
     }
-    if(options.hasOwnProperty("reduction") && (typeof options.reduction === "number")){
-      autoreduction=Number(options.reduction);
+    if (options.hasOwnProperty("reduction") && (typeof options.reduction === "number")) {
+      autoreduction = Number(options.reduction);
     }
 
     if (!(active_plots[gname] instanceof Object)) {
       alert("\"" + gname + "\" not a valid graph ");
       return;
     }
-    var items=0;
+    var items = 0;
     if (stop == "" || stop == "NOW") {
       stop = (new Date()).getTime();
     }
 
-    if(typeof chunk!=="number"){
-      chunk=stop-start;
+    if (typeof chunk !== "number") {
+      chunk = stop - start;
     }
-    if(typeof start!=="number"){
-      start=Number(start);
+    if (typeof start !== "number") {
+      start = Number(start);
     }
-    if(typeof stop!=="number"){
-      stop=Number(stop);
+    if (typeof stop !== "number") {
+      stop = Number(stop);
     }
-    chunk=chunk*1000; // in ms
+    chunk = chunk * 1000; // in ms
 
     jchaos.options.updateEachCall = true;
     jchaos.setOptions({ "timeout": 60000 });
@@ -7026,19 +7104,19 @@
     for (var i = seriesLength - 1; i > -1; i--) {
       chart.series[i].setData([]);
     }
-    var projections={};
-    var query_opt={
-      tags:qtag,
-      maxpoints:graph_opt.width,
-      page:Number(page)
+    var projections = {};
+    var query_opt = {
+      tags: qtag,
+      maxpoints: graph_opt.width,
+      page: Number(page)
     };
-    query_opt['reduction']=autoreduction;
-    query_opt['count']=0;
+    query_opt['reduction'] = autoreduction;
+    query_opt['count'] = 0;
     graph_opt.culist.forEach(function (item) {
-      projections[item]={
-        0:["dpck_ats"],
-        1:["dpck_ats"],
-        4:["dpck_ats"]
+      projections[item] = {
+        0: ["dpck_ats"],
+        1: ["dpck_ats"],
+        4: ["dpck_ats"]
       }
     });
     graph_opt.culist.forEach(function (item) {
@@ -7061,7 +7139,7 @@
       correlation = true;
     }
     var histdataset = {};
-    $("#info-download-"+gname).html("retrieving data..")
+    $("#info-download-" + gname).html("retrieving data..")
 
     if (correlation) {
       for (k in tr) {
@@ -7072,70 +7150,70 @@
       for (var v in graph_opt.culist) {
         var item = graph_opt.culist[v];
         for (var dir in dirlist) {
-          
-          for(var start_chunk=start;start_chunk<stop;start_chunk+=chunk){
-            var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
-            query_opt['projection']=projections[item][dirlist[dir]];
+
+          for (var start_chunk = start; start_chunk < stop; start_chunk += chunk) {
+            var stop_chunk = ((start_chunk + chunk) > stop) ? stop : (start_chunk + chunk);
+            query_opt['projection'] = projections[item][dirlist[dir]];
             jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", function (data) {
 
-            for (k in tr) {
-              var trname = tr[k].name;
+              for (k in tr) {
+                var trname = tr[k].name;
 
-              if (tr[k].x.cu === item) {
-                var variable = tr[k].x.var;
-                if (data.Y[0].hasOwnProperty(variable)) {
-                  var cnt = 0;
-                  console.log("X acquiring " + trname + " path:" + tr[k].x.origin + " items:" + data.Y.length);
-                  items+=data.Y.length;
-                  if(data.end){
-                    $("#info-download-"+gname).html("<b>"+items+"</b>").css('color', 'black');
-                  } else {
-                    $("#info-download-"+gname).html(items).css('color', 'green');
-                  }
-
-                  data.Y.forEach(function (ds) {
-                    if (tr[k].x.index != null && tr[k].x.index != "-1") {
-                      var tmp = Number(ds[variable]);
-                      histdataset[trname].x.push(tmp[tr[k].x.index]);
+                if (tr[k].x.cu === item) {
+                  var variable = tr[k].x.var;
+                  if (data.Y[0].hasOwnProperty(variable)) {
+                    var cnt = 0;
+                    console.log("X acquiring " + trname + " path:" + tr[k].x.origin + " items:" + data.Y.length);
+                    items += data.Y.length;
+                    if (data.end) {
+                      $("#info-download-" + gname).html("<b>" + items + "</b>").css('color', 'black');
                     } else {
-                      histdataset[trname].x.push(Number(ds[variable]));
-
+                      $("#info-download-" + gname).html(items).css('color', 'green');
                     }
-                    histdataset[trname].tx.push(data.X[cnt++]);
 
-                  });
+                    data.Y.forEach(function (ds) {
+                      if (tr[k].x.index != null && tr[k].x.index != "-1") {
+                        var tmp = Number(ds[variable]);
+                        histdataset[trname].x.push(tmp[tr[k].x.index]);
+                      } else {
+                        histdataset[trname].x.push(Number(ds[variable]));
 
+                      }
+                      histdataset[trname].tx.push(data.X[cnt++]);
+
+                    });
+
+                  }
+                }
+                if (tr[k].y.cu === item) {
+                  var variable = tr[k].y.var;
+                  if (data.Y[0].hasOwnProperty(variable)) {
+                    var cnt = 0;
+                    console.log("Y acquiring " + trname + " path:" + tr[k].y.origin + " items:" + data.Y.length);
+                    items += data.Y.length;
+                    if (data.Y.length < page) {
+                      $("#info-download-" + gname).html("<b>" + items + "</b>").css('color', 'black');
+                    } else {
+                      $("#info-download-" + gname).html(items).css('color', 'green');
+                    }
+
+                    data.Y.forEach(function (ds) {
+                      if (tr[k].y.index != null && tr[k].y.index != "-1") {
+                        var tmp = ds[variable];
+                        histdataset[trname].y.push(Number(tmp[tr[k].y.index]));
+                      } else {
+                        histdataset[trname].y.push(Number(ds[variable]));
+
+                      }
+                      histdataset[trname].ty.push(data.X[cnt++]);
+
+                    });
+                  }
                 }
               }
-              if (tr[k].y.cu === item) {
-                var variable = tr[k].y.var;
-                if (data.Y[0].hasOwnProperty(variable)) {
-                  var cnt = 0;
-                  console.log("Y acquiring " + trname + " path:" + tr[k].y.origin + " items:" + data.Y.length);
-                  items+=data.Y.length;
-                  if(data.Y.length<page){
-                    $("#info-download-"+gname).html("<b>"+items+"</b>").css('color', 'black');
-                  } else {
-                    $("#info-download-"+gname).html(items).css('color', 'green');
-                  }
-
-                  data.Y.forEach(function (ds) {
-                    if (tr[k].y.index != null && tr[k].y.index != "-1") {
-                      var tmp = ds[variable];
-                      histdataset[trname].y.push(Number(tmp[tr[k].y.index]));
-                    } else {
-                      histdataset[trname].y.push(Number(ds[variable]));
-
-                    }
-                    histdataset[trname].ty.push(data.X[cnt++]);
-
-                  });
-                }
-              }
-            }
-            query_opt['count']=data.count;
-          }, query_opt);
-        }
+              query_opt['count'] = data.count;
+            }, query_opt);
+          }
         }
       };
       // ok plot
@@ -7160,102 +7238,102 @@
 
         for (var dir in dirlist) {
           var dataset = [];
-          var start_chunk=start;
-          
-          var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
+          var start_chunk = start;
 
-            query_opt['projection']=projections[item][dirlist[dir]];
+          var stop_chunk = ((start_chunk + chunk) > stop) ? stop : (start_chunk + chunk);
 
-            var download_handler=function (data) {
-              var dev=data['devs'];
-              var qstop=data['query']['end']
-              var cnt = 0, ele_count = 0;
-              if(!data.hasOwnProperty("nitems")){
-              }
-              for (k in tr) {
-                if (tr[k].y.origin == "histogram") {
-                  if (tr[k].x.cu === dev) {
-                    var variable = tr[k].x.var;
-  
-                    data.Y.forEach(function (ds) {
-                      //dataset.push(ds[variable]);
-                      chart.series[cnt + 1].addPoint(ds[variable], false, false);
-  
-                    });
-                  }
-                  cnt += 2;
-                } else {
-                  if (tr[k].y.cu === dev) {
-                    //iterate on the datasets
-                 //   console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
-                    items+=data.Y.length;
-                    var txt="items:"+data.nitems+" runid:"+data.runid + " done:"+(stop*100.0/qstop);
-                    if(data.end && (qstop==stop)){
-                      $("#info-download-"+gname).html("<b>"+txt+"</b>").css('color', 'black');
-                    } else {
-                      $("#info-download-"+gname).html(txt).css('color', 'green');
-                    }
-  
-                    var variable = tr[k].y.var;
-                    var index = tr[k].y.index;
-                    ele_count = 0;
-                    data.Y.forEach(function (ds) {
-                      if (ds.hasOwnProperty(variable)) {
-                        var ts = data.X[ele_count++] - time_off;
-                        var tmp = ds[variable];
-  
-                        if (index != null) {
-                          if (tmp.hasOwnProperty("$binary")) {
-                            tmp = convertBinaryToArrays(tmp);
-                          }
-  
-                          if (index == "-1") {
-                            var incr = 1.0 / tmp.length;
-                            var dataset = [];
-                            for (var cntt = 0; cntt < tmp.length; cntt++) {
-                              var t = ts + incr * cntt;
-                              var v = Number(tmp[cntt]);
-                              dataset.push([t, v]);
-                              chart.series[cnt].addPoint([t, v], false, false);
-                            }
-                            // chart.series[cnt].setData(dataset, true, true, true);
-                            chart.redraw();
-  
-                          } else {
-                            chart.series[cnt].addPoint([ts, Number(tmp[index])], false, false);
-                          }
-  
-                        } else {
-                          chart.series[cnt].addPoint([ts, Number(tmp)], false, false);
-  
-                        }
-                      }
-                    });
-                  }
-                  cnt++;
+          query_opt['projection'] = projections[item][dirlist[dir]];
+
+          var download_handler = function (data) {
+            var dev = data['devs'];
+            var qstop = data['query']['end']
+            var cnt = 0, ele_count = 0;
+            if (!data.hasOwnProperty("nitems")) {
+            }
+            for (k in tr) {
+              if (tr[k].y.origin == "histogram") {
+                if (tr[k].x.cu === dev) {
+                  var variable = tr[k].x.var;
+
+                  data.Y.forEach(function (ds) {
+                    //dataset.push(ds[variable]);
+                    chart.series[cnt + 1].addPoint(ds[variable], false, false);
+
+                  });
                 }
-  
-              }
-              chart.redraw();
-              query_opt['count']=data.count;
-              start_chunk+=chunk;
-              if(start_chunk<stop){
-                var stop_chunk=((start_chunk+chunk) > stop)?stop:(start_chunk+chunk);
+                cnt += 2;
+              } else {
+                if (tr[k].y.cu === dev) {
+                  //iterate on the datasets
+                  //   console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
+                  items += data.Y.length;
+                  var txt = "items:" + data.nitems + " runid:" + data.runid + " done:" + (stop * 100.0 / qstop);
+                  if (data.end && (qstop == stop)) {
+                    $("#info-download-" + gname).html("<b>" + txt + "</b>").css('color', 'black');
+                  } else {
+                    $("#info-download-" + gname).html(txt).css('color', 'green');
+                  }
 
-                jchaos.getHistory(dev, dirlist[dir], start_chunk, stop_chunk, "",download_handler , query_opt,function(err){
-                  alert(err);
-                });
+                  var variable = tr[k].y.var;
+                  var index = tr[k].y.index;
+                  ele_count = 0;
+                  data.Y.forEach(function (ds) {
+                    if (ds.hasOwnProperty(variable)) {
+                      var ts = data.X[ele_count++] - time_off;
+                      var tmp = ds[variable];
 
+                      if (index != null) {
+                        if (tmp.hasOwnProperty("$binary")) {
+                          tmp = convertBinaryToArrays(tmp);
+                        }
+
+                        if (index == "-1") {
+                          var incr = 1.0 / tmp.length;
+                          var dataset = [];
+                          for (var cntt = 0; cntt < tmp.length; cntt++) {
+                            var t = ts + incr * cntt;
+                            var v = Number(tmp[cntt]);
+                            dataset.push([t, v]);
+                            chart.series[cnt].addPoint([t, v], false, false);
+                          }
+                          // chart.series[cnt].setData(dataset, true, true, true);
+                          chart.redraw();
+
+                        } else {
+                          chart.series[cnt].addPoint([ts, Number(tmp[index])], false, false);
+                        }
+
+                      } else {
+                        chart.series[cnt].addPoint([ts, Number(tmp)], false, false);
+
+                      }
+                    }
+                  });
+                }
+                cnt++;
               }
-              // true until close if false the history loop retrive breaks
-              return true;
-            };
-            jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "",download_handler , query_opt,function(err){
-              alert(err);
-            });
-        
-        
-      }
+
+            }
+            chart.redraw();
+            query_opt['count'] = data.count;
+            start_chunk += chunk;
+            if (start_chunk < stop) {
+              var stop_chunk = ((start_chunk + chunk) > stop) ? stop : (start_chunk + chunk);
+
+              jchaos.getHistory(dev, dirlist[dir], start_chunk, stop_chunk, "", download_handler, query_opt, function (err) {
+                alert(err);
+              });
+
+            }
+            // true until close if false the history loop retrive breaks
+            return true;
+          };
+          jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", download_handler, query_opt, function (err) {
+            alert(err);
+          });
+
+
+        }
       });
     }
 
@@ -7269,7 +7347,7 @@
         stop: (new Date()).getTime(),
         tag: "",
         chunk: dashboard_settings.defaultChunk,
-        reduction:1
+        reduction: 1
       };
     }
 
@@ -7285,7 +7363,7 @@
     $('#reportrange-' + id).daterangepicker({
       startDate: start,
       endDate: end,
-      autoUpdateInput:true,
+      autoUpdateInput: true,
       timePicker: true,
       timePicker24Hour: true,
       linkedCalendars: false,
@@ -7323,7 +7401,7 @@
         stop: (new Date()).getTime(),
         tag: "",
         chunk: dashboard_settings.defaultChunk,
-        reduction:1
+        reduction: 1
       };
     }
 
@@ -7375,10 +7453,10 @@
     createCustomDialog(opt, html, "Run", function () {
 
       query_params['page'] = Number($("#query-page").val());
-      if(typeof $("#query-start").val() === "number"){
-       query_params['start'] = Number($("#query-start").val());
+      if (typeof $("#query-start").val() === "number") {
+        query_params['start'] = Number($("#query-start").val());
       }
-      if(typeof $("#query-stop").val() === "number"){
+      if (typeof $("#query-stop").val() === "number") {
         query_params['stop'] = Number($("#query-stop").val());
       }
       query_params['tag'] = $("#query-tag").val();
@@ -7394,13 +7472,13 @@
         // $('#daterange').val('');
         var start = new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
         var end = new Date(picker.endDate.format('MMMM D, YYYY HH:mm'));
-        if(typeof start.getTime() === "number" ){
+        if (typeof start.getTime() === "number") {
           query_params['start'] = start.getTime();
           $('#query-start').val(start.getTime());
 
         }
 
-        if(typeof end.getTime() === "number" ){
+        if (typeof end.getTime() === "number") {
           query_params['stop'] = end.getTime();
           $('#query-stop').val(end.getTime());
 
@@ -7418,16 +7496,18 @@
   function createGraphDialog(gname, id, options) {
     var av_graphs = jchaos.variable("highcharts", "get", null, null);
     var opt = av_graphs[gname];
-    if(typeof active_plots === "undefined"){
-      active_plots={};
+    if (typeof active_plots === "undefined") {
+      active_plots = {};
     }
     if (!(opt instanceof Object)) {
       alert("\"" + gname + "\" not a valid graph ");
       return;
     }
-    if(typeof options ==="undefined"){
-      options= {modal: false, title: gname, zIndex: 10000, autoOpen: true,
-      width: opt.width, height:opt.height,resizable: true}
+    if (typeof options === "undefined") {
+      options = {
+        modal: false, title: gname, zIndex: 10000, autoOpen: true,
+        width: opt.width, height: opt.height, resizable: true
+      }
     }
     if (options.hasOwnProperty("width")) {
       opt.width = options.width;
@@ -7438,27 +7518,27 @@
 
     }
     var html = "";
-    var idname=gname;
-    var html_target="<div></div>";
+    var idname = gname;
+    var html_target = "<div></div>";
     //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
     html += '<div class="row-fluid" style="height: 100%; width: 100%">';
     //html += '<div id="createGraphDialog-' + id + '" style="height: 100%; width: 100%">';
-    if(typeof id === "string"){
+    if (typeof id === "string") {
       idname = id;
-      html_target="#"+id;
-    } 
+      html_target = "#" + id;
+    }
     html += '<div id="reportrange-' + idname + '" class="span8" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
     html += '<i class="fa fa-calendar"></i>&nbsp';
     html += '<span></span> <i class="fa fa-caret-down"></i>';
     html += '</div>';
-    html += '<div class="span2">count:</div>' 
-    html += '<div id="info-download-'+gname +'" class="span2" />' 
-    
+    html += '<div class="span2">count:</div>'
+    html += '<div id="info-download-' + gname + '" class="span2" />'
+
     html += '<div id="createGraphDialog-' + idname + '" class="span10" style="height: 100%; width: 100%">';
     html += '</div>';
 
     html += '</div>';
-    if(typeof id === "string"){
+    if (typeof id === "string") {
 
       $(html_target).children().remove();
       $(html_target).append(html);
@@ -7476,7 +7556,7 @@
               start: 0,
               stop: (new Date()).getTime(),
               tag: "",
-              chunk:dashboard_settings.defaultChunk
+              chunk: dashboard_settings.defaultChunk
             };
           }
           query_params['start'] = start;
@@ -7484,14 +7564,14 @@
 
           console.log(picker.startDate.format('MMMM D, YYYY HH:mm'));
           console.log(picker.endDate.format('MMMM D, YYYY HH:mm'));
-          runQueryToGraph(gname, query_params.start, query_params.stop,{tag:query_params.tag, page:query_params.page,chunck:query_params.chunk});
+          runQueryToGraph(gname, query_params.start, query_params.stop, { tag: query_params.tag, page: query_params.page, chunck: query_params.chunk });
 
         }, idname);
 
         var chart = new Highcharts.chart("createGraphDialog-" + idname, opt.highchart_opt);
         var start_time = (new Date()).getTime();
         console.log("New Graph:" + gname + " has been created :" + JSON.stringify(opt));
-       
+
         active_plots[gname] = {
           graphname: gname,
           graph: chart,
@@ -7693,10 +7773,10 @@
                }
              });*/
             createQueryDialog(function (query) {
-              runQueryToGraph(gname, query.start, query.stop, {tag:query.tag, page:query.page,chunck:query.chunk,reduction:query.reduction});
+              runQueryToGraph(gname, query.start, query.stop, { tag: query.tag, page: query.page, chunck: query.chunk, reduction: query.reduction });
             });
 
-          
+
           }
         }, {
           text: "Save",
@@ -7745,13 +7825,13 @@
           text: "Close",
           click: function () {
             console.log("Removing graph:" + gname);
-            if(active_plots.hasOwnProperty(gname)){
-              if(active_plots[gname].hasOwnProperty('interval')){
+            if (active_plots.hasOwnProperty(gname)) {
+              if (active_plots[gname].hasOwnProperty('interval')) {
                 clearInterval(active_plots[gname].interval);
               }
               delete active_plots[gname]['graph'];
               delete active_plots[gname];
-          }
+            }
 
             $(this).dialog('close');
           }
@@ -7764,10 +7844,10 @@
       dlg_opt[i] = options[i];
     }
     console.log("dialog options:" + JSON.stringify(dlg_opt));
-    if(typeof id === "undefined"){
+    if (typeof id === "undefined") {
       $('<div></div>').appendTo('body')
-      .html(html)
-      .dialog(dlg_opt);
+        .html(html)
+        .dialog(dlg_opt);
     } else {
       $(html_target).dialog(dlg_opt);
     }
@@ -7820,7 +7900,7 @@
         resizable: true,
         dialogClass: 'no-close'
       };
-      createGraphDialog(gname,"dialog-" + count,  options);
+      createGraphDialog(gname, "dialog-" + count, options);
 
 
     } else {
@@ -8019,8 +8099,8 @@
 
   }
 
-  
-  
+
+
 
   function generateScriptAdminModal() {
     var html = '<div class="modal hide fade" id="mdl-script">';
@@ -9046,13 +9126,13 @@
       if (us_copied != null && us_copied.ndk_uid != "") {
         items['agent-act'] = "---------";
         items['associate-node'] = { name: "Associate " + us_copied.ndk_uid + "..." };
-        
+
 
         items['agent-act'] = "---------";
       }
 
     }
-    if(node_selected != null && node_selected !=""){
+    if (node_selected != null && node_selected != "") {
 
       items['shutdown-' + node_type] = { name: "Shutdown " + node_selected };
     }
@@ -9065,7 +9145,7 @@
     var cu = tmpObj.data[cindex];
     if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
-      if ((tmpObj.off_line[cu.health.ndk_uid] == false)) {
+      if ((tmpObj.off_line[cu.health.ndk_uid] == 0)) {
 
         if (status == 'Start') {
           items['stop'] = { name: "Stop", icon: "stop" };
@@ -9126,12 +9206,16 @@
     items['sep2'] = "---------";
     //node_name_to_desc[node_multi_selected[0]]
     var desc = tmpObj.node_name_to_desc[name];
-// camera
-    var name_encoded=encodeName(name);
-    if(tmpObj.hasOwnProperty('crop') && (typeof tmpObj['crop'][name_encoded] === "object")){
-      items['set-roi']={name: "Set Roi "+name+" ("+tmpObj['crop'][name_encoded].x.toFixed() +","+tmpObj['crop'][name_encoded].y.toFixed()+") size "+tmpObj['crop'][name_encoded].width.toFixed()+"x"+tmpObj['crop'][name_encoded].height.toFixed()};
+    // camera
+    if (tmpObj.hasOwnProperty('crop') && (typeof tmpObj['crop'][name] === "object")) {
+      var crop_obj = tmpObj['crop'][name];
+      if (typeof crop_obj === "object") {
+        crop_obj['cu'] = name;
+        items['set-roi'] = { name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+      }
     }
-//
+
+    //
     if (desc != null && desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("control_unit_implementation")) {
       var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
 
@@ -9170,6 +9254,7 @@
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("ndk_uid")) {   //if el health
       var name = cu.health.ndk_uid;
       var status = cu.health.nh_status;
+      var encoden = encodeName(name);
       $("#cmd-stop-start").hide();
       $("#cmd-init-deinit").hide();
       $("#cmd-load-unload").hide();
@@ -9182,8 +9267,16 @@
       $("#cmd-recover-error").children().remove();
       $("#cmd-bypass-on-off").children().remove();
       */
-      if ((tmpObj.off_line[name] > 0) && (status != "Unload")) {
-        status = "Dead";
+      if (status != "Unload") {
+        switch (tmpObj.off_line[encoden]) {
+          case 1:
+            status = "Dead";
+            break;
+          case 2:
+            status = "Updating";
+            break;
+
+        }
       }
       $("#h3-generic-cmd").html("Generic Controls:\"" + name + "\" status:" + status);
 
@@ -9237,7 +9330,7 @@
         $("#cmd-load-unload").show();
       }
     }
-    if (cu.hasOwnProperty('system') && (status != "Dead")) {   //if el system
+    if (cu.hasOwnProperty('system') && (tmpObj.off_line[encoden] == 0)) {   //if el system
       $("#scheduling_title").html("Actual scheduling (us):" + cu.system.cudk_thr_sch_delay);
 
       if (cu.system.cudk_bypass_state == false) {
@@ -9333,8 +9426,8 @@
     }
   }
   function updateLog(cu) {
-    if((typeof cu === "undefined") || (cu == null)){
-      cu="";
+    if ((typeof cu === "undefined") || (cu == null)) {
+      cu = "";
     }
     $("#table_logs").find("tr:gt(0)").remove();
     //var logtype= $( "input[name=log]:radio" );
@@ -9372,14 +9465,14 @@
 
     });
   }
-  function updateGraph( graph_filt) {
+  function updateGraph(graph_filt) {
     high_graphs = jchaos.variable("highcharts", "get", null, null);
     $("#table_graph").find("tr:gt(0)").remove();
-    if(typeof graph_filt !=="string"){
-      graph_filt="";
+    if (typeof graph_filt !== "string") {
+      graph_filt = "";
     }
     for (g in high_graphs) {
-      if(g.includes(graph_filt)){
+      if (g.includes(graph_filt)) {
         $('#table_graph').append('<tr class="row_element" id="' + g + '"><td>' + g + '</td><td>' + high_graphs[g].time + '</td><td>' + high_graphs[g].highchart_opt.chart.type + '</td></tr>');
       }
     }
@@ -9511,7 +9604,7 @@
   $.fn.generateMenuBox = function () {
     $(this).html(generateMenuBox());
   }
-  
+
   $.fn.generateQueryTable = function () {
     $(this).html(generateQueryTable());
   }
@@ -9521,8 +9614,8 @@
   $.fn.editActions = function () {
     actionJsonEditor();
   }
-  
-  
+
+
   $.fn.getFile = function (msghead, msg, handler) {
     return getFile(msghead, msg, handler);
   }
@@ -9530,11 +9623,11 @@
     return getValueFromCUList(culist, path);
   }
   jqccs.runQueryToGraph = function (gname, start, stop, options) {
-    return runQueryToGraph(gname, start, stop,options);
+    return runQueryToGraph(gname, start, stop, options);
   }
 
-  jqccs.createGraphDialog = function (gname,id,  options) {
-    return createGraphDialog(gname,id,  options);
+  jqccs.createGraphDialog = function (gname, id, options) {
+    return createGraphDialog(gname, id, options);
   }
 
   function initSettings() {
@@ -9746,7 +9839,7 @@
     module.exports = $(this);
 
   } else {
-    window.jqccs=jqccs;
-    
+    window.jqccs = jqccs;
+
   }
 })(jQuery);
