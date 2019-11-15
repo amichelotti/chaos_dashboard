@@ -1710,6 +1710,7 @@
       $("#mdl-log").modal("hide");
 
     });
+
     $("#mdl-log").resizable().draggable();
    // $("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true});
 
