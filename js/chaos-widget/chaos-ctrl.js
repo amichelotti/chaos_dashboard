@@ -1710,8 +1710,8 @@
       $("#mdl-log").modal("hide");
 
     });
-    //$("#mdl-log").resizable().draggable();
-    $("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true});
+    $("#mdl-log").resizable().draggable();
+   // $("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true});
 
   }
   function snapSetup(tmpObj) {
@@ -2454,12 +2454,12 @@
                 if (cnt > 0) {
                   html += "</tr>"
                 }
-                html += '<tr class="row_element" id=camera-row"' + cnt + '">';
+                html += '<tr class="row_element" id=camera-row"' + cnt + '" cuname="'+key+'">';
               }
-              html += '<td class="td_element" id="camera-' + encoden + '">'
+              html += '<td class="td_element cameraMenu" id="camera-' + encoden + '">'
               //   html += '<div><b>'+key+'</b>';
               html += '<div>';
-              html += '<img id="cameraImage-' + encoden + '" src="" />';
+              html += '<img id="cameraImage-' + encoden + '" cuname="'+key+'" src="" />';
               html += '<div class="top-left">' + key + '</div>';
 
               html += '</div>';
@@ -2484,6 +2484,9 @@
             $("#cameraImage-" + encoden).cropper({
               aspectRatio: 16 / 9,
               crop: function(event) {
+                tmpObj['crop']={};
+                tmpObj['crop'][encoden]=event.detail;
+                $(this).attr['cropping']=event.detail;
                 console.log(event.detail.x);
                 console.log(event.detail.y);
                 console.log(event.detail.width);
@@ -2502,8 +2505,34 @@
             });
           })
         });
+        $.contextMenu('destroy', '.cropper-container');
 
-      }
+        $.contextMenu({
+          selector: '.cropper-container',
+          build: function ($trigger, e) {
+            var name = $(e.currentTarget.element).attr("cuname");
+            var cuitem = {};
+            if(typeof $(e.currentTarget).attr('cropping') ==="object"){
+              var c=$(e.currentTarget).attr('cropping');
+              cuitem['set-roi']={name:"Set Camera ROI:("+c.x+","+c.y+") size:"+c.width+"x"+c.height};
+            }
+            cuitem['sep1'] = "---------";
+    
+            cuitem['quit'] = {
+              name: "Quit", icon: function () {
+                return 'context-menu-icon context-menu-icon-quit';
+              }
+            };
+    
+            return {
+    
+              callback: function (cmd, options) {
+
+                return;
+              }
+            }
+          }
+      
     });
     $("#triggerType").off();
     $("#triggerType").on("change", function () {
@@ -2519,7 +2548,7 @@
       });
     });
 
-  }
+  }})}
   /****
    * 
    * Setup CU Interface
@@ -9096,6 +9125,12 @@
     items['sep2'] = "---------";
     //node_name_to_desc[node_multi_selected[0]]
     var desc = tmpObj.node_name_to_desc[name];
+// camera
+    var name_encoded=encodeName(name);
+    if(tmpObj.hasOwnProperty('crop') && (typeof tmpObj['crop'][name_encoded] === "object")){
+      items['set-roi']={name: "Set Roi "+name+" ("+tmpObj['crop'][name_encoded].x.toFixed() +","+tmpObj['crop'][name_encoded].y.toFixed()+") size "+tmpObj['crop'][name_encoded].width.toFixed()+"x"+tmpObj['crop'][name_encoded].height.toFixed()};
+    }
+//
     if (desc != null && desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("control_unit_implementation")) {
       var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
 
