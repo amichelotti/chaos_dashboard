@@ -2460,7 +2460,7 @@
               html += '<td class="td_element cameraMenu" id="camera-' + encoden + '" cuname="' + key + '" >'
               //   html += '<div><b>'+key+'</b>';
               html += '<div>';
-              html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
+              html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 />';
               html += '<div class="top-left">' + key + '</div>';
 
               html += '</div>';
@@ -2527,7 +2527,11 @@
             var el=ele[0];
             for(var k in el){
                 if(!(k.startsWith("dpck")||k.startsWith("ndk")||k.startsWith("cudk"))){
-                  cuitem['set-'+k] = { name: "Set "+k, type:"text",value:el[k],events:(function(k){
+                  var val=el[k];
+                  if(typeof el[k]==="object"){
+                    val=JSON.stringify(el[k]);
+                  }
+                  cuitem['set-'+k] = { name: "Set "+k, type:"text",value:val,events:(function(k){
                     var events= {
                       keyup: function(e) {
                       // add some fancy key handling here?
@@ -4625,7 +4629,13 @@
           jsonEditWindow("Application Run", templ, processTemplates[k], function (data, obj) {
             // save template and run template
             jchaos.variable("app_templates", "set", processTemplates, null);
-            var server = findBestServer(obj);
+            var server;
+            if(tmpObj.hasOwnProperty('target-agent')){
+              server =tmpObj['target-agent'];
+            } else {
+              server=findBestServer(obj);
+            }
+            
             jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
               if (r.err != 0) {
                 instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
@@ -4649,7 +4659,11 @@
                     });
                   }
                 } else {
-                  var server = findBestServer(obj);
+                  if(tmpObj.hasOwnProperty('target-agent')){
+                    server =tmpObj['target-agent'];
+                  } else {
+                    server=findBestServer(obj);
+                  }
 
                   jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
@@ -4721,6 +4735,9 @@
     var launch_arg = "";
     var chaos_prefix = "";
     findBestServer(function (server) {
+      if(tmpObj.hasOwnProperty('target-agent')){
+        server =tmpObj['target-agent'];
+      }
       if (server == null) {
         alert("NO Server Available");
         return;
@@ -4780,27 +4797,44 @@
       });
     });
   }
-  function updateProcessMenu(tmpObj, node_name) {
+  function updateProcessMenu(tmpObj, target) {
     var items = {};
     var interface = tmpObj.type;
     node_selected = tmpObj.node_selected;
     // var cindex = tmpObj.node_name_to_index[node_name];
+    var attr=target.attr('agent-name');
     items['new-script'] = { name: "New Script..." };
     items['load-script'] = { name: "Load Script from file..." };
-    items['manage-script'] = { name: "Manage/Run Script..." };
-    items['purge-script'] = { name: "Purge END scripts" };
     var prorunsub = processRunSubMenu(tmpObj);
     var protemsub = processAppTemplateSubMenu(tmpObj);
-    items['fold1'] = { name: "Run Chaos Application...", "items": prorunsub };
-    items['fold2'] = { name: "Manage Application Template...", "items": protemsub };
 
-    if (node_selected != null) {
-      items['open-process-console'] = { name: "Open Console " };
-      // items['open-process-errconsole'] = { name: "Open Error console" };
-      items['download-output'] = { name: "Download Files" };
-      items['kill-process'] = { name: "Kill " };
+    if(typeof attr==="string"){
+      tmpObj['target-agent']=attr;
+      items['manage-script'] = { name: "Manage/Run Script on "+attr };
+      items['fold1'] = { name: "Run Chaos Application on "+attr, "items": prorunsub };
+    } else {
+      if(tmpObj.hasOwnProperty('target-agent')){
+        delete tmpObj['target-agent'];
+      }
+      items['manage-script'] = { name: "Manage/Run Script..." };
+      items['purge-script'] = { name: "Purge END scripts" };
+      items['fold1'] = { name: "Run Chaos Application...", "items": prorunsub };
+      items['fold2'] = { name: "Manage Application Template...", "items": protemsub };
 
+      if (node_selected != null) {
+        items['open-process-console'] = { name: "Open Console " };
+        // items['open-process-errconsole'] = { name: "Open Error console" };
+        items['download-output'] = { name: "Download Files" };
+        items['kill-process'] = { name: "Kill " };
+  
+      }
     }
+    
+    
+    
+    
+
+    
 
     return items;
   }
@@ -5073,9 +5107,9 @@
           if (cnt > 0) {
             html += "</tr>"
           }
-          html += '<tr class="row_element processMenu" id=graph-row"' + cnt + '">';
+          html += '<tr class="row_element" id=graph-row"' + cnt + '">';
         }
-        html += '<td class="td_element" id="graph-' + encoden + '"></td>';
+        html += '<td class="td_element processMenu" id="graph-' + encoden + '" agent-name="'+key+'"></td>';
 
         cnt++;
       };
@@ -5084,7 +5118,7 @@
         $("#" + graph_table).append(html);
         for (var key in serverlist) {
           var encoden = encodeName(key);
-          chart_options.title.text = "Server " + key;
+          chart_options.title.text = "Agent on " + key;
 
           server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
 
@@ -5163,8 +5197,7 @@
       build: function ($trigger, e) {
         var template = tmpObj.type;
 
-        var cuname = $(e.currentTarget).attr(template + "-name");
-        var cuitem = updateProcessMenu(tmpObj, cuname);
+        var cuitem = updateProcessMenu(tmpObj, $(e.currentTarget));
 
         cuitem['sep1'] = "---------";
 
@@ -5766,7 +5799,7 @@
   function generateGenericTable(tmpObj) {
     var cu = tmpObj.elems;
     var template = tmpObj.type;
-    var html = '<div class="row-fluid" id="table-space">';
+    var html = '<div class="row-fluid" z-index=-1 id="table-space">';
     html += '<div class="box span12">';
     html += '<div class="box-content span12">';
     if (cu.length == 0) {
