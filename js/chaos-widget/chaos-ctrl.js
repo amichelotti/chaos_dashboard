@@ -2510,6 +2510,7 @@
 
         $.contextMenu({
           selector: '.cameraMenu',
+          zIndex:10000,
           build: function ($trigger, e) {
             var name = $(e.currentTarget).attr("cuname");
             var cuitem = {};
@@ -9258,7 +9259,7 @@
     }
     if (tmpObj.node_multi_selected.length == 1) {
 
-      items['show-dataset'] = { name: "Show/Plot Dataset" };
+      items['show-dataset'] = { name: "Show/Set/Plot Dataset" };
       items['show-desc'] = { name: "Show Description" };
       items['show-tags'] = { name: "Show Tags info" };
 
