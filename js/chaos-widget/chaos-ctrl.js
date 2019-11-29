@@ -419,6 +419,8 @@
                 $(".json-toggle").trigger("click");
                 jsonEnableContext(cuname);
               }
+            },function(err){
+              console.log(err);
             });
           }
 
@@ -646,6 +648,8 @@
                 $(this).remove();
 
               }
+            },function(err){
+              console.log(err);
             });
           }
           //$(this).attr("refresh_time",update);
@@ -1284,7 +1288,7 @@
     var node_list = tmpObj['elems'];
     var cutype = tmpObj.type;
 
-    jchaos.node(node_list, "health", cutype, null, null, function (data) {
+    jchaos.node(node_list, "health", cutype, function (data) {
       tmpObj.data = data;
       updateGenericTableDataset(tmpObj);
 
@@ -1576,7 +1580,21 @@
             } else {
               // It's valid!
               var json_editor_value = json_editor.getValue();
-              ret = editorFn(json_editor_value, tmpObj);
+              try{
+                ret = editorFn(json_editor_value, tmpObj);
+              } catch(err){
+                if((typeof err ==="object" )){
+                  if(err.hasOwnProperty('error_status')){
+                    instantMessage("Error ", err.error_status, 4000,false);
+                  } else {
+                    instantMessage("Error ", JSON.stringify(err), 4000,false);
+              
+                  }
+                } else {
+                  alert(err)
+              
+                }
+              }
             }
             if (ret <= 0) {
               $(this).remove();
@@ -2519,6 +2537,8 @@
               if (typeof crop_obj === "object") {
                 crop_obj['cu'] = name;
                 cuitem['set-roi'] = { name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+                cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+
               }
             
             }
@@ -2637,7 +2657,7 @@
         cuselection = tmpObj.node_selected;
       }
       if (alias == "cu_clear_current_cmd") {
-        jchaos.node(cuselection, "killcmd", "cu", null, null, function () {
+        jchaos.node(cuselection, "killcmd", "cu", function () {
           instantMessage("Clear Current Command", "Clearing last command OK", 1000, true);
         }, function () {
           instantMessage("ERROR Clear Current Command", "Clearing last command ", 3000, false);
@@ -2713,7 +2733,7 @@
       }
       if (cuselection != null && cmd != null) {
         if (cmd == "init") {
-          jchaos.node(cuselection, "init", "cu", null, function (data) {
+          jchaos.node(cuselection, "init", "cu", function (data) {
             instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
           }, function (data) {
@@ -2721,7 +2741,7 @@
 
           });
         } else if (cmd == "deinit") {
-          jchaos.node(cuselection, "deinit", "cu", null, function (data) {
+          jchaos.node(cuselection, "deinit", "cu", function (data) {
             instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
           }, function (data) {
@@ -2765,7 +2785,7 @@
           });
           return;
         } else if (cmd == "start") {
-          jchaos.node(cuselection, "start", "cu", null, function (data) {
+          jchaos.node(cuselection, "start", "cu", function (data) {
             instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
           }, function (data) {
@@ -2773,7 +2793,7 @@
 
           });
         } else if (cmd == "stop") {
-          jchaos.node(cuselection, "stop", "cu", null, function (data) {
+          jchaos.node(cuselection, "stop", "cu", function (data) {
             instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
           }, function (data) {
@@ -2818,7 +2838,7 @@
     $("#cu_clear_current_cmd").click(function (e) {
       var node_multi_selected = tmpObj.node_multi_selected;
 
-      jchaos.node(node_multi_selected, "killcmd", "cu", null, null, function () {
+      jchaos.node(node_multi_selected, "killcmd", "cu", function () {
         instantMessage("Clear Current Command", node_multi_selected + ":Clearing last command OK", 1000, true);
       }, function () {
         instantMessage("ERROR Clear Current Command", node_multi_selected[0] + ":Clearing last command ", 3000, false);
@@ -2828,7 +2848,7 @@
     $("#cu_clear_queue").click(function (e) {
       var node_multi_selected = tmpObj.node_multi_selected;
 
-      jchaos.node(node_multi_selected, "clrcmdq", "cu", null, null, function () {
+      jchaos.node(node_multi_selected, "clrcmdq", "cu", function () {
         instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
       }, function () {
         instantMessage("ERROR Command Queue", node_multi_selected[0] + ":Clearing Command Queue ", 3000, false);
@@ -2921,7 +2941,25 @@
     return names;
   }
   function executeCameraMenuCmd(tmpObj, cmd, opt) {
-    if (cmd == 'set-roi') {
+    if(cmd == 'set-reference'){
+      var crop_opt=opt.items[cmd].crop_opt;
+
+      var width=crop_opt.width.toFixed();
+      var height=crop_opt.height.toFixed();
+      var x=crop_opt.x.toFixed();
+      var y=crop_opt.y.toFixed();
+
+      jchaos.setAttribute(crop_opt.cu, "REFOFFSETX", String(x), function () {
+        jchaos.setAttribute(crop_opt.cu, "REFOFFSETY", String(y), function () {
+          jchaos.setAttribute(crop_opt.cu, "REFSIZEX",String(width) , function () {
+            jchaos.setAttribute(crop_opt.cu, "REFSIZEY",String(height), function () {
+              instantMessage("SET REFERENCE "+crop_opt.cu, "("+x+","+y+") "+width+"x"+height, 3000, true);
+
+            });
+          });
+        });
+      });
+    } else if (cmd == 'set-roi') {
       var crop_opt=opt.items[cmd].crop_opt;
 
       console.log("CROP_OBJ:" + JSON.stringify(crop_opt));
@@ -3021,7 +3059,7 @@
 
       });
     } else if (cmd == "init") {
-      jchaos.node(tmpObj.node_multi_selected, "init", "cu", null, null, function (data) {
+      jchaos.node(tmpObj.node_multi_selected, "init", "cu", function (data) {
         instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000, true);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -3031,7 +3069,7 @@
 
       });
     } else if (cmd == "deinit") {
-      jchaos.node(tmpObj.node_multi_selected, "deinit", "cu", null, null, function (data) {
+      jchaos.node(tmpObj.node_multi_selected, "deinit", "cu", function (data) {
         instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000, true);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -3041,7 +3079,7 @@
 
       });
     } else if (cmd == "start") {
-      jchaos.node(tmpObj.node_multi_selected, "start", "cu", null, null, function (data) {
+      jchaos.node(tmpObj.node_multi_selected, "start", "cu", function (data) {
         instantMessage("START ", "Command:\"" + cmd + "\" sent", 1000, true);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -3051,7 +3089,7 @@
 
       });
     } else if (cmd == "stop") {
-      jchaos.node(tmpObj.node_multi_selected, "stop", "cu", null, null, function (data) {
+      jchaos.node(tmpObj.node_multi_selected, "stop", "cu", function (data) {
         instantMessage("STOP ", "Command:\"" + cmd + "\" sent", 1000, true);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -3133,6 +3171,8 @@
         } else {
           alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
         }
+      },function(err){
+        console.log(err);
       });
 
     } else if (cmd == "history-cu-root") {
@@ -3348,24 +3388,15 @@
   }
 
   function updateProcessServer(tmpObj, cb) {
-    jchaos.search("", "agent", true, function (ag) {
-      var agent_obj = {};
-      var agent_list = [];
-      ag.forEach(function (elem) {
-        var regx = /ChaosAgent_(.+)\:(.+)/;
-        var match = regx.exec(elem);
-        if (match) {
-          var server = match[1];
-          agent_list.push(server)
-
-        }
-      });
-      tmpObj['agent_list'] = agent_list;
-      if (typeof cb === "function") {
+    jchaos.activeAgentList(function(agents){
+      tmpObj['agent_list'] = agents;
+      if(typeof cb==="function"){
         cb(tmpObj);
       }
-    });
+
+    })
   }
+
   function setupProcess(tempObj) {
     var list_eu = [];
     var list_eu_full = [];
@@ -3612,6 +3643,8 @@
 
           tmpObj.data = node_live_selected;
           tmpObj.updateFn(tmpObj);
+        },function(err){
+          console.log(err);
         });
       } else {
         tmpObj.updateFn(tmpObj);
@@ -3713,16 +3746,18 @@
   }
 
   function executeNodeMenuCmd(tmpObj, cmd, opt) {
+    try{
     node_selected = tmpObj.node_selected;
     var node_multi_selected = tmpObj.node_multi_selected;
     var node_name_to_desc = tmpObj.node_name_to_desc;
+    
     if (cmd == "edit-nt_agent") {
       var templ = {
         $ref: "agent.json",
         format: "tabs"
       }
 
-      jchaos.node(node_selected, "info", "agent", "", null, function (data) {
+      jchaos.node(node_selected, "info", "agent", function (data) {
         if (data != null) {
           // editorFn = agentSave;
           //jsonEdit(templ, data);
@@ -3743,7 +3778,7 @@
         $ref: "cu.json",
         format: "tabs"
       }
-      jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+      jchaos.node(node_selected, "get", "cu", function (data) {
         if (data != null) {
           //editorFn = cuSave;
           //jsonEdit(templ, data);
@@ -3761,7 +3796,7 @@
         alert("not US selected!");
         return;
       }
-      jchaos.node(node_selected, "get", "us", "", null, function (data) {
+      jchaos.node(node_selected, "get", "us", function (data) {
         if (data.hasOwnProperty("us_desc")) {
           //    editorFn = unitServerSave;
           //    jsonEdit(templ, data.us_desc);
@@ -3803,7 +3838,7 @@
     } else if (cmd == "copy-nt_control_unit") {
 
 
-      jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+      jchaos.node(node_selected, "get", "cu", function (data) {
         if (data != null) {
           cu_copied = data;
           //  copyToClipboard(JSON.stringify(data));
@@ -3813,7 +3848,7 @@
     } else if (cmd == "save-nt_control_unit") {
 
 
-      jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+      jchaos.node(node_selected, "get", "cu", function (data) {
         if (data != null) {
           if (data instanceof Object) {
             var tmp = { cu_desc: data };
@@ -3849,7 +3884,7 @@
       });
       return;
     } else if (cmd == "copy-nt_unit_server") {
-      jchaos.node(node_selected, "get", "us", "", null, function (data) {
+      jchaos.node(node_selected, "get", "us", function (data) {
         if (data.hasOwnProperty("us_desc")) {
           us_copied = data.us_desc;
           copyToClipboard(JSON.stringify(data));
@@ -3858,7 +3893,7 @@
       });
       return;
     } else if (cmd == "save-nt_unit_server") {
-      jchaos.node(node_selected, "get", "us", "", null, function (data) {
+      jchaos.node(node_selected, "get", "us", function (data) {
         if (data.hasOwnProperty("us_desc")) {
           if (data.us_desc instanceof Object) {
             var blob = new Blob([JSON.stringify(data.us_desc)], { type: "json;charset=utf-8" });
@@ -4040,7 +4075,7 @@
         $ref: "agent.json",
         format: "tabs"
       }
-      jchaos.node(node_selected, "info", "agent", "", null, function (data) {
+      jchaos.node(node_selected, "info", "agent", function (data) {
         if (data != null) {
 
           if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
@@ -4060,8 +4095,8 @@
                 association_uid: 0,
                 node_launch_cmd_line: "UnitServer",
                 node_auto_start: true,
-                node_keep_alive: true,
-                node_log_at_launch: true
+                node_keep_alive: false,
+                node_log_at_launch: false
               };
               data.andk_node_associated.push(tmp);
             }
@@ -4077,7 +4112,24 @@
       executeCUMenuCmd(tmpObj, cmd, options);
     }
     return;
+  
+  
+} catch(err){
+  if((typeof err ==="object" )){
+    if(err.hasOwnProperty('error_status')){
+      instantMessage("Error ", err.error_status, 4000,false);
+    } else {
+      instantMessage("Error ", JSON.stringify(err), 4000,false);
+
+    }
+  } else {
+    alert(err)
+
   }
+  
+
+}
+}
   /**** ALGO MENU */
 
   function executeAlgoMenuCmd(cmd, opt) {
@@ -4210,7 +4262,7 @@
     var template = tmpObj.type;
     var node_list = tmpObj['elems'];
     var cutype = tmpObj.type;
-    jchaos.node(node_list, "desc", cutype, null, null, function (data) {
+    jchaos.node(node_list, "desc", cutype, function (data) {
       var cnt = 0;
       var us_list = [];
       var cu_list = [];
@@ -4236,7 +4288,7 @@
         });
       }
       if (us_list.length > 0) {
-        jchaos.node(us_list, "parent", "us", null, null, function (data) {
+        jchaos.node(us_list, "parent", "us", function (data) {
           var cnt = 0;
           data.forEach(function (us) {
             if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
@@ -4950,7 +5002,8 @@
       // load on all servers
       var ag = tmpObj['agent_list'];
       var cnt = ag.length;
-      ag.forEach(function (server) {
+      ag.forEach(function (ser) {
+        var server =ser.ndk_host_name;
         jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
           if (r.err != 0) {
             instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);
@@ -5310,82 +5363,19 @@
   }
 
   function updateProcessList(tmpObj, handler) {
-    var proc = {};
     if (!tmpObj.hasOwnProperty('agent_list')) {
       return;
     }
     var ag = tmpObj['agent_list'];
-    var agent_obj = {};
-    var proc_list = [];
-    var cnt = 0;
-    ag.forEach(function (server) {
-      agent_obj[server] = {};
-      /*  var r=jchaos.rmtListProcess(server + ":8071",null,null);
-        if (r.hasOwnProperty("info")) {
-          agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
-          agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
-          agent_obj[server]['systime'] = parseFloat(r.info.systime);
-          agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
-          agent_obj[server]['ts'] = r.info.ts;
-        }
-  
-        if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
-          var processes = r.data.processes;
-          processes.forEach(function (p) {
-            p['hostname'] = server;
-            p['parent'] = server;
-  
-            proc[p.uid] = p;
-            proc_list.push(p.uid);
-          });
-        }
-      });
-        */
-      jchaos.rmtListProcess(server + ":8071", function (r) {
-        if (r.hasOwnProperty("info")) {
-          agent_obj[server]['idle'] = r.info.hasOwnProperty("idletime") ? parseFloat(r.info.idletime) : parseFloat(r.info.idle);
-          agent_obj[server]['user'] = r.info.hasOwnProperty("usertime") ? parseFloat(r.info.usertime) : parseFloat(r.info.user);
-          agent_obj[server]['sys'] = r.info.hasOwnProperty("systime") ? parseFloat(r.info.systime) : parseFloat(r.info.sys);
-          agent_obj[server]['io'] = r.info.hasOwnProperty("iowait") ? parseFloat(r.info.iowait) : parseFloat(r.info.io);
-          agent_obj[server]['pmem'] = parseFloat(r.info.pmem);
-
-          agent_obj[server]['ts'] = r.info.ts;
-        }
-
-        if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
-          var processes = r.data.processes;
-          processes.forEach(function (p) {
-            p['hostname'] = server;
-            p['parent'] = server;
-
-            proc[p.uid] = p;
-            proc_list.push(p.uid);
-          });
-        }
-        if (++cnt >= ag.length) {
-          tmpObj['data'] = proc;
-          tmpObj['elems'] = proc_list;
-          tmpObj['agents'] = agent_obj;
-          if (typeof handler === "function") {
-            handler(tmpObj);
-          }
-        }
-      }, function (bad) {
-        console.log("Some error state of server:" + server + " occur:" + bad);
-        if (++cnt >= ag.length) {
-          tmpObj['data'] = proc;
-          tmpObj['elems'] = proc_list;
-          tmpObj['agents'] = agent_obj;
-          if (typeof handler === "function") {
-            handler(tmpObj);
-          }
-        }
-      });
+   
+    jchaos.getAllProcessInfo(ag,function(pl){
+      tmpObj['data']=pl['data'];
+      tmpObj['elems'] = pl['elems'];
+      tmpObj['agents'] = pl['agents'];
+      handler(tmpObj);
     });
-
-
-    return proc;
   }
+
   function searchEu(str, alive, list_zone, list_class, list_eu_name) {
     var list_eu = [];
     eu_process = updateProcessList();
@@ -6641,6 +6631,8 @@
       tmpObj.data = selected;
 
       updateGenericCU(tmpObj);
+    },function(str){
+      console.log(str);
     });
   }
   function updatePS(tmpObj) {
@@ -8921,7 +8913,7 @@
         },
         open: function (event, ui) {
           updateLogInterval = setInterval(function () {
-            jchaos.node(name, "getlog", "agent", null, function (data) {
+            jchaos.node(name, "getlog", "agent", function (data) {
               $("#culog").append(JSON.stringify(data));
             });
           }, 1000);
