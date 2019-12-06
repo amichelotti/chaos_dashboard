@@ -9655,7 +9655,10 @@
   jqccs.createGraphDialog = function (gname, id, options) {
     return createGraphDialog(gname, id, options);
   }
-
+  jqccs.generateScraperTable= function(tmpObj){
+    return generateScraperTable(tmpObj);
+  }
+  
   function initSettings() {
     var sett = localStorage['chaos_dashboard_settings'];
     if (!sett || sett == "null") {

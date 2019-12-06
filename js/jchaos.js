@@ -1635,7 +1635,17 @@
 			var cnt = 0;
 			var proc = {};
 			agl.forEach(function (ser) {
-				var server=ser.ndk_host_name;
+				var server="";
+				if(ser.hasOwnProperty('ndk_host_name')&&(ser.ndk_host_name!=="")){
+					server=ser.ndk_host_name;
+				} else {
+					var regx = /(.+)\:(.+)/;
+					var match = regx.exec(ser.ndk_rpc_addr);
+					if (match) {
+						server = match[1];
+					}
+				}
+				
 				agent_obj[server] = {};
 				jchaos.rmtListProcess(server + ":8071", function (r) {
 						if (r.hasOwnProperty("info")) {
