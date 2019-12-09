@@ -1021,23 +1021,8 @@
   }
 
   function decodeDeviceAlarm(dev_alarm) {
-    $("#table_device_alarm").find("tr:gt(0)").remove();
     $("#name-device-alarm").html(dev_alarm.ndk_uid);
-
-    $.each(dev_alarm, function (key, value) {
-      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
-        switch (value) {
-          case 1:
-            $("#table_device_alarm").append('<tr><td class="warning_value">' + key + '</td><td class="warning_value">' + value + '</td></tr>');
-            break;
-          case 2:
-            $("#table_device_alarm").append('<tr><td style="color:red;">' + key + '</td><td style="color:red;">' + value + '</td></tr>');
-            break;
-          default:
-            $("#table_device_alarm").append('<tr><td>' + key + '</td><td>' + value + '</td></tr>');
-        }
-      }
-    });
+    $("#table_device_alarm").html(jqccs.generateAlarmTable(dev_alarm));
   }
   /**
    * Check if a string represents a valid url
@@ -9658,7 +9643,23 @@
   jqccs.generateScraperTable= function(tmpObj){
     return generateScraperTable(tmpObj);
   }
-  
+  jqccs.generateAlarmTable=function(dev_alarm){
+    var html="";
+    dev_alarm.forEach(function (key, value) {
+      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
+        switch (value) {
+          case 1:
+            html+='<tr><td class="warning_value">' + key + '</td><td class="warning_value">' + value + '</td></tr>';
+            break;
+          case 2:
+            html+='<tr><td style="color:red;">' + key + '</td><td style="color:red;">' + value + '</td></tr>';
+            break;
+         
+        }
+      }
+    });
+    return html;
+  }
   function initSettings() {
     var sett = localStorage['chaos_dashboard_settings'];
     if (!sett || sett == "null") {
