@@ -1,0 +1,80 @@
+{
+  "_args": [
+    [
+      "jquery-select-areas",
+      "/home/michelo/tmp"
+    ]
+  ],
+  "_from": "jquery-select-areas@latest",
+  "_id": "jquery-select-areas@0.1.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/jquery-select-areas",
+  "_nodeVersion": "8.1.3",
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/jquery-select-areas-0.1.0.tgz_1499005040952_0.1789845791645348"
+  },
+  "_npmUser": {
+    "email": "luhuiguo@gmail.com",
+    "name": "luhuiguo"
+  },
+  "_npmVersion": "5.0.3",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "jquery-select-areas",
+    "raw": "jquery-select-areas",
+    "rawSpec": "",
+    "scope": null,
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/jquery-select-areas/-/jquery-select-areas-0.1.0.tgz",
+  "_shasum": "a42fb9833c1f093d3abe72e8d18f4982c040fb63",
+  "_shrinkwrap": null,
+  "_spec": "jquery-select-areas",
+  "_where": "/home/michelo/tmp",
+  "author": {
+    "name": "360learning"
+  },
+  "bugs": {
+    "url": "https://github.com/360Learning/jquery-select-areas/issues"
+  },
+  "dependencies": {
+    "jquery": "^3.2.1"
+  },
+  "description": "jQuery-select-areas is a jQuery plugin that let you select multiple areas of an image, move them and resize them.",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "integrity": "sha512-tP2A++llwx4pUHmdRfFTZo2m4+WVmd7ky0ixtzQfJkzBFKZVK4Mnwv2TnsYcWTFdUFTKvRaYbQloV2YaXy3gew==",
+    "shasum": "a42fb9833c1f093d3abe72e8d18f4982c040fb63",
+    "tarball": "https://registry.npmjs.org/jquery-select-areas/-/jquery-select-areas-0.1.0.tgz"
+  },
+  "gitHead": "7b32f74fb9bc392d045391b95133d8d5a1f3575d",
+  "homepage": "https://github.com/360Learning/jquery-select-areas#readme",
+  "keywords": [
+    "areas",
+    "jquery",
+    "select"
+  ],
+  "license": "MIT",
+  "main": "jquery.selectareas.js",
+  "maintainers": [
+    {
+      "name": "luhuiguo",
+      "email": "luhuiguo@gmail.com"
+    }
+  ],
+  "name": "jquery-select-areas",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/360Learning/jquery-select-areas.git"
+  },
+  "version": "0.1.0"
+}

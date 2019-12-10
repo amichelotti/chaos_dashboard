@@ -228,7 +228,6 @@
 				XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 			}
 			request = new XMLHttpRequest();
-			request.timeout = jchaos.options.timeout;
 
 			var srv = jchaos.options.uri;
 			XMLHttpRequest.responseType = "json";
@@ -239,6 +238,7 @@
 			var could_make_async = (typeof handleFunc === "function");
 			if (could_make_async == false) {
 				request.open("POST", url, false);
+				// request.timeout = jchaos.options.timeout; //not possiblee for sync
 
 				request.send(params);
 				if (request.status == 200) {
@@ -257,6 +257,7 @@
 
 			}
 			request.open("POST", url, (jchaos.ops_on_going > jchaos.options.limit_on_going) ? false : (jchaos.options.async));
+			request.timeout = jchaos.options.timeout;
 
 			// console.log("on going:"+jchaos.ops_on_going);
 			// request.setRequestHeader("Content-Type", 'application/json');

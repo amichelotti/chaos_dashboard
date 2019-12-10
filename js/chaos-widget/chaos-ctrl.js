@@ -3314,10 +3314,12 @@
         interface = $("#classe").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val();
-        list_cu = interface2NodeList(tempObj, interface, alive);
-        tempObj['elems'] = list_cu;
+        interface2NodeList(tempObj, interface, alive,function(list_cu){
+          tempObj['elems'] = list_cu;
 
-        updateInterface(tempObj);
+          updateInterface(tempObj);
+  
+        });
       }
       //var tt =prompt('type value');
     });
@@ -3326,9 +3328,11 @@
       var alive = $("input[type=radio][name=search-alive]:checked").val();
       interface = $("#classe option:selected").val();
 
-      list_cu = interface2NodeList(tempObj, interface, alive);
-      tempObj['elems'] = list_cu;
-      updateInterface(tempObj);
+      interface2NodeList(tempObj, interface, alive,function(list_cu){
+        tempObj['elems'] = list_cu;
+        updateInterface(tempObj);
+      });
+      
     });
   }
 
@@ -5500,32 +5504,36 @@
   }
 
 
-  function interface2NodeList(tempObj, inter, alive) {
+  function interface2NodeList(tempObj, inter, alive,handler) {
     var tmp = [];
     if ((inter != "agent") && (inter != "us") && (inter != "cu")) {
-      var node = jchaos.search(search_string, "us", (alive == "true"), false);
-      tempObj.type = "ALL";
+      jchaos.search(search_string, "us", (alive == "true"), function(node){
+        tempObj.type = "ALL";
 
-      node.forEach(function (item) {
-        tmp.push(item);
+        node.forEach(function (item) {
+          tmp.push(item);
+        });
+        jchaos.search(search_string, "agent", (alive == "true"),function(node){
+          node.forEach(function (item) {
+            tmp.push(item);
+          });
+          jchaos.search(search_string, "cu", (alive == "true"),function(node){
+            node.forEach(function (item) {
+              tmp.push(item);
+            });
+            handler(tmp);
+          });
+        });
+        
       });
-      node = jchaos.search(search_string, "agent", (alive == "true"), false);
-      tempObj.type = "agent";
-
-      node.forEach(function (item) {
-        tmp.push(item);
-      });
-      node = jchaos.search(search_string, "cu", (alive == "true"), false);
-      node.forEach(function (item) {
-        tmp.push(item);
-      });
+      
     } else {
       tempObj.type = inter;
-      tmp = jchaos.search(search_string, inter, (alive == "true"), false);
+      jchaos.search(search_string, inter, (alive == "true"), handler);
 
     }
     if (inter == "eu") {
-      eu_process = jchaos.variable("eu", "get", null, null);
+      jchaos.variable("eu", "get", function(eu_process){;
       for (var g in eu_process) {
         if (search_string != "") {
           if (g.indexOf(search_string)) {
@@ -5534,9 +5542,9 @@
         } else {
           tmp.push(g);
         }
-
-
       }
+      handler(tmp);
+    });
     }
     return tmp;
   }
