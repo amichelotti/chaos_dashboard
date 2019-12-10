@@ -89,3 +89,17 @@ a.json-placeholder:hover {
   font-weight:bold;
   visibility:visible;
 }
+.errorItem-0{
+  color:green;
+  visibility:visible;
+}
+.errorItem-1{
+  color:orange;
+  visibility:visible;
+  font-weight:bold;
+}
+.errorItem-2{
+  color:red;
+  visibility:visible;
+  font-weight:bold;
+}
