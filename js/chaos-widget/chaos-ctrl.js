@@ -9185,6 +9185,10 @@
           items['sep1'] = "---------";
         } else if (status == 'Recoverable Error') {
           items['recover'] = { name: "Recover", icon: "recover" };
+          items['unload'] = { name: "Unload", icon: "unload" };
+          items['deinit'] = { name: "Deinit", icon: "deinit" };
+          items['stop'] = { name: "Stop", icon: "stop" };
+
           items['sep1'] = "---------";
         } else if (status == 'Fatal Error') {
           items['deinit'] = { name: "Deinit", icon: "deinit" };
