@@ -95,7 +95,9 @@
 
 			echo '<script src="'.$main_dir.'/js/json-viewer/jquery.json-viewer.js"></script>';			
 			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-ctrl.js"></script>';
-			
+			echo '<link href="'.$main_dir.'/js/cropper.min.css" media="screen" rel="stylesheet" type="text/css" />';
+			echo '<script src="'.$main_dir.'/js/cropper.min.js"></script>';			
+
 			//<script src="js/plotly-latest.min.js"></script>
 			//<link href="js/json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
 				   

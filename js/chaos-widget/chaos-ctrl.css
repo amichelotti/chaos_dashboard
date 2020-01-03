@@ -1,4 +1,3 @@
-/* Syntax highlighting for JSON objects */
 ul.json-dict, ol.json-array {
   list-style-type: none;
   margin: 0 0 0 1px;
@@ -60,4 +59,47 @@ a.json-placeholder {
 }
 a.json-placeholder:hover {
   text-decoration: underline;
+}
+
+.fh {
+  color: rgba(0, 0, 255, 0.8);
+  font-size: small;
+}
+.fi {
+  color: rgba(0, 0, 0, 0.8);
+  font-size: x-small;
+}
+.enableItem-true{
+  color:green;
+  font-size:x-small;
+  font-weight:bold;
+}
+.enableItem-false{
+  color:black;
+  font-size:xx-small;
+  color:black;
+}
+
+.errorItem-false{
+  visibility:hidden;
+}
+
+.errorItem-true{
+  color:red;
+  font-weight:bold;
+  visibility:visible;
+}
+.errorItem-0{
+  color:green;
+  visibility:visible;
+}
+.errorItem-1{
+  color:orange;
+  visibility:visible;
+  font-weight:bold;
+}
+.errorItem-2{
+  color:red;
+  visibility:visible;
+  font-weight:bold;
 }

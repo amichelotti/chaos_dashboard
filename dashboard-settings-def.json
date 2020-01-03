@@ -4,6 +4,7 @@
 	"checkLive" :10000,
 	"defaultRestTimeout" :5000,
 	"defaultPage":30,
+	"defaultChunk":3600,
 	"camera":{
 		"cameraRefresh":1000,
 		"cameraPerRow" :2,

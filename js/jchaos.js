@@ -9,27 +9,61 @@
 		jchaos.ops_on_going = 0;
 		jchaos.ops_abort = false;
 		jchaos.lastChannel = {};
-		var uri_default="localhost:8081";
-		
+		var uri_default = "localhost:8081";
+
 		jchaos.options = {
 			updateEachCall: false,
 			uri: uri_default,
 			async: true,
 			limit_on_going: 10000,
 			history_page_len: 1000,
-			timeout:5000,
+			timeout: 5000,
 			console_log: function (str) { console.log(str); },
 			console_err: function (str) { console.error(str); }
 
 		};
+
+		/***
+		 * 
+		 */
+		jchaos.createMotor = function (name, endOphandler, switchHandler) {
+
+			var obj = {
+				name: name,
+				lastpos: 0,
+				limit1: false,
+				limit2: false,
+				home: false,
+
+				// move absolute
+				mov: function (pos) {
+
+				},
+				// move relative
+				movr: function (pos) {
+
+				},
+				// do home
+				gohome: function () {
+
+				},
+				pos: function () {
+
+				}
+			}
+			return obj;
+		}
+
+
+		/*****************************/
 		jchaos.setOptions = function (opt) {
-			
+
 			for (var attrname in opt) { jchaos.options[attrname] = opt[attrname]; }
 			var str = jchaos.options['uri'];
-		//	var regex = /\:\d+/;
+			//	var regex = /\:\d+/;
 			//strip eventual port
 			jchaos.options['uri'] = str;
-			
+
 
 
 		}
@@ -40,168 +74,171 @@
 			jchaos.options['console_err'](str);
 		}
 		/******* REMOTE PROCESS MANAGEMENT ****/
-		jchaos.basicRmt=function (server,func,param,handler,badhandler){
-			if(handler instanceof Function){
-			jchaos.basicPost("api/v1/restconsole/"+func, JSON.stringify(param), function (r) {
-				if(handler instanceof Function){
-					handler(r);
-				} else {
-					return r;
-				} 
-			},  badhandler,server);
-		} else {
-			return 	jchaos.basicPost("api/v1/restconsole/"+func, JSON.stringify(param), null,null,server);
+		jchaos.basicRmt = function (server, func, param, handler, badhandler) {
+			if (handler instanceof Function) {
+				jchaos.basicPost("api/v1/restconsole/" + func, JSON.stringify(param), function (r) {
+					if (handler instanceof Function) {
+						handler(r);
+					} else {
+						return r;
+					}
+				}, badhandler, server);
+			} else {
+				return jchaos.basicPost("api/v1/restconsole/" + func, JSON.stringify(param), null, null, server);
 
-		}
+			}
 		}
 		/**
 		 * Retrive a given environemnt variable
 		 */
-		jchaos.rmtGetEnvironment=function (server,varname,handler,badhandler){
-			var param ={};
-			param['variable']=varname;
-			return jchaos.basicRmt(server,"getenv",param,handler,badhandler);
+		jchaos.rmtGetEnvironment = function (server, varname, handler, badhandler) {
+			var param = {};
+			param['variable'] = varname;
+			return jchaos.basicRmt(server, "getenv", param, handler, badhandler);
 		}
 		/**
 		 * Set a Property
 		 */
-		jchaos.rmtSetProp=function (server,prop,handler,badhandler){
-			return jchaos.basicRmt(server,"setprop",prop,handler,badhandler);
+		jchaos.rmtSetProp = function (server, prop, handler, badhandler) {
+			return jchaos.basicRmt(server, "setprop", prop, handler, badhandler);
 		}
 		/**
 		 * Retrive a given environemnt variable
 		 * return a process structure
 		 */
-		jchaos.rmtCreateProcess=function (server,name,cmdline,ptype,workdir,handler,badhandler){
-			var param ={};
-			param['cmdline']=cmdline;     
-      param['ptype']=ptype;
-			param['pname']=name;
-			if(workdir != null && workdir!=""){
-							param['workdir']=workdir;     
+		jchaos.rmtCreateProcess = function (server, name, cmdline, ptype, workdir, handler, badhandler) {
+			var param = {};
+			param['cmdline'] = cmdline;
+			param['ptype'] = ptype;
+			param['pname'] = name;
+			if (workdir != null && workdir != "") {
+				param['workdir'] = workdir;
 			}
-			console.log("create process:"+JSON.stringify(param));
-			return jchaos.basicRmt(server,"create",param,handler,badhandler);
+			console.log("create process:" + JSON.stringify(param));
+			return jchaos.basicRmt(server, "create", param, handler, badhandler);
 		}
-	/**
-		 * Retrive a process working directory 
-		 * return a zip file
-		 */
-		jchaos.rmtDownload=function (server,uid,workdir,handler,badhandler){
-			var param ={};
-			param['uid']=uid;
-			if(workdir != null && workdir!=""){
-				param['workdir']=workdir;     
+		/**
+			 * Retrive a process working directory 
+			 * return a zip file
+			 */
+		jchaos.rmtDownload = function (server, uid, workdir, handler, badhandler) {
+			var param = {};
+			param['uid'] = uid;
+			if (workdir != null && workdir != "") {
+				param['workdir'] = workdir;
 			}
-		
-			console.log("Download process outputs:"+JSON.stringify(param));
-			return jchaos.basicRmt(server,"download",param,handler,badhandler);
+
+			console.log("Download process outputs:" + JSON.stringify(param));
+			return jchaos.basicRmt(server, "download", param, handler, badhandler);
 		}
 		/**
 		 * Upload a new Script 
 		 * return the path 
 		 */
-		jchaos.rmtUploadScript=function (server,name,ptype,content,handler,badhandler){
-			
-			if((name instanceof Object) && (ptype instanceof Function) && (content instanceof Function)){
-				return jchaos.basicRmt(server,"load",name,ptype,content);
+		jchaos.rmtUploadScript = function (server, name, ptype, content, handler, badhandler) {
+
+			if ((name instanceof Object) && (ptype instanceof Function) && (content instanceof Function)) {
+				return jchaos.basicRmt(server, "load", name, ptype, content);
 			}
-			var param ={};
-			param['script_name']=name;     
-            param['eudk_script_language']=ptype;
-			param['eudk_script_content']=btoa(unescape(encodeURIComponent(content)));   
-			return jchaos.basicRmt(server,"load",param,handler,badhandler);
-             
+			var param = {};
+			param['script_name'] = name;
+			param['eudk_script_language'] = ptype;
+			param['eudk_script_content'] = btoa(unescape(encodeURIComponent(content)));
+			return jchaos.basicRmt(server, "load", param, handler, badhandler);
+
 		}
 		/***
 		 * Return a list of process on the given server
 		 */
-		jchaos.rmtListProcess=function (server,handler,badhandler){
-			var param={};
-			return jchaos.basicRmt(server,"list",param,handler,badhandler);
-             
+		jchaos.rmtListProcess = function (server, handler, badhandler) {
+			var param = {};
+			return jchaos.basicRmt(server, "list", param, handler, badhandler);
+
 		}
 		/***
 		 * Set the console of a specified process uid
 		 */
-		jchaos.rmtSetConsole=function (server,uid,str,handler,badhandler){
-			var param={};
-			param['uid']=uid;
-			param['data']=btoa(unescape(encodeURIComponent(str +"\n")));
-			return jchaos.basicRmt(server,"setconsole",param,handler,badhandler);     
+		jchaos.rmtSetConsole = function (server, uid, str, handler, badhandler) {
+			var param = {};
+			param['uid'] = uid;
+			param['data'] = btoa(unescape(encodeURIComponent(str + "\n")));
+			return jchaos.basicRmt(server, "setconsole", param, handler, badhandler);
 		}
 		/***
 		 * Get the console of a specified process uid
 		 */
-		jchaos.rmtGetConsole=function (server,uid,fromline,toline,handler,badhandler){
-			var param={};
-			param['uid']=uid;
-			param['fromline']=fromline;
-			param['toline']=toline;
+		jchaos.rmtGetConsole = function (server, uid, fromline, toline, handler, badhandler) {
+			var param = {};
+			param['uid'] = uid;
+			param['fromline'] = fromline;
+			param['toline'] = toline;
 
-			return jchaos.basicRmt(server,"getconsole",param,handler,badhandler);     
+			return jchaos.basicRmt(server, "getconsole", param, handler, badhandler);
 		}
 
 		/***
 		 * Get the console of a specified process uid
 		 */
-		jchaos.rmtKill=function (server,uid,handler,badhandler){
-			var param={};
-			param['uid']=uid;
+		jchaos.rmtKill = function (server, uid, handler, badhandler) {
+			var param = {};
+			param['uid'] = uid;
 
-			return jchaos.basicRmt(server,"kill",param,handler,badhandler);     
+			return jchaos.basicRmt(server, "kill", param, handler, badhandler);
 		}
 
 		/***
 		 * Purget list of process to a given level (0 soft (EXCEPTION), 1 medium (ENDED and EXCEPTION), 2 hard (ALL))
 		 */
-		jchaos.rmtPurge=function (server,level,handler,badhandler){
-			var param={};
-			param['level']=level;
+		jchaos.rmtPurge = function (server, level, handler, badhandler) {
+			var param = {};
+			param['level'] = level;
 
-			return jchaos.basicRmt(server,"purge",param,handler,badhandler);     
+			return jchaos.basicRmt(server, "purge", param, handler, badhandler);
 		}
 		/******************************/
 		/****** WIDGET */
-		jchaos.progressBar=function (msg,id,lab){
+		jchaos.progressBar = function (msg, id, lab) {
 			var progressbar;
-			var instant = $('<div></div>').html('<div id="'+id+'"><div class="progress-label">'+lab+'</div></div>').dialog({
-			  
-			  title: msg,
-			  position: "top",
-			  open: function () {
-				progressbar=$( "#"+id )
-				var progressLabel = $( ".progress-label" );
-				progressbar.progressbar({
-				  value: false,
-				change: function() {
-				  var val=progressbar.progressbar( "value" );
-				  progressLabel.text( val + "%" );
-			  },
-			  complete: function() {
-				$(this).parent().dialog("close");
-			  }
+			var instant = $('<div></div>').html('<div id="' + id + '"><div class="progress-label">' + lab + '</div></div>').dialog({
+
+				title: msg,
+				position: "top",
+				open: function () {
+					progressbar = $("#" + id)
+					var progressLabel = $(".progress-label");
+					progressbar.progressbar({
+						value: false,
+						change: function () {
+							var val = progressbar.progressbar("value");
+							progressLabel.text(val + "%");
+						},
+						complete: function () {
+							$(this).parent().dialog("close");
+						}
+					});
+				}, close: function () {
+					$(this).remove();
+				}
 			});
-		   },close:function(){
-			 $(this).remove();
-		   }});
-		  }
+		}
 		/***** */
-		jchaos.basicPost = function (func, params, handleFunc, handleFuncErr,server) {
+		jchaos.basicPost = function (func, params, handleFunc, handleFuncErr, server) {
 			var request;
 			if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 				XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 			}
 			request = new XMLHttpRequest();
-			var srv=jchaos.options.uri;
-			XMLHttpRequest.responseType="json";
-			if (typeof server === "string" ){
-				srv=server;
+
+			var srv = jchaos.options.uri;
+			XMLHttpRequest.responseType = "json";
+			if (typeof server === "string") {
+				srv = server;
 			}
 			var url = "http://" + srv + "/" + func;
 			var could_make_async = (typeof handleFunc === "function");
 			if (could_make_async == false) {
 				request.open("POST", url, false);
+				// request.timeout = jchaos.options.timeout; //not possiblee for sync
 
 				request.send(params);
 				if (request.status == 200) {
@@ -211,6 +248,7 @@
 					} catch (err) {
 						var str = "jchaos.basicPost Error parsing json '" + err + "' body returned:'" + request.responseText + "' post:'" + params + "'";
 						console.error(str);
+						throw str;
 						return null;
 					}
 				}
@@ -238,8 +276,8 @@
 								} catch (err) {
 									console.trace("trace:");
 									var str = "handler function error:'" + err + "' url:'" + url + "' post data:'" + params + "' response:'" + request.responseText + "'";
-									console.log(str);
-									if(typeof handleFuncErr === "function"){
+									jchaos.perror(str);
+									if (typeof handleFuncErr === "function") {
 										handleFuncErr(json);
 									}
 								}
@@ -248,10 +286,12 @@
 
 						} catch (err) {
 							var str = "jchaos.basicPost Error parsing json '" + err + "' body returned:'" + request.responseText + "'" + "' post:'" + params + "'";;
+
+
 							//console.error(str);
-							console.log(str);
+							jchaos.perror(str);
 							//throw str;
-							if (handleFuncErr != null && (typeof handleFuncErr === "function")) {
+							if ((typeof handleFuncErr === "function")) {
 								handleFuncErr(request.responseText);
 							} else {
 								if (could_make_async) {
@@ -263,10 +303,30 @@
 
 						}
 					} else {
+						var json;
+						var str;
+						try {
+							json = JSON.parse(request.responseText);
+							str = "Error '" + request.status + "' API '" + params + "'  returned:'" + request.responseText + "'";
+						} catch (pr) {
+							json = request.responseText;
+							str = "jchaos.basicPost Error parsing json body returned:'" + request.responseText + "'" + "' post:'" + params + "'";;
+						}
 						var str = "POST " + url + " body:\"" + params + "\" went wrong, result:" + request.status + " state:" + request.readyState;
-						console.error(str);
+						jchaos.perror(str);
 						if (handleFuncErr != null && (typeof handleFuncErr === "function")) {
-							handleFuncErr(request.responseText);
+							handleFuncErr(json);
+						} else {
+							if ((typeof json === "object")) {
+								if (json.hasOwnProperty('error_status')) {
+									alert(json.error_status);
+								}
+							} else {
+								alert(str);
+							}
+
+
+
 						}
 					}
 				}
@@ -371,28 +431,28 @@
 		 * @param {*} _okhandler handler called when ok
 		 * @param {*} _nokhandler handler called when nok
 		 */
-		jchaos.checkRestore=function(_tagname,_node_list,_timeout,_okhandler,_nokhandler){
-			var checkFreq=_timeout/10;
-			var retry=10;
-			if(_node_list == null){
-				_node_list=jchaos.search(_tagname,"insnapshot",true);
+		jchaos.checkRestore = function (_tagname, _node_list, _timeout, _okhandler, _nokhandler) {
+			var checkFreq = _timeout / 10;
+			var retry = 10;
+			if (_node_list == null) {
+				_node_list = jchaos.search(_tagname, "insnapshot", true);
 			}
-			jchaos.checkPeriodiocally("checkRestore", retry, checkFreq, function(){
-				var data=jchaos.getChannel(_node_list,3,null);
-				var oks=0;
-				data.forEach(function(ds){
-					if((ds.busy == false)&&(ds.cudk_set_tag==_tagname)&&(ds.cudk_set_state==3)){
+			jchaos.checkPeriodiocally("checkRestore", retry, checkFreq, function () {
+				var data = jchaos.getChannel(_node_list, 3, null);
+				var oks = 0;
+				data.forEach(function (ds) {
+					if ((ds.busy == false) && (ds.cudk_set_tag == _tagname) && (ds.cudk_set_state == 3)) {
 						jchaos.print(ds.ndk_uid + " OK reached");
 						oks++;
 					} else {
-						jchaos.print(ds.ndk_uid + " NOT YET busy:"+ds.busy+ " restore state:"+ds.cudk_set_state);
+						jchaos.print(ds.ndk_uid + " NOT YET busy:" + ds.busy + " restore state:" + ds.cudk_set_state);
 
 					}
 				});
-				if(oks==_node_list.length){
+				if (oks == _node_list.length) {
 					return true;
 				}
-				return false;	
+				return false;
 			}, _okhandler, _nokhandler);
 		}
 		/**
@@ -403,26 +463,26 @@
 		 * @param {*} _okhandler handler called when ok
 		 * @param {*} _nokhandler handler called when nok
 		 */
-		jchaos.checkBurstRunning=function(_tagname,_node_list,_timeout,_okhandler,_nokhandler){
-			var checkFreq=_timeout/10;
-			var retry=10;
-			
-			jchaos.checkPeriodiocally("checkBurstRunning", retry, checkFreq, function(){
-				var data=jchaos.getChannel(_node_list,3,null);
-				var oks=0;
-				data.forEach(function(ds){
-					if((ds.cudk_burst_state == true)&&(ds.cudk_burst_tag==_tagname)){
+		jchaos.checkBurstRunning = function (_tagname, _node_list, _timeout, _okhandler, _nokhandler) {
+			var checkFreq = _timeout / 10;
+			var retry = 10;
+
+			jchaos.checkPeriodiocally("checkBurstRunning", retry, checkFreq, function () {
+				var data = jchaos.getChannel(_node_list, 3, null);
+				var oks = 0;
+				data.forEach(function (ds) {
+					if ((ds.cudk_burst_state == true) && (ds.cudk_burst_tag == _tagname)) {
 						jchaos.print(ds.ndk_uid + " OK tagging");
 						oks++;
 					} else {
-						jchaos.print(ds.ndk_uid + " NOT YET ACQUIRING, burst state:"+ds.cudk_burst_state+ " burst tag:"+ds.cudk_burst_tag);
+						jchaos.print(ds.ndk_uid + " NOT YET ACQUIRING, burst state:" + ds.cudk_burst_state + " burst tag:" + ds.cudk_burst_tag);
 
 					}
 				});
-				if(oks==_node_list.length){
+				if (oks == _node_list.length) {
 					return true;
 				}
-				return false;	
+				return false;
 			}, _okhandler, _nokhandler);
 		}
 		/**
@@ -433,26 +493,26 @@
 		 * @param {*} _okhandler handler called when ok
 		 * @param {*} _nokhandler handler called when nok
 		 */
-		jchaos.checkEndBurst=function(_node_list,_timeout,_okhandler,_nokhandler){
-			var checkFreq=_timeout/10;
-			var retry=10;
-			
-			jchaos.checkPeriodiocally("checkEndBurst", retry, checkFreq, function(){
-				var data=jchaos.getChannel(_node_list,3,null);
-				var oks=0;
-				data.forEach(function(ds){
-					if((ds.cudk_burst_state == false)){
+		jchaos.checkEndBurst = function (_node_list, _timeout, _okhandler, _nokhandler) {
+			var checkFreq = _timeout / 10;
+			var retry = 10;
+
+			jchaos.checkPeriodiocally("checkEndBurst", retry, checkFreq, function () {
+				var data = jchaos.getChannel(_node_list, 3, null);
+				var oks = 0;
+				data.forEach(function (ds) {
+					if ((ds.cudk_burst_state == false)) {
 						jchaos.print(ds.ndk_uid + " OK End");
 						oks++;
 					} else {
-						jchaos.print(ds.ndk_uid + " STILL ACQUIRING burst state:"+ds.cudk_burst_state+ " burst tag:"+ds.cudk_burst_tag);
+						jchaos.print(ds.ndk_uid + " STILL ACQUIRING burst state:" + ds.cudk_burst_state + " burst tag:" + ds.cudk_burst_tag);
 
 					}
 				});
-				if(oks==_node_list.length){
+				if (oks == _node_list.length) {
 					return true;
 				}
-				return false;	
+				return false;
 			}, _okhandler, _nokhandler);
 		}
 		jchaos.snapshot = function (_name, _what, _node_list, value_, handleFunc, nok) {
@@ -507,6 +567,14 @@
 			}
 			opt['what'] = _what;
 			opt['type'] = _type;
+			if(typeof _parent  === 'function'){
+				handleFunc=_parent;
+				if(typeof value_ === 'function'){
+					nok=value_;
+				}
+				_parent="";
+				value_=null;
+			}
 			opt['parent'] = _parent;
 
 
@@ -523,7 +591,7 @@
 			return jchaos.mdsBase("node", opt, handleFunc, nok);
 		}
 
-		jchaos.loadScript = function (_name, seqid, handleFunc,errFunc) {
+		jchaos.loadScript = function (_name, seqid, handleFunc, errFunc) {
 			var opt = {};
 			var value = {
 				"seq": seqid,
@@ -532,7 +600,7 @@
 			opt['name'] = "";
 			opt['what'] = "load";
 			opt['value'] = value;
-			return jchaos.mdsBase("script", opt, handleFunc,errFunc);
+			return jchaos.mdsBase("script", opt, handleFunc, errFunc);
 		}
 		jchaos.manageInstanceScript = function (script_name, script_seq, instance_name, create, handleFunc) {
 			var opt = {};
@@ -563,7 +631,7 @@
 			opt['value'] = value;
 			return jchaos.mdsBase("script", opt, handleFunc);
 		}
-		jchaos.searchScriptInstance = function (script_name, search_string, handleFunc,errfunc) {
+		jchaos.searchScriptInstance = function (script_name, search_string, handleFunc, errfunc) {
 			var opt = {};
 			var script_desc = {};
 			script_desc['script_name'] = script_name;
@@ -572,7 +640,7 @@
 			opt['name'] = "";
 			opt['what'] = "searchInstance";
 			opt['value'] = script_desc;
-			return jchaos.mdsBase("script", opt, handleFunc,errfunc);
+			return jchaos.mdsBase("script", opt, handleFunc, errfunc);
 		}
 		jchaos.updateScriptInstance = function (script_instance, script_base_description, handleFunc) {
 			var opt = {};
@@ -714,12 +782,12 @@
 
 			return dev_array;
 		}
-/**
- * getChannel
- * \brief retrive the specified live channel
- * @param devs CU names
- * @params channel_id (0: output, 1: input, 2:custom,3:system, 4: health, 5 cu alarm, 6 dev alarms)
- */
+		/**
+		 * getChannel
+		 * \brief retrive the specified live channel
+		 * @param devs CU names
+		 * @params channel_id (0: output, 1: input, 2:custom,3:system, 4: health, 5 cu alarm, 6 dev alarms)
+		 */
 		jchaos.getChannel = function (devs, channel_id, handleFunc, badfunc) {
 
 			var dev_array = jchaos.convertArray2CSV(devs);
@@ -777,17 +845,18 @@
 		 * @param handleFunc call back to call if success
 		 * @param errFunc callback to call if error 
 		 */
-		jchaos.storageLive = function(dev,enable, handleFunc, errFunc){
-			jchaos.getChannel(dev,3,function(cus){
-				cus.forEach(function(elem,index){
-					if(elem.hasOwnProperty('dsndk_storage_type')){
-						var val=Number(elem.dsndk_storage_type);
-						val = (val&0x1)|(enable<<1);
-						jchaos.setProperty(cus[index].ndk_uid,[{ "dsndk_storage_type": val}]);
-							
+		jchaos.storageLive = function (dev, enable, handleFunc, errFunc) {
+			jchaos.getChannel(dev, 3, function (cus) {
+				cus.forEach(function (elem, index) {
+					if (elem.hasOwnProperty('dsndk_storage_type')) {
+						var val = Number(elem.dsndk_storage_type);
+						val = (val & 0x1) | (enable << 1);
+						jchaos.setProperty(cus[index].ndk_uid, [{ "dsndk_storage_type": val }]);
+
 					}
 				})
-				handleFunc();},errFunc);
+				handleFunc();
+			}, errFunc);
 		}
 		/***
 		 * storageHisto
@@ -797,17 +866,18 @@
 		 * @param handleFunc call back to call if success
 		 * @param errFunc callback to call if error 
 		 */
-		jchaos.storageHisto = function(dev,enable, handleFunc, errFunc){
-			jchaos.getChannel(dev,3,function(cus){
-				cus.forEach(function(elem,index){
-					if(elem.hasOwnProperty('dsndk_storage_type')){
-						var val=Number(elem.dsndk_storage_type);
-						val = (val&0x2)|(enable&1);
-						jchaos.setProperty(cus[index].ndk_uid,[{ "dsndk_storage_type": val}]);
-							
+		jchaos.storageHisto = function (dev, enable, handleFunc, errFunc) {
+			jchaos.getChannel(dev, 3, function (cus) {
+				cus.forEach(function (elem, index) {
+					if (elem.hasOwnProperty('dsndk_storage_type')) {
+						var val = Number(elem.dsndk_storage_type);
+						val = (val & 0x2) | (enable & 1);
+						jchaos.setProperty(cus[index].ndk_uid, [{ "dsndk_storage_type": val }]);
+
 					}
 				})
-				handleFunc();},errFunc);
+				handleFunc();
+			}, errFunc);
 		}
 		jchaos.setProperty = function (dev, prop, handleFunc, errFunc) {
 			var opt = {
@@ -934,7 +1004,35 @@
 		 * 
 		 * */
 		jchaos.sendCUCmd = function (devs, cmd, param, handleFunc, handleFuncErr) {
-			jchaos.sendCUFullCmd(devs, cmd, param, 0, 0, handleFunc, handleFuncErr);
+			if ((cmd instanceof Object) && ((typeof param === "function") || (typeof param === "undefined"))) {
+				// all coded into cmd, handlefunc
+				var parm = "";
+				var prio = 0;
+				var mode = 0;
+				var cm = "";
+				handleFuncErr = handleFunc;
+				handleFunc = param;
+				if (cmd.hasOwnProperty('cmd')) {
+					cm = cmd['cmd'];
+				} else {
+					throw ("'cmd' must be specified");
+				}
+				if (cmd.hasOwnProperty('param')) {
+					parm = cmd['param'];
+				}
+				if (cmd.hasOwnProperty('prio')) {
+					prio = cmd['param'];
+				}
+				if (cmd.hasOwnProperty('mode')) {
+					mode = cmd['mode'];
+				}
+
+				jchaos.sendCUFullCmd(devs, cm, parm, mode, prio, handleFunc, handleFuncErr);
+
+			} else {
+
+				jchaos.sendCUFullCmd(devs, cmd, param, 0, 0, handleFunc, handleFuncErr);
+			}
 		}
 		jchaos.sendCUFullCmd = function (devs, cmd, param, force, prio, handleFunc, handleFuncErr) {
 			var dev_array = jchaos.convertArray2CSV(devs);
@@ -958,6 +1056,8 @@
 			if (params != "") {
 				str_url_cu = str_url_cu + "&parm=" + params;
 			}
+			jchaos.print("sending command: " + str_url_cu);
+
 			if ((typeof handleFunc !== "function")) {
 				return jchaos.basicPost("CU", str_url_cu, null);
 			}
@@ -974,10 +1074,11 @@
 		 * @param {string[] tags optional} tagsv 
 
 		 */
-		jchaos.getHistory = function (devs, channel, start, stop, varname, handleFunc, tagsv) {
+		jchaos.getHistory = function (devs, channel, start, stop, varname, handleFunc, tagsv, funcerr) {
 			var result = {
 				X: [],
-				Y: []
+				Y: [],
+				nitems: 0
 			};
 			var opt = {};
 			//var regex=/^[0-9]+$/;
@@ -994,29 +1095,35 @@
 				opt['end'] = stop;
 			}
 			if (tagsv instanceof Array) {
-				if(tagsv.length > 0){
+				if (tagsv.length > 0) {
 					opt['tags'] = tagsv;
+				}
+			} else if (tagsv instanceof Object) {
+				for (var k in tagsv) {
+					opt[k] = tagsv[k];
 				}
 			}
 
 			opt['channel'] = channel;
-			opt['page'] = jchaos.options.history_page_len;
+			if (!opt.hasOwnProperty('page')) {
+				opt['page'] = jchaos.options.history_page_len;
+			}
 			if (varname !== "undefined" && (typeof varname !== "string")) {
 				opt['var'] = varname;
 			}
-			if (tagsv !== "undefined") {
-				if (tagsv instanceof Array) {
-					opt["tags"] = tagsv;
-				} else if(tagsv!="") {
+			if (opt['tags'] !== "undefined") {
+				if ((typeof opt['tags'] === "string") && (opt['tags'] != "")) {
 					opt["tags"] = [tagsv];
+				} else {
+					delete opt["tags"];
 				}
 			}
 
-			jchaos.getHistoryBase(devs, opt, 1, 0, result, handleFunc);
+			jchaos.getHistoryBase(devs, opt, 0, 0, result, handleFunc, funcerr);
 
 		}
 
-		jchaos.fetchHistoryToZip = function (zipname, cams, start, stop, tagsv, updateCall,errCall) {
+		jchaos.fetchHistoryToZip = function (zipname, cams, start, stop, tagsv, updateCall, errCall) {
 			var vcams;
 			if (cams instanceof Array) {
 				vcams = cams;
@@ -1033,8 +1140,8 @@
 				});
 			vcams.forEach(function (ci) {
 				jchaos.getHistory(ci, 0, start, stop, "", function (ds) {
-					if((ds.Y[0] instanceof Object)){
-						if ( (ds.Y[0].hasOwnProperty("FRAMEBUFFER")) && (ds.Y[0].FRAMEBUFFER.hasOwnProperty("$binary")) && (ds.Y[0].hasOwnProperty("FMT"))) {
+					if ((ds.Y[0] instanceof Object)) {
+						if ((ds.Y[0].hasOwnProperty("FRAMEBUFFER")) && (ds.Y[0].FRAMEBUFFER.hasOwnProperty("$binary")) && (ds.Y[0].hasOwnProperty("FMT"))) {
 							ds.Y.forEach(function (img) {
 
 								var name = ci + "/" + img.dpck_seq_id + "_" + img.dpck_ats + "" + img.FMT;
@@ -1060,9 +1167,9 @@
 							{
 								percent: 0
 							});
-							if(typeof errCall == "function"){
-								errCall("Nothing found from "+start +" to:"+stop);
-							}
+						if (typeof errCall == "function") {
+							errCall("Nothing found from " + start + " to:" + stop);
+						}
 					}
 				}, tagsv);
 			});
@@ -1070,7 +1177,7 @@
 
 		}
 
-		jchaos.getHistoryBase = function (devs, opt, seq, runid, result, handleFunc) {
+		jchaos.getHistoryBase = function (devs, opt, seq, runid, result, handleFunc, funcErr) {
 			var cmd = "queryhst";
 			var dev_array = jchaos.convertArray2CSV(devs);
 
@@ -1078,36 +1185,55 @@
 			opt['runid'] = runid;
 
 			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd + "&parm=" + JSON.stringify(opt);
-			console.log("getHistory (seqid:" + seq + " runid:" + runid + ") start:" + opt.start + " end:" + opt.end + " page:" + opt.page);
+			//console.log("getHistory (seqid:" + seq + " runid:" + runid + ") start:" + opt.start + " end:" + opt.end + " page:" + opt.page);
 			jchaos.basicPost("CU", str_url_cu, function (datav) {
 				var ret = true;
-				if ((opt.var != null) && (opt.var != "")) {
-					datav.data.forEach(function (ele) {
-						result.X.push(Number(ele.ts));
-						result.Y.push(ele.val);
-					});
-				} else {
-					datav.data.forEach(function (ele) {
-						result.X.push(Number(ele.dpck_ats));
-						result.Y.push(ele);
-					});
+				if (datav.data instanceof Array) {
+					result['nitems'] += datav.data.length;
 
+					if ((opt.var != null) && (opt.var != "")) {
+						datav.data.forEach(function (ele) {
+							result.X.push(Number(ele.ts));
+							result.Y.push(ele.val);
+						});
+					} else {
+						datav.data.forEach(function (ele) {
+							result.X.push(Number(ele.dpck_ats));
+							result.Y.push(ele);
+						});
+
+					}
 				}
+				result['devs'] = devs;
+				result['query'] = opt;
+				result['end'] = datav.end;
+				result['runid'] = datav.runid;
+				result['seqid'] = datav.seqid;
 				if (jchaos.options.updateEachCall) {
+					if (datav.hasOwnProperty("count")) {
+						result["count"] = datav.count;
+					}
 					ret = handleFunc(result);
 					result.X = [];
 					result.Y = [];
+
 				} else {
 					if (datav.end == 1) {
 						// update if 0 or something else
+						if (datav.hasOwnProperty("count")) {
+							result["count"] = datav.count;
+						}
 						handleFunc(result);
 
 					}
 				}
 				if (ret && (datav.end == 0)) {
-					jchaos.getHistoryBase(devs, opt, datav.seqid, datav.runid, result, handleFunc);
+					if (datav.hasOwnProperty("count")) {
+						opt["count"] = datav.count;
+					}
+					jchaos.getHistoryBase(devs, opt, datav.seqid + 1, datav.runid, result, handleFunc, funcErr);
 				}
-			});
+			}, funcErr);
 		}
 
 
@@ -1128,372 +1254,559 @@
 			}, checkFreq);
 		};
 
-	/**
-   * saveFullConfig
-   * @brief Save to local disk the state of fundamental configurations
-   */
-  jchaos.saveFullConfig = function (name) {
-	//find all US
-	var obj = {};
-	obj['agents'] = [];
-	var agent_list = jchaos.search("", "agent", false, false);
-	agent_list.forEach(function (item) {
-	  var agent = {
-		"name": item,
-	  };
-	  var info = jchaos.node(item, "info", "agent", "", null);
-	  agent['info'] = info;
-	  obj['agents'].push(agent);
-	  ;
-	});
-	obj['us'] = [];
-	var us_list = jchaos.search("", "us", false, false);
-	us_list.forEach(function (item) {
-	  var data = jchaos.node(item, "get", "us", "", null);
-	  obj['us'].push(data);
+		/**
+	   * saveFullConfig
+	   * @brief Save to local disk the state of fundamental configurations
+	   */
+		jchaos.saveFullConfig = function (name) {
+			//find all US
+			var obj = {};
+			obj['agents'] = [];
+			var agent_list = jchaos.search("", "agent", false, false);
+			agent_list.forEach(function (item) {
+				var agent = {
+					"name": item,
+				};
+				var info = jchaos.node(item, "info", "agent", "", null);
+				agent['info'] = info;
+				obj['agents'].push(agent);
+				;
+			});
+			obj['us'] = [];
+			var us_list = jchaos.search("", "us", false, false);
+			us_list.forEach(function (item) {
+				var data = jchaos.node(item, "get", "us", "", null);
+				obj['us'].push(data);
 
-	});
-	// snapshots
-	obj['snapshots'] = [];
-	var snaplist = jchaos.search("", "snapshots", false);
-	snaplist.forEach(function (item) {
-	  var snap = {
-		snap: item,
-	  };
-	  var dataset = jchaos.snapshot(item.name, "load", null, "");
-	  snap['dataset'] = dataset;
-	  obj['snapshots'].push(snap);
-	});
-	// graphs
+			});
+			// snapshots
+			obj['snapshots'] = [];
+			var snaplist = jchaos.search("", "snapshots", false);
+			snaplist.forEach(function (item) {
+				var snap = {
+					snap: item,
+				};
+				var dataset = jchaos.snapshot(item.name, "load", null, "");
+				snap['dataset'] = dataset;
+				obj['snapshots'].push(snap);
+			});
+			// graphs
 
-	obj['graphs'] = jchaos.variable("highcharts", "get", null, null);
-	obj['cu_templates'] = jchaos.variable("cu_templates", "get", null, null);
-	var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
-	if(typeof name === "undefined"){
-		saveAs(blob, "configuration.json");
-	} else {
-		saveAs(blob, name + ".json");
+			obj['graphs'] = jchaos.variable("highcharts", "get", null, null);
+			obj['cu_templates'] = jchaos.variable("cu_templates", "get", null, null);
+			var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
+			if (typeof name === "undefined") {
+				saveAs(blob, "configuration.json");
+			} else {
+				saveAs(blob, name + ".json");
 
-	}
-  }
-  
-  /**
-   * restoreFullConfig
-   * @brief Restore a previously saved configuration
-   * @param json: the json configuration
-   * @param configToRestore: choose the items to restore
-   */
-  jchaos.restoreFullConfig = function (config, configToRestore) {
-		if (!(configToRestore instanceof Array)) {
-		  return;
+			}
 		}
-		configToRestore.forEach(function (sel) {
-	
-		  if (sel == "us") {
-			if (config.hasOwnProperty('us') && (config.us instanceof Array)) {
-			  config.us.forEach(function (data) {
-				confirm("US " + data.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
-				  if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
-					data.us_desc.cu_desc.forEach(function (item) {
-					  jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
+		jchaos.removeAllAssociation=function(cuid){
+			var agl=jchaos.search("","agent",false,false);
+			jchaos.node(agl, "del", "agent", cuid, null);
+
+			/*for(var l in agl){
+				var agent=agl[l];
+				jchaos.node(agent, "del", "agent", cuid, null);
+				
+			}*/
+			return;
+		}
+			
+		/*jchaos.agentSave=function (json, obj) {
+		if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
+			json.andk_node_associated.forEach(function (tostay) {
+				jchaos.removeAllAssociation(tostay.ndk_uid);
+			});
+			var node_selected = obj.node_selected;
+
+			  json.andk_node_associated.forEach(function (item) {
+				jchaos.node(node_selected, "set", "agent", null, item, function (data) {
+				  console.log("agent save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+				  if (item.node_log_at_launch) {
+					jchaos.node(item.ndk_uid, "enablelog", "agent", null, null, function (data) {
 					});
-					node_selected = data.us_desc.ndk_uid;
-	
-					unitServerSave(data.us_desc);
-	
+				  } else {
+					jchaos.node(item.ndk_uid, "disablelog", "agent", null, null, function (data) {
+		
+					});
 				  }
-				}, "Join", function () { unitServerSave(data.us_desc); });
-	
+				  return 0;
+				});
 			  });
-			} else if (config.hasOwnProperty("us_desc")) {
-			  var templ = {
-				$ref: "us.json",
-				format: "tabs"
-			  }
-			  confirm("Add US " + config.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
-				if (config.us_desc.hasOwnProperty("cu_desc") && (config.us_desc.cu_desc instanceof Array)) {
-				  config.us_desc.cu_desc.forEach(function (item) {
-					jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
+			} 
+		  }*/
+
+		  jchaos.agentSave=function (json, obj) {
+			// remove all the associations
+			if (obj != null) {
+			  var node_selected = obj.node_selected;
+			  var list_to_remove = [];
+			  jchaos.node(node_selected, "info", "agent", function (data) {
+				if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
+				  //rimuovi tutte le associazioni precedenti.
+				  data.andk_node_associated.forEach(function (item) {
+					if (item.hasOwnProperty("ndk_uid")) {
+					  var found = false;
+					  if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
+						json.andk_node_associated.forEach(function (tostay) {
+						  if (tostay.ndk_uid == item.ndk_uid) {
+							found = true;
+						  }
+						});
+		
+					  }
+					  if (found == false) {
+						list_to_remove.push(item.ndk_uid);
+					  }
+					}
 				  });
-				  node_selected = config.us_desc.ndk_uid;
-				  // editorFn = unitServerSave;
-				  //jsonEdit(templ, config.us_desc);
-				  jsonEditWindow("US Editor", templ, config.us_desc, unitServerSave, tmpObj);
-	
+				  list_to_remove.forEach(function (item) {
+					console.log("Agent remove association " + item);
+					jchaos.node(node_selected, "del", "agent", item, function (daa) { });
+				  });
 				}
-			  }, "Join", function () {
-				// editorFn = unitServerSave;
-				//jsonEdit(templ, config.us_desc);
-				jsonEditWindow("US Editor Join", templ, config.us_desc, unitServerSave, tmpObj);
-	
 			  });
-			} else if (config.hasOwnProperty("cu_desc")) {
-	
-			  var parent = config.cu_desc.ndk_parent;
-	
-	
-			  confirm("Add CU " + config.cu_desc.ndk_uid, "Add CU to " + parent + "?", "Add", function () {
-				if (config.hasOwnProperty("cu_desc")) {
-				  var templ = {
-					$ref: "cu.json",
-					format: "tabs"
+			}
+		
+			if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
+			  json.andk_node_associated.forEach(function (item) {
+				jchaos.node(node_selected, "set", "agent", null, item, function (data) {
+				  console.log("agent save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+				  if (item.node_log_at_launch) {
+					jchaos.node(item.ndk_uid, "enablelog", "agent", function (data) {
+					});
+				  } else {
+					jchaos.node(item.ndk_uid, "disablelog", "agent", function (data) {
+		
+					});
 				  }
-				  //editorFn = newCuSave;
-				  var tmp = config.cu_desc;
-				  //jsonEdit(templ, tmp);
-				  jsonEditWindow("New CU Editor", templ, tmp, newCuSave, tmpObj);
-	
+				  return 0;
+				});
+			  });
+			} 
+		  }
+
+
+		jchaos.unitServerSave = function (json, obj) {
+			if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
+				alert("no ndk_uid key found");
+				return 1;
+			}
+			if (json.ndk_uid == "") {
+				alert("US name cannot be empty");
+				return 2;
+			}
+			var node_selected = json.ndk_uid;
+			if (node_selected == null || node_selected == "") {
+				alert("not US selected!");
+				return 3;
+			}
+
+			var data = jchaos.node(node_selected, "get", "us", "", null, null);
+
+
+			if ((data instanceof Object) && data.hasOwnProperty("us_desc")) {
+				if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+					data.us_desc.cu_desc.forEach(function (item) {
+						var found = false;
+						// remove just the cu not present in new configuration
+						json.cu_desc.forEach(function (items) {
+							if (items.ndk_uid == item.ndk_uid) {
+								found = true;
+							}
+						});
+						if ((found == false) && (item.ndk_uid != "")) {
+							console.log("deleting cu:\"" + item.ndk_uid + "\"");
+							jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
+
+						}
+					});
+
 				}
-			  }, "Cancel", function () {
+			}
+
+			json.cu_desc.forEach(function (item) {
+				item.ndk_parent = node_selected;
+			});
+			jchaos.node(node_selected, "set", "us", "", json, function (data) {
+				console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+			});
+			return 0;
+		}
+
+
+		jchaos.newCuSave = function (json, obj) {
+			var node_selected=null;
+			if((typeof obj ==="object") && (obj.hasOwnProperty('node_selected'))){
+				node_selected=obj.node_selected;
+			} 
+			if ((node_selected == null || node_selected == "")) {
+				if (json.ndk_parent == "") {
+					alert("not US selected!");
+					return 1;
+				} else {
+					console.log("using US specified into CU:" + json.ndk_parent);
+					var us_list = jchaos.search(json.ndk_parent, "us", false, false);
+					if (us_list.length == 0) {
+						alert("US specified in CU does not exist (create before)");
+						return -1;
+					}
+					node_selected = json.ndk_parent;
+				}
+			}
+			if (!json.hasOwnProperty("control_unit_implementation") || json.control_unit_implementation == "") {
+				alert("You must specify a valid implementation 'control_unit_implementation' "+JSON.stringify(json));
+				return 1;
+			}
+			if (!json.hasOwnProperty("ndk_uid") || json.ndk_uid == "") {
+				alert("You must specify a valid UID 'ndk_uid'");
+				return 1;
+			}
+			if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
+				jchaos.node(node_selected, "get", "us", "", null, function (data) {
+					console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
+					json.ndk_parent = node_selected;
+					if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+						data.us_desc.cu_desc.push(json);
+					} else {
+						data.us_desc["cu_desc"] = [json];
+					}
+					jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
+						console.log("unitServer save: \"" + name + "\" value:" + JSON.stringify(json));
+					});
+				});
+			} else {
+				alert("missing required field ndk_uid");
+				return 1;
+			}
+			return 0;
+		}
+		/**
+		 * restoreFullConfig
+		 * @brief Restore a previously saved configuration
+		 * @param json: the json configuration
+		 * @param configToRestore: choose the items to restore
+		 */
+		jchaos.restoreFullConfig = function (config, configToRestore) {
+			var node_selected = "";
+			console.log("congigs to restore:"+JSON.stringify(configToRestore));
+			console.log("To restore:"+JSON.stringify(config));
+
+			if (!(configToRestore instanceof Array)) {
+				return;
+			}
+			configToRestore.forEach(function (sel) {
+
+				if (sel == "us") {
+					if (config.hasOwnProperty('us') && (config.us instanceof Array)) {
+						config.us.forEach(function (data) {
+							
+							if ((data!=null)&& data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+								data.us_desc.cu_desc.forEach(function (item) {
+									jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
+								});
+								node_selected = data.us_desc.ndk_uid;
+
+								jchaos.unitServerSave(data.us_desc);
+							}
+						});
+					} else if (config.hasOwnProperty("us_desc")) {
+						if (config.us_desc.hasOwnProperty("cu_desc") && (config.us_desc.cu_desc instanceof Array)) {
+							config.us_desc.cu_desc.forEach(function (item) {
+								jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
+							});
+							node_selected = config.us_desc.ndk_uid;
+							jchaos.unitServerSave(config.us_desc);
+
+						}
+					};
+				} else if (config.hasOwnProperty("cu_desc")) {
+
+					var parent = config.cu_desc.ndk_parent;
+					if (config.hasOwnProperty("cu_desc")) {
+						var tmp = config.cu_desc;
+						//jsonEdit(templ, tmp);
+						jchaos.newCuSave(tmp);
+					}
+				}
+				if ((sel == "agents") && config.hasOwnProperty('agents') && (config.agents instanceof Array)) {
+					config.agents.forEach(function (json) {
+
+						jchaos.agentSave(json.name, json.info);
+					});
+				}
+				if ((sel == "snapshots") && config.hasOwnProperty('snapshots') && (config.snapshots instanceof Array)) {
+					config.snapshots.forEach(function (json) {
+						jchaos.snapshot(json.name, "set", "", json.dataset, function (d) {
+							console.log("restoring snapshot '" + json.name + "' created:" + json.ts);
+						});
+					});
+				}
+				if ((sel == "graphs") && config.hasOwnProperty('graphs') && (config.graphs instanceof Object)) {
+					jchaos.variable("highcharts", "set", config.graphs, function (s) {
+						console.log("restoring graphs:" + JSON.stringify(config.graphs));
+						high_graphs = config.graph;
+					});
+
+				}
+				if ((sel == "custom_group") && config.hasOwnProperty('custom_group') && (config.custom_group instanceof Array)) {
+					jchaos.variable("custom_group", "set", config.custom_group, function (s) {
+						console.log("restoring custom groups:" + JSON.stringify(config.custom_group));
+						custom_group = config.custom_group;
+					});
+
+				}
+				if ((sel == "cu_templates") && (config instanceof Object) && (!config.hasOwnProperty("cu_desc"))) {
+
+					jchaos.variable("cu_templates", "set", config, function (s) {
+						console.log("restoring CU templates:" + JSON.stringify(config));
+						cu_templates = config;
+					});
+
+				}
+			});
+		}
+		/**
+		 * activeAgentList
+		 * @brief return a list of agents addresses in the callback
+		 * @param cb: return a list of active agents
+		 */
+		jchaos.activeAgentList = function (cb) {
+			jchaos.search("", "agent", true, function (ag) {
+				var agent_list = [];
+				ag.forEach(function (elem) {
+					var regx = /ChaosAgent_(.+)\:(.+)/;
+					var match = regx.exec(elem);
+					if (match) {
+						var server = match[1];
+						agent_list.push(server)
+
+					}
+				});
+				if (typeof cb === "function") {
+					cb(agent_list);
+				}
+			});
+		}
+
+		/**
+		 * activeAgentList
+		 * @brief return a list of agents addresses in the callback
+		 * @param cb: return a list of active agents
+		 */
+		jchaos.activeAgentList = function (cb) {
+			jchaos.search("", "agent", true, function (ag) {
+				var agent_list = [];
+				var cnt_agent=0;
+				ag.forEach(function (elem) {
+				  jchaos.node(elem,"info","agent",function(aginfo){
+					if(aginfo.hasOwnProperty('instance_name')){
+					  if((aginfo.instance_name=="")){
+						aginfo.instance_name=elem;
+					  }
+					} else {
+					  aginfo['instance_name']=elem;
+					}
+					agent_list.push(aginfo);
+					if(++cnt_agent==ag.length){
+					  if (typeof cb === "function") {
+						cb(agent_list);
+					  }
+					}
+				  });
+				
+				});
+			   
 			  });
-			}
-		  }
-		  if ((sel == "agents") && config.hasOwnProperty('agents') && (config.agents instanceof Array)) {
-			config.agents.forEach(function (json) {
-			  agentSave(node_selected, json.info);
-			});
-		  }
-		  if ((sel == "snapshots") && config.hasOwnProperty('snapshots') && (config.snapshots instanceof Array)) {
-			config.snapshots.forEach(function (json) {
-			  jchaos.snapshot(json.name, "set", "", json.dataset, function (d) {
-				console.log("restoring snapshot '" + json.name + "' created:" + json.ts);
-			  });
-			});
-		  }
-		  if ((sel == "graphs") && config.hasOwnProperty('graphs') && (config.graphs instanceof Object)) {
-			jchaos.variable("highcharts", "set", config.graphs, function (s) {
-			  console.log("restoring graphs:" + JSON.stringify(config.graphs));
-			  high_graphs = config.graph;
-			});
-	
-		  }
-		  if ((sel == "custom_group") && config.hasOwnProperty('custom_group') && (config.custom_group instanceof Array)) {
-			jchaos.variable("custom_group", "set", config.custom_group, function (s) {
-			  console.log("restoring custom groups:" + JSON.stringify(config.custom_group));
-			  custom_group = config.custom_group;
-			});
-	
-		  }
-		  if ((sel == "cu_templates") && (config instanceof Object) && (!config.hasOwnProperty("cu_desc"))) {
-	
-			jchaos.variable("cu_templates", "set", config, function (s) {
-			  console.log("restoring CU templates:" + JSON.stringify(config));
-			  cu_templates = config;
-			});
-	
-		  }
-		});
-	  }  
-	  /**
-	   * activeAgentList
-	   * @brief return a list of agents addresses in the callback
-	   * @param cb: return a list of active agents
-	   */
-	  jchaos.activeAgentList=function (cb) {
-		jchaos.search("", "agent", true, function (ag) {
-		  var agent_list = [];
-		  ag.forEach(function (elem) {
-			var regx = /ChaosAgent_(.+)\:(.+)/;
-			var match = regx.exec(elem);
-			if (match) {
-			  var server = match[1];
-			  agent_list.push(server)
-	
-			}
-		  });
-		  if (typeof cb === "function") {
-			cb(agent_list);
-		  }
-		});
-	  }
+		
+		}
 
-	  /**
-	   * activeAgentList
-	   * @brief return a list of agents addresses in the callback
-	   * @param cb: return a list of active agents
-	   */
-	  jchaos.activeAgentList=function (cb) {
-		jchaos.search("", "agent", true, function (ag) {
-		  var agent_list = [];
-		  ag.forEach(function (elem) {
-			var regx = /ChaosAgent_(.+)\:(.+)/;
-			var match = regx.exec(elem);
-			if (match) {
-			  var server = match[1];
-			  agent_list.push(server)
-	
-			}
-		  });
-		  if (typeof cb === "function") {
-			cb(agent_list);
-		  }
-		});
-	  }
-
-	 /**
-	   * getAllProcessInfo
-	   * @brief return a vector of process information in the callback
-	   * @param cb: return a list of active agen
-	   * 	   
-	   * */
-	  jchaos.getAllProcessInfo=function(cb){
-		var agent_obj = {};
-		var proc_list = [];
-		var tmpObj={};
-		var cnt = 0;
-
-		jchaos.activeAgentList(function(ag) {
-			var proc={};
-			ag.forEach(function (server) {
+		/**
+		  * getAllProcessInfo
+		  * @brief return a vector of process information in the callback
+		  * @param agl list of agents info
+		  * @param cb: return a list of active agen
+		  * 	   
+		  * */
+		jchaos.getAllProcessInfo = function (agl,cb) {
+			var agent_obj = {};
+			var proc_list = [];
+			var tmpObj = {};
+			var cnt = 0;
+			var proc = {};
+			agl.forEach(function (ser) {
+				var server="";
+				if(ser.hasOwnProperty('ndk_host_name')&&(ser.ndk_host_name!=="")){
+					server=ser.ndk_host_name;
+				} else {
+					var regx = /(.+)\:(.+)/;
+					var match = regx.exec(ser.ndk_rpc_addr);
+					if (match) {
+						server = match[1];
+					}
+				}
+				
 				agent_obj[server] = {};
 				jchaos.rmtListProcess(server + ":8071", function (r) {
-					if (r.hasOwnProperty("info")) {
-					  agent_obj[server]['idle'] = r.info.hasOwnProperty("idletime") ? parseFloat(r.info.idletime) : parseFloat(r.info.idle);
-					  agent_obj[server]['user'] = r.info.hasOwnProperty("usertime") ? parseFloat(r.info.usertime) : parseFloat(r.info.user);
-					  agent_obj[server]['sys'] = r.info.hasOwnProperty("systime") ? parseFloat(r.info.systime) : parseFloat(r.info.sys);
-					  agent_obj[server]['io'] = r.info.hasOwnProperty("iowait") ? parseFloat(r.info.iowait) : parseFloat(r.info.io);
-					  agent_obj[server]['pmem'] = parseFloat(r.info.pmem);
-			
-					  agent_obj[server]['ts'] = r.info.ts;
-					}
-			
-					if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
-					  var processes = r.data.processes;
-					  processes.forEach(function (p) {
-						p['hostname'] = server;
-						p['parent'] = server;
-			
-						proc[p.uid] = p;
-						proc_list.push(p.uid);
-					  });
-					}
-					if (++cnt >= ag.length) {
-					  tmpObj['procinfo'] = proc;
-					  tmpObj['proclist'] = proc_list;
-					  tmpObj['agents'] = agent_obj;
-					  if (typeof cb === "function") {
-						cb(tmpObj);
-					  }
-					}
-				  }, function (bad) {
-					console.log("Some error state of server:" + server + " occur:" + bad);
-					if (++cnt >= ag.length) {
-					  tmpObj['procinfo'] = proc;
-					  tmpObj['proclist'] = proc_list;
-					  tmpObj['agents'] = agent_obj;
-					  if (typeof handler === "function") {
-						cb(tmpObj);
-					  }
-					}
-				  });
-				});
-		})
-	} 
-	  /**
-	   * findBestServer
-	   * @brief return a list of agents ordered by occupation in the callback
-	   * @param cb: return a list of active agents
-	   */
-	  jchaos.findBestServer=function(cb){
-		jchaos.getAllProcessInfo(function(ag){
-			var server="";
-			var idle=0;
-			var agents=ag['agents'];
-			for(var i in agents){
-				if(agents[i]['idle']>idle){
-					server=i;
-					idle=agents[i]['idle'];
-				}
-			}
-			cb(server);
+						if (r.hasOwnProperty("info")) {
+							agent_obj[server]['idle'] = r.info.hasOwnProperty("idletime") ? parseFloat(r.info.idletime) : parseFloat(r.info.idle);
+							agent_obj[server]['user'] = r.info.hasOwnProperty("usertime") ? parseFloat(r.info.usertime) : parseFloat(r.info.user);
+							agent_obj[server]['sys'] = r.info.hasOwnProperty("systime") ? parseFloat(r.info.systime) : parseFloat(r.info.sys);
+							agent_obj[server]['io'] = r.info.hasOwnProperty("iowait") ? parseFloat(r.info.iowait) : parseFloat(r.info.io);
+							agent_obj[server]['pmem'] = parseFloat(r.info.pmem);
 
-		});
-	  }
+							agent_obj[server]['ts'] = r.info.ts;
+						}
 
-	  /**
-   * runScript
-   * @brief Run the specified script on the chaos infrastructure
-   * @param name: the name of the script present in the DB
-   * @param parm: optional parameters
-   * @param okhandle: called when ok
-   * @param errorhandle: called when failed
-   */
-  jchaos.runScript = function (name, parm,okhandle,errorhandle) {
-		jchaos.search(name, "script", false, function (l) {
-		  if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
-			if (l.found_script_list.length > 0) {
-			  var seq = l.found_script_list[0].seq;
-			  console.log("found script:" + JSON.stringify(l.found_script_list[0]));
-			  jchaos.loadScript(name, seq, function (jsonscript) {
-				jchaos.findBestServer(function (server) {
-				  console.log("best server:" + server);
-	
-				  jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
-					if (r.err != 0) {
-						if(typeof errorhandle !== "undefined") errorhandle(server + ": Load Script", "cannot load:" + r.errmsg);
-					  
-					} else {
-					  if (r.data.hasOwnProperty('path')) {
-						var path = r.data.path;
-						var workingdir = r.data.workingdir;
-						var launch_arg = "";
-						var name = jsonscript['script_name'];
-						var language = jsonscript['eudk_script_language'];
-						var defargs = jsonscript['default_argument']
-						var chaos_prefix = "";
-						jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
-						  if (r.err != 0) {
-							if(typeof errorhandle !== "undefined") errorhandle("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg);
-							return;
-						  } else {
-							chaos_prefix = r.data.value;
-							if (language == "CPP") {
-							  launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm + "\"";
-							} else if (language == "bash") {
-							  launch_arg = "bash " + path + parm;
-							} else if (language == "nodejs") {
-							  launch_arg = "node " + path + parm;
-	
-							} else if (language == "python") {
-							  launch_arg = "python " + path + parm;
-	
-							} else {
-							  launch_arg = language + " " + path + parm;
-							}
-							jchaos.rmtCreateProcess(server + ":8071", name, launch_arg, language, workingdir, function (r) {
-							  console.log("Script running onto:" + server + " :" + JSON.stringify(r));
-							  if(typeof okhandle !== "undefined") okhandle(r);
-							}, function (bad) {
-							  console.log("Some error getting loading script:" + bad);
-							  if(typeof errorhandle !== "undefined") errorhandle("Failed to start " + bad);
-	
+						if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
+							var processes = r.data.processes;
+							processes.forEach(function (p) {
+								p['hostname'] = server;
+								p['parent'] = ser.instance_name;
+
+								proc[p.uid] = p;
+								proc_list.push(p.uid);
 							});
-	
-	
-						  }
-						}, function (bad) {
-						  console.log("Some error getting environment:" + bad);
-						  if(typeof errorhandle !== "undefined") errorhandle("Failed to start " + bad);
-	
-						});
-					  }
-	
-					}
-				  }, function (bad) {
-					console.log("Some error  loading script:" + bad); 	  
-					if(typeof errorhandle !== "undefined")
-					errorhandle("Exception  loading:" + bad);
-	
-				  });
+						}
+						if (++cnt >= agl.length) {
+							tmpObj['data'] = proc;
+							tmpObj['elems'] = proc_list;
+							tmpObj['agents'] = agent_obj;
+							if (typeof cb === "function") {
+								cb(tmpObj);
+							}
+						}
+					}, function (bad) {
+						console.log("Some error state of server:" + server + " occur:" + bad);
+						if (++cnt >= agl.length) {
+							tmpObj['data'] = proc;
+							tmpObj['elems'] = proc_list;
+							tmpObj['agents'] = agent_obj;
+							if (typeof cb === "function") {
+								cb(tmpObj);
+							}
+						}
+					});
 				});
-			  });
-			}
-	
-		  };
-		});
-	  }
-	  
-  
+			
+		}
+		/**
+		 * findBestServer
+		 * @brief return a list of agents ordered by occupation in the callback
+		 * @param cb: return a list of active agents
+		 */
+		jchaos.findBestServer = function (cb) {
+			jchaos.activeAgentList(function(iagents){
+			jchaos.getAllProcessInfo(iagents,function (ag) {
+				var server = "";
+				var idle = 0;
+				var agents=ag['agents'];
+				for (var i in agents) {
+					if (agents[i]['idle'] > idle) {
+						server = i;
+						idle = agents[i]['idle'];
+					}
+				}
+				cb(server);
+
+			});
+		})
+	};
+
+		/**
+	 * runScript
+	 * @brief Run the specified script on the chaos infrastructure
+	 * @param name: the name of the script present in the DB
+	 * @param parm: optional parameters
+	 * @param okhandle: called when ok
+	 * @param errorhandle: called when failed
+	 */
+		jchaos.runScript = function (name, parm, okhandle, errorhandle) {
+			jchaos.search(name, "script", false, function (l) {
+				if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
+					if (l.found_script_list.length > 0) {
+						var seq = l.found_script_list[0].seq;
+						console.log("found script:" + JSON.stringify(l.found_script_list[0]));
+						jchaos.loadScript(name, seq, function (jsonscript) {
+							jchaos.findBestServer(function (server) {
+								if(server==""){
+									if(typeof errorhandle==="function"){
+										errorhandle("No server available");
+
+									} else {
+										throw "No Server Available";
+									}
+								}
+								console.log("best server:" + server);
+
+								jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
+									if (r.err != 0) {
+										if (typeof errorhandle !== "undefined") errorhandle(server + ": Load Script", "cannot load:" + r.errmsg);
+
+									} else {
+										if (r.data.hasOwnProperty('path')) {
+											var path = r.data.path;
+											var workingdir = r.data.workingdir;
+											var launch_arg = "";
+											var name = jsonscript['script_name'];
+											var language = jsonscript['eudk_script_language'];
+											var defargs = jsonscript['default_argument']
+											var chaos_prefix = "";
+											jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+												if (r.err != 0) {
+													if (typeof errorhandle !== "undefined") errorhandle("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg);
+													return;
+												} else {
+													chaos_prefix = r.data.value;
+													if (language == "CPP") {
+														launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm + "\"";
+													} else if (language == "bash") {
+														launch_arg = "bash " + path + parm;
+													} else if (language == "nodejs") {
+														launch_arg = "node " + path + parm;
+
+													} else if (language == "python") {
+														launch_arg = "python " + path + parm;
+
+													} else {
+														launch_arg = language + " " + path + parm;
+													}
+													jchaos.rmtCreateProcess(server + ":8071", name, launch_arg, language, workingdir, function (r) {
+														console.log("Script running onto:" + server + " :" + JSON.stringify(r));
+														if (typeof okhandle !== "undefined") okhandle(r);
+													}, function (bad) {
+														console.log("Some error getting loading script:" + bad);
+														if (typeof errorhandle !== "undefined") errorhandle("Failed to start " + bad);
+
+													});
+
+
+												}
+											}, function (bad) {
+												console.log("Some error getting environment:" + bad);
+												if (typeof errorhandle !== "undefined") errorhandle("Failed to start " + bad);
+
+											});
+										}
+
+									}
+								}, function (bad) {
+									console.log("Some error  loading script:" + bad);
+									if (typeof errorhandle !== "undefined")
+										errorhandle("Exception  loading:" + bad);
+
+								});
+							});
+						});
+					}
+
+				};
+			});
+		}
+
+
 		/**
 		 * This function check for a variable change on a 'devlist', for 'retry' times, checking every 'checkFreq'
 		 * 'checkFunc' takes in input the live and realize the check 
