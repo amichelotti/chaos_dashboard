@@ -5,7 +5,34 @@
 (function () {
 	function createLibrary() {
 		var jchaos = {};
-
+		jchaos.extendJson=function(key, n) {
+			// Filtraggio delle proprietà
+			if(Number(n) === n && n % 1 !== 0){
+				var obj={$numberDouble:n.toString()};
+				return obj;
+			}
+			
+			return n;
+		  }
+		  jchaos.extendStringKey=function(obj, key) {
+			if(obj.hasOwnProperty(key)){
+				try{
+					  var o=JSON.parse(obj[key]);
+					  obj[key]=JSON.stringify(o,jchaos.extendJson);
+			
+					} catch(e){
+			
+					}
+					return obj;	
+			}
+			// Filtraggio delle proprietà
+			if(Number(n) === n && n % 1 !== 0){
+				var obj={$numberDouble:n.toString()};
+				return obj;
+			}
+			
+			return n;
+		  }
 		jchaos.ops_on_going = 0;
 		jchaos.ops_abort = false;
 		jchaos.lastChannel = {};
@@ -390,16 +417,16 @@
 			jchaos.setLongLong(obj, 'dpck_hr_ats', dd * 1000);
 
 			if (typeof handleFunc !== "function") {
-				jchaos.basicPost(str_url_cu, JSON.stringify(obj), null);
+				jchaos.basicPost(str_url_cu, JSON.stringify(obj,jchaos.extendJson), null);
 				return;
 
 			}
 
-			jchaos.basicPost(str_url_cu, JSON.stringify(obj), function (datav) { handleFunc(datav); });
+			jchaos.basicPost(str_url_cu, JSON.stringify(obj,jchaos.extendJson), function (datav) { handleFunc(datav); });
 
 		}
 		jchaos.mdsBase = function (cmd, opt, handleFunc, errFunc) {
-			var param = "cmd=" + cmd + "&parm=" + JSON.stringify(opt);
+			var param = "cmd=" + cmd + "&parm=" + JSON.stringify(opt,jchaos.extendJson);
 			var ret = jchaos.basicPost("MDS", param, handleFunc, errFunc);
 			return ret;
 		}
@@ -582,7 +609,7 @@
 				try {
 					JSON.stringify(value_); // check if json
 					opt['value'] = value_;
-					console.log("param:" + JSON.stringify(opt));
+					console.log("param:" + JSON.stringify(opt,jchaos.extendJson));
 				} catch (e) {
 					console.error("not a valid json error :'" + e + "' value:" + value_);
 					return;
@@ -668,7 +695,7 @@
 
 					}
 					JSON.parse(value_);
-					opt['value'] = JSON.stringify(value_);
+					opt['value'] = JSON.stringify(value_,jchaos.extendJson);
 
 				} catch (e) {
 					opt['value'] = value_;
@@ -1047,7 +1074,7 @@
 					JSON.parse(param);
 
 				}
-				params = JSON.stringify(param);
+				params = JSON.stringify(param,jchaos.extendJson);
 			} catch (e) {
 				params = param;
 
@@ -1184,7 +1211,7 @@
 			opt['seq'] = seq;
 			opt['runid'] = runid;
 
-			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd + "&parm=" + JSON.stringify(opt);
+			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd + "&parm=" + JSON.stringify(opt,jchaos.extendJson);
 			//console.log("getHistory (seqid:" + seq + " runid:" + runid + ") start:" + opt.start + " end:" + opt.end + " page:" + opt.page);
 			jchaos.basicPost("CU", str_url_cu, function (datav) {
 				var ret = true;
@@ -1427,8 +1454,17 @@
 				}
 			}
 
-			json.cu_desc.forEach(function (item) {
-				item.ndk_parent = node_selected;
+			json.cu_desc.forEach(function (item,index) {
+				json.cu_desc[index].ndk_parent = node_selected;
+				json.cu_desc[index]=jchaos.extendStringKey(item,'cudk_load_param');
+				if(item.hasOwnProperty('cudk_driver_description')){
+					item.cudk_driver_description.forEach(function(el,i){
+						json.cu_desc[index].cudk_driver_description[i]=jchaos.extendStringKey(el,'cudk_driver_description_init_parameter');
+	
+					});
+	
+				  }
+  
 			});
 			jchaos.node(node_selected, "set", "us", "", json, function (data) {
 				console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
@@ -1436,7 +1472,31 @@
 			return 0;
 		}
 
+		jchaos.cuSave=function (json, obj) {
 
+			if ((json != null) && json.hasOwnProperty("ndk_uid")) {
+			  var name = json.ndk_uid;
+			  if (!json.hasOwnProperty("ndk_parent")) {
+				alert("CU parent not defined");
+				return 1;
+			  }
+			  json=jchaos.extendStringKey(json,'cudk_load_param');
+			  if(json.hasOwnProperty('cudk_driver_description')){
+				json.cudk_driver_description.forEach(function(elem,index){
+					json.cudk_driver_description[index]=jchaos.extendStringKey(elem,'cudk_driver_description_init_parameter');
+
+				});
+
+			  }
+		
+			  jchaos.node(json.ndk_uid, "set", "cu", json.ndk_parent, json, function (data) {
+				console.log("cu save: \"" + node_selected + "\" value:" + JSON.stringify(json,jchaos.extendJson));
+			  });
+			} else {
+			  alert("No ndk_uid field found");
+			}
+			return 0;
+		  }
 		jchaos.newCuSave = function (json, obj) {
 			var node_selected=null;
 			if((typeof obj ==="object") && (obj.hasOwnProperty('node_selected'))){

@@ -1525,22 +1525,7 @@
   }
 
 
-  function cuSave(json, obj) {
-
-    if ((json != null) && json.hasOwnProperty("ndk_uid")) {
-      var name = json.ndk_uid;
-      if (!json.hasOwnProperty("ndk_parent")) {
-        alert("CU parent not defined");
-        return 1;
-      }
-      jchaos.node(json.ndk_uid, "set", "cu", json.ndk_parent, json, function (data) {
-        console.log("cu save: \"" + node_selected + "\" value:" + JSON.stringify(json));
-      });
-    } else {
-      alert("No ndk_uid field found");
-    }
-    return 0;
-  }
+  
 
 
   /***
@@ -3771,7 +3756,7 @@
         if (data != null) {
           //editorFn = cuSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("CU Editor", templ, data, cuSave, tmpObj);
+          jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj);
 
         }
       });

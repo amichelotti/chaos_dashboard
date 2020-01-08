@@ -22,7 +22,8 @@
 		},
 		"cudk_ds_inc" : {
 			"type": "string",
-			"description":"Meaningful value increment (0=digital or NA)"
+			"default":"0",
+			"description":"Meaningful value increment (0=digital)"
 		},
 		"cudk_ds_unit" : {
 			"type": "string",
