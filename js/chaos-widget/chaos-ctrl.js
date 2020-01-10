@@ -6159,8 +6159,8 @@
     html += '<tr>';
     html += '<th>Element</th>';
     html += '<th colspan="3">Status</th>';
-    html += '<th>Position [mm]</th>';
-    html += '<th>Setting [mm]</th>';
+    html += '<th colspan="2">Position</th>';
+    html += '<th colspan="2">Setting</th>';
     html += '<th colspan="2">Saved [mm]</th>';
     html += '<th colspan="4">Flags(On,Plim,Nlim,Home)</th>';
     html += '<th colspan="2">Alarms dev/cu</th>';
@@ -6176,7 +6176,11 @@
       html += "<td id='" + cuname + "_system_busy'></td>";
       html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
       html += "<td class='position_element' id='" + cuname + "_output_position'></td>";
+      html += "<td class='position_element' id='" + cuname + "_output_poi'></td>";
+
       html += "<td class='position_element' id='" + cuname + "_input_position'></td>";
+      html += "<td class='position_element' id='" + cuname + "_input_poi'></td>";
+
       html += "<td id='" + cuname + "_input_saved_position'></td>";
       html += "<td id='" + cuname + "_input_saved_status'></td>";
       html += "<td id='" + cuname + "_flag_output_status'></td>";
@@ -6331,7 +6335,13 @@
         var cuname = encodeName(elem.health.ndk_uid);
 
         $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
+        if(elem.output.hasOwnProperty("POI")){
+          $("#" + cuname + "_output_poi").html(elem.output.POI);
+        } 
         $("#" + cuname + "_input_position").html(elem.input.position.toFixed(3));
+        if(elem.input.hasOwnProperty("POI")){
+          $("#" + cuname + "_input_poi").html(elem.input.POI);
+        }
         /* switch (elem.output.polarity) {
            case 1:
              $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
@@ -6344,7 +6354,7 @@
              break;
  
          }*/
-
+        
         if (elem.output.home) {
           $("#" + cuname + "_flag_home").html('<i class="material-icons verde">home</i>');
         } else {
@@ -6376,7 +6386,17 @@
 
       }
       if (elem.health.ndk_uid == tmpObj.node_selected) {
+        if(elem.hasOwnProperty('custom')){
+          if(elem.custom.hasOwnProperty('cudk_load_param')){
+           if(elem.custom.cudk_load_param.hasOwnProperty('poi')){
+             $("#mov_abs_poi").empty();
+             for(var i in elem.custom.cudk_load_param.poi){
+               $("#mov_abs_poi").append("<option value='"+elem.custom.cudk_load_param.poi[i]+"'>"+i+"</option>");
 
+             }
+           }
+          }
+        }
         if (elem.output.powerOn) {
 
           $("#scraper_setPoweron").prop('disabled', true);
@@ -6408,8 +6428,11 @@
     html += '<i class="material-icons rosso">error</i>';
     html += '<p class="name-cmd">Reset</p>';
     html += '</a>';
-    html += '<div class="span3" onTablet="span6" onDesktop="span3" id="input-value">';
+    html += '<div class="span2" id="input-value">';
     html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="1">';
+    html += '</div>';
+    html += '<div class="span2" id="input-value">';
+    html += '<select class="input" id="mov_abs_poi"></select>';
     html += '</div>';
     html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
     html += '<p>Set Absolute</p>';
