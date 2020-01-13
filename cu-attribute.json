@@ -20,13 +20,15 @@
 			"type": "string",
 			"description":"Min Range"
 		},
-		"cudk_ds_inc" : {
+		"cudk_ds_attr_inc" : {
 			"type": "string",
-			"description":"Meaningful value increment (0=digital or NA)"
+			"default":"0",
+			"description":"Meaningful value increment (0=digital)"
 		},
-		"cudk_ds_unit" : {
+		"cudk_ds_attr_unit" : {
 			"type": "string",
 			"default":"NA",
+			"format":"text",
 			"description":"data Units"
 		}
 		,
