@@ -6179,7 +6179,7 @@
       html += "<td class='position_element' id='" + cuname + "_output_poi'></td>";
 
       html += "<td class='position_element' id='" + cuname + "_input_position'></td>";
-      html += "<td class='position_element' id='" + cuname + "_input_poi'></td>";
+      html += "<td class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'></select></td>";
 
       html += "<td id='" + cuname + "_input_saved_position'></td>";
       html += "<td id='" + cuname + "_input_saved_status'></td>";
@@ -6420,7 +6420,7 @@
 
 
   }
-  function generateScraperCmd() {
+  function generateScraperCmd(tmpObj) {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
     html += '<div>';
@@ -6476,8 +6476,43 @@
     html += '</div>';
     html += '</div>';
     html += '</div>';
+    if(tmpObj.hasOwnProperty('elems')){
+      jchaos.getChannel(tmpObj.elems,2,function(customs){
+        customs.forEach(function(custom){
+          var name=encodeName(custom.ndk_uid) + "_select_input_poi";
+          $("#"+name).hide();
+        if(custom.hasOwnProperty('cudk_load_param')&& custom.cudk_load_param.hasOwnProperty('poi')){
+          var name=encodeName(custom.ndk_uid) + "_select_input_poi";
+          $("#"+name).show();
+          $("#"+name).empty();
+          for(var i in custom.cudk_load_param.poi){
+            $("#"+name).append("<option value='"+custom.cudk_load_param.poi[i]+"'>"+i+"</option>");
 
+          }
+          $("#"+name).on("click", function (s) {
 
+            var cuname = $(this).attr('name');
+            var poiv = $(this).find("option:selected").text();
+            var param={
+              poi:poiv
+            }
+
+            jchaos.sendCUCmd(cuname,"mov_abs",param, function (d) {
+              
+              instantMessage(cuname, "Move to:"+poiv , 1000, true)
+            }, function (d) {
+              instantMessage(cuname, "ERROR OCCURRED:" + d, 2000, 350, 400, false);
+      
+            });
+          })
+          
+        
+      }});
+      });
+    };
+      
+    
+    
     return html;
   }
   function generatePStable(tmpObj) {
