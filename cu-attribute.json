@@ -19,6 +19,29 @@
 		"cudk_ds_min_range" : {
 			"type": "string",
 			"description":"Min Range"
+		},
+		"cudk_ds_attr_inc" : {
+			"type": "string",
+			"default":"0",
+			"description":"Meaningful value increment (0=digital)"
+		},
+		"cudk_ds_attr_unit" : {
+			"type": "string",
+			"default":"NA",
+			"format":"text",
+			"description":"data Units"
+		}
+		,
+		"cudk_ds_attr_convfact" : {
+			"type": "string",
+			"default":"1",
+			"description":"Conversion factor to apply on sets"
+		}
+		,
+		"cudk_ds_attr_offset" : {
+			"type": "string",
+			"default":"0",
+			"description":"Offset to apply on sets"
 		}
 	} 
 }

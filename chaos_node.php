@@ -65,7 +65,8 @@ $('#main-dashboard').chaosDashboard({
                 collapsed: true,
 				withQuotes: true,
 				template:"node",
-                Interval: 2000
+				Interval: 2000,
+				timeout:3000
 
             });
 </script>
