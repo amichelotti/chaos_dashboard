@@ -1865,7 +1865,15 @@
 				};
 			});
 		}
-
+		/**
+		 * Encode a path name
+		 */
+		jchaos.encodeName=function(str) {
+			var tt = str.replace(/[\/\:\.]/g, "_");
+			var rr = tt.replace(/\+/g, "_p");
+			var kk = rr.replace(/\-/g, "_m")
+			return kk;
+		  }
 
 		/**
 		 * This function check for a variable change on a 'devlist', for 'retry' times, checking every 'checkFreq'
