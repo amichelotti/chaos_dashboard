@@ -50,6 +50,85 @@
 
 		};
 
+		/**
+		 * return an object from a full path description
+		 */
+		jchaos.decodeCUPath=function (cupath) {
+			var regex_vect = /(.*)\/(.*)\/(.*)\[([-\d]+)\]$/;
+		
+			var regex = /(.*)\/(.*)\/(.*)$/;
+			var tmp = {
+			  cu: null,
+			  dir: null,
+			  var: null,
+			  const: null,
+			  origin: cupath
+			};
+			if ($.isNumeric(cupath)) {
+			  tmp = {
+				cu: null,
+				dir: null,
+				var: null,
+				const: Number(cupath),
+				index: null, // in case of vectors
+				origin: cupath
+			  };
+			  return tmp;
+			}
+			var match = regex_vect.exec(cupath);
+			if (match != null) {
+			  tmp = {
+				cu: match[1],
+				dir: match[2],
+				var: match[3],
+				const: null,
+				index: match[4],
+				origin: cupath
+			  };
+			  return tmp;
+			}
+			match = regex.exec(cupath);
+			if (match != null) {
+			  tmp = {
+				cu: match[1],
+				dir: match[2],
+				var: match[3],
+				const: null,
+				index: null,
+				origin: cupath
+			  };
+			}
+			return tmp;
+		  }
+
+
+		  jchaos.isCollapsable=function (arg) {
+			return arg instanceof Object && Object.keys(arg).length > 0;
+		  }
+
+		  jchaos.toHHMMSS=function (sec_num) {
+
+			// var sec_num = parseInt(this, 10); // don't forget the second param	
+			var days = Math.floor(sec_num / 86400);
+			var hours = Math.floor((sec_num - (days * 86400)) / 3600);
+			var minutes = Math.floor((sec_num - (days * 86400) - (hours * 3600)) / 60);
+			var seconds = sec_num - (days * 86400) - (hours * 3600) - (minutes * 60);
+		
+			if (days < 10) {
+			  days = "0" + days;
+			}
+			if (hours < 10) {
+			  hours = "0" + hours;
+			}
+			if (minutes < 10) {
+			  minutes = "0" + minutes;
+			}
+			if (seconds < 10) {
+			  seconds = "0" + seconds;
+			}
+		
+			return days + ' days ' + hours + ':' + minutes + ':' + seconds;
+		  }
 		/***
 		 * 
 		 */

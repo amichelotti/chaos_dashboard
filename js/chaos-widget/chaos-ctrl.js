@@ -298,7 +298,7 @@
         //   $("#desc-"+name).width(hostWidth/4);
         //  $("#desc-"+name).height(hostHeight/4);
         var jsonhtml = json2html(json, options, cuname);
-        if (isCollapsable(json)) {
+        if (jchaos.isCollapsable(json)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
         $("#desc-" + name).html(jsonhtml);
@@ -407,7 +407,7 @@
               }
               var converted = convertBinaryToArrays(imdata[0]);
               var jsonhtml = json2html(converted, options, cuname);
-              if (isCollapsable(converted)) {
+              if (jchaos.isCollapsable(converted)) {
                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
               }
 
@@ -735,53 +735,7 @@
     return str;
   }
 
-  function decodeCUPath(cupath) {
-    var regex_vect = /(.*)\/(.*)\/(.*)\[([-\d]+)\]$/;
-
-    var regex = /(.*)\/(.*)\/(.*)$/;
-    var tmp = {
-      cu: null,
-      dir: null,
-      var: null,
-      const: null,
-      origin: cupath
-    };
-    if ($.isNumeric(cupath)) {
-      tmp = {
-        cu: null,
-        dir: null,
-        var: null,
-        const: Number(cupath),
-        index: null, // in case of vectors
-        origin: cupath
-      };
-      return tmp;
-    }
-    var match = regex_vect.exec(cupath);
-    if (match != null) {
-      tmp = {
-        cu: match[1],
-        dir: match[2],
-        var: match[3],
-        const: null,
-        index: match[4],
-        origin: cupath
-      };
-      return tmp;
-    }
-    match = regex.exec(cupath);
-    if (match != null) {
-      tmp = {
-        cu: match[1],
-        dir: match[2],
-        var: match[3],
-        const: null,
-        index: null,
-        origin: cupath
-      };
-    }
-    return tmp;
-  }
+  
   function findImplementationName(type) {
 
     var ret = "uknown";
@@ -974,33 +928,9 @@
    * Check if arg is either an array with at least 1 element, or a dict with at least 1 key
    * @return boolean
    */
-  function isCollapsable(arg) {
-    return arg instanceof Object && Object.keys(arg).length > 0;
-  }
   
-  function toHHMMSS(sec_num) {
-
-    // var sec_num = parseInt(this, 10); // don't forget the second param	
-    var days = Math.floor(sec_num / 86400);
-    var hours = Math.floor((sec_num - (days * 86400)) / 3600);
-    var minutes = Math.floor((sec_num - (days * 86400) - (hours * 3600)) / 60);
-    var seconds = sec_num - (days * 86400) - (hours * 3600) - (minutes * 60);
-
-    if (days < 10) {
-      days = "0" + days;
-    }
-    if (hours < 10) {
-      hours = "0" + hours;
-    }
-    if (minutes < 10) {
-      minutes = "0" + minutes;
-    }
-    if (seconds < 10) {
-      seconds = "0" + seconds;
-    }
-
-    return days + ' days ' + hours + ':' + minutes + ':' + seconds;
-  }
+  
+  
 
   function show_dev_alarm(id) {
     var dataset = node_live_selected[node_name_to_index[jchaos.encodeName(id)]];
@@ -1766,7 +1696,7 @@
           fname: "snapshot_" + snap_selected,
           fext: "json"
         };
-        if (isCollapsable(dataset)) {
+        if (jchaos.isCollapsable(dataset)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
         updateSnapshotTable(tmpObj, true);
@@ -1804,7 +1734,7 @@
           fname: "description_" + jchaos.encodeName(node_selected),
           fext: "json"
         };
-        if (isCollapsable(dataset)) {
+        if (jchaos.isCollapsable(dataset)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
         $("#desc_text").html("Description of " + node_selected);
@@ -1821,21 +1751,21 @@
       selector: '.json-key',
       build: function ($trigger, e) {
         var cuitem = {};
-        var portdir = $(e.currentTarget).attr("portdir");
+      //  var portdir = $(e.currentTarget).attr("portdir");
         var portname = $(e.currentTarget).attr("portname");
         var portarray = $(e.currentTarget).attr("portarray");
         cuitem['show-graph'] = { name: "Show Graphs.." };
         if (portarray == "0") {
-          cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
-          cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
-          cuitem['plot-histo'] = { name: "Histogram " + portdir + "/" + portname };
+          cuitem['plot-x'] = { name: "Plot " + portname + " on X" };
+          cuitem['plot-y'] = { name: "Plot " + portname + " on Y" };
+          cuitem['plot-histo'] = { name: "Histogram " + portname };
 
         } else {
 
 
-          cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
-          cuitem['plot-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
-          cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
+          cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on X" };
+          cuitem['plot-y'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on Y" };
+          cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portname + "[] on X" };
 
         }
 
@@ -1855,32 +1785,37 @@
 
             var fullname;
             if (portarray == "0") {
-              fullname = node_selected + "/" + portdir + "/" + portname;
+              //fullname = node_selected + "/" + portdir + "/" + portname;
+              fullname = portname;
             } else {
-              fullname = node_selected + "/" + portdir + "/" + portname + "[0]";
+              //fullname = node_selected + "/" + portdir + "/" + portname + "[0]";
+              fullname = portname + "[0]";
             }
             if (cmd == "show-graph") {
               $("#mdl-graph-list").modal("show");
             } else if (cmd == "plot-x") {
               $("#mdl-graph").modal("show");
 
-              $("#trace-name").val(node_selected);
+              $("#trace-name").val(fullname);
               $("#xvar").val(fullname);
+              $("#graph_save_name").val(jchaos.encodeName(fullname));
 
             } else if (cmd == "plot-y") {
               $("#mdl-graph").modal("show");
 
-              $("#trace-name").val(node_selected);
+              $("#trace-name").val(fullname);
               $("#yvar").val(fullname);
+              $("#graph_save_name").val(jchaos.encodeName(fullname));
 
             } else if (cmd == "plot-histo") {
               $("#mdl-graph").modal("show");
 
-              $("#trace-name").val(node_selected);
+              $("#trace-name").val(fullname);
               $("#yvar").val("histogram");
               $("#xvar").val(fullname);
               $("#xtype").val("linear");
               $("#ytype").val("linear");
+              $("#graph_save_name").val(jchaos.encodeName(fullname));
 
               $("#graphtype").val("histogram");
 
@@ -1908,7 +1843,7 @@
         fext: "json"
       };
 
-      if (isCollapsable(dataset[0])) {
+      if (jchaos.isCollapsable(dataset[0])) {
         jsonhtml = '<a class="json-toggle"></a>' + jsonhtml;
       }
 
@@ -1962,6 +1897,7 @@
    * 
    * JSON SETUP
    */
+  
 
   function jsonSetup(dom, tmpObj) {
     var collapsed = options.collapsed;
@@ -1971,68 +1907,30 @@
       tmpObj['json_editing'] = false;
 
     }
-
-    $(dom).off('click');
-    $(dom).off('keypress');
-
-    $(dom).on("click", "a.json-toggle", function () {
-      var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
-      target.toggle();
-      if (target.is(':visible')) {
-        target.siblings('.json-placeholder').remove();
-      }
-      else {
-        var count = target.children('li').length;
-        var placeholder = count + (count > 1 ? ' items' : ' item');
-        target.after('<a href class="json-placeholder">' + placeholder + '</a>');
-      }
-      return false;
-    });
-
-    $(dom).on("click", "span.json-key", function () {
-      var id = this.id;
-      var attr = id.split("-")[1];
-
-      $("#attr-" + attr).toggle();
+    jqccs.jsonSetup(dom,function(e){
       tmpObj['json_editing'] = true;
 
-      //var tt =prompt('type value');
-      return false;
-    });
-
-    //$("input.json-keyinput").keypress(function (e) {
-    $(dom).on("keypress", "input.json-keyinput", function (e) {
+    },function(e){
       if (e.keyCode == 13) {
-        var id = this.id;
-        var attr = id.split("-")[1];
-        var value = $("#" + id).val();
-        jchaos.setAttribute(tmpObj.node_selected, attr, value, function () {
-          instantMessage(tmpObj.node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, true)
+       
+        var value = e.target.value;
+        var attrname= e.target.name;
+        var desc=jchaos.decodeCUPath(attrname);
+        jchaos.setAttribute(desc.cu, desc.var, value, function () {
+          instantMessage(desc.cu + " Attribute "+desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, true)
 
         }, function () {
-          instantMessage(tmpObj.node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, false)
+          instantMessage(desc.cu+ " Attribute Error "+desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
         });
         tmpObj['json_editing'] = false;
 
-        $("#" + this.id).toggle();
+        return true;
+      } else {
         return false;
       }
-      //var tt =prompt('type value');
-      return this;
-    });
-    /* Simulate click on toggle button when placeholder is clicked */
-    //$("a.json-placeholder").click(function () {
-    $(dom).on("click", "a.json-placeholder", function () {
-      $(dom).siblings('a.json-toggle').click();
-      return false;
-    });
-    /* Trigger click to collapse all nodes */
-
-    /*if (options.collapsed == true) {
-      $(this).find('a.json-toggle').click();
-    }*/
-
+    })
+   
   }
   /*
   * 
@@ -2309,8 +2207,8 @@
       if (ytype == "datetime") {
         ypath = "timestamp";
       }
-      tmpx = decodeCUPath(xpath);
-      tmpy = decodeCUPath(ypath);
+      tmpx = jchaos.decodeCUPath(xpath);
+      tmpy = jchaos.decodeCUPath(ypath);
       var tname = jchaos.encodeName(tracename);
       $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="' + tracename + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
       if (tmpx == null && tmpy == null) {
@@ -2339,12 +2237,12 @@
       if (xpath == "") {
         xpath = "timestamp";
       } else {
-        tmpx = decodeCUPath(xpath);
+        tmpx = jchaos.decodeCUPath(xpath);
       }
       if (ypath == "") {
         ypath = "timestamp";
       } else {
-        tmpy = decodeCUPath(ypath);
+        tmpy = jchaos.decodeCUPath(ypath);
       }
       if ((tmpx == null) && (tmpy == null)) {
         alert("INVALID paths");
@@ -6466,7 +6364,7 @@
         el.usrTime = Number(el.health.nh_ut).toFixed(3);
         el.tmStamp = Number(el.health.dpck_ats);
 
-        el.tmUtm = toHHMMSS(el.health.nh_upt);
+        el.tmUtm = jchaos.toHHMMSS(el.health.nh_upt);
         status = el.health.nh_status;
         $("#" + name_id + "_health_uptime").html(el.tmUtm);
         $("#" + name_id + "_health_timestamp").html(new Date(el.tmStamp).toLocaleString());
@@ -8706,13 +8604,83 @@
     html += '</div>';
     return html;
   }
+ jqccs.json2html=function(json, options, pather) {
+  return json2html(json, options, pather);
+ }
+ jqccs.jsonSetup=function(dom, clickHandler,editHandler) {
+    
+  $(dom).off('click');
+  $(dom).off('keypress');
 
+  $(dom).on("click", "a.json-toggle", function () {
+    var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
+    target.toggle();
+    if (target.is(':visible')) {
+      target.siblings('.json-placeholder').remove();
+    }
+    else {
+      var count = target.children('li').length;
+      var placeholder = count + (count > 1 ? ' items' : ' item');
+      target.after('<a href class="json-placeholder">' + placeholder + '</a>');
+    }
+    return false;
+  });
+
+  $(dom).on("click", "span.json-key", function (e) {
+    var id = this.id;
+    var enc=jchaos.encodeName(id);
+    $("#attr-" + enc).toggle();
+    if(typeof clickHandler === "function"){
+      clickHandler(e);
+    }
+    return false;
+  });
+
+  //$("input.json-keyinput").keypress(function (e) {
+  $(dom).on("keypress", "input.json-keyinput", function (e) {
+    if(typeof editHandler === "function"){
+      if(editHandler(e)){
+        $("#" + this.id).toggle();
+
+      }
+
+    } else {
+      $("#" + this.id).toggle();
+
+    }
+
+    return this;
+  });
+  /* Simulate click on toggle button when placeholder is clicked */
+  //$("a.json-placeholder").click(function () {
+  $(dom).on("click", "a.json-placeholder", function () {
+    $(dom).siblings('a.json-toggle').click();
+    return false;
+  });
+  /* Trigger click to collapse all nodes */
+
+  /*if (options.collapsed == true) {
+    $(this).find('a.json-toggle').click();
+  }*/
+
+}
   /**
    * Transform a json object into html representation
    * @return string
    */
   function json2html(json, options, pather) {
     var html = '';
+    if(typeof options === "undefined"){
+      options={
+        collapsed: true,
+        withQuotes: true,
+        format:10
+      }
+    }
+    if(typeof pather === "undefined"){
+     pather="";
+    }
+    console.log("pather:"+pather);
     if (typeof json === 'string') {
       /* Escape tags */
       json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -8746,10 +8714,10 @@
         for (var i = 0; i < json.length; ++i) {
           html += '<li>';
           /* Add toggle button if item is collapsable */
-          if (isCollapsable(json[i])) {
+          if (jchaos.isCollapsable(json[i])) {
             html += '<a  class="json-toggle"></a>';
           }
-          html += json2html(json[i], options, key);
+          html += json2html(json[i], options,  pather +"/"+key);
           /* Add comma if item is not last */
           if (i < json.length - 1) {
             html += ',';
@@ -8767,11 +8735,13 @@
       if (key_count > 0) {
         html += '{<ul class="json-dict">';
         for (var key in json) {
+          var id=pather +"/"+key ;
+          var enc=jchaos.encodeName(id);
           if (json.hasOwnProperty(key)) {
             html += '<li>';
             var keyclass = "";
             var portarray = 0;
-            if (isCollapsable(json[key])) {
+            if (jchaos.isCollapsable(json[key])) {
               if (json[key] instanceof Array) {
                 keyclass = "json-key";
                 portarray = json[key].length;
@@ -8781,19 +8751,22 @@
             } else {
               keyclass = "json-key";
             }
+
             var keyRepr = options.withQuotes ?
-              '<span class="' + keyclass + '" id=' + pather + '-' + key + ' portdir="' + pather + '" portname="' + key + '" portarray="' + portarray + '">"' + key + '"</span>' : key;
+              '<span class="' + keyclass + '" id=' + enc+ ' portname="' + id + '" portarray="' + portarray + '">"' + key + '"</span>' : key;
             /* Add toggle button if item is collapsable */
-            if (isCollapsable(json[key])) {
+            if (jchaos.isCollapsable(json[key])) {
               html += '<a  class="json-toggle">' + keyRepr + '</a>';
             }
             else {
               html += keyRepr;
 
             }
-            html += ': ' + json2html(json[key], options, key);
-            if ((!isCollapsable(json[key])) && (pather == "input")) {
-              html += '<input class="json-keyinput" id="attr-' + key + '"/>';
+            html += ': ' + json2html(json[key], options, pather +"/"+key);
+            if ((!jchaos.isCollapsable(json[key])) /*&& (pather == "input")*/) {
+            //  var id=pather +"/"+key ;
+             // var enc=jchaos.encodeName(id);
+              html += '<input class="json-keyinput" name="' +id+ '" id="attr-'+ enc+ '"/>';
 
             }
             /* Add comma if item is not last */
@@ -8818,9 +8791,7 @@
    * Check if arg is either an array with at least 1 element, or a dict with at least 1 key
    * @return boolean
    */
-  function isCollapsable(arg) {
-    return arg instanceof Object && Object.keys(arg).length > 0;
-  }
+  
 
   /**
    * Check if a string represents a valid url
