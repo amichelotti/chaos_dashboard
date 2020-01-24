@@ -1271,7 +1271,7 @@
 
     jchaos.node(node_list, "health", cutype, function (data) {
       tmpObj.data = data;
-      jqccs.updateGenericTableDataset(tmpObj);
+      updateGenericTableDataset(tmpObj);
 
     });
 
@@ -2414,13 +2414,172 @@
   }
 
 
+  function updateCameraInterface(tmpObj) {
+    var template = tmpObj.type
+    var tablename = "camera_table-" + template;
+
+
+
+    updateInterfaceCU(tmpObj);
+    $("#main_table-" + template + " tbody tr").off();
+    $("#main_table-" + template + " tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table-" + template, tmpObj, e);
+      if (tmpObj.node_multi_selected instanceof Array) {
+        var cnt = 0;
+
+        var html = '<table class="table table-bordered" id="' + tablename + '">';
+        var camlist = tmpObj.node_multi_selected;
+        if (camlist instanceof Array) {
+          var html = "";
+
+          camlist.forEach(function (key) {
+            if (cnt < dashboard_settings.camera.maxCameraCol) {
+              var encoden = jchaos.encodeName(key);
+              if ((cnt % dashboard_settings.camera.cameraPerRow) == 0) {
+                if (cnt > 0) {
+                  html += "</tr>"
+                }
+                html += '<tr class="row_element" id=camera-row"' + cnt + '">';
+              }
+              html += '<td class="td_element cameraMenu" id="camera-' + encoden + '" cuname="' + key + '" >'
+              //   html += '<div><b>'+key+'</b>';
+              html += '<div>';
+              html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 />';
+              html += '<div class="top-left">' + key + '</div>';
+
+              html += '</div>';
+
+              html += '</td>';
+
+              cnt++;
+            }
+          });
+
+          if (cnt > 0) {
+            html += "</tr>";
+
+          }
+        }
+        html += "</table>";
+        $("#cameraTable").html(html);
+        camlist.forEach(function (key) {
+          var encoden = jchaos.encodeName(key);
+
+          $("#cameraImage-" + encoden).on('click', function () {
+            $("#cameraImage-" + encoden).cropper({
+              aspectRatio: 16 / 9,
+              crop: function (event) {
+                tmpObj['crop'] = {};
+                tmpObj['crop'][key] = event.detail;
+
+                /*console.log(event.detail.x);
+                console.log(event.detail.y);
+                console.log(event.detail.width);
+                console.log(event.detail.height);
+                console.log(event.detail.rotate);
+                console.log(event.detail.scaleX);
+                console.log(event.detail.scaleY);*/
+              },
+              ready() {
+                // Do something here
+                // ...
+
+                // And then
+                this.cropper.crop();
+              }
+            });
+          })
+        });
+        $.contextMenu('destroy', '.cameraMenu');
+
+        $.contextMenu({
+          selector: '.cameraMenu',
+          zIndex:10000,
+          build: function ($trigger, e) {
+            var name = $(e.currentTarget).attr("cuname");
+            var cuitem = {};
+            if (tmpObj.hasOwnProperty('crop')) {
+              var crop_obj = tmpObj['crop'][name];
+              if (typeof crop_obj === "object") {
+                crop_obj['cu'] = name;
+                cuitem['set-roi'] = { name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+                cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+
+              }
+            
+            }
+            cuitem['exit-crop'] = { name: "Exit cropping", cu: name };
+            cuitem['sep1'] = "---------";
+            var ele=jchaos.getChannel(name,1,null);
+            var el=ele[0];
+            for(var k in el){
+                if(!(k.startsWith("dpck")||k.startsWith("ndk")||k.startsWith("cudk"))){
+                  var val=el[k];
+                  if(typeof el[k]==="object"){
+                    val=JSON.stringify(el[k]);
+                  }
+                  cuitem['set-'+k] = { name: "Set "+k, type:"text",value:val,events:(function(k){
+                    var events= {
+                      keyup: function(e) {
+                      // add some fancy key handling here?
+                        if(e.keyCode==13){
+                          jchaos.setAttribute(name,k,e.target.value,function(){
+                            instantMessage("Setting ", "\"" + k + "\"=\"" + e.target.value + "\" sent", 3000);
+                          });
+                        }   
+                  } 
+                }
+              return events;})(k)
+            }
+          }
+        }  
+          
+            
+
+            cuitem['sep2'] = "---------";
+
+            cuitem['quit'] = {
+              name: "Quit", icon: function () {
+                return 'context-menu-icon context-menu-icon-quit';
+              }
+
+            };
+
+            return {
+
+              callback: function (cmd, options) {
+                executeCameraMenuCmd(tmpObj, cmd, options);
+                return;
+              },
+              items: cuitem
+            }
+          }
+
+        });
+        $("#triggerType").off();
+        $("#triggerType").on("change", function () {
+          var node_selected = tmpObj.node_selected;
+          var value = $("#triggerType option:selected").val();
+          var attr = "TRIGGER_MODE";
+          jchaos.setAttribute(node_selected, attr, value, function () {
+            instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 2000, null, null, true)
+
+          }, function () {
+            instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 3000, null, null, false)
+
+          });
+        });
+
+      }
+    })
+  }
   /****
    * 
    * Setup CU Interface
    * 
   */
   // the interface has all the main elements
-  jqccs.updateInterfaceCU=function (tmpObj) {
+  function updateInterfaceCU(tmpObj) {
     var template = tmpObj.type;
     var descs = jchaos.getDesc(tmpObj['elems'], null);
     if (descs instanceof Array) {
@@ -2431,9 +2590,6 @@
     }
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, tmpObj, e);
-      if(tmpObj.hasOwnProperty('tableClickFn') && (typeof tmpObj.tableClickFn=="function")){
-        tmpObj.tableClickFn(tmpObj,e);
-      }
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -2750,7 +2906,48 @@
     }
     return names;
   }
-  
+  function executeCameraMenuCmd(tmpObj, cmd, opt) {
+    if(cmd == 'set-reference'){
+      var crop_opt=opt.items[cmd].crop_opt;
+
+      var width=crop_opt.width.toFixed();
+      var height=crop_opt.height.toFixed();
+      var x=crop_opt.x.toFixed();
+      var y=crop_opt.y.toFixed();
+
+      jchaos.setAttribute(crop_opt.cu, "REFOFFSETX", String(x), function () {
+        jchaos.setAttribute(crop_opt.cu, "REFOFFSETY", String(y), function () {
+          jchaos.setAttribute(crop_opt.cu, "REFSIZEX",String(width) , function () {
+            jchaos.setAttribute(crop_opt.cu, "REFSIZEY",String(height), function () {
+              instantMessage("SET REFERENCE "+crop_opt.cu, "("+x+","+y+") "+width+"x"+height, 3000, true);
+
+            });
+          });
+        });
+      });
+    } else if (cmd == 'set-roi') {
+      var crop_opt=opt.items[cmd].crop_opt;
+
+      console.log("CROP_OBJ:" + JSON.stringify(crop_opt));
+      var x=crop_opt.x.toFixed();
+      var y=crop_opt.y.toFixed();
+      var width=crop_opt.width.toFixed();
+      var height=crop_opt.height.toFixed();
+      jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
+        jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
+          jchaos.setAttribute(crop_opt.cu, "WIDTH",String(width) , function () {
+            jchaos.setAttribute(crop_opt.cu, "HEIGHT",String(height), function () {
+              instantMessage("ROI "+crop_opt.cu, "("+x+","+y+") "+width+"x"+height, 3000, true);
+
+            });
+          });
+        });
+      });
+    } else if (cmd == 'exit-crop') {
+      var encoden = jchaos.encodeName(opt.items[cmd].cu);
+      $("#cameraImage-" + encoden).cropper('destroy');
+    }
+  }
   function executeCUMenuCmd(tmpObj, cmd, opt) {
     if (cmd == "quit") {
       return;
@@ -3312,7 +3509,7 @@
       updateGenericControl(tmpObj, curr_cu_selected);
 
     }
-    jqccs.updateGenericTableDataset(tmpObj);
+    updateGenericTableDataset(tmpObj);
   }
 
   function checkLiveCU(tmpObj) {
@@ -3441,65 +3638,92 @@
   function changeView(tmpObj, cutype,handler) {
 
     tmpObj.refresh_rate = dashboard_settings.generalControlRefresh;
-    tmpObj.upd_chan = 255;
-    tmpObj.type = "cu";
-
-    tmpObj.generateTableFn = generateGenericTable;
-    tmpObj.generateCmdFn = generateGenericControl;
-    tmpObj.updateFn = updateGenericCU;
-    tmpObj.refresh_rate = dashboard_settings.generalRefresh;
 
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
       tmpObj.upd_chan = -1;
       tmpObj.type = "SCPowerSupply";
-   
+     /* tmpObj.htmlFn.output['polarify']=function(pol){
+        switch (pol) {
+          case 1:
+            return '<i class="material-icons rosso">add_circle</i>';
+          case -1:
+            return '<i class="material-icons blu">remove_circle</i>';
+          case 0:
+            return '<i class="material-icons">radio_button_unchecked</i>';
+            break;
+
+        }
+        return "NA";
+      }
+      tmpObj.htmlFn.output['stby']=function(val){
+        if(val){
+          return '<i class="material-icons verde">trending_down</i>';
+        } else {
+          return '<i class="material-icons rosso">pause_circle_outline</i>';
+        }
+      }
+       */
+     $.getScript( "/js/chaos-widget/"+tmpObj.type +".js", function( data, textStatus, jqxhr ) {
+        var w=getWidget();
+        tmpObj.htmlFn=w.dsFn;
+        tmpObj.generateTableFn = w.tableFn;
+        tmpObj.generateCmdFn = w.cmdFn;
+        tmpObj.updateFn = updateGenericTableDataset;
+        
+        handler(tmpObj);
+  
+      });
+   //   tmpObj.htmlFn=$.getScript( "/js/chaos-widget/"+tmpObj.type +".js");
+     
     } else if ((cutype.indexOf("SCActuator") != -1)) {
       tmpObj.type = "SCActuator";
       tmpObj.upd_chan = -1;
-    
+      $.getScript( "/js/chaos-widget/"+tmpObj.type +".js", function( data, textStatus, jqxhr ) {
+        var w=getWidget();
+        tmpObj.htmlFn=w.dsFn;
+        tmpObj.generateTableFn = w.tableFn;
+        tmpObj.generateCmdFn = w.cmdFn;
+        tmpObj.updateFn = updateGenericTableDataset;
+
+        if(w.hasOwnProperty('updateFn')){
+          tmpObj.updateFn = w.updateFn;
+        }
+        if(w.hasOwnProperty('updateInterfaceFn')){
+          tmpObj.updateInterfaceFn = w.updateInterfaceFn;
+        }
+        handler(tmpObj);
+  
+      });
     } else if ((cutype.indexOf("RTCamera") != -1)) {
       tmpObj.type = "RTCamera";
 
       tmpObj.upd_chan = -2;
+      tmpObj.generateTableFn = generateCameraTable;
+      tmpObj.updateFn = updateCameraTable;
+      tmpObj.updateInterfaceFn = updateCameraInterface;
+     // tmpObj.generateCmdFn = generateCameraCmd;
+
       tmpObj.refresh_rate = dashboard_settings.camera.cameraRefresh;
-      tmpObj['maxCameraCol']=dashboard_settings.camera.maxCameraCol;
-      tmpObj['cameraPerRow']=dashboard_settings.camera.cameraPerRow;
-      
       jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
     } else if ((cutype.indexOf("SCLibera") != -1)) {
       tmpObj.type = "SCLibera";
 
       tmpObj.upd_chan = -1;
+      tmpObj.generateTableFn = generateBPMTable;
+      tmpObj.updateFn = updateBPM;
+      tmpObj.generateCmdFn = generateBPMCmd;
 
-    } 
+    } else {
+      tmpObj.upd_chan = 255;
+      tmpObj.type = "cu";
 
-    $.getScript( "/js/chaos-widget/"+tmpObj.type +".js", function( data, textStatus, jqxhr ) {
-      var w=getWidget();
-      if(w.dsFn!=null){
-        tmpObj.htmlFn=w.dsFn;
-      }
-      if(w.hasOwnProperty('tableFn')){
-        tmpObj.generateTableFn = w.tableFn;
-      } 
-      if(w.hasOwnProperty('cmdFn')){
-        tmpObj.generateCmdFn = w.cmdFn;
-      } 
-      if(w.hasOwnProperty('updateFn')){
-        tmpObj.updateFn = w.updateFn;
-      } 
-      if(w.hasOwnProperty('updateInterfaceFn')){
-        tmpObj.updateInterfaceFn = w.updateInterfaceFn;
-      } 
-      if(w.hasOwnProperty('tableClickFn')){
-        tmpObj['tableClickFn'] = w.tableClickFn;
-      } 
-      handler(tmpObj);
+      tmpObj.generateTableFn = generateGenericTable;
+      tmpObj.generateCmdFn = generateGenericControl;
+      tmpObj.updateFn = updateGenericCU;
+      tmpObj.refresh_rate = dashboard_settings.generalRefresh;
 
-    }).fail(function(){
-      jchaos.perror("cannot load:"+"/js/chaos-widget/"+tmpObj.type +".js")
-      handler(tmpObj);
-
-    });
+    }
+    handler(tmpObj);
   }
   function buildCUPage(tmpObj, cuids, cutype) {
     var node_list = [];
@@ -4138,6 +4362,119 @@
 
   }
 
+  /*
+    function buildNodeInterface(nodes, cutype, template) {
+      if (nodes == null) {
+        alert("NO Nodes given!");
+        return;
+      }
+      if (!(nodes instanceof Array)) {
+        node_list = [nodes];
+      } else {
+        node_list = nodes;
+      }
+  
+      node_list.forEach(function (elem, id) {
+        var name = jchaos.encodeName(elem);
+        node_name_to_index[name] = id;
+        health_time_stamp_old[name] = 0;
+        off_line[name] = false;
+      });
+      // cu_selected = cu_list[0];
+      node_selected = null;
+      var htmlt, htmlc, htmlg;
+      var updateTableFn = new Function;
+     
+      htmlt = generateNodeTable(node_list, template);
+      updateTableFn = updateNodeTable;
+  
+  
+      $("#specific-table-" + tmpObj.template).html(htmlt);
+      // $("div.specific-control").html(htmlc);
+      checkRegistration = 0;
+      setupNode(template);
+  
+      jchaos.node(node_list, "desc", cutype, null, null, function (data) {
+        var cnt = 0;
+        var us_list = [];
+        var cu_list = [];
+        node_list.forEach(function (elem, index) {
+          var type = data[index].ndk_type;
+          node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
+          if ((type == "nt_control_unit")) {
+            cu_list.push(elem);
+          } else if ((type == "nt_unit_server")) {
+            us_list.push(elem);
+          }
+  
+        });
+        if (cu_list.length > 0) {
+          jchaos.getDesc(cu_list, function (data) {
+            var cnt = 0;
+            data.forEach(function (cu) {
+              if (cu.hasOwnProperty("instance_description")) {
+                node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
+                node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
+              }
+              cnt++;
+            });
+          });
+        }
+        if (us_list.length > 0) {
+          jchaos.node(us_list, "parent", "us", null, null, function (data) {
+            var cnt = 0;
+            data.forEach(function (us) {
+              if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
+                node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
+              }
+              cnt++;
+            });
+          });
+        }
+      });
+  
+  
+      if (node_list_interval != null) {
+        clearInterval(node_list_interval);
+      }
+      updateTableFn(node_list);
+      node_list_interval = setInterval(function (e) {
+        var start_time = (new Date()).getTime();
+        if ((start_time - checkRegistration) > 60000) {
+          checkRegistration = start_time;
+          jchaos.node(node_list, "desc", cutype, null, null, function (data) {
+            var cnt = 0;
+            node_list.forEach(function (elem, index) {
+              node_name_to_desc[elem].desc = data[index];
+            });
+          });
+          updateTableFn(node_list);
+  
+        }
+        jchaos.node(node_list, "health", cutype, null, null, function (data) {
+          node_live_selected = data;
+          updateGenericTableDataset(node_live_selected);
+  
+        });
+  
+  
+       
+        // update all generic
+  
+        if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[node_selected] == null) {
+          return;
+        }
+  
+  
+  
+  
+      }, options.Interval, updateTableFn);
+  
+      installCheckLive();
+  
+  
+    } */
+
   function buildAlgoInterface(nodes, interface, template) {
     if (nodes == null) {
       alert("NO Nodes given!");
@@ -4708,7 +5045,7 @@
     }
 
   }
-  jqccs.makeDynamicGraphTable=function (tmpObj, graph_table_name, highchartOpt, culist) {
+  function makeDynamicGraphTable(tmpObj, graph_table_name, highchartOpt, culist) {
     var cnt = 0;
     var num_chart = 3;
     var hostWidth = $(window).width();
@@ -5583,9 +5920,15 @@
   }
 
 
-jqccs.updateGenericTableDataset=function(tmpObj) {
+
+  function updateGenericTableDataset(tmpObj) {
     
-   
+    if (updateGenericTableDataset.count == undefined) {
+      updateGenericTableDataset.count = 1;
+    }
+    else {
+      updateGenericTableDataset.count++;
+    }
     updateCUDS(tmpObj);
 
     
@@ -5616,9 +5959,239 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
       }
     });
   }
-  
-  
-  
+  function generateBPMTable(tmpObj) {
+    var cu = tmpObj.elems;
+    var template = tmpObj.type;
+
+    var html = '<table class="table table-bordered" id="graph_table_BPM">';
+    html += '</table>';
+
+    html += '<div class="row-fluid">';
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<table class="table table-bordered" id="main_table-' + template + '">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Element</th>';
+    html += '<th colspan="3">Status</th>';
+    html += '<th>X</th>';
+    html += '<th>Y</th>';
+    html += '<th>VA</th>';
+    html += '<th>VB</th>';
+    html += '<th>VC</th>';
+    html += '<th>VD</th>';
+    html += '<th>SUM</th>';
+    html += '<th colspan="2">Samples/Trigger</th>';
+    html += '<th colspan="2">Alarms dev/cu</th>';
+    html += '</tr>';
+    html += '</thead>';
+
+
+    $(cu).each(function (i) {
+      var cuname = jchaos.encodeName(cu[i]);
+      html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<td class='td_element td_name'>" + cu[i] + "</td>";
+      html += "<td id='" + cuname + "_health_status'></td>";
+      html += "<td id='" + cuname + "_system_busy'></td>";
+      html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+      html += "<td title='Calculated X position' id='" + cuname + "_output_X'></td>";
+      html += "<td title='Calculated Y position' id='" + cuname + "_output_Y'></td>";
+      html += "<td title='VA' id='" + cuname + "_output_VA'></td>";
+      html += "<td title='VB' id='" + cuname + "_output_VB'></td>";
+      html += "<td title='VC' id='" + cuname + "_output_VC'></td>";
+      html += "<td title='VD' id='" + cuname + "_output_VD'></td>";
+      html += "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
+      html += "<td title='Samples' id='" + cuname + "_input_SAMPLES'></td>";
+      html += "<td title='Trigger' id='" + cuname + "_input_TRIGGER'></td>";
+
+      html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
+      html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
+
+    });
+
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    return html;
+  }
+  function generateBPMCmd() {
+    var html = '<div class="row-fluid">';
+    html += '<div class="box span12 box-cmd">';
+    html += '<div class="box-header green">';
+    html += '<h3 id="h3-cmd">Commands</h3>';
+    html += '</div>';
+    html += '<div class="box-content">';
+    html += '<div class="span12 statbox">';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
+    html += '<i class="material-icons verde">trending_down</i>';
+    html += '<p class="name-cmd">SlowAcquisition</p>';
+    html += '</a>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_da"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":1,\"loops\":-1,\"samples\":1024}>';
+    html += '<i class="material-icons verde">trending_up</i>';
+    html += '<p class="name-cmd">DataOnDemand</p>';
+    html += '</a>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_tda"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":257,\"loops\":-1,\"samples\":1024}>';
+    html += '<i class="material-icons verde">timer</i>';
+    html += '<p class="name-cmd">DataOnDemand (Triggered)</p>';
+    html += '</a>';
+    html += "<div class='span3 statbox'>";
+    html += "<h3>Samples</h3>";
+    html += "<input type='number' id='acquire_samples'>";
+    html += "</div>";
+
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_stop"  cucmdid="cu_clear_current_cmd" >';
+    html += '<i class="material-icons rosso">pause_circle_outline</i>';
+    html += '<p class="name-cmd">Stop Acquisition</p>';
+    html += '</a>';
+
+
+    html += '</div>';
+    html += '<div class="span12 statbox">';
+    html += '<textarea class="form-control" rows="5" id="BPM_STATUS"></textarea>';
+
+    //html += '<p id="BPM_STATUS"/>';    
+    html += '</div>';
+
+    html += '</div>';
+
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    return html;
+  }
+  function generateScraperTable(tmpObj) {
+    
+  }
+
+  function updateBPM(tmpObj) {
+    var cu = tmpObj.data;
+    if (JSON.stringify(tmpObj['elems']) !== JSON.stringify(tmpObj['old_elems'])) {
+      var chart_options = {
+        maxpoints: 10,
+        npoints: 0,
+        chart: {
+
+        },
+        title: {
+          text: ''
+        },
+
+        xAxis: {
+          type: "datetime",
+          title: {
+            text: 'Time'
+          }
+        },
+        yAxis: {
+          title: {
+            text: 'V'
+          }
+
+        },
+        legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'middle'
+        },
+
+        plotOptions: {
+          series: {
+            label: {
+              connectorAllowed: false
+            },
+          }
+        },
+        series: [{
+          name: 'VA',
+          data: []
+        }, {
+          name: 'VB',
+          data: []
+        }, {
+          name: 'VC',
+          data: []
+        }, {
+          name: 'VD',
+          data: []
+        }, {
+          name: 'SUM',
+          data: []
+        }]
+      };
+      makeDynamicGraphTable(tmpObj, "graph_table_BPM", chart_options, tmpObj['elems']);
+      tmpObj['old_elems'] = tmpObj['elems'];
+    }
+    var now = (new Date()).getTime();
+    updateGenericTableDataset(tmpObj);
+
+    cu.forEach(function (elem) {
+      if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
+
+        var cuname = jchaos.encodeName(elem.health.ndk_uid);
+        if ((tmpObj.node_selected != null) && (elem.health.ndk_uid == tmpObj.node_selected)) {
+          $("#BPM_STATUS").html(elem.output.STATUS);
+        }
+        $("#" + cuname + "_output_X").html(elem.output.X.toFixed(3));
+        $("#" + cuname + "_output_Y").html(elem.output.Y.toFixed(3));
+        $("#" + cuname + "_output_VA").html(elem.output.VA);
+        $("#" + cuname + "_output_VB").html(elem.output.VB);
+        $("#" + cuname + "_output_VC").html(elem.output.VC);
+        $("#" + cuname + "_output_VD").html(elem.output.VD);
+        $("#" + cuname + "_output_SUM").html(elem.output.SUM);
+        $("#" + cuname + "_input_SAMPLES").html(elem.input.SAMPLES);
+        if (elem.input.TRIGGER) {
+          $("#" + cuname + "_input_TRIGGER").html("Triggered");
+        } else {
+          $("#" + cuname + "_input_TRIGGER").html("No Trigger");
+        }
+        if (tmpObj.hasOwnProperty("graph_table_BPM")) {
+          var chart = tmpObj['graph_table_BPM'][cuname];
+          if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
+            var shift = false;
+            if (tmpObj['graph_table_BPM'][cuname].options.npoints > tmpObj['graph_table_BPM'][cuname].options.maxpoints) {
+              shift = true;
+            }
+            tmpObj['graph_table_BPM'][cuname].options.npoints++;
+            if ((elem.output.MODE & 0x1) && (elem.output.hasOwnProperty("SUM_ACQ"))) {
+              var arrv = [];
+              arrv[0] = convertBinaryToArrays(elem.output.VA_ACQ);
+              arrv[1] = convertBinaryToArrays(elem.output.VB_ACQ);
+              arrv[2] = convertBinaryToArrays(elem.output.VC_ACQ);
+              arrv[3] = convertBinaryToArrays(elem.output.VD_ACQ);
+              arrv[4] = convertBinaryToArrays(elem.output.SUM_ACQ);
+              for (var i = 0; i < 5; i++) {
+                if (arrv[i] instanceof Array) {
+                  var setp = []
+                  arrv[i].forEach(function (elem, n) {
+                    setp.push([now + n, elem]);
+
+                  });
+                  chart.series[i].setData(setp, true, true, true);
+                }
+              }
+            } else {
+              chart.series[0].addPoint([now, elem.output.VA], false, shift);
+              chart.series[1].addPoint([now, elem.output.VB], false, shift);
+              chart.series[2].addPoint([now, elem.output.VC], false, shift);
+              chart.series[3].addPoint([now, elem.output.VD], false, shift);
+              chart.series[3].addPoint([now, elem.output.SUM], false, shift);
+            }
+            chart.redraw();
+
+          }
+
+        }
+      }
+    });
+
+
+
+  }
 
   function updateScraper(tmpObj) {
     var cu = tmpObj.data;
@@ -5707,11 +6280,13 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
       }
     });
 
-    jqccs.updateGenericTableDataset(tmpObj);
+    updateGenericTableDataset(tmpObj);
 
 
   }
-  
+  function generateScraperCmd(tmpObj) {
+    
+  }
 
   function generateCameraCmd(tmpObj) {
     var html = '<div class="row-fluid">';
@@ -5879,24 +6454,18 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
     if(tmpObj.data==null || !(tmpObj.data instanceof Array)){
       return;
     }
-    if(typeof updateCUDS.seq == "undefined"){
-      updateCUDS.seq =0;
-    } else {
-      updateCUDS.seq++;
-    }
     var cu=tmpObj.data;
     cu.forEach(function(el){
     try {
       var name_device_db, name_id;
       var status;
-      var seq=0;
       if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid"))) {   //if el health
         name_device_db = el.health.ndk_uid;
         name_id = jchaos.encodeName(name_device_db);
         el.systTime = Number(el.health.nh_st).toFixed(3);
         el.usrTime = Number(el.health.nh_ut).toFixed(3);
         el.tmStamp = Number(el.health.dpck_ats);
-        
+
         el.tmUtm = toHHMMSS(el.health.nh_upt);
         status = el.health.nh_status;
         $("#" + name_id + "_health_uptime").html(el.tmUtm);
@@ -5994,7 +6563,7 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
             } else if (el.system.cudk_set_state < 0) {
               cmd_state = el.system.running_cmd_alias + ' (<font color="red">' + el.system.cudk_set_tag + '</font>)';
             } else {
-              if (updateCUDS.seq & 1) {
+              if (updateGenericTableDataset.count & 1) {
                 cmd_state = el.system.running_cmd_alias + ' (<font color="yellow"><b>' + el.system.cudk_set_tag + '</b></font>)';
               } else {
                 cmd_state = el.system.running_cmd_alias + ' (<font color="orange"><b>' + el.system.cudk_set_tag + '</b></font>)';
@@ -6003,7 +6572,7 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
             }
           }
           if (busy == "true") {
-            if (updateCUDS.seq & 1) {
+            if (updateGenericTableDataset.count & 1) {
               $("#" + name_id + "_system_current_command").html("<b>" + cmd_state + "</b>");
             } else {
               $("#" + name_id + "_system_current_command").html(cmd_state);
@@ -6017,7 +6586,7 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
         $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
 
         if (status == 'Start') {
-          if (updateCUDS.seq & 1) {
+          if (updateGenericTableDataset.count & 1) {
             if (el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
               $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
               $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
@@ -6031,7 +6600,7 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
 
         if (busy == 'true') {
           $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:" + el.system.running_cmd_alias);
-          if (updateCUDS.seq & 1) {
+          if (updateGenericTableDataset.count & 1) {
             $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
           } else {
             $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
@@ -6197,7 +6766,7 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
           tmpObj.data[cindex] = d[0];
           if (++cnt == tmpObj.node_multi_selected.length) {
             
-            jqccs.updateGenericTableDataset(tmpObj);
+            updateGenericTableDataset(tmpObj);
           }
 
 
@@ -9280,7 +9849,7 @@ jqccs.updateGenericTableDataset=function(tmpObj) {
       if (options.template == "cu") {
         templateObj.buildInterfaceFn = buildCUInterface; /* build the skeleton*/
         templateObj.setupInterfaceFn = setupCU; /*create and setup table*/
-        templateObj.updateInterfaceFn = jqccs.updateInterfaceCU;
+        templateObj.updateInterfaceFn = updateInterfaceCU;
         templateObj.generateTableFn = generateGenericTable; /* update table */
         templateObj.generateCmdFn = generateGenericControl;
         templateObj.updateFn = updateGenericCU;
