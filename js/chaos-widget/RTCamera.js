@@ -416,11 +416,11 @@ function getWidget() {
           html += "<td id='" + cuname + "_camera_mode'></td>";
           html += "<td id='" + cuname + "'><select class='select_camera_mode' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>Triggered</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
           
-          html += "<td id='" + cuname + "_output_shutter'></td>";
-          html += "<td id='" + cuname + "'><input id='" + cuname + "_shutter' name='"+cu[i]+"'></input></td>";
+          html += "<td class='span1' id='" + cuname + "_output_shutter'></td>";
+          html += "<td class='span1' id='" + cuname + "'><input id='" + cuname + "_shutter' name='"+cu[i]+"'></input></td>";
           
           html += "<td id='" + cuname + "_output_gain'></td>";
-          html += "<td id='" + cuname + "'><input id='" + cuname + "_gain' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "'><input maxlength='4' size='4' id='" + cuname + "_gain' name='"+cu[i]+"'></input></td>";
           
           html += "<td id='" + cuname + "_output_brightness'></td>";
           html += "<td id='" + cuname + "'><input id='" + cuname + "_brightness' name='"+cu[i]+"'></input></td>";
@@ -440,52 +440,7 @@ function getWidget() {
       },
       cmdFn:function(tmpObj) {
         
-          var html = '<div class="row-fluid">';
-          html += '<div class="box span12 box-cmd">';
-          html += '<div class="box-header green">';
-          html += '<h3 id="h3-cmd">Commands</h3>';
-          html += '</div>';
-          html += '<div class="box-content">';
-          html += '<div class="row-fluid">';
-          html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSbuttON" cucmdid="mode" title="Powersupply Operational" cucmdvalue=1>';
-          html += '<i class="material-icons verde">trending_down</i>';
-          html += '<p class="name-cmd">On</p>';
-          html += '</a>';
-          html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSbuttOFF" cucmdid="mode" title="Powersupply STBY" cucmdvalue=0>';
-          html += '<i class="material-icons rosso">pause_circle_outline</i>';
-          html += '<p class="name-cmd">Standby</p>';
-          html += '</a>';
-          html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSreset_alarm" title="Reset Powersupply Alarms" cucmdid="rset">';
-          html += '<i class="material-icons rosso">error</i>';
-          html += '<p class="name-cmd">Reset</p>';
-          html += '</a>';
-          html += '<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value-mag">';
-          html += '<input class="input focused" id="sett_sett_cur" name="setCurrent" title="current setpoint in Ampere" type="text" value="">';
-          html += '</div>';
-      
-          html += '<a class="quick-button-small span1 btn-value cucmd" cucmdid="sett" id="PSapply_current" >';
-          html += '<p>Apply</p>';
-          html += '</a>';
-          html += '</div>';
-          html += '<div class="row-fluid">';
-          html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola" title="Powersupply Polarity POS" cucmdvalue=1 >';
-          html += '<i class="material-icons rosso">add_circle</i>';
-          html += '<p class="name-cmd">Pos</p>';
-          html += '</a>';
-          html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity OPEN" cucmdvalue=0 >';
-          html += '<i class="material-icons">radio_button_unchecked</i>';
-          html += '<p class="name-cmd">Open</p>';
-          html += '</a>';
-          html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity NEGATIVE" cucmdvalue=-1 >';
-          html += '<i class="material-icons blu">remove_circle</i>';
-          html += '<p class="name-cmd">Neg</p>';
-          html += '</a>';
-          html += '</div>';
-          html += '</div>';
-          html += '</div>';
-          html += '</div>';
-      
-        return html;
+        return "";
     }
   }
   return chaos;

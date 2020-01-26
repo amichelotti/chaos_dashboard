@@ -2488,6 +2488,9 @@
     }
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, tmpObj, e);
+      if(tmpObj.hasOwnProperty(tableClickFn)){
+        tableClickFn(tmpObj);
+      }
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -3535,92 +3538,56 @@
    */
   function changeView(tmpObj, cutype,handler) {
 
-    tmpObj.refresh_rate = dashboard_settings.generalControlRefresh;
-
-    if ((cutype.indexOf("SCPowerSupply") != -1)) {
-      tmpObj.upd_chan = -1;
-      tmpObj.type = "SCPowerSupply";
-     /* tmpObj.htmlFn.output['polarify']=function(pol){
-        switch (pol) {
-          case 1:
-            return '<i class="material-icons rosso">add_circle</i>';
-          case -1:
-            return '<i class="material-icons blu">remove_circle</i>';
-          case 0:
-            return '<i class="material-icons">radio_button_unchecked</i>';
-            break;
-
-        }
-        return "NA";
-      }
-      tmpObj.htmlFn.output['stby']=function(val){
-        if(val){
-          return '<i class="material-icons verde">trending_down</i>';
-        } else {
-          return '<i class="material-icons rosso">pause_circle_outline</i>';
-        }
-      }
-       */
-     $.getScript( "/js/chaos-widget/"+tmpObj.type +".js", function( data, textStatus, jqxhr ) {
-        var w=getWidget();
-        tmpObj.htmlFn=w.dsFn;
-        tmpObj.generateTableFn = w.tableFn;
-        tmpObj.generateCmdFn = w.cmdFn;
-        tmpObj.updateFn = updateGenericTableDataset;
-        
-        handler(tmpObj);
-  
-      });
-   //   tmpObj.htmlFn=$.getScript( "/js/chaos-widget/"+tmpObj.type +".js");
-     
-    } else if ((cutype.indexOf("SCActuator") != -1)) {
-      tmpObj.type = "SCActuator";
-      tmpObj.upd_chan = -1;
-      $.getScript( "/js/chaos-widget/"+tmpObj.type +".js", function( data, textStatus, jqxhr ) {
-        var w=getWidget();
-        tmpObj.htmlFn=w.dsFn;
-        tmpObj.generateTableFn = w.tableFn;
-        tmpObj.generateCmdFn = w.cmdFn;
-        tmpObj.updateFn = updateGenericTableDataset;
-
-        if(w.hasOwnProperty('updateFn')){
-          tmpObj.updateFn = w.updateFn;
-        }
-        if(w.hasOwnProperty('updateInterfaceFn')){
-          tmpObj.updateInterfaceFn = w.updateInterfaceFn;
-        }
-        handler(tmpObj);
-  
-      });
-    } else if ((cutype.indexOf("RTCamera") != -1)) {
-      tmpObj.type = "RTCamera";
-
-      tmpObj.upd_chan = -2;
-      tmpObj.generateTableFn = generateCameraTable;
-      tmpObj.updateFn = updateCameraTable;
-      tmpObj.updateInterfaceFn = updateCameraInterface;
-     // tmpObj.generateCmdFn = generateCameraCmd;
-
-      tmpObj.refresh_rate = dashboard_settings.camera.cameraRefresh;
-      jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
-    } else if ((cutype.indexOf("SCLibera") != -1)) {
-      tmpObj.type = "SCLibera";
-
-      tmpObj.upd_chan = -1;
-      tmpObj.generateTableFn = generateBPMTable;
-      tmpObj.updateFn = updateBPM;
-      tmpObj.generateCmdFn = generateBPMCmd;
-
-    } else {
-      tmpObj.upd_chan = 255;
+    tmpObj.upd_chan = 255;
       tmpObj.type = "cu";
 
       tmpObj.generateTableFn = generateGenericTable;
       tmpObj.generateCmdFn = generateGenericControl;
       tmpObj.updateFn = updateGenericCU;
       tmpObj.refresh_rate = dashboard_settings.generalRefresh;
+      tmpObj.updateInterfaceFn = updateInterfaceCU;
 
-    }
+    if ((cutype.indexOf("SCPowerSupply") != -1)) {
+      tmpObj.upd_chan = -1;
+      tmpObj.type = "SCPowerSupply";
+     
+     
+   //   tmpObj.htmlFn=$.getScript( "/js/chaos-widget/"+tmpObj.type +".js");
+     
+    } else if ((cutype.indexOf("SCActuator") != -1)) {
+      tmpObj.type = "SCActuator";
+      tmpObj.upd_chan = -1;
+    } else if ((cutype.indexOf("RTCamera") != -1)) {
+      tmpObj.type = "RTCamera";
+
+      tmpObj.upd_chan = -2;
+     
+      tmpObj.refresh_rate = dashboard_settings.camera.cameraRefresh;
+      jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
+    } else if ((cutype.indexOf("SCLibera") != -1)) {
+      tmpObj.type = "SCLibera";
+
+      
+    } 
+    $.getScript( "/js/chaos-widget/"+tmpObj.type +".js", function( data, textStatus, jqxhr ) {
+      var w=getWidget();
+      tmpObj.htmlFn=w.dsFn;
+      tmpObj.generateTableFn = w.tableFn;
+      if(w.hasOwnProperty('cmdFn')){
+        tmpObj.generateCmdFn = w.cmdFn;
+      }
+      if(w.hasOwnProperty('updateFn')){
+        tmpObj.updateFn = w.updateFn;
+      }
+      if(w.hasOwnProperty('updateInterfaceFn')){
+        tmpObj.updateInterfaceFn = w.updateInterfaceFn;
+      }
+      if(w.hasOwnProperty('tableClickFn')){
+        tmpObj['tableClickFn'] = w.tableClickFn;
+      }
+      handler(tmpObj);
+
+    });
     handler(tmpObj);
   }
   function buildCUPage(tmpObj, cuids, cutype) {

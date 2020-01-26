@@ -86,15 +86,22 @@ require_once('header.php');
 
 
 <script>
-	function pathToVariable(variable,path,value){
+	function pathToVariable(variable,str,value){
 		var n=str.indexOf("/");
 		if(n!=-1){
 			str=str.substring(n+1);
 			n=str.indexOf("/");
 			if(n!=-1){
 				var key=str.substring(0,n-1);
-				pathToVariable(variable[key],key,value);
+				variable[key]=pathToVariable(variable[key],key,value);
+			} else {
+				var key=str.substring(0);
+				variable[key]=value;
+
 			}
+		} else {
+			variable[str]=value;
+			return variable;
 		}
 		
 		while((n=str.indexOf("/"))!=-1){
