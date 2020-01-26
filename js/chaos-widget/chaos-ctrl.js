@@ -5818,10 +5818,12 @@
   }
 
 
-
+  jqccs.updateGenericTableDataset=function(tmpObj){
+    return updateGenericTableDataset(tmpObj);
+  }
   function updateGenericTableDataset(tmpObj) {
     
-    if (updateGenericTableDataset.count == undefined) {
+    if (typeof updateGenericTableDataset.count === "undefined") {
       updateGenericTableDataset.count = 1;
     }
     else {
