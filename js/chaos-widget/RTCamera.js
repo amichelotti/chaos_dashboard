@@ -4,7 +4,21 @@ function getWidget() {
      {
        dsFn:{
         output:{
-          
+          TRIGGER_MODE:function(val){
+            switch(val){
+              case 0:
+                return "Continuous";
+              case 2:
+                return "Pulse";
+              case 5:
+                return "No Acquire";
+              case 3:
+                return "Trigger";
+              default:
+                return "--";
+            }
+             
+          }
         }
       },
       tableClickFn:function (tmpObj,e) {
@@ -15,7 +29,6 @@ function getWidget() {
           var html = '<table class="table table-bordered" id="' + tablename + '">';
           var camlist = tmpObj.node_multi_selected;
           if (camlist instanceof Array) {
-            var html = "";
   
             camlist.forEach(function (key) {
               if (cnt < tmpObj.maxCameraCol) {
@@ -151,159 +164,17 @@ function getWidget() {
   
         }
       },
-     /* updateInterfaceFn:function (tmpObj) {
-        var template = tmpObj.type
-        var tablename = "camera_table-" + template;
-    
-    
-    
+      updateInterfaceFn:function (tmpObj) {
         jqccs.updateInterfaceCU(tmpObj);
-        $("#main_table-" + template + " tbody tr").off();
-        $("#main_table-" + template + " tbody tr").click(function (e) {
-          mainTableCommonHandling("main_table-" + template, tmpObj, e);
-          if (tmpObj.node_multi_selected instanceof Array) {
-            var cnt = 0;
-    
-            var html = '<table class="table table-bordered" id="' + tablename + '">';
-            var camlist = tmpObj.node_multi_selected;
-            if (camlist instanceof Array) {
-              var html = "";
-    
-              camlist.forEach(function (key) {
-                if (cnt < dashboard_settings.camera.maxCameraCol) {
-                  var encoden = jchaos.encodeName(key);
-                  if ((cnt % dashboard_settings.camera.cameraPerRow) == 0) {
-                    if (cnt > 0) {
-                      html += "</tr>"
-                    }
-                    html += '<tr class="row_element" id=camera-row"' + cnt + '">';
-                  }
-                  html += '<td class="td_element cameraMenu" id="camera-' + encoden + '" cuname="' + key + '" >'
-                  //   html += '<div><b>'+key+'</b>';
-                  html += '<div>';
-                  html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 />';
-                  html += '<div class="top-left">' + key + '</div>';
-    
-                  html += '</div>';
-    
-                  html += '</td>';
-    
-                  cnt++;
-                }
-              });
-    
-              if (cnt > 0) {
-                html += "</tr>";
-    
-              }
-            }
-            html += "</table>";
-            $("#cameraTable").html(html);
-            camlist.forEach(function (key) {
-              var encoden = jchaos.encodeName(key);
-    
-              $("#cameraImage-" + encoden).on('click', function () {
-                $("#cameraImage-" + encoden).cropper({
-                  aspectRatio: 16 / 9,
-                  crop: function (event) {
-                    tmpObj['crop'] = {};
-                    tmpObj['crop'][key] = event.detail;
-    
-                
-                  },
-                  ready() {
-                    // Do something here
-                    // ...
-    
-                    // And then
-                    this.cropper.crop();
-                  }
-                });
-              })
-            });
-            $.contextMenu('destroy', '.cameraMenu');
-    
-            $.contextMenu({
-              selector: '.cameraMenu',
-              zIndex:10000,
-              build: function ($trigger, e) {
-                var name = $(e.currentTarget).attr("cuname");
-                var cuitem = {};
-                if (tmpObj.hasOwnProperty('crop')) {
-                  var crop_obj = tmpObj['crop'][name];
-                  if (typeof crop_obj === "object") {
-                    crop_obj['cu'] = name;
-                    cuitem['set-roi'] = { name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
-                    cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
-    
-                  }
-                
-                }
-                cuitem['exit-crop'] = { name: "Exit cropping", cu: name };
-                cuitem['sep1'] = "---------";
-                var ele=jchaos.getChannel(name,1,null);
-                var el=ele[0];
-                for(var k in el){
-                    if(!(k.startsWith("dpck")||k.startsWith("ndk")||k.startsWith("cudk"))){
-                      var val=el[k];
-                      if(typeof el[k]==="object"){
-                        val=JSON.stringify(el[k]);
-                      }
-                      cuitem['set-'+k] = { name: "Set "+k, type:"text",value:val,events:(function(k){
-                        var events= {
-                          keyup: function(e) {
-                          // add some fancy key handling here?
-                            if(e.keyCode==13){
-                              jchaos.setAttribute(name,k,e.target.value,function(){
-                                jqccs.instantMessage("Setting ", "\"" + k + "\"=\"" + e.target.value + "\" sent", 3000);
-                              });
-                            }   
-                      } 
-                    }
-                  return events;})(k)
-                }
-              }
-            }  
-              
-                
-    
-                cuitem['sep2'] = "---------";
-    
-                cuitem['quit'] = {
-                  name: "Quit", icon: function () {
-                    return 'context-menu-icon context-menu-icon-quit';
-                  }
-    
-                };
-    
-                return {
-    
-                  callback: function (cmd, options) {
-                    executeCameraMenuCmd(tmpObj, cmd, options);
-                    return;
-                  },
-                  items: cuitem
-                }
-              }
-    
-            });
-            $("#triggerType").off();
-            $("#triggerType").on("change", function () {
-              var node_selected = tmpObj.node_selected;
-              var value = $("#triggerType option:selected").val();
-              var attr = "TRIGGER_MODE";
-              jchaos.setAttribute(node_selected, attr, value, function () {
-                jqccs.instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 2000, null, null, true)
-    
-              }, function () {
-                jqccs.instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 3000, null, null, false)
-    
-              });
-            });
-    
-          }
+        $(".select_camera_mode").change(function (e) {
+          var value=e.currentTarget.value;
+          console.log("name="+e.currentTarget.name+" value="+value);          
+          jchaos.setAttribute(e.currentTarget.name, "TRIGGER_MODE", value, function () {
+            jqccs.instantMessage("SET MODE "+e.currentTarget.name, value, 3000, true);
+
+         })
         })
-      },*/
+      },
       updateFn:function (tmpObj) {
         var cu = tmpObj.elems;
     
@@ -413,17 +284,17 @@ function getWidget() {
           html += "<td id='" + cuname + "_system_busy'></td>";
           html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           
-          html += "<td id='" + cuname + "_camera_mode'></td>";
-          html += "<td id='" + cuname + "'><select class='select_camera_mode' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>Triggered</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
+          html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
+          html += "<td id='" + cuname + "'><select class='select_camera_mode span6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>Triggered</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
           
-          html += "<td class='span1' id='" + cuname + "_output_shutter'></td>";
-          html += "<td class='span1' id='" + cuname + "'><input id='" + cuname + "_shutter' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "_output_SHUTTER'></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_shutter' name='"+cu[i]+"'></input></td>";
           
-          html += "<td id='" + cuname + "_output_gain'></td>";
-          html += "<td id='" + cuname + "'><input maxlength='4' size='4' id='" + cuname + "_gain' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "_output_GAIN'></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_gain' name='"+cu[i]+"'></input></td>";
           
-          html += "<td id='" + cuname + "_output_brightness'></td>";
-          html += "<td id='" + cuname + "'><input id='" + cuname + "_brightness' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "_output_BRIGHTNESS'></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_brightness' name='"+cu[i]+"'></input></td>";
     
           html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
           html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";

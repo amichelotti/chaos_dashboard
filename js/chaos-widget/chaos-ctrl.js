@@ -2471,6 +2471,11 @@
       }
     })
   }
+
+
+  jqccs.updateInterfaceCU=function(t){
+    return updateInterfaceCU(t);
+  }
   /****
    * 
    * Setup CU Interface
@@ -2488,8 +2493,8 @@
     }
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, tmpObj, e);
-      if(tmpObj.hasOwnProperty(tableClickFn)){
-        tableClickFn(tmpObj);
+      if(tmpObj.hasOwnProperty('tableClickFn')){
+        tmpObj.tableClickFn(tmpObj);
       }
     });
     n = $('#main_table-' + template + ' tr').size();
@@ -3561,7 +3566,8 @@
       tmpObj.type = "RTCamera";
 
       tmpObj.upd_chan = -2;
-     
+      tmpObj.maxCameraCol=dashboard_settings.camera.maxCameraCol;
+      tmpObj.cameraPerRow=dashboard_settings.camera.cameraPerRow;
       tmpObj.refresh_rate = dashboard_settings.camera.cameraRefresh;
       jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
     } else if ((cutype.indexOf("SCLibera") != -1)) {
@@ -8649,7 +8655,7 @@
     if(typeof pather === "undefined"){
      pather="";
     }
-    console.log("pather:"+pather);
+    //console.log("pather:"+pather);
     if (typeof json === 'string') {
       /* Escape tags */
       json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
