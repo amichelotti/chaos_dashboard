@@ -8602,7 +8602,7 @@
   });
 
   $(dom).on("click", "span.json-key", function (e) {
-    var id = this.id;
+    var id = $(e.currentTarget).attr("portname");
     var enc=jchaos.encodeName(id);
     $("#attr-" + enc).toggle();
     if(typeof clickHandler === "function"){
@@ -8728,8 +8728,12 @@
             }
 
             var keyRepr = options.withQuotes ?
+              '<span class="' + keyclass + '" portname="' + id + '" portarray="' + portarray + '">"' + key + '"</span>' : key;
+            
+            /*  var keyRepr = options.withQuotes ?
               '<span class="' + keyclass + '" id=' + enc+ ' portname="' + id + '" portarray="' + portarray + '">"' + key + '"</span>' : key;
-            /* Add toggle button if item is collapsable */
+            */
+              /* Add toggle button if item is collapsable */
             if (jchaos.isCollapsable(json[key])) {
               html += '<a  class="json-toggle">' + keyRepr + '</a>';
             }
