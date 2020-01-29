@@ -166,6 +166,14 @@ function getWidget() {
       },
       updateInterfaceFn:function (tmpObj) {
         jqccs.updateInterfaceCU(tmpObj);
+        jchaos.getChannel(tmpObj['elems'], -1, function (selected) {
+          tmpObj.data = selected;
+    
+          jqccs.updateGenericTableDataset(tmpObj);
+        },function(str){
+          console.log(str);
+        });
+
         $(".select_camera_mode").change(function (e) {
           var value=e.currentTarget.value;
           console.log("name="+e.currentTarget.name+" value="+value);          

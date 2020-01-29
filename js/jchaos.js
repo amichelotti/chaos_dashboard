@@ -427,9 +427,9 @@
 								if (json.hasOwnProperty('error_status')) {
 									alert(json.error_status);
 								}
-							} else {
+							} /*else {
 								alert(str);
-							}
+							}*/
 
 
 
@@ -446,10 +446,10 @@
 				}
 			};
 			request.ontimeout = function (e) {
-				console.error("request TIMEOUT:" + request.statusText);
+				console.error("request TIMEOUT:" +e.currentTarget.timeout);
 				//throw "error:" + request.statusText;
 				if (handleFuncErr != null && (typeof handleFuncErr === "function")) {
-					handleFuncErr(request.responseText);
+					handleFuncErr("timeout "+e.currentTarget.timeout+" reached");
 				}
 			};
 			//console.log("sending:"+params);
@@ -805,7 +805,7 @@
 		 * @param {boolean} _alive search among alive (true) or all(false)
 		 * @param {*} handleFunc handler
 		 */
-		jchaos.search = function (_name, _what, _alive, handleFunc) {
+		jchaos.search = function (_name, _what, _alive, handleFunc,handlerr) {
 
 			var opt = {
 				name: _name,
@@ -818,9 +818,9 @@
 				alive: _alive
 			};
 			if (_name instanceof Array) {
-				return jchaos.mdsBase("search", optv, handleFunc);
+				return jchaos.mdsBase("search", optv, handleFunc,handlerr);
 			}
-			return jchaos.mdsBase("search", opt, handleFunc);
+			return jchaos.mdsBase("search", opt, handleFunc,handlerr);
 		}
 		/**
 		 * Find an array of CU with the given implementation

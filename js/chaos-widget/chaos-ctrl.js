@@ -3124,7 +3124,7 @@
     html += '</div>';
 
     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
-    html += '<h3>Elements</h3>';
+    html += '<h3>Group</h3>';
     html += '<select id="elements" size="auto"></select>';
     html += '</div>';
 
@@ -3466,7 +3466,19 @@
     });
 
   }
+  function stateOutput(v,isError){
+    if(typeof errorCount ==="undefined" ){
+      errorCount=0;
+    }
+    if(isError){
+      errorCount++;
+      $("#refresh_rate_update").html('<b><font color="red">'+errorCount+"-"+v+'</font></b>');
+    } else {
+      $("#refresh_rate_update").html(v);
 
+    }
+
+  }
   function updateInterface(tmpObj) {
     var cuids = tmpObj['elems'];
     var template = tmpObj.type;
@@ -3509,9 +3521,11 @@
       }
       var now = (new Date()).getTime();
       //$("#refresh_rate_update").html('<font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font>');
-
+      var lat=0;
       if (tmpObj.upd_chan > -2) {
         jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
+          lat=(new Date()).getTime()-now;
+
           var node_live_selected = dat;
           if (node_live_selected.length == 0) {
             return;
@@ -3519,11 +3533,16 @@
 
           tmpObj.data = node_live_selected;
           tmpObj.updateFn(tmpObj);
+          stateOutput('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Latency:' + lat + '</p><p>Errors:' + tmpObj.updateErrors + '</p></font></b>',false);
+
         },function(err){
           console.log(err);
+          stateOutput(err,true);
+
         });
       } else {
         tmpObj.updateFn(tmpObj);
+
       }
       if ((now - tmpObj.last_check) > tmpObj.check_interval) {
         if (tmpObj.data != null) {
@@ -3533,7 +3552,7 @@
         }
       }
       tmpObj.updateRefresh = now - tmpObj.lastUpdate;
-      $("#refresh_rate_update").html('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Errors:' + tmpObj.updateErrors + '</p></font></b>');
+
       tmpObj.lastUpdate = now;
     }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
@@ -5299,8 +5318,18 @@
     }
     jchaos.search("", "zone", true, function (zones) {
       element_sel('#zones', zones, 1);
+    },function(error){
+      stateOutput(error,true);
     });
-
+    $("#zones").click(function () {
+      if($("#zones option").length==0){
+        jchaos.search("", "zone", true, function (zones) {
+          element_sel('#zones', zones, 1);
+        },function(error){
+          stateOutput(error,true);
+        });
+      }
+    });
     element_sel('#classe', classe, 1);
     $("#zones").change(function () {
       var zone_selected;
@@ -8797,7 +8826,7 @@
     html += '<div class="row-fluid">';
 
     html += "<div class='span3 statbox'>";
-    html += "<h3 id='scheduling_title'></h3>";
+    html += "<h3 id='scheduling_title'>Scheduling(us)</h3>";
     html += "<input type='text' class='setSchedule'>";
     html += "</div>";
 
@@ -9785,7 +9814,10 @@
           var e = jQuery.Event('keypress');
           e.which = 13;
           e.keyCode = 13;
-
+          jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
+          templateObj.check_interval = dashboard_settings.checkLive;
+          templateObj.refresh_rate = dashboard_settings.generalRefresh;
+          
           $("#search-chaos").trigger(e);
         }, null);
 
