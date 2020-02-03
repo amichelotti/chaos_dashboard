@@ -296,13 +296,13 @@ function getWidget() {
           html += "<td id='" + cuname + "'><select class='select_camera_mode span6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>Triggered</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
           
           html += "<td id='" + cuname + "_output_SHUTTER'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_shutter' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_SHUTTER' name='"+cu[i]+"/input/SHUTTER'></input></td>";
           
           html += "<td id='" + cuname + "_output_GAIN'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_gain' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_GAIN' name='"+cu[i]+"/input/GAIN'></input></td>";
           
           html += "<td id='" + cuname + "_output_BRIGHTNESS'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_brightness' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_BRIGHTNESS' name='"+cu[i]+"/input/BRIGHTNESS'></input></td>";
     
           html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
           html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";

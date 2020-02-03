@@ -2778,18 +2778,17 @@
      */
     $(main_dom).on("keypress", "input.cucmdattr", function (e) {
       if (e.keyCode == 13) {
-        var id = this.id;
-        var attr = id.split("-")[1];
-        var value = $("#" + id).val();
-        var node_selected = tmpObj.node_selected;
-        jchaos.setAttribute(node_selected, attr, value, function () {
-          instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, true);
+        var value = e.target.value;
+        var attrname= e.target.name;
+        var desc=jchaos.decodeCUPath(attrname);
+        jchaos.setAttribute(desc.cu, desc.var, value, function () {
+          instantMessage(desc.cu + " Attribute "+desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, true)
 
         }, function () {
-          instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, false);
+          instantMessage(desc.cu+ " Attribute Error "+desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
         });
-        $("#" + this.id).toggle();
+        
         return false;
       }
       //var tt =prompt('type value');
