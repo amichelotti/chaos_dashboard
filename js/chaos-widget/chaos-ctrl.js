@@ -3172,10 +3172,16 @@
     html += '<div class="span6">'
     html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
     html += '</div>'
+    
     // html += '<h3 class="span3">Search</h3>';
 
     html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
     html += '</div>';
+    html += '</div>';
+    html += '<div class="chaosrow">';
+    html +='<a href="#" class="chaositem previous_page round">&#8249;</a>';
+    html += '<div id="page_number" class="chaositem">0/0</div>';
+    html +='<a href="#" class="chaositem next_page round">&#8250;</a>';
     html += '</div>';
     html += generateEditJson();
     html += '<div id="specific-table-' + tempObj.template + '"></div>';
@@ -5315,10 +5321,27 @@
     return list_eu;
   }
 
-  function buildInterfaceFrompPagedSearch(tmpObj,search_string,what){
+  function buildInterfaceFrompPagedSearch(tmpObj,what){
     var alive = $("input[type=radio][name=search-alive]:checked").val()
+    var interface = $("#classe option:selected").val();
+    var element_selected = $("#elements option:selected").val();
+    var zone_selected = $("#zones option:selected").val();
+    var search_string = "";
+    if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
+      search_string = zone_selected;
+    }
+    if ((typeof element_selected !=="undefined")&&(element_selected != "ALL") && (element_selected != "--Select--")) {
+      search_string += "/" + element_selected;
+    }
+    if($("#search-chaos").val()!=null && $("#search-chaos").val().length>0){
+      search_string += "/" + element_selected+"/"+$("#search-chaos").val();
+    }
 
-    jchaos.search(search_string,what,(alive == "true"),{"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage},function(list_cu){
+    var sopt={"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage};
+    if(interface != "--Select--" && interface!= "ALL"){
+      sopt['impl']=implementation_map[interface];
+    }
+    jchaos.search(search_string,what,(alive == "true"),sopt,function(list_cu){
       var search_query={
         search:search_string,
         type:"cu",
@@ -5328,7 +5351,6 @@
       dashboard_settings['pages']=list_cu.pages;
       tmpObj['search_query']=search_query;
       $("#page_number").html(dashboard_settings.current_page+"/"+dashboard_settings.pages);
-      var interface = $("#classe option:selected").val();
 
       buildCUPage(tmpObj, list_cu.list, implementation_map[interface]);
 
@@ -5360,29 +5382,28 @@
     element_sel('#classe', classe, 1);
     $("#zones").change(function () {
       var zone_selected;
-      zone_selected = $("#zones option:selected").val();
-      search_string = zone_selected;
+      var zone_selected = $("#zones option:selected").val();
+
+      $("#search-chaos").val("");
+
       if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non � selezionata la zona
         $("#elements").attr('disabled', 'disabled');
       } else {
         $("#elements").removeAttr('disabled');
       }
       if (zone_selected == "ALL") {
-        search_string = "";
         var alive = $("[input=search-alive]:checked").val()
         jchaos.search(search_string, "class", (alive == "true"), function (ll) {
           element_sel('#elements', ll, 1);
         });
 
       } else {
-        search_string = zone_selected;
 
         jchaos.search(zone_selected, "class", true, function (ll) {
           element_sel('#elements', ll, 1);
         });
       }
-      $("#search-chaos").val(search_string);
-      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
+      buildInterfaceFrompPagedSearch(tmpObj,"cu");
 
      
    //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
@@ -5394,7 +5415,7 @@
         dashboard_settings.current_page--;
         if(tmpObj.hasOwnProperty('search_query')){
           var query=tmpObj['search_query'];
-          buildInterfaceFrompPagedSearch(tmpObj,query.search,query.what);
+          buildInterfaceFrompPagedSearch(tmpObj,query.what);
 
         }
       }
@@ -5410,7 +5431,7 @@
       if(dashboard_settings.current_page<dashboard_settings.pages){
         dashboard_settings.current_page++;
         var query=tmpObj['search_query'];
-        buildInterfaceFrompPagedSearch(tmpObj,query.search,query.what);
+        buildInterfaceFrompPagedSearch(tmpObj,query.what);
 
       }
     });
@@ -5419,14 +5440,7 @@
     $("#elements").change(function () {
       var element_selected = $("#elements option:selected").val();
       var zone_selected = $("#zones option:selected").val();
-      search_string = "";
-      if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
-        search_string = zone_selected;
-      }
-      if ((element_selected != "ALL") && (node_selected != "--Select--")) {
-        search_string += "/" + element_selected;
-      }
-
+      $("#search-chaos").val("");
 
       if (element_selected == "--Select--" || zone_selected == "--Select--") {
         $(".btn-main-function").hasClass("disabled");
@@ -5435,21 +5449,23 @@
         $(".btn-main-function").removeClass("disabled");
 
       }
-      $("#search-chaos").val(search_string);
 
-
-      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
+      dashboard_settings.current_page=0;
+      buildInterfaceFrompPagedSearch(tmpObj,"cu");
 
     });
     $("#classe").change(function () {
-
-      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
+      dashboard_settings.current_page=0;
+      $("#search-chaos").val("");
+      buildInterfaceFrompPagedSearch(tmpObj,"cu");
 
 
     });
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
         search_string = $(this).val();
+        dashboard_settings.current_page=0;
+
         buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
 
       }
@@ -5457,6 +5473,8 @@
     });
 
     $("input[type=radio][name=search-alive]").change(function (e) {
+      dashboard_settings.current_page=0;
+
       buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
 
     });
