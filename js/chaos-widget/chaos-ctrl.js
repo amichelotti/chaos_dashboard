@@ -3147,6 +3147,13 @@
     html += generateActionBox();
     html += '</div>';
     html += generateModalActions();
+
+    html += '<div class="chaosrow">';
+    html +='<a href="#" class="chaositem previous_page round">&#8249;</a>';
+    html += '<div id="page_number" class="chaositem">0/0</div>';
+    html +='<a href="#" class="chaositem next_page round">&#8250;</a>';
+    html += '</div>';
+       
     html += '<div id="specific-table-' + tempObj.template + '"></div>';
     html += '<div id="specific-control-' + tempObj.template + '"></div>';
     return html;
@@ -5308,7 +5315,26 @@
     return list_eu;
   }
 
+  function buildInterfaceFrompPagedSearch(tmpObj,search_string,what){
+    var alive = $("input[type=radio][name=search-alive]:checked").val()
 
+    jchaos.search(search_string,what,(alive == "true"),{"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage},function(list_cu){
+      var search_query={
+        search:search_string,
+        type:"cu",
+        alive:(alive == "true"),
+        opt:{"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage}
+      }
+      dashboard_settings['pages']=list_cu.pages;
+      tmpObj['search_query']=search_query;
+      $("#page_number").html(dashboard_settings.current_page+"/"+dashboard_settings.pages);
+      var interface = $("#classe option:selected").val();
+
+      buildCUPage(tmpObj, list_cu.list, implementation_map[interface]);
+
+    });
+
+  }
   function mainCU(tmpObj) {
     var list_cu = [];
     var classe = ["powersupply", "scraper", "camera", "BPM"];
@@ -5321,6 +5347,7 @@
     },function(error){
       stateOutput(error,true);
     });
+    
     $("#zones").click(function () {
       if($("#zones option").length==0){
         jchaos.search("", "zone", true, function (zones) {
@@ -5355,12 +5382,38 @@
         });
       }
       $("#search-chaos").val(search_string);
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
-      var interface = $("#classe option:selected").val();
+      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
 
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
+     
+   //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
+    $(".previous_page").click(function(e){
+      if(!dashboard_settings.hasOwnProperty('current_page')){
+        dashboard_settings['current_page']=0;
+      }
+      if(dashboard_settings.current_page>0){
+        dashboard_settings.current_page--;
+        if(tmpObj.hasOwnProperty('search_query')){
+          var query=tmpObj['search_query'];
+          buildInterfaceFrompPagedSearch(tmpObj,query.search,query.what);
 
-      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
+        }
+      }
+
+    });
+    $(".next_page").click(function(e){
+      if(!dashboard_settings.hasOwnProperty('current_page')){
+        dashboard_settings['current_page']=0;
+      }
+      if(!dashboard_settings.hasOwnProperty('pages')){
+        dashboard_settings['pages']=1;
+      }
+      if(dashboard_settings.current_page<dashboard_settings.pages){
+        dashboard_settings.current_page++;
+        var query=tmpObj['search_query'];
+        buildInterfaceFrompPagedSearch(tmpObj,query.search,query.what);
+
+      }
+    });
     });
 
     $("#elements").change(function () {
@@ -5383,42 +5436,29 @@
 
       }
       $("#search-chaos").val(search_string);
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
 
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-      var interface = $("#classe option:selected").val();
 
-      buildCUPage(tmpObj, list_cu, implementation_map[interface], "cu");
+      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
 
     });
     $("#classe").change(function () {
-      var interface = $("#classe option:selected").val();
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
 
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
+      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
 
-      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
 
     });
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
-        var interface = $("#classe").val();
         search_string = $(this).val();
-        var alive = $("input[type=radio][name=search-alive]:checked").val()
-
-        list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-        buildCUPage(tmpObj, list_cu, implementation_map[interface]);
+        buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
 
       }
       //var tt =prompt('type value');
     });
 
     $("input[type=radio][name=search-alive]").change(function (e) {
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-      var interface = $("#classe option:selected").val();
+      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
 
-      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
     });
 
 
@@ -9708,6 +9748,7 @@
         localStorage['chaos_dashboard_settings'] = JSON.stringify(json);
         dashboard_settings = json;
       });
+      dashboard_settings['current_page']=0;
     } else {
       dashboard_settings = JSON.parse(sett);
       $.getJSON("dashboard-settings-def.json", function (json) {
@@ -9715,6 +9756,8 @@
         localStorage['chaos_dashboard_settings'] = JSON.stringify(dashboard_settings);
       });
     }
+    dashboard_settings['current_page']=0;
+
 
   }
 

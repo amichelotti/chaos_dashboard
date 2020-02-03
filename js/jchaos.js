@@ -805,22 +805,30 @@
 		 * @param {boolean} _alive search among alive (true) or all(false)
 		 * @param {*} handleFunc handler
 		 */
-		jchaos.search = function (_name, _what, _alive, handleFunc,handlerr) {
+		jchaos.search = function (_name, _what, _alive, opts,handleFunc,handlerr) {
 
 			var opt = {
 				name: _name,
 				what: _what,
 				alive: _alive
 			};
-			var optv = {
-				names: _name,
-				what: _what,
-				alive: _alive
-			};
 			if (_name instanceof Array) {
-				return jchaos.mdsBase("search", optv, handleFunc,handlerr);
+				delete opt['name'];
+				opt['names']=_name;
 			}
+			if(typeof opts === "function"){
+				handlerr=handleFunc;
+				handleFunc=opts;
+			} else if(typeof opts ==="object"){
+				for(var i in opts){
+					//pagelen number of objects
+					//start
+					opt[i]=opts[i];
+				}
+			}
+			
 			return jchaos.mdsBase("search", opt, handleFunc,handlerr);
+
 		}
 		/**
 		 * Find an array of CU with the given implementation
