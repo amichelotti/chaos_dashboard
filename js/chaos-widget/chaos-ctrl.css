@@ -140,3 +140,6 @@ a:hover {
   float:left; 
   margin:10px;
 }
+.pageindex{
+  visibility:hidden; /*make sure the wrapper has no dimension*/
+}

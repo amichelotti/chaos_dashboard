@@ -318,7 +318,7 @@ function getWidget() {
         return html;
       },
       cmdFn:function(tmpObj) {
-        
+        jqccs.generateGenericControl(tmpObj);
         return "";
     }
   }
@@ -365,4 +365,24 @@ function getWidget() {
       var encoden = jchaos.encodeName(opt.items[cmd].cu);
       $("#cameraImage-" + encoden).cropper('destroy');
     }
+  }
+
+  function configureSliderCommands(tmpObj, slname, slinput) {
+    $("#" + slname).slider({
+      range: "max",
+      min: 0,
+      max: 100,
+      value: 1,
+      slide: function (event, ui) {
+        $("#" + slinput).val(ui.value);
+        var id = this.id;
+        var node_selected = tmpObj.node_selected;
+        var attr = id.split("-")[1];
+        jchaos.setAttribute(node_selected, attr, String(ui.value), function () {
+          //   instantMessage("Attribute ", "\"" + attr + "\"=\"" + ui.value + "\" sent", 1000)
+
+        });
+      }
+    });
+    $("#" + slinput).val($("#" + slname).slider("value"));
   }
