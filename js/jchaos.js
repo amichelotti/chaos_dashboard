@@ -5,6 +5,15 @@
 (function () {
 	function createLibrary() {
 		var jchaos = {};
+		jchaos['latency']=0;
+		jchaos['latency_avg']=0;
+		jchaos['latency_tot']=0;
+		jchaos['errors']=0;
+		jchaos['timeouts']=0;
+		jchaos['nops']=0;
+
+		jchaos['numok']=0;
+
 		jchaos.extendJson=function(key, n) {
 			// Filtraggio delle proprietà
 			if(Number(n) === n && n % 1 !== 0){
@@ -330,6 +339,8 @@
 		/***** */
 		jchaos.basicPost = function (func, params, handleFunc, handleFuncErr, server) {
 			var request;
+			var now = (new Date()).getTime();
+
 			if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 				XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 			}
@@ -364,6 +375,7 @@
 			}
 			request.open("POST", url, (jchaos.ops_on_going > jchaos.options.limit_on_going) ? false : (jchaos.options.async));
 			request.timeout = jchaos.options.timeout;
+			jchaos['nops']++;
 
 			// console.log("on going:"+jchaos.ops_on_going);
 			// request.setRequestHeader("Content-Type", 'application/json');
@@ -378,6 +390,11 @@
 							var json = JSON.parse(request.responseText);
 							if (could_make_async) {
 								try {
+									var lat = (new Date()).getTime()-now;
+									jchaos['latency']=lat;
+									jchaos['latency_tot']+=lat;
+									jchaos['numok']=jchaos['numok']+1;
+									jchaos['latency_avg']=jchaos['latency_tot']/jchaos['numok'];
 									handleFunc(json);
 								} catch (err) {
 									console.trace("trace:");
@@ -411,6 +428,7 @@
 					} else {
 						var json;
 						var str;
+						jchaos['errors']++;
 						try {
 							json = JSON.parse(request.responseText);
 							str = "Error '" + request.status + "' API '" + params + "'  returned:'" + request.responseText + "'";
@@ -446,6 +464,8 @@
 				}
 			};
 			request.ontimeout = function (e) {
+				jchaos['timeouts']++;
+
 				console.error("request TIMEOUT:" +e.currentTarget.timeout);
 				//throw "error:" + request.statusText;
 				if (handleFuncErr != null && (typeof handleFuncErr === "function")) {

@@ -318,8 +318,8 @@ function getWidget() {
         return html;
       },
       cmdFn:function(tmpObj) {
-        jqccs.generateGenericControl(tmpObj);
-        return "";
+        return jqccs.generateGenericControl(tmpObj);
+        
     }
   }
   return chaos;

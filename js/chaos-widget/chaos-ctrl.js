@@ -3409,8 +3409,8 @@
         return;
       }
       var now = (new Date()).getTime();
+
       //$("#refresh_rate_update").html('<font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font>');
-      var lat=0;
       if (tmpObj.upd_chan > -2) {
         jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
           lat=(new Date()).getTime()-now;
@@ -3422,7 +3422,6 @@
 
           tmpObj.data = node_live_selected;
           tmpObj.updateFn(tmpObj);
-          stateOutput('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Latency:' + lat + '</p><p>Errors:' + tmpObj.updateErrors + '</p></font></b>',false);
 
         },function(err){
           console.log(err);
@@ -3432,7 +3431,11 @@
       } else {
         tmpObj.updateFn(tmpObj);
 
+
       }
+
+      stateOutput('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Latency:' + jchaos['latency'] + '</p><p>LatencyAvg:' + jchaos['latency_avg'].toFixed(2) + '</p><p>OpsOk:' + jchaos['numok'] + '</p><p>Errors:' + jchaos['errors'] + '</p><p>Timeouts:' + jchaos['timeouts'] + '</p></font></b>',false);
+
       if ((now - tmpObj.last_check) > tmpObj.check_interval) {
         if (tmpObj.data != null) {
           tmpObj.checkLiveFn(tmpObj);
