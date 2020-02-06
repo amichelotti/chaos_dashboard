@@ -1232,6 +1232,9 @@
 				if (tagsv.length > 0) {
 					opt['tags'] = tagsv;
 				}
+			} else if (typeof tagsv==="string"){
+				opt['tags'] = [tagsv];
+
 			} else if (tagsv instanceof Object) {
 				for (var k in tagsv) {
 					opt[k] = tagsv[k];
@@ -1245,14 +1248,7 @@
 			if (varname !== "undefined" && (typeof varname !== "string")) {
 				opt['var'] = varname;
 			}
-			if (opt['tags'] !== "undefined") {
-				if ((typeof opt['tags'] === "string") && (opt['tags'] != "")) {
-					opt["tags"] = [tagsv];
-				} else {
-					delete opt["tags"];
-				}
-			}
-
+			
 			jchaos.getHistoryBase(devs, opt, 0, 0, result, handleFunc, funcerr);
 
 		}
@@ -1278,7 +1274,7 @@
 						if ((ds.Y[0].hasOwnProperty("FRAMEBUFFER")) && (ds.Y[0].FRAMEBUFFER.hasOwnProperty("$binary")) && (ds.Y[0].hasOwnProperty("FMT"))) {
 							ds.Y.forEach(function (img) {
 
-								var name = ci + "/" + img.dpck_seq_id + "_" + img.dpck_ats + "" + img.FMT;
+								var name = ci + "/" + img.dpck_ats  + "_" + img.cudk_run_id + "_" + img.dpck_seq_id + "" + img.FMT;
 								zipf.file(name, img.FRAMEBUFFER.$binary.base64, { base64: true });
 								jchaos.print("zipping image: " + name + " into:" + zipname);
 
@@ -1319,7 +1315,10 @@
 			opt['runid'] = runid;
 
 			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd + "&parm=" + JSON.stringify(opt,jchaos.extendJson);
-			//console.log("getHistory (seqid:" + seq + " runid:" + runid + ") start:" + opt.start + " end:" + opt.end + " page:" + opt.page);
+			var start_string=(new Date(opt.start)).toLocaleString();
+			var stop_string=(new Date(opt.end)).toLocaleString();
+
+			console.log("getHistory "+dev_array+ " (seqid:" + seq + " runid:" + runid + ") start:" + start_string + " end:" + stop_string + " page:" + opt.page);
 			jchaos.basicPost("CU", str_url_cu, function (datav) {
 				var ret = true;
 				if (datav.data instanceof Array) {
