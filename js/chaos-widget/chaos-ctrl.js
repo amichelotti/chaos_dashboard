@@ -5384,7 +5384,6 @@
         tempObj.type = "ALL";
         $(".pageindex").css("visibility", "visible");
         $("#page_number").html((dashboard_settings.current_page+1)+"/"+dashboard_settings.pages);
-
         handler(node.list);
         
       });
