@@ -5230,7 +5230,7 @@
       dashboard_settings['pages']=list_cu.pages;
       tmpObj['search_query']=search_query;
       $(".pageindex").css("visibility", "visible");
-      $("#page_number").html(dashboard_settings.current_page+"/"+dashboard_settings.pages);
+      $("#page_number").html((dashboard_settings.current_page+1)+"/"+dashboard_settings.pages);
 
       buildCUPage(tmpObj, list_cu.list, implementation_map[interface]);
 
@@ -5383,7 +5383,7 @@
         tempObj['search_query']=search_query;
         tempObj.type = "ALL";
         $(".pageindex").css("visibility", "visible");
-        $("#page_number").html(dashboard_settings.current_page+"/"+dashboard_settings.pages);
+        $("#page_number").html((dashboard_settings.current_page+1)+"/"+dashboard_settings.pages);
 
         handler(node.list);
         
@@ -5396,7 +5396,7 @@
         dashboard_settings['pages']=list.pages;
         tempObj['search_query']=search_query;
         $(".pageindex").css("visibility", "visible");
-        $("#page_number").html(dashboard_settings.current_page+"/"+dashboard_settings.pages);
+        $("#page_number").html((dashboard_settings.current_page+1)+"/"+dashboard_settings.pages);
 
         handler(list.list);
       } );
