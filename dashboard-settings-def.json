@@ -3,8 +3,11 @@
 	"generalControlRefresh" :500,
 	"checkLive" :10000,
 	"defaultRestTimeout" :5000,
+	"maxNodesPerPage" :10,
 	"defaultPage":30,
 	"defaultChunk":3600,
+	"defaultZone":"ALL",
+	"defaultGroup":"ALL",
 	"camera":{
 		"cameraRefresh":1000,
 		"cameraPerRow" :2,

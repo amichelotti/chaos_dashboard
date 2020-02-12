@@ -5,6 +5,15 @@
 (function () {
 	function createLibrary() {
 		var jchaos = {};
+		jchaos['latency']=0;
+		jchaos['latency_avg']=0;
+		jchaos['latency_tot']=0;
+		jchaos['errors']=0;
+		jchaos['timeouts']=0;
+		jchaos['nops']=0;
+
+		jchaos['numok']=0;
+
 		jchaos.extendJson=function(key, n) {
 			// Filtraggio delle proprietà
 			if(Number(n) === n && n % 1 !== 0){
@@ -330,6 +339,8 @@
 		/***** */
 		jchaos.basicPost = function (func, params, handleFunc, handleFuncErr, server) {
 			var request;
+			var now = (new Date()).getTime();
+
 			if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 				XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 			}
@@ -364,6 +375,7 @@
 			}
 			request.open("POST", url, (jchaos.ops_on_going > jchaos.options.limit_on_going) ? false : (jchaos.options.async));
 			request.timeout = jchaos.options.timeout;
+			jchaos['nops']++;
 
 			// console.log("on going:"+jchaos.ops_on_going);
 			// request.setRequestHeader("Content-Type", 'application/json');
@@ -378,6 +390,11 @@
 							var json = JSON.parse(request.responseText);
 							if (could_make_async) {
 								try {
+									var lat = (new Date()).getTime()-now;
+									jchaos['latency']=lat;
+									jchaos['latency_tot']+=lat;
+									jchaos['numok']=jchaos['numok']+1;
+									jchaos['latency_avg']=jchaos['latency_tot']/jchaos['numok'];
 									handleFunc(json);
 								} catch (err) {
 									console.trace("trace:");
@@ -411,6 +428,7 @@
 					} else {
 						var json;
 						var str;
+						jchaos['errors']++;
 						try {
 							json = JSON.parse(request.responseText);
 							str = "Error '" + request.status + "' API '" + params + "'  returned:'" + request.responseText + "'";
@@ -427,9 +445,9 @@
 								if (json.hasOwnProperty('error_status')) {
 									alert(json.error_status);
 								}
-							} else {
+							} /*else {
 								alert(str);
-							}
+							}*/
 
 
 
@@ -446,10 +464,12 @@
 				}
 			};
 			request.ontimeout = function (e) {
-				console.error("request TIMEOUT:" + request.statusText);
+				jchaos['timeouts']++;
+
+				console.error("request TIMEOUT:" +e.currentTarget.timeout);
 				//throw "error:" + request.statusText;
 				if (handleFuncErr != null && (typeof handleFuncErr === "function")) {
-					handleFuncErr(request.responseText);
+					handleFuncErr("timeout "+e.currentTarget.timeout+" reached");
 				}
 			};
 			//console.log("sending:"+params);
@@ -805,22 +825,30 @@
 		 * @param {boolean} _alive search among alive (true) or all(false)
 		 * @param {*} handleFunc handler
 		 */
-		jchaos.search = function (_name, _what, _alive, handleFunc) {
+		jchaos.search = function (_name, _what, _alive, opts,handleFunc,handlerr) {
 
 			var opt = {
 				name: _name,
 				what: _what,
 				alive: _alive
 			};
-			var optv = {
-				names: _name,
-				what: _what,
-				alive: _alive
-			};
 			if (_name instanceof Array) {
-				return jchaos.mdsBase("search", optv, handleFunc);
+				delete opt['name'];
+				opt['names']=_name;
 			}
-			return jchaos.mdsBase("search", opt, handleFunc);
+			if(typeof opts === "function"){
+				handlerr=handleFunc;
+				handleFunc=opts;
+			} else if(typeof opts ==="object"){
+				for(var i in opts){
+					//pagelen number of objects
+					//start
+					opt[i]=opts[i];
+				}
+			}
+			
+			return jchaos.mdsBase("search", opt, handleFunc,handlerr);
+
 		}
 		/**
 		 * Find an array of CU with the given implementation
@@ -1204,6 +1232,9 @@
 				if (tagsv.length > 0) {
 					opt['tags'] = tagsv;
 				}
+			} else if (typeof tagsv==="string"){
+				opt['tags'] = [tagsv];
+
 			} else if (tagsv instanceof Object) {
 				for (var k in tagsv) {
 					opt[k] = tagsv[k];
@@ -1217,14 +1248,7 @@
 			if (varname !== "undefined" && (typeof varname !== "string")) {
 				opt['var'] = varname;
 			}
-			if (opt['tags'] !== "undefined") {
-				if ((typeof opt['tags'] === "string") && (opt['tags'] != "")) {
-					opt["tags"] = [tagsv];
-				} else {
-					delete opt["tags"];
-				}
-			}
-
+			
 			jchaos.getHistoryBase(devs, opt, 0, 0, result, handleFunc, funcerr);
 
 		}
@@ -1250,7 +1274,7 @@
 						if ((ds.Y[0].hasOwnProperty("FRAMEBUFFER")) && (ds.Y[0].FRAMEBUFFER.hasOwnProperty("$binary")) && (ds.Y[0].hasOwnProperty("FMT"))) {
 							ds.Y.forEach(function (img) {
 
-								var name = ci + "/" + img.dpck_seq_id + "_" + img.dpck_ats + "" + img.FMT;
+								var name = ci + "/" + img.dpck_ats  + "_" + img.cudk_run_id + "_" + img.dpck_seq_id + "" + img.FMT;
 								zipf.file(name, img.FRAMEBUFFER.$binary.base64, { base64: true });
 								jchaos.print("zipping image: " + name + " into:" + zipname);
 
@@ -1291,7 +1315,10 @@
 			opt['runid'] = runid;
 
 			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd + "&parm=" + JSON.stringify(opt,jchaos.extendJson);
-			//console.log("getHistory (seqid:" + seq + " runid:" + runid + ") start:" + opt.start + " end:" + opt.end + " page:" + opt.page);
+			var start_string=(new Date(opt.start)).toLocaleString();
+			var stop_string=(new Date(opt.end)).toLocaleString();
+
+			console.log("getHistory "+dev_array+ " (seqid:" + seq + " runid:" + runid + ") start:" + start_string + " end:" + stop_string + " page:" + opt.page);
 			jchaos.basicPost("CU", str_url_cu, function (datav) {
 				var ret = true;
 				if (datav.data instanceof Array) {

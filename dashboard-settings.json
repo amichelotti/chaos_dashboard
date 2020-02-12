@@ -10,6 +10,21 @@
 		"default":1000,
 		"description":"General Refresh (ms)"
 	},
+	"maxNodesPerPage" : {
+		"type":"integer",
+		"default":10,
+		"description":"Max number of Nodes per page"
+	},
+	"defaultZone" : {
+		"type":"string",
+		"default":"ALL",
+		"description":"Default Zone to open"
+	},
+	"defaultGroup" : {
+		"type":"string",
+		"default":"ALL",
+		"description":"Default Group to open"
+	},
 	"generalControlRefresh" : {
 		"type":"integer",
 		"default":500,
