@@ -7066,10 +7066,12 @@
   }
 
   function createQueryDialog(querycb, opencb) {
+    var dstart = new Date();
+    dstart.setHours(0,0,0,0);
     if (typeof query_params === "undefined") {
       query_params = {
         page: dashboard_settings.defaultPage,
-        start: 0,
+        start: dstart.getTime(),
         stop: (new Date()).getTime(),
         tag: "",
         chunk: dashboard_settings.defaultChunk,
@@ -7099,7 +7101,7 @@
     html += '</div>';
 
     html += '<label class="label span3">Start </label>';
-    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value=' + query_params.start + '>';
+    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
     html += '<label class="label span3">Stop </label>';
     html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
 
@@ -7125,12 +7127,10 @@
     createCustomDialog(opt, html, "Run", function () {
 
       query_params['page'] = Number($("#query-page").val());
-      if (typeof $("#query-start").val() === "number") {
-        query_params['start'] = Number($("#query-start").val());
-      }
-      if (typeof $("#query-stop").val() === "number") {
-        query_params['stop'] = Number($("#query-stop").val());
-      }
+      query_params['start'] = Number($("#query-start").val());
+      
+      query_params['stop'] = Number($("#query-stop").val());
+      
       query_params['tag'] = $("#query-tag").val();
       query_params['chunk'] = Number($("#query-chunk").val());
       query_params['reduction'] = Number($("#query-reduction").val());
