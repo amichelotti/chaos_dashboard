@@ -3619,8 +3619,15 @@
           if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
             var parent = desc[0].instance_description.ndk_parent;
             confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
-              jchaos.node(nod, "del", "cu", parent, null);
-              updateInterface(tmpObj);
+              jchaos.node(nod, "del", "cu", parent, function(ok){
+                instantMessage("Deleted", "CU " + nod , 1000,true);
+
+                updateInterface(tmpObj);
+
+              },function(bad){
+                instantMessage("Deleting", "CU " + nod , 2000,false);
+
+              });
 
             }, "Cancel");
           }
@@ -9395,7 +9402,7 @@ jqccs.generateGenericControl=function(tmpObj){
     var html="";
     for(var key in dev_alarm){
       var value=dev_alarm[key];
-      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
+      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
         if(value>0){
           if(value>2){
             value=2;

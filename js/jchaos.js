@@ -369,7 +369,8 @@
 						return null;
 					}
 				}
-				console.error("bad status:" + request.status);
+				console.error("bad status:" + request.status + " error:"+request.responseText);
+				
 				return null;
 
 			}
