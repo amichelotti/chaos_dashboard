@@ -3614,14 +3614,14 @@
       }, "Cancel");
       return;
     } else if (cmd == "del-nt_control_unit") {
-      node_multi_selected.forEach(function (nod) {
+      node_multi_selected.forEach(function (nod,index) {
         jchaos.getDesc(nod, function (desc) {
           if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
             var parent = desc[0].instance_description.ndk_parent;
             confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
-              jchaos.node(nod, "del", "cu", parent, function(ok){
+              jchaos.node(nod, "del", "cu", parent, null,function(ok){
                 instantMessage("Deleted", "CU " + nod , 1000,true);
-
+                tmpObj['elems'].splice(index,1);
                 updateInterface(tmpObj);
 
               },function(bad){
