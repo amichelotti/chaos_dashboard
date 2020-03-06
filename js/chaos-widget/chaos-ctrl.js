@@ -5207,7 +5207,7 @@
     return list_eu;
   }
 
-  function buildInterfaceFrompPagedSearch(tmpObj,what){
+  function buildInterfaceFromPagedSearch(tmpObj,what){
     var alive = $("input[type=radio][name=search-alive]:checked").val()
     var interface = $("#classe option:selected").val();
     var element_selected = $("#elements option:selected").val();
@@ -5220,7 +5220,11 @@
       search_string += "/" + element_selected;
     }
     if($("#search-chaos").val()!=null && $("#search-chaos").val().length>0){
-      search_string += "/" + element_selected+"/"+$("#search-chaos").val();
+      if(search_string.length>0){
+        search_string += "/"+$("#search-chaos").val();
+      } else {
+        search_string += $("#search-chaos").val();
+      }
     }
 
     var sopt={"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage};
@@ -5290,7 +5294,7 @@
           element_sel('#elements', ll, 1);
         });
       }
-      buildInterfaceFrompPagedSearch(tmpObj,"cu");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
      
    //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
@@ -5302,7 +5306,7 @@
         dashboard_settings.current_page--;
         if(tmpObj.hasOwnProperty('search_query')){
           var query=tmpObj['search_query'];
-          buildInterfaceFrompPagedSearch(tmpObj,query.what);
+          buildInterfaceFromPagedSearch(tmpObj,query.what);
 
         }
       }
@@ -5318,7 +5322,7 @@
       if(dashboard_settings.current_page<dashboard_settings.pages){
         dashboard_settings.current_page++;
         var query=tmpObj['search_query'];
-        buildInterfaceFrompPagedSearch(tmpObj,query.what);
+        buildInterfaceFromPagedSearch(tmpObj,query.what);
 
       }
     });
@@ -5338,13 +5342,13 @@
       }
 
       dashboard_settings.current_page=0;
-      buildInterfaceFrompPagedSearch(tmpObj,"cu");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
     });
     $("#classe").change(function () {
       dashboard_settings.current_page=0;
       $("#search-chaos").val("");
-      buildInterfaceFrompPagedSearch(tmpObj,"cu");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
 
     });
@@ -5353,7 +5357,7 @@
         search_string = $(this).val();
         dashboard_settings.current_page=0;
 
-        buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
+        buildInterfaceFromPagedSearch(tmpObj,"cu");
 
       }
       //var tt =prompt('type value');
@@ -5362,7 +5366,7 @@
     $("input[type=radio][name=search-alive]").change(function (e) {
       dashboard_settings.current_page=0;
 
-      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
     });
 
