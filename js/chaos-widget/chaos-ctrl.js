@@ -2528,7 +2528,21 @@
     $("input[type=radio][name=live-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
-      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
+      var node_multi_selected = tmpObj.node_multi_selected;
+      jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
+        function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+        function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+
+    });
+    $("input[type=radio][name=log-enable]").change(function (e) {
+      var dslive = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+      var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
       jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
         function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
@@ -2538,7 +2552,9 @@
     $("input[type=radio][name=histo-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
-      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
 
       jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
@@ -8575,6 +8591,11 @@ jqccs.generateGenericControl=function(tmpObj){
     html += '</div>'
 
     html += '<div class="span2">'
+    html += '<label for="log-enable">enable log</label><input class="input-xlarge" id="log-true" title="Enable Logging on Grafana " name="log-enable" type="radio" value="true">';
+    html += '<label for="log-enable">disable log</label><input class="input-xlarge" id="log-false" title="Disable Logging on Grafana" name="log-enable" type="radio" value="false">';
+    html += '</div>'
+
+    html += '<div class="span2">'
     html += '<label for="histo-enable">enable history</label><input class="input-xlarge" id="histo-true" title="Enable History" name="histo-enable" type="radio" value="true">';
     html += '<label for="histo-enable">disable history</label><input class="input-xlarge" id="histo-false" title="Disable History" name="histo-enable" type="radio" value="false">';
     html += '</div>'
@@ -9096,7 +9117,7 @@ jqccs.generateGenericControl=function(tmpObj){
         $("#cmd-load-unload").show();
       }
     }
-    if (cu.hasOwnProperty('system') && (tmpObj.off_line[encoden] == 0)) {   //if el system
+    if (cu.hasOwnProperty('system') /*&& (tmpObj.off_line[encoden] == 0)*/) {   //if el system
       $("#scheduling_title").html("Actual scheduling (us):" + cu.system.cudk_thr_sch_delay);
 
       if (cu.system.cudk_bypass_state == false) {
@@ -9114,6 +9135,11 @@ jqccs.generateGenericControl=function(tmpObj){
           $("input[name=live-enable][value='true']").prop("checked", true);
         } else {
           $("input[name=live-enable][value='false']").prop("checked", true);
+        }
+        if (cu.system.dsndk_storage_type & 0x10) {
+          $("input[name=log-enable][value='true']").prop("checked", true);
+        } else {
+          $("input[name=log-enable][value='false']").prop("checked", true);
         }
         if (cu.system.dsndk_storage_type & 0x1) {
           $("input[name=histo-enable][value='true']").prop("checked", true);
