@@ -369,9 +369,13 @@
               case 7:
                 $(e.target).text("Stat");
               break;
+              case 8:
+                $(e.target).text("All");
+              break;
+              
               default:
                 showdataset = 0;
-                $(e.target).text("All");
+                $(e.target).text("Output");
             }
 
             // $(instant).dialog("close");
