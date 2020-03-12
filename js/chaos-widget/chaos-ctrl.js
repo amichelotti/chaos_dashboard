@@ -315,6 +315,7 @@
     var started = 0;
     var stop_update = false;
     var showformat = 0;
+    var showdataset =8;
     var last_dataset = {};
     var name = jchaos.encodeName(cuname);
     var instant = $('<div id=dataset-' + name + '></div>').dialog({
@@ -336,6 +337,43 @@
               $(e.target).text("Not Update");
 
             }
+            // $(instant).dialog("close");
+          }
+        },{
+          text: "Dataset", id: 'dataset-type-' + name, click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            showdataset++;
+            switch (showdataset) {
+              case 0:
+                $(e.target).text("Output");
+                break;
+              case 1:
+                $(e.target).text("Input");
+                break;
+              case 2:
+                $(e.target).text("Custom");
+                break;
+              case 3:
+                $(e.target).text("System");
+                break;
+              case 4:
+                  $(e.target).text("Health");
+                break;
+              case 5:
+                  $(e.target).text("DevAlarm");
+              break;
+
+              case 6:
+                  $(e.target).text("CUAlarm");
+              break;
+              case 7:
+                $(e.target).text("Stat");
+              break;
+              default:
+                showdataset = 0;
+                $(e.target).text("All");
+            }
+
             // $(instant).dialog("close");
           }
         }, {
@@ -394,7 +432,14 @@
             isediting = tmpObj.json_editing;
           }
           if ((!stop_update) && (isediting == false)) {
-            jchaos.getChannel(cuname, -1, function (imdata) {
+            var chnum=showdataset;
+            if(showdataset==7){
+              chnum=128;
+            } else if(chnum>7){
+              chnum=-1;
+            }
+
+            jchaos.getChannel(cuname, chnum, function (imdata) {
               last_dataset = imdata[0];
               if (showformat == 1) {
                 options["format"] = 10 + 0x100;
