@@ -960,8 +960,8 @@
 			}
 			jchaos.basicPost("CU", str_url_cu, function (datav) { jchaos.lastChannel = datav; handleFunc(datav); });
 		}
-		jchaos.setSched = function (cu, schedule_ms) {
-			return jchaos.sendCUCmd(cu, "sched", Number(schedule_ms));
+		jchaos.setSched = function (cu, schedule_ms,handle,nok) {
+			return jchaos.sendCUCmd(cu, "sched", Number(schedule_ms),handle,nok);
 		}
 		jchaos.setBypass = function (dev, value, handleFunc) {
 			var opt = {

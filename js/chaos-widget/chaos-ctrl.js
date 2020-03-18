@@ -2400,7 +2400,13 @@
       if ((event.which == 13)) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
-        jchaos.setSched(tmpObj.node_multi_selected, value);
+        jchaos.setSched(tmpObj.node_multi_selected, value,function(){
+          instantMessage("Set scheduling", "to "+value + " us Hz:"+1000000/Number(value), 2000, true);
+
+        },function(err){
+          instantMessage("ERROR Set scheduling", "to "+value+" err:"+err, 2000, false);
+
+        });
 
       }
     });
@@ -2982,7 +2988,7 @@
         // open CB 
         var names = findTagsOf(tmpObj, currsel);
         element_sel("#select-tag", names, 0);
-        $("#select-tag").on("click", function () {
+        $("#select-tag").on("change", function () {
           var tagname = $("#select-tag option:selected").val();
           $("#query-tag").val(tagname);
           var tags = jchaos.variable("tags", "get", null, null);
