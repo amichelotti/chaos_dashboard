@@ -1506,7 +1506,7 @@
   /***
    * 
    */
-  function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj) {
+  function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj,ok,nok) {
     var instant = $('<div id=edit-temp></div>').dialog({
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
@@ -1526,7 +1526,7 @@
               // It's valid!
               var json_editor_value = json_editor.getValue();
               try{
-                ret = editorFn(json_editor_value, tmpObj);
+                ret = editorFn(json_editor_value, tmpObj,ok,nok);
               } catch(err){
                 if((typeof err ==="object" )){
                   if(err.hasOwnProperty('error_status')){
@@ -3645,7 +3645,13 @@
         if (data != null) {
           //editorFn = cuSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj);
+          jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj,function(ok){
+            instantMessage("CU saved " + node_selected, " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Errro saving CU "+node_selected, bad , 2000,false);
+    
+          });
 
         }
       });
@@ -3663,7 +3669,13 @@
         if (data.hasOwnProperty("us_desc")) {
           //    editorFn = unitServerSave;
           //    jsonEdit(templ, data.us_desc);
-          jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj);
+          jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj,function(ok){
+            instantMessage("Unit server save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Unit server failed", bad , 2000,false);
+    
+          });
 
         }
       });
@@ -3675,7 +3687,15 @@
       }
       //editorFn = unitServerSave;
       //jsonEdit(templ, null);
-      jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj);
+      jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj,function(ok){
+        instantMessage("Unit server save ", " OK" , 2000,true);
+        
+      },function(bad){
+        instantMessage("Unit server failed", bad , 2000,false);
+
+      }
+
+      );
 
       return;
     } else if (cmd == "del-nt_unit_server") {
@@ -3749,7 +3769,13 @@
         def_obj['ndk_uid'] = copia.ndk_uid + "_copied";
         def_obj['ndk_parent'] = node_selected;
         //jsonEdit(templ, tmp);
-        jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj);
+        jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj,function(ok){
+          instantMessage("CU save ", " OK" , 2000,true);
+          
+        },function(bad){
+          instantMessage("CU save failed", bad , 2000,false);
+  
+        });
 
       });
       return;
@@ -3798,7 +3824,13 @@
           // editorFn = jchaos.newCuSave;
           def_obj.ndk_parent = node_selected;
           //jsonEdit(templ, tmp);
-          jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
 
         }, "Cancel", function () {
@@ -3874,7 +3906,13 @@
           }
           // editorFn = jchaos.newCuSave;
           // jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
         } else {
           // custom
@@ -3887,7 +3925,13 @@
 
           //editorFn = jchaos.newCuSave;
           //jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
         }
       }
@@ -3973,7 +4017,13 @@
           }
           //editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj);
+          jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj,function(ok){
+            instantMessage("Agent save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Agent save failed", bad , 2000,false);
+    
+          });
 
         };
       });
