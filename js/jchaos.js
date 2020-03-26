@@ -369,7 +369,8 @@
 						return null;
 					}
 				}
-				console.error("bad status:" + request.status);
+				console.error("bad status:" + request.status + " error:"+request.responseText);
+				
 				return null;
 
 			}
@@ -703,7 +704,7 @@
 			}
 			opt['parent'] = _parent;
 
-
+			
 			if (value_ != null) {
 				try {
 					JSON.stringify(value_); // check if json
@@ -959,8 +960,8 @@
 			}
 			jchaos.basicPost("CU", str_url_cu, function (datav) { jchaos.lastChannel = datav; handleFunc(datav); });
 		}
-		jchaos.setSched = function (cu, schedule_ms) {
-			return jchaos.sendCUCmd(cu, "sched", Number(schedule_ms));
+		jchaos.setSched = function (cu, schedule_ms,handle,nok) {
+			return jchaos.sendCUCmd(cu, "sched", Number(schedule_ms),handle,nok);
 		}
 		jchaos.setBypass = function (dev, value, handleFunc) {
 			var opt = {
@@ -1471,7 +1472,7 @@
 			} 
 		  }*/
 
-		  jchaos.agentSave=function (json, obj) {
+		  jchaos.agentSave=function (json, obj,ok,bad) {
 			// remove all the associations
 			if (obj != null) {
 			  var node_selected = obj.node_selected;
@@ -1504,9 +1505,11 @@
 			}
 		
 			if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
+			 var assok=0;
 			  json.andk_node_associated.forEach(function (item) {
 				jchaos.node(node_selected, "set", "agent", null, item, function (data) {
 				  console.log("agent save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+				  assok++;
 				  if (item.node_log_at_launch) {
 					jchaos.node(item.ndk_uid, "enablelog", "agent", function (data) {
 					});
@@ -1515,14 +1518,22 @@
 		
 					});
 				  }
+				 
+				  if(assok==json.andk_node_associated.length){
+					if(typeof ok ==="function"){
+						ok();
+					}
+				  }
 				  return 0;
-				});
+				},bad);
 			  });
+			  	
+
 			} 
 		  }
 
 
-		jchaos.unitServerSave = function (json, obj) {
+		jchaos.unitServerSave = function (json, obj,ok,nok) {
 			if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
 				alert("no ndk_uid key found");
 				return 1;
@@ -1572,13 +1583,12 @@
 				  }
   
 			});
-			jchaos.node(node_selected, "set", "us", "", json, function (data) {
-				console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
-			});
+
+			jchaos.node(node_selected, "set", "us", "", json, ok,nok);
 			return 0;
 		}
 
-		jchaos.cuSave=function (json, obj) {
+		jchaos.cuSave=function (json, obj,ok,bad) {
 
 			if ((json != null) && json.hasOwnProperty("ndk_uid")) {
 			  var name = json.ndk_uid;
@@ -1595,15 +1605,16 @@
 
 			  }
 		
-			  jchaos.node(json.ndk_uid, "set", "cu", json.ndk_parent, json, function (data) {
-				console.log("cu save: \"" + node_selected + "\" value:" + JSON.stringify(json,jchaos.extendJson));
-			  });
+			  jchaos.node(json.ndk_uid, "set", "cu", json.ndk_parent, json, ok,bad);
 			} else {
+				if(typeof bad === "function"){
+					bad("No ndk_uid field found");	
+				}
 			  alert("No ndk_uid field found");
 			}
 			return 0;
 		  }
-		jchaos.newCuSave = function (json, obj) {
+		jchaos.newCuSave = function (json, obj,ok,bad) {
 			var node_selected=null;
 			if((typeof obj ==="object") && (obj.hasOwnProperty('node_selected'))){
 				node_selected=obj.node_selected;
@@ -1611,11 +1622,17 @@
 			if ((node_selected == null || node_selected == "")) {
 				if (json.ndk_parent == "") {
 					alert("not US selected!");
+					if(typeof bad === "function"){
+						bad("not US selected!");	
+					}
 					return 1;
 				} else {
 					console.log("using US specified into CU:" + json.ndk_parent);
 					var us_list = jchaos.search(json.ndk_parent, "us", false, false);
 					if (us_list.length == 0) {
+						if(typeof bad === "function"){
+							bad("US specified in CU does not exist (create before)");	
+						}
 						alert("US specified in CU does not exist (create before)");
 						return -1;
 					}
@@ -1623,11 +1640,18 @@
 				}
 			}
 			if (!json.hasOwnProperty("control_unit_implementation") || json.control_unit_implementation == "") {
+				if(typeof bad === "function"){
+					bad("You must specify a valid implementation 'control_unit_implementation' "+JSON.stringify(json));	
+				}
 				alert("You must specify a valid implementation 'control_unit_implementation' "+JSON.stringify(json));
 				return 1;
 			}
 			if (!json.hasOwnProperty("ndk_uid") || json.ndk_uid == "") {
 				alert("You must specify a valid UID 'ndk_uid'");
+				if(typeof bad === "function"){
+					bad("You must specify a valid UID 'ndk_uid'");	
+				}
+
 				return 1;
 			}
 			if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
@@ -1639,12 +1663,13 @@
 					} else {
 						data.us_desc["cu_desc"] = [json];
 					}
-					jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
-						console.log("unitServer save: \"" + name + "\" value:" + JSON.stringify(json));
-					});
+					jchaos.node(node_selected, "set", "us", "", data.us_desc, ok,bad);
 				});
 			} else {
 				alert("missing required field ndk_uid");
+				if(typeof bad === "function"){
+					bad("missing required field ndk_uid");
+				}
 				return 1;
 			}
 			return 0;

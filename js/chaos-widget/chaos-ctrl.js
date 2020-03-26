@@ -315,6 +315,7 @@
     var started = 0;
     var stop_update = false;
     var showformat = 0;
+    var showdataset =8;
     var last_dataset = {};
     var name = jchaos.encodeName(cuname);
     var instant = $('<div id=dataset-' + name + '></div>').dialog({
@@ -336,6 +337,47 @@
               $(e.target).text("Not Update");
 
             }
+            // $(instant).dialog("close");
+          }
+        },{
+          text: "Dataset", id: 'dataset-type-' + name, click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            showdataset++;
+            switch (showdataset) {
+              case 0:
+                $(e.target).text("Output");
+                break;
+              case 1:
+                $(e.target).text("Input");
+                break;
+              case 2:
+                $(e.target).text("Custom");
+                break;
+              case 3:
+                $(e.target).text("System");
+                break;
+              case 4:
+                  $(e.target).text("Health");
+                break;
+              case 5:
+                  $(e.target).text("DevAlarm");
+              break;
+
+              case 6:
+                  $(e.target).text("CUAlarm");
+              break;
+              case 7:
+                $(e.target).text("Stat");
+              break;
+              case 8:
+                $(e.target).text("All");
+              break;
+              
+              default:
+                showdataset = 0;
+                $(e.target).text("Output");
+            }
+
             // $(instant).dialog("close");
           }
         }, {
@@ -394,7 +436,14 @@
             isediting = tmpObj.json_editing;
           }
           if ((!stop_update) && (isediting == false)) {
-            jchaos.getChannel(cuname, -1, function (imdata) {
+            var chnum=showdataset;
+            if(showdataset==7){
+              chnum=128;
+            } else if(chnum>7){
+              chnum=-1;
+            }
+
+            jchaos.getChannel(cuname, chnum, function (imdata) {
               last_dataset = imdata[0];
               if (showformat == 1) {
                 options["format"] = 10 + 0x100;
@@ -1457,7 +1506,7 @@
   /***
    * 
    */
-  function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj) {
+  function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj,ok,nok) {
     var instant = $('<div id=edit-temp></div>').dialog({
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
@@ -1477,7 +1526,7 @@
               // It's valid!
               var json_editor_value = json_editor.getValue();
               try{
-                ret = editorFn(json_editor_value, tmpObj);
+                ret = editorFn(json_editor_value, tmpObj,ok,nok);
               } catch(err){
                 if((typeof err ==="object" )){
                   if(err.hasOwnProperty('error_status')){
@@ -2351,7 +2400,13 @@
       if ((event.which == 13)) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
-        jchaos.setSched(tmpObj.node_multi_selected, value);
+        jchaos.setSched(tmpObj.node_multi_selected, value,function(){
+          instantMessage("Set scheduling", "to "+value + " us Hz:"+1000000/Number(value), 2000, true);
+
+        },function(err){
+          instantMessage("ERROR Set scheduling", "to "+value+" err:"+err, 2000, false);
+
+        });
 
       }
     });
@@ -2528,7 +2583,21 @@
     $("input[type=radio][name=live-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
-      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
+      var node_multi_selected = tmpObj.node_multi_selected;
+      jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
+        function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+        function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+
+    });
+    $("input[type=radio][name=log-enable]").change(function (e) {
+      var dslive = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+      var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
       jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
         function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
@@ -2538,7 +2607,9 @@
     $("input[type=radio][name=histo-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
-      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
 
       jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
@@ -2917,7 +2988,7 @@
         // open CB 
         var names = findTagsOf(tmpObj, currsel);
         element_sel("#select-tag", names, 0);
-        $("#select-tag").on("click", function () {
+        $("#select-tag").on("change", function () {
           var tagname = $("#select-tag option:selected").val();
           $("#query-tag").val(tagname);
           var tags = jchaos.variable("tags", "get", null, null);
@@ -3574,7 +3645,13 @@
         if (data != null) {
           //editorFn = cuSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj);
+          jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj,function(ok){
+            instantMessage("CU saved " + node_selected, " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Errro saving CU "+node_selected, bad , 2000,false);
+    
+          });
 
         }
       });
@@ -3592,7 +3669,13 @@
         if (data.hasOwnProperty("us_desc")) {
           //    editorFn = unitServerSave;
           //    jsonEdit(templ, data.us_desc);
-          jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj);
+          jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj,function(ok){
+            instantMessage("Unit server save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Unit server failed", bad , 2000,false);
+    
+          });
 
         }
       });
@@ -3604,7 +3687,15 @@
       }
       //editorFn = unitServerSave;
       //jsonEdit(templ, null);
-      jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj);
+      jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj,function(ok){
+        instantMessage("Unit server save ", " OK" , 2000,true);
+        
+      },function(bad){
+        instantMessage("Unit server failed", bad , 2000,false);
+
+      }
+
+      );
 
       return;
     } else if (cmd == "del-nt_unit_server") {
@@ -3614,13 +3705,20 @@
       }, "Cancel");
       return;
     } else if (cmd == "del-nt_control_unit") {
-      node_multi_selected.forEach(function (nod) {
+      node_multi_selected.forEach(function (nod,index) {
         jchaos.getDesc(nod, function (desc) {
           if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
             var parent = desc[0].instance_description.ndk_parent;
             confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
-              jchaos.node(nod, "del", "cu", parent, null);
-              updateInterface(tmpObj);
+              jchaos.node(nod, "del", "cu", parent, null,function(ok){
+                instantMessage("Deleted", "CU " + nod , 1000,true);
+                tmpObj['elems'].splice(index,1);
+                updateInterface(tmpObj);
+
+              },function(bad){
+                instantMessage("Deleting", "CU " + nod , 2000,false);
+
+              });
 
             }, "Cancel");
           }
@@ -3671,7 +3769,13 @@
         def_obj['ndk_uid'] = copia.ndk_uid + "_copied";
         def_obj['ndk_parent'] = node_selected;
         //jsonEdit(templ, tmp);
-        jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj);
+        jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj,function(ok){
+          instantMessage("CU save ", " OK" , 2000,true);
+          
+        },function(bad){
+          instantMessage("CU save failed", bad , 2000,false);
+  
+        });
 
       });
       return;
@@ -3720,7 +3824,13 @@
           // editorFn = jchaos.newCuSave;
           def_obj.ndk_parent = node_selected;
           //jsonEdit(templ, tmp);
-          jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
 
         }, "Cancel", function () {
@@ -3796,7 +3906,13 @@
           }
           // editorFn = jchaos.newCuSave;
           // jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
         } else {
           // custom
@@ -3809,7 +3925,13 @@
 
           //editorFn = jchaos.newCuSave;
           //jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
         }
       }
@@ -3895,7 +4017,13 @@
           }
           //editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj);
+          jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj,function(ok){
+            instantMessage("Agent save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Agent save failed", bad , 2000,false);
+    
+          });
 
         };
       });
@@ -5200,7 +5328,7 @@
     return list_eu;
   }
 
-  function buildInterfaceFrompPagedSearch(tmpObj,what){
+  function buildInterfaceFromPagedSearch(tmpObj,what){
     var alive = $("input[type=radio][name=search-alive]:checked").val()
     var interface = $("#classe option:selected").val();
     var element_selected = $("#elements option:selected").val();
@@ -5213,7 +5341,11 @@
       search_string += "/" + element_selected;
     }
     if($("#search-chaos").val()!=null && $("#search-chaos").val().length>0){
-      search_string += "/" + element_selected+"/"+$("#search-chaos").val();
+      if(search_string.length>0){
+        search_string += "/"+$("#search-chaos").val();
+      } else {
+        search_string += $("#search-chaos").val();
+      }
     }
 
     var sopt={"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage};
@@ -5283,7 +5415,7 @@
           element_sel('#elements', ll, 1);
         });
       }
-      buildInterfaceFrompPagedSearch(tmpObj,"cu");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
      
    //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
@@ -5295,7 +5427,7 @@
         dashboard_settings.current_page--;
         if(tmpObj.hasOwnProperty('search_query')){
           var query=tmpObj['search_query'];
-          buildInterfaceFrompPagedSearch(tmpObj,query.what);
+          buildInterfaceFromPagedSearch(tmpObj,query.what);
 
         }
       }
@@ -5311,7 +5443,7 @@
       if(dashboard_settings.current_page<dashboard_settings.pages){
         dashboard_settings.current_page++;
         var query=tmpObj['search_query'];
-        buildInterfaceFrompPagedSearch(tmpObj,query.what);
+        buildInterfaceFromPagedSearch(tmpObj,query.what);
 
       }
     });
@@ -5331,13 +5463,13 @@
       }
 
       dashboard_settings.current_page=0;
-      buildInterfaceFrompPagedSearch(tmpObj,"cu");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
     });
     $("#classe").change(function () {
       dashboard_settings.current_page=0;
       $("#search-chaos").val("");
-      buildInterfaceFrompPagedSearch(tmpObj,"cu");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
 
     });
@@ -5346,7 +5478,7 @@
         search_string = $(this).val();
         dashboard_settings.current_page=0;
 
-        buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
+        buildInterfaceFromPagedSearch(tmpObj,"cu");
 
       }
       //var tt =prompt('type value');
@@ -5355,7 +5487,7 @@
     $("input[type=radio][name=search-alive]").change(function (e) {
       dashboard_settings.current_page=0;
 
-      buildInterfaceFrompPagedSearch(tmpObj,search_string,"cu");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
     });
 
@@ -7066,10 +7198,12 @@
   }
 
   function createQueryDialog(querycb, opencb) {
+    var dstart = new Date();
+    dstart.setHours(0,0,0,0);
     if (typeof query_params === "undefined") {
       query_params = {
         page: dashboard_settings.defaultPage,
-        start: 0,
+        start: dstart.getTime(),
         stop: (new Date()).getTime(),
         tag: "",
         chunk: dashboard_settings.defaultChunk,
@@ -7099,7 +7233,7 @@
     html += '</div>';
 
     html += '<label class="label span3">Start </label>';
-    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value=' + query_params.start + '>';
+    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
     html += '<label class="label span3">Stop </label>';
     html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
 
@@ -7125,12 +7259,10 @@
     createCustomDialog(opt, html, "Run", function () {
 
       query_params['page'] = Number($("#query-page").val());
-      if (typeof $("#query-start").val() === "number") {
-        query_params['start'] = Number($("#query-start").val());
-      }
-      if (typeof $("#query-stop").val() === "number") {
-        query_params['stop'] = Number($("#query-stop").val());
-      }
+      query_params['start'] = Number($("#query-start").val());
+      
+      query_params['stop'] = Number($("#query-stop").val());
+      
       query_params['tag'] = $("#query-tag").val();
       query_params['chunk'] = Number($("#query-chunk").val());
       query_params['reduction'] = Number($("#query-reduction").val());
@@ -8564,6 +8696,11 @@ jqccs.generateGenericControl=function(tmpObj){
     html += '</div>'
 
     html += '<div class="span2">'
+    html += '<label for="log-enable">enable log</label><input class="input-xlarge" id="log-true" title="Enable Logging on Grafana " name="log-enable" type="radio" value="true">';
+    html += '<label for="log-enable">disable log</label><input class="input-xlarge" id="log-false" title="Disable Logging on Grafana" name="log-enable" type="radio" value="false">';
+    html += '</div>'
+
+    html += '<div class="span2">'
     html += '<label for="histo-enable">enable history</label><input class="input-xlarge" id="histo-true" title="Enable History" name="histo-enable" type="radio" value="true">';
     html += '<label for="histo-enable">disable history</label><input class="input-xlarge" id="histo-false" title="Disable History" name="histo-enable" type="radio" value="false">';
     html += '</div>'
@@ -9085,7 +9222,7 @@ jqccs.generateGenericControl=function(tmpObj){
         $("#cmd-load-unload").show();
       }
     }
-    if (cu.hasOwnProperty('system') && (tmpObj.off_line[encoden] == 0)) {   //if el system
+    if (cu.hasOwnProperty('system') /*&& (tmpObj.off_line[encoden] == 0)*/) {   //if el system
       $("#scheduling_title").html("Actual scheduling (us):" + cu.system.cudk_thr_sch_delay);
 
       if (cu.system.cudk_bypass_state == false) {
@@ -9103,6 +9240,11 @@ jqccs.generateGenericControl=function(tmpObj){
           $("input[name=live-enable][value='true']").prop("checked", true);
         } else {
           $("input[name=live-enable][value='false']").prop("checked", true);
+        }
+        if (cu.system.dsndk_storage_type & 0x10) {
+          $("input[name=log-enable][value='true']").prop("checked", true);
+        } else {
+          $("input[name=log-enable][value='false']").prop("checked", true);
         }
         if (cu.system.dsndk_storage_type & 0x1) {
           $("input[name=histo-enable][value='true']").prop("checked", true);
@@ -9395,7 +9537,7 @@ jqccs.generateGenericControl=function(tmpObj){
     var html="";
     for(var key in dev_alarm){
       var value=dev_alarm[key];
-      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
+      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
         if(value>0){
           if(value>2){
             value=2;
