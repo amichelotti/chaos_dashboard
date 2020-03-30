@@ -2,6 +2,21 @@
  * !CHAOS REST Library
  */
 
+ /*
+ * Callback in asynchronous operations called when the operation is ok
+ *
+ * @callback okcb
+ * @param {object} depending on the operation (typically a dataset)
+ */
+
+/*
+ * Callback in asynchronous operations called when the operation is fails
+ *
+ * @callback badcb
+ * @param {string|object} description of the error
+ */
+
+
 (function () {
 	function createLibrary() {
 		var jchaos = {};
@@ -1198,16 +1213,17 @@
 			}
 			jchaos.basicPost("CU", str_url_cu, handleFunc, handleFuncErr);
 		}
+		
 		/**
-		 * 
-		 * @param {string} devs 
-		 * @param {integer} channel 
-		 * @param {epoch timestamp in ms} start 
-		 * @param {epoch timestamp in ms} stop 
-		 * @param {string variable name optional} varname 
-		 * @param {handler} handleFunc
-		 * @param {string[] tags optional} tagsv 
-
+		 * Retrive history of a channel dataset of a  group of devices
+		 * @param  {string|string[]} devs CU or array of CU
+		 * @param  {integer} channel channel to retrieve
+		 * @param  {integer|string} start epoch timestamp in ms (GMT) of start of search
+		 * @param  {integer|string} stop  epoch timestamp in ms (GMT) of start of search
+		 * @param  {string} [varname] optional name of the variable to retrieve (instead of all)
+		 * @param  {okcb} [handleFunc] callback if ok
+		 * @param  {string|string[]} [tagsv] optional tags
+		 * @param  {badcb} [funcerr] optional bad callback
 		 */
 		jchaos.getHistory = function (devs, channel, start, stop, varname, handleFunc, tagsv, funcerr) {
 			var result = {
