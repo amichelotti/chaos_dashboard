@@ -1,24 +1,64 @@
 /**
- * !CHAOS REST Library
+ *  !CHAOS REST Library                                                                                                                                                                                           
+ *@fileOverview                                                                                                                                                                               
+ *@version 1.0                                                                                                                                                                                
+ *@author Andrea Michelotti                                                                                                                                                                                            
+                                                                                                                                                        
  */
 
- /*
+/**
  * Callback in asynchronous operations called when the operation is ok
- *
  * @callback okcb
- * @param {object} depending on the operation (typically a dataset)
+ * @param {object} data  depend on the operation (typically a dataset)
  */
 
-/*
+/** 
  * Callback in asynchronous operations called when the operation is fails
- *
  * @callback badcb
- * @param {string|object} description of the error
+ * @param {string|object} data description of the error
+ */
+/**
+ * The command object for sendCU commands
+ * @typedef {Object} cmdPar
+ * @property {string} cmd - command name
+ * @property {integer} prio - Priority
+ * @property {integer} mode - mode
  */
 
-
+ /**
+  * CU variable path
+  * @typedef {Object} varpath
+  * @property {string} cu CU PATH 
+  * @property {string} dir direction (input,output)
+  * @property {string} var variable dataset name
+  * @property {string} const constantco:String
+  * @property {string} origin full path
+  */
+ /**
+  * Channel idintification mapping:
+  * -1 : all
+  *  0: output
+  *  1: input
+  *  2: custom
+  *  3: system
+  *  4: health
+  *  5: cu alarms
+  *  6: device alarms
+  *  128: status
+  *  255: health+system+ alarams
+  * @typedef {integer} channelid
+ */
+/**
+  * @typedef ChaosOption
+  * @type {object}
+  * @property {boolean} updateEachCall history update each call
+  * @property {string} uri address:port of the REST server
+*/
 (function () {
 	function createLibrary() {
+		/**  
+		 * @namespace 
+		 */
 		var jchaos = {};
 		jchaos['latency']=0;
 		jchaos['latency_avg']=0;
@@ -28,7 +68,6 @@
 		jchaos['nops']=0;
 
 		jchaos['numok']=0;
-
 		jchaos.extendJson=function(key, n) {
 			// Filtraggio delle proprietà
 			if(Number(n) === n && n % 1 !== 0){
@@ -61,7 +100,17 @@
 		jchaos.ops_abort = false;
 		jchaos.lastChannel = {};
 		var uri_default = "localhost:8081";
+		/** 
+		 * @prop {boolean} updateEachCall=true choose if update each call of history operation
+		 * @prop {string} uri=localhost:8081 REST server URI
+		 * @prop {boolean} async=true if false force the call to be synchronous, otherwise depend if the callback is definedd
+		 * @prop {integer} limit_on_going=10000 limits the concurrent operations
+		 * @prop {integer} history_page_len=1000 default history page len
+		 * @prop {integer} timeout=5000 default timeout for operation
+		 * @prop {callback} console_log redirected on console.log
+		 * @prop {callback} console_err redirected on console.error
 
+		*/
 		jchaos.options = {
 			updateEachCall: false,
 			uri: uri_default,
@@ -74,8 +123,11 @@
 
 		};
 
+		
 		/**
-		 * return an object from a full path description
+		 * Decode a CU dataset element path and return an object
+		 * @param  {string} cupath
+		 * @return {varpath}
 		 */
 		jchaos.decodeCUPath=function (cupath) {
 			var regex_vect = /(.*)\/(.*)\/(.*)\[([-\d]+)\]$/;
@@ -129,7 +181,11 @@
 		  jchaos.isCollapsable=function (arg) {
 			return arg instanceof Object && Object.keys(arg).length > 0;
 		  }
-
+		  /**
+		   * translate seconds in days hours minutes seconds string
+		   * @param  {integer} sec_num
+		   * @return {string} return string xx days hh:mm:ss 
+		   */
 		  jchaos.toHHMMSS=function (sec_num) {
 
 			// var sec_num = parseInt(this, 10); // don't forget the second param	
@@ -154,7 +210,7 @@
 			return days + ' days ' + hours + ':' + minutes + ':' + seconds;
 		  }
 		/***
-		 * 
+		 * @hide
 		 */
 		jchaos.createMotor = function (name, endOphandler, switchHandler) {
 
@@ -185,7 +241,11 @@
 		}
 
 
-		/*****************************/
+		
+		/**
+		 * Set Library options options
+		 * @param  {object} opt
+		 */
 		jchaos.setOptions = function (opt) {
 
 			for (var attrname in opt) { jchaos.options[attrname] = opt[attrname]; }
@@ -197,13 +257,30 @@
 
 
 		}
+		
+		/** 
+		 * Prints a String on the configured console
+		 * @param  {string} str
+		 */
 		jchaos.print = function (str) {
 			jchaos.options['console_log'](str);
 		}
+		/** 
+		 * Prints a String on the configured console error
+		 * @param  {string} str
+		 */
 		jchaos.perror = function (str) {
 			jchaos.options['console_err'](str);
 		}
 		/******* REMOTE PROCESS MANAGEMENT ****/
+		/**
+		 * Helper function to post commands on the process remote management
+		 * @param  {string} server rest process remote management server
+		 * @param  {string} func REST function
+		 * @param  {object} param REST function parameters
+		 * @param  {okcb} handler handler on success
+		 * @param  {badcb} badhandler handler on failure
+		 */
 		jchaos.basicRmt = function (server, func, param, handler, badhandler) {
 			if (handler instanceof Function) {
 				jchaos.basicPost("api/v1/restconsole/" + func, JSON.stringify(param), function (r) {
@@ -218,8 +295,14 @@
 
 			}
 		}
+		
 		/**
 		 * Retrive a given environemnt variable
+		 * @param  {string} server rest process remote management server
+		 * @param  {string} varname environment variable name
+		 * @param  {okcb} handler handler on success
+		 * @param  {badcb} badhandler handler on failure
+		 * @returns the value on the specified handler.
 		 */
 		jchaos.rmtGetEnvironment = function (server, varname, handler, badhandler) {
 			var param = {};
@@ -227,14 +310,30 @@
 			return jchaos.basicRmt(server, "getenv", param, handler, badhandler);
 		}
 		/**
-		 * Set a Property
+		 * Set the specified propery
+		 * @param  {string} server rest process remote management server
+		 * @param  { {uid:String, propname:String} } prop property name 
+		 * @param  {okcb} handler handler on success
+		 * @param  {badcb} badhandler handler on failure
+		 * @returns the value on the specified handler.
 		 */
 		jchaos.rmtSetProp = function (server, prop, handler, badhandler) {
 			return jchaos.basicRmt(server, "setprop", prop, handler, badhandler);
 		}
 		/**
-		 * Retrive a given environemnt variable
+		 * 
+		 */
+		/**
+		 * Launch a process the specified process on the given remote server
 		 * return a process structure
+		 * @param  {string} server rest process remote management server
+		 * @param  {string} name program name
+		 * @param  {string} cmdline command line
+		 * @param  {string} ptype type ("exec": binary, "C++": C++ script")
+		 * @param  {string} workdir remote local directory
+		 * @param  {okcb} handler handler on success
+		 * @param {badcb} badhandler handler on failure
+		 * @returns {object} return a process object with many status and information
 		 */
 		jchaos.rmtCreateProcess = function (server, name, cmdline, ptype, workdir, handler, badhandler) {
 			var param = {};
@@ -251,6 +350,15 @@
 			 * Retrive a process working directory 
 			 * return a zip file
 			 */
+		/**
+		 * Return a zip file contaning the working directory of the specified process
+		 * can be used to retrieve outputs of remote runs
+		 * @param  {string} server rest process remote management server
+		 * @param  {string} uid the process uid returned by the rmtCreateProcess
+		 * @param  {string} workdir working dir to retrieve and zip
+		 * @param  {okcb} handler handler on success
+		 * @param {badcb} badhandler handler on failure
+		 */
 		jchaos.rmtDownload = function (server, uid, workdir, handler, badhandler) {
 			var param = {};
 			param['uid'] = uid;
@@ -262,8 +370,17 @@
 			return jchaos.basicRmt(server, "download", param, handler, badhandler);
 		}
 		/**
-		 * Upload a new Script 
+		 */
+		/**
+		 * Upload a script/executable on the remote server 
 		 * return the path 
+		 * @param  {string} server rest process remote management server
+		 * @param  {string} name program name
+		 * @param  {string} ptype type ("exec": binary, "C++": C++ script")
+		 * @param  {string} content base64 encoded content to upload
+		 * @returns {object} return the path of the remote process
+		 * @param  {okcb} handler handler on success
+		 * @param {badcb} badhandler handler on failure
 		 */
 		jchaos.rmtUploadScript = function (server, name, ptype, content, handler, badhandler) {
 
@@ -277,26 +394,42 @@
 			return jchaos.basicRmt(server, "load", param, handler, badhandler);
 
 		}
-		/***
+		/**
 		 * Return a list of process on the given server
+		 * @param  {string} server rest process remote management server
+		 * @param  {okcb} handler handler on success
+		 * @param {badcb} badhandler handler on failure
+		 * @returns {object[]} return a list of process descriptors
 		 */
 		jchaos.rmtListProcess = function (server, handler, badhandler) {
 			var param = {};
 			return jchaos.basicRmt(server, "list", param, handler, badhandler);
 
 		}
-		/***
-		 * Set the console of a specified process uid
-		 */
+		
+		/**
+		 * Write on the remote console of the specified process
+		 * @param  {string} server rest process remote management server
+		 * @param  {string} uid the process uid returned by the rmtCreateProcess
+		 * @param  {string} str line to send
+		 * @param  {okcb} handler handler on success
+		 * @param {badcb} badhandler handler on failure
+	 */
 		jchaos.rmtSetConsole = function (server, uid, str, handler, badhandler) {
 			var param = {};
 			param['uid'] = uid;
 			param['data'] = btoa(unescape(encodeURIComponent(str + "\n")));
 			return jchaos.basicRmt(server, "setconsole", param, handler, badhandler);
 		}
-		/***
-		 * Get the console of a specified process uid
-		 */
+		/**
+		 * Reads the console of the specified process uid
+		 * @param  {string} server rest process remote management server
+		 * @param  {string} uid the process uid returned by the rmtCreateProcess
+		 * @param  {integer} fromline get from this line
+		 * @param  {integer} toline until this line (-1 means end)
+		 * @param  {okcb} handler handler on success
+		 * @param {badcb} badhandler handler on failure
+	 */
 		jchaos.rmtGetConsole = function (server, uid, fromline, toline, handler, badhandler) {
 			var param = {};
 			param['uid'] = uid;
@@ -306,9 +439,14 @@
 			return jchaos.basicRmt(server, "getconsole", param, handler, badhandler);
 		}
 
-		/***
-		 * Get the console of a specified process uid
-		 */
+		
+		/**
+		 * Kill the specified process
+		 * @param  {string} server rest process remote management server
+		 * @param  {string} uid the process uid returned by the rmtCreateProcess
+		 * @param  {okcb} handler handler on success
+		 * @param {badcb} badhandler handler on failure
+		*/
 		jchaos.rmtKill = function (server, uid, handler, badhandler) {
 			var param = {};
 			param['uid'] = uid;
@@ -316,17 +454,27 @@
 			return jchaos.basicRmt(server, "kill", param, handler, badhandler);
 		}
 
-		/***
-		 * Purget list of process to a given level (0 soft (EXCEPTION), 1 medium (ENDED and EXCEPTION), 2 hard (ALL))
-		 */
+	
+		/**
+		 * Purge a list of process to a given level (0 soft (EXCEPTION), 1 medium (ENDED and EXCEPTION), 2 hard (ALL) 
+		 * @param  {string} server rest process remote management server
+		 * @param  {integer} level purge level
+		 * @param  {okcb} [handler] handler on success
+		 * @param {badcb} [badhandler] handler on failure
+		*/
 		jchaos.rmtPurge = function (server, level, handler, badhandler) {
 			var param = {};
 			param['level'] = level;
 
 			return jchaos.basicRmt(server, "purge", param, handler, badhandler);
 		}
+
+
 		/******************************/
 		/****** WIDGET */
+		/**
+		 * @hide
+		 */
 		jchaos.progressBar = function (msg, id, lab) {
 			var progressbar;
 			var instant = $('<div></div>').html('<div id="' + id + '"><div class="progress-label">' + lab + '</div></div>').dialog({
@@ -352,6 +500,16 @@
 			});
 		}
 		/***** */
+		
+		/**
+		 * Helper function that is the base of all commands to the !CHAOS REST SERVER
+		 * the server is specified in the option
+		 * @param  {string} func  REST function to perform
+		 * @param  {string} params parameters
+		 * @param  {okcb} [handler] handler on success, if present the call will be asynchronous
+		 * @param {badcb} [badhandler] handler on failure
+		n* @param  {string} [server] override the default server
+		 */
 		jchaos.basicPost = function (func, params, handleFunc, handleFuncErr, server) {
 			var request;
 			var now = (new Date()).getTime();
@@ -494,16 +652,26 @@
 			//  request.close();
 
 		}
+		/**
+		 * @hide
+		*/
 		jchaos.addLongKey = function (obj, key, valuestr) {
 			if (obj[key] == undefined) {
 				var tt = {}
 				tt['$numberLong'] = valuestr;
 				obj[key] = tt;
 			}
+			return obj;
 		}
+		/**
+		 * @hide
+		*/
 		jchaos.getLongLong = function (obj, key) {
 			return parseInt(obj[key].$numberLong);
 		}
+		/**
+		 * @hide
+		*/
 		jchaos.setLongLong = function (obj, key, val) {
 			if (!obj.hasOwnProperty(key)) {
 				jchaos.addLongKey(obj, key, val.toString());
@@ -511,20 +679,35 @@
 			}
 
 		}
+		/**
+		 * @hide
+		*/
 		jchaos.normalizeDataset = function (obj) {
 			jchaos.addLongKey(obj, 'dpck_hr_ats', "0");
 			jchaos.addLongKey(obj, 'dpck_ats', "0");
 			jchaos.addLongKey(obj, 'dpck_seq_id', "0");
 		}
-
-		jchaos.registerCU = function (cuid, obj, handleFunc) {
+		/**
+		 * Registers a CU  dataset using REST 
+		 * @param  {string} cuid
+		 * @param  {object} obj the CU dataset to register/push
+		 * @param  {okcb} [handleFunc] handler on success, if present the call will be asynchronous
+		 * @param {badcb} [badhandler] handler on failure
+		 */
+		jchaos.registerCU = function (cuid, obj, handleFunc,badhandler) {
 			var str_url_cu = "/api/v1/producer/jsonregister/" + cuid;
 			var dd = Date.now();
 			jchaos.normalizeDataset(obj);
-			jchaos.basicPost(str_url_cu, JSON.stringify(obj), handleFunc);
+			jchaos.basicPost(str_url_cu, JSON.stringify(obj), handleFunc,badhandler);
 		}
-
-		jchaos.pushCU = function (cuid, obj, handleFunc) {
+		/**
+		 * Push a CU dataset using REST
+		 * @param  {string} cuid
+		 * @param  {object} obj the CU dataset to register/push
+		 * @param  {okcb} [handleFunc] handler on success, if present the call will be asynchronous
+		 * @param {badcb} [badhandler] handler on failure
+		 */
+		jchaos.pushCU = function (cuid, obj, handleFunc,badhandler) {
 			var str_url_cu = "/api/v1/producer/jsoninsert/" + cuid;
 			var dd = Date.now();
 			jchaos.setLongLong(obj, 'dpck_seq_id', jchaos.getLongLong(obj, 'dpck_seq_id') + 1);
@@ -537,34 +720,53 @@
 
 			}
 
-			jchaos.basicPost(str_url_cu, JSON.stringify(obj,jchaos.extendJson), function (datav) { handleFunc(datav); });
+			jchaos.basicPost(str_url_cu, JSON.stringify(obj,jchaos.extendJson), function (datav) { handleFunc(datav); },badhandler);
 
 		}
+		
+		/**
+		 * Helper function that wrap basic post used for query that regards generic MDS operations
+		 * @param  {string} cmd command to send
+		 * @param  {object} opt options
+		 * @param  {okcb} [handleFunc] handler on success, if present the call will be asynchronous
+		 * @param {badcb} [errFunc] handler on failure
+		 */
 		jchaos.mdsBase = function (cmd, opt, handleFunc, errFunc) {
 			var param = "cmd=" + cmd + "&parm=" + JSON.stringify(opt,jchaos.extendJson);
 			var ret = jchaos.basicPost("MDS", param, handleFunc, errFunc);
 			return ret;
 		}
+		
 		/**
 		 * Start tagging a list of nodes for an interval of given time, expressed in cycles or ms
-		 * @param {*} _tagname tag name
-		 * @param {*} _node_list a list of nodes
-		 * @param {*} _tag_type 1 means cycles 2 means ms time
-		 * @param {*} _tag_value tag value
+		 * 
+		 * @param  {string} tagname
+		 * @param  {string|string[]} node_list
+		 * @param  {integer} tag_type (2= time in ms, 1=cycles)
+		 * @param  {integer} tag_value numer of ms or cycles
+		 * @param  {okcb} [handleFunc] handler on success, if present the call will be asynchronous
+		 * @param {badcb} [nok] handler on failure 
+		 * 
+		 * tagging for 10s
+		 * @example  
+		 * var camera_list=["MYCAMERA1","MYCAMERA2"];
+		 * jchaos.tag("burstbyseconds",camera_list,2,10000,function(){});
 		 */
-		jchaos.tag = function (_tagname, _node_list, _tag_type, _tag_value, handleFunc, nok) {
+		
+		jchaos.tag = function (tagname, node_list, tag_type, tag_value, handleFunc, nok) {
 			var value = {};
-			value['dsndk_history_burst_tag'] = _tagname;
-			value['dsndk_history_burst_type'] = _tag_type;
-			value['dsndk_history_burst_value'] = _tag_value;
+			value['dsndk_history_burst_tag'] = tagname;
+			value['dsndk_history_burst_type'] = tag_type;
+			value['dsndk_history_burst_value'] = tag_value;
 
-			if (_node_list instanceof Array) {
-				value['ndk_uid'] = _node_list;
+			if (node_list instanceof Array) {
+				value['ndk_uid'] = node_list;
 			} else {
-				value['ndk_uid'] = [_node_list];
+				value['ndk_uid'] = [node_list];
 			}
 			return jchaos.snapshot("", "burst", "", JSON.stringify(value), handleFunc, nok);
 		}
+
 		/**
 		 * Check if a list of CU have done a correct restore, the check is performed every timeout/10 ms for maximum timeout
 		 * @param {*} _tagname tag name
@@ -697,6 +899,17 @@
 			var ret = jchaos.node(_name, "set", "us", "", _json, null);
 			return ret;
 		}
+		
+		/**
+		 * Perform a 'w_hat' operation on the nodes of '_name' of type :'_type'
+		 * @param  {string|string[]} _name the name of the nodes where to perform the operation
+		 * @param  {} _what operation type
+		 * @param  {} _type
+		 * @param  {} _parent
+		 * @param  {} value_
+		 * @param  {} handleFunc
+		 * @param  {} nok
+		 */
 		jchaos.node = function (_name, _what, _type, _parent, value_, handleFunc, nok) {
 			var opt = {};
 			if (_name instanceof Array) {
@@ -773,6 +986,9 @@
 			opt['value'] = value;
 			return jchaos.mdsBase("script", opt, handleFunc);
 		}
+		/**
+		 * @hide
+		 */
 		jchaos.searchScriptInstance = function (script_name, search_string, handleFunc, errfunc) {
 			var opt = {};
 			var script_desc = {};
@@ -784,6 +1000,9 @@
 			opt['value'] = script_desc;
 			return jchaos.mdsBase("script", opt, handleFunc, errfunc);
 		}
+		/**
+		 * @hide
+		 */
 		jchaos.updateScriptInstance = function (script_instance, script_base_description, handleFunc) {
 			var opt = {};
 			var script_desc = {};
@@ -795,6 +1014,14 @@
 			opt['value'] = script_desc;
 			return jchaos.mdsBase("script", opt, handleFunc);
 		}
+		
+		/**
+		 * Set/Get variable name
+		 * @param  {string|string[]} _name 
+		 * @param  {('set'|'get')} _what operation type
+		 * @param  {object} [value_] in case of set the object 
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 */
 		jchaos.variable = function (_name, _what, value_, handleFunc) {
 			var opt = {};
 			if (_name instanceof Array) {
@@ -819,8 +1046,18 @@
 
 			return jchaos.mdsBase("variable", opt, handleFunc);
 		}
+		/**
+		 * Search logs for the given CUs
+		 * @param {string|string[]} devs to search
+		 * @param  {string} _what set to "search"
+		 * @param  {string} _type one of: "Info" "error", "warning","log","command","all"
+		 * @param  {integer} _start epoch in ms start of the search
+		 * @param  {integer} _end epoch md end of the search
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		* @param  {badcb} [handlerr] callback if error
 
-		jchaos.log = function (_name, _what, _type, _start, _end, handleFunc) {
+		 */
+		jchaos.log = function (devs, _what, _type, _start, _end, handleFunc,handlerr) {
 			var opt = {};
 			if (_name instanceof Array) {
 				opt['names'] = _name;
@@ -832,14 +1069,16 @@
 			opt['start'] = _start;
 			opt['end'] = _end;
 
-			return jchaos.mdsBase("log", opt, handleFunc);
+			return jchaos.mdsBase("log", opt, handleFunc,handlerr);
 		}
 		/**
 		 * 
 		 * @param {string} _name is the substring of what you want search
-		 * @param {string} _what is one of "cu,us"
+		 * @param {("cu"|"us"|"agent"|"cds"|"webui"|"variable"|"snapshotsof"|"snapshots"|"script"|"zone"|"class")} _what operation type 
 		 * @param {boolean} _alive search among alive (true) or all(false)
-		 * @param {*} handleFunc handler
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [handlerr] callback if error
+
 		 */
 		jchaos.search = function (_name, _what, _alive, opts,handleFunc,handlerr) {
 
@@ -870,9 +1109,7 @@
 		 * Find an array of CU with the given implementation
 		 * @param {string} impl C++ implementation name to find
 		 * @param {bool} alive search from alive or all
-		 * @param {function} handleFunc call back function
-			 
-		 }}
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
 		 */
 		jchaos.findCUByImplementation = function (impl, alive, handleFunc) {
 			var implList = [];
@@ -887,10 +1124,11 @@
 				});
 			});
 		}
+		
 		/**
-		 * Recover CU alive status
-		 * @ param {String} status_to_search Status to find (Start, Stop, Init, Deinit, Fatal error, Recoverable error)
-		 * @ param {List} 
+		 * Return an array of CU that match a given status
+		 * @param  {string} status_to_search
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
 		 */
 		jchaos.getCUStatus = function (status_to_search, handleFunc) {
 			var cu_stats = [];
@@ -915,6 +1153,11 @@
 			});
 
 		}
+		/**
+		 * convert an array into a CommaSepareted elements
+		 * @param {string[]} devs array
+		 * @returns {string}
+		 */
 		jchaos.convertArray2CSV = function (devs) {
 			var dev_array = "";
 			if (devs instanceof Array) {
@@ -932,11 +1175,13 @@
 
 			return dev_array;
 		}
+		
 		/**
-		 * getChannel
-		 * \brief retrive the specified live channel
-		 * @param devs CU names
-		 * @params channel_id (0: output, 1: input, 2:custom,3:system, 4: health, 5 cu alarm, 6 dev alarms)
+		 * Retrive the specified dataset correspoding to a given CU
+		 * @param  {String|String[]} devs CU or array of CU
+		 * @param  {channelid} channel_id (-1: all,0: output, 1: input, 2:custom,3:system, 4: health, 5 cu alarm, 6 dev alarms,128 status)
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [badfunc] bad callback
 		 */
 		jchaos.getChannel = function (devs, channel_id, handleFunc, badfunc) {
 
@@ -958,6 +1203,11 @@
 			}
 			jchaos.basicPost("CU", str_url_cu, function (datav) { jchaos.lastChannel = datav; handleFunc(datav); }, badfunc);
 		}
+		/***
+		 * Retrieve a full description og the specified CU
+		 * @param  {string|string[]} cu CU or array of CU
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 */
 		jchaos.getDesc = function (devs, handleFunc) {
 
 			var dev_array = jchaos.convertArray2CSV(devs);
@@ -975,25 +1225,43 @@
 			}
 			jchaos.basicPost("CU", str_url_cu, function (datav) { jchaos.lastChannel = datav; handleFunc(datav); });
 		}
-		jchaos.setSched = function (cu, schedule_ms,handle,nok) {
-			return jchaos.sendCUCmd(cu, "sched", Number(schedule_ms),handle,nok);
-		}
-		jchaos.setBypass = function (dev, value, handleFunc) {
-			var opt = {
-				"name": dev,
-				"type": "cu",
-				"what": "set",
-				"value": { "properties": [{ "cudk_bypass_state": value }] }
-			};
-			return jchaos.mdsBase("node", opt, handleFunc);
+
+		/***
+		 * Set a new scheduling time in us
+		 * @param  {string|string[]} cu CU or array of CU
+		 * @param {number} schedule_us enable disable
+		 * @param  {okcb} [handle] callback if ok, enable async mode
+		 * @param  {badcb} [nok] bad callback
+		 */
+		jchaos.setSched = function (cu, schedule_us,handle,nok) {
+			return jchaos.sendCUCmd(cu, "sched", Number(schedule_us),handle,nok);
 		}
 		/***
-		 * storageLive
-		 * \brief enable/disable live cu
-		 * @param dev list of cu
-		 * @param enable enable disable
-		 * @param handleFunc call back to call if success
-		 * @param errFunc callback to call if error 
+		 * Enable or disable bypass on CU
+		 * @param  {string|string[]} dev CU or array of CU
+		 * @param {bool} enable enable disable
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [errFunc] bad callback
+		 */
+		jchaos.setBypass = function (dev, enable, handleFunc, errFunc) {
+			var opt = {
+				"type": "cu",
+				"what": "set",
+				"value": { "properties": [{ "cudk_bypass_state": enable }] }
+			};
+			if(dev instanceof Array){
+				opt['names']=dev;
+			} else {
+				opt['name']=dev;
+			}
+			return jchaos.mdsBase("node", opt, handleFunc,errFunc);
+		}
+		/***
+		 * Enable or disable live on CU
+		 * @param  {string|string[]} dev CU or array of CU
+		 * @param {bool} enable enable disable
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [errFunc] bad callback
 		 */
 		jchaos.storageLive = function (dev, enable, handleFunc, errFunc) {
 			jchaos.getChannel(dev, 3, function (cus) {
@@ -1009,12 +1277,11 @@
 			}, errFunc);
 		}
 		/***
-		 * storageHisto
-		 * \brief enable/disable history cu
-		 * @param dev list of cu
-		 * @param enable enable disable
-		 * @param handleFunc call back to call if success
-		 * @param errFunc callback to call if error 
+		 * Enable or disable history on CU
+		 * @param  {string|string[]} dev CU or array of CU
+		 * @param {bool} enable enable disable
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [errFunc] bad callback
 		 */
 		jchaos.storageHisto = function (dev, enable, handleFunc, errFunc) {
 			jchaos.getChannel(dev, 3, function (cus) {
@@ -1029,21 +1296,41 @@
 				handleFunc();
 			}, errFunc);
 		}
+		
+		/**
+		 * Set a CU property
+		 * @param  {string|string[]} dev CU or array of CU
+		 * @param  {string} prop property name
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [errFunc] bad callback
+		 */
 		jchaos.setProperty = function (dev, prop, handleFunc, errFunc) {
 			var opt = {
-				"name": dev,
 				"type": "cu",
 				"what": "set",
 				"value": { "properties": prop }
 			};
+			if(dev instanceof Array){
+				opt['names']=dev;
+			} else {
+				opt['name']=dev;
+			}
+		
 			return jchaos.mdsBase("node", opt, handleFunc, errFunc);
 		}
-		jchaos.loadUnload = function (dev, value, handleFunc, nok) {
+		/**
+		 * Load or Unload a CU
+		 * @param  {string|string[]} dev CU or array of CU
+		 * @param  {bool} loadunload (true = load, false=unload)
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [nok] bad callback
+		 */
+		jchaos.loadUnload = function (dev, loadunload, handleFunc, nok) {
 
 			var opt = {
 
 				"type": "cu",
-				"what": value ? "load" : "unload",
+				"what": loadunload ? "load" : "unload",
 			};
 			if (dev instanceof Array) {
 				opt['names'] = dev;
@@ -1052,6 +1339,9 @@
 			}
 			jchaos.mdsBase("node", opt, handleFunc, nok);
 		}
+		/**
+		 * @ignore
+		 */
 		jchaos.forceState = function (devs, state, handleFunc) {
 			jchaos.getChannel(devs, 4, function (data) {
 				data.forEach(function (elem) {
@@ -1142,17 +1432,29 @@
 				});
 			});
 		}
-		jchaos.setAttribute = function (devs, attr, value, ok, nok) {
+		
+		/**
+		 * @param  {string|string[]} devs CU or array of CU
+		 * @param  {string} attr attribute name
+		 * @param  {string} value attribute value
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [handleFuncErr] bad callback
+		 */
+		jchaos.setAttribute = function (devs, attr, value, handleFunc, handleFuncErr) {
 			//var parm="{\""+attr+"\":\""+value+"\"}";
 			var parm = {};
 			parm[attr] = value;
-			jchaos.sendCUCmd(devs, "attr", parm, ok, nok);
+			jchaos.sendCUCmd(devs, "attr", parm, handleFunc, handleFuncErr);
 		}
 
-		/*
-		 * Send a command to a set of devices
-		 * 
-		 * */
+		/**
+		 * Sends a command to a CU
+		 * @param  {string|string[]} devs CU or array of CU
+		 * @param  {cmdPar} cmd command to send
+		 * @param  {object} [param] optional and my be included into cmd
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [handleFuncErr] bad callback
+		 */
 		jchaos.sendCUCmd = function (devs, cmd, param, handleFunc, handleFuncErr) {
 			if ((cmd instanceof Object) && ((typeof param === "function") || (typeof param === "undefined"))) {
 				// all coded into cmd, handlefunc
@@ -1167,11 +1469,12 @@
 				} else {
 					throw ("'cmd' must be specified");
 				}
+
 				if (cmd.hasOwnProperty('param')) {
 					parm = cmd['param'];
 				}
 				if (cmd.hasOwnProperty('prio')) {
-					prio = cmd['param'];
+					prio = cmd['prio'];
 				}
 				if (cmd.hasOwnProperty('mode')) {
 					mode = cmd['mode'];
@@ -1184,6 +1487,16 @@
 				jchaos.sendCUFullCmd(devs, cmd, param, 0, 0, handleFunc, handleFuncErr);
 			}
 		}
+		/**
+		 * Sends a command to a CU, with explicit params
+		 * @param  {string|string[]} devs CU or array of CU
+		 * @param  {string} cmd command to send
+		 * @param  {string|object} [param]
+		 * @param  {integer} force
+		 * @param  {integer} prio
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
+		 * @param  {badcb} [handleFuncErr] bad callback
+		 */
 		jchaos.sendCUFullCmd = function (devs, cmd, param, force, prio, handleFunc, handleFuncErr) {
 			var dev_array = jchaos.convertArray2CSV(devs);
 			var params = "";
@@ -1221,7 +1534,7 @@
 		 * @param  {integer|string} start epoch timestamp in ms (GMT) of start of search
 		 * @param  {integer|string} stop  epoch timestamp in ms (GMT) of start of search
 		 * @param  {string} [varname] optional name of the variable to retrieve (instead of all)
-		 * @param  {okcb} [handleFunc] callback if ok
+		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
 		 * @param  {string|string[]} [tagsv] optional tags
 		 * @param  {badcb} [funcerr] optional bad callback
 		 */
