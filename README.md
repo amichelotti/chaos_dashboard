@@ -1,234 +1,150 @@
-#### Functions
+<a name="module_jchaos"></a>
 
-<dl>
-<dt><a href="#decodeCUPath">decodeCUPath(cupath)</a> ⇒ <code><a href="#varpath">varpath</a></code></dt>
-<dd><p>Decode a CU dataset element path and return an object</p></dd>
-<dt><a href="#toHHMMSS">toHHMMSS(sec_num)</a> ⇒ <code>string</code></dt>
-<dd><p>translate seconds in days hours minutes seconds string</p></dd>
-<dt><a href="#setOption">setOption(opt)</a></dt>
-<dd><p>Set Library options options</p></dd>
-<dt><a href="#basicRmt">basicRmt(server, func, param, handler, badhandler)</a></dt>
-<dd><p>Helper function to post commands on the process remote management</p></dd>
-<dt><a href="#rmtGetEnvironment">rmtGetEnvironment(server, varname, handler, badhandler)</a> ⇒</dt>
-<dd><p>Retrive a given environemnt variable</p></dd>
-<dt><a href="#rmtSetProp">rmtSetProp(server, prop, handler, badhandler)</a> ⇒</dt>
-<dd><p>Set the specified propery</p></dd>
-<dt><a href="#rmtCreateProcess">rmtCreateProcess(server, name, cmdline, ptype, workdir, handler, badhandler)</a> ⇒ <code>object</code></dt>
-<dd><p>Launch a process the specified process on the given remote server<br>
-return a process structure</p></dd>
-<dt><a href="#rmtCreateProcess">rmtCreateProcess(server, uid, workdir, handler, badhandler)</a></dt>
-<dd><p>Return a zip file contaning the working directory of the specified process<br>
-can be used to retrieve outputs of remote runs</p></dd>
-<dt><a href="#rmtUploadScript">rmtUploadScript(server, name, ptype, content, handler, badhandler)</a> ⇒ <code>object</code></dt>
-<dd><p>Upload a script/executable on the remote server<br>
-return the path</p></dd>
-<dt><a href="#rmtListProcess">rmtListProcess(server, handler, badhandler)</a> ⇒ <code>Array.&lt;object&gt;</code></dt>
-<dd><p>Return a list of process on the given server</p></dd>
-<dt><a href="#rmtKill">rmtKill(server, uid, handler, badhandler)</a></dt>
-<dd><p>Kill the specified process</p></dd>
-<dt><a href="#rmtPurge">rmtPurge(server, level, [handler], [badhandler])</a></dt>
-<dd><p>Purge a list of process to a given level (0 soft (EXCEPTION), 1 medium (ENDED and EXCEPTION), 2 hard (ALL)</p></dd>
-<dt><a href="#basicPost">basicPost(func, params, [handler], [badhandler], [server])</a></dt>
-<dd><p>Helper function that is the base of all commands to the !CHAOS REST SERVER<br>
-the server is specified in the option</p></dd>
-<dt><a href="#registerCU">registerCU(cuid, obj, [handleFunc], [badhandler])</a></dt>
-<dd><p>Registers a CU  dataset using REST</p></dd>
-<dt><a href="#pushCU">pushCU(cuid, obj, [handleFunc], [badhandler])</a></dt>
-<dd><p>Push a CU dataset using REST</p></dd>
-<dt><a href="#mdsBase">mdsBase(cmd, opt, [handleFunc], [errFunc])</a></dt>
-<dd><p>Helper function that wrap basic post used for query that regards generic MDS operations</p></dd>
-<dt><a href="#tag">tag(tagname, node_list, tag_type, tag_value, [handleFunc], [nok])</a></dt>
-<dd><p>Start tagging a list of nodes for an interval of given time, expressed in cycles or ms</p></dd>
-<dt><a href="#checkRestore">checkRestore(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])</a></dt>
-<dd><p>Check if a lists of CU have done a correct snapshot restore, the check is performed every timeout/10 ms for maximum timeout</p></dd>
-<dt><a href="#checkBurstRunning">checkBurstRunning(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])</a></dt>
-<dd><p>Helper function to check if a burst is running</p></dd>
-<dt><a href="#checkEndBurst">checkEndBurst(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])</a></dt>
-<dd><p>Check if a list of CU ended correct burst, the check is performed every timeout/10 ms for maximum timeout</p></dd>
-<dt><a href="#snapshot">snapshot(_name, _what, _node_list, [value_], [handleFunc], [nok])</a></dt>
-<dd><p>Performs snapshot operations</p>
-<pre><code>
-create (create a new snapshot of the given list of CUs)
-load (retrive a create snapshot)
-set (create a snapshot from a value)
-delete (delete a snapshot)
-restore (restore a snapshot)
-burst (perform a burst tag operation see <b>tag</b>)
-</code></pre></dd>
-<dt><a href="#node">node(_name, _what, _type, [_parent], [value_], handleFunc, nok)</a></dt>
-<dd><p>Perform and operation specified by '_what' onthe nodes of '_name' of type :'_type'</p></dd>
-<dt><a href="#variable">variable(_name, _what, [value_], [handleFunc], [handleFunc])</a></dt>
-<dd><p>Allows to manage variables that are persistent (on DB)</p></dd>
-<dt><a href="#log">log(devs, _what, _type, _start, _end, [handleFunc], [handlerr])</a></dt>
-<dd><p>Search logs for the given CUs</p></dd>
-<dt><a href="#search">search(_name, _what, _alive, [handleFunc], [handlerr])</a> ⇒</dt>
-<dd></dd>
-<dt><a href="#findCUByImplementation">findCUByImplementation(impl, alive, [handleFunc])</a></dt>
-<dd><p>Find an array of CU with the given implementation</p></dd>
-<dt><a href="#getCUStatus">getCUStatus(status_to_search, [handleFunc])</a></dt>
-<dd><p>Return an array of CU that match a given status</p></dd>
-<dt><a href="#convertArray2CSV">convertArray2CSV(devs)</a> ⇒ <code>string</code></dt>
-<dd><p>convert an array into a CommaSepareted elements</p></dd>
-<dt><a href="#getChannel">getChannel(devs, channel_id, [handleFunc], [badfunc])</a> ⇒ <code>object</code></dt>
-<dd><p>Retrive the specified dataset correspoding to a given CU</p></dd>
-<dt><a href="#setProperty">setProperty(dev, prop, [handleFunc], [errFunc])</a></dt>
-<dd><p>Set a CU property</p></dd>
-<dt><a href="#loadUnload">loadUnload(dev, loadunload, [handleFunc], [nok])</a></dt>
-<dd><p>Load or Unload a CU</p></dd>
-<dt><a href="#sendCUCmd">sendCUCmd(devs, cmd, [param], [handleFunc], [handleFuncErr])</a></dt>
-<dd><p>Sends a command to a CU</p></dd>
-<dt><a href="#sendCUFullCmd">sendCUFullCmd(devs, cmd, [param], force, prio, [handleFunc], [handleFuncErr])</a></dt>
-<dd><p>Sends a command to a CU, with explicit params</p></dd>
-<dt><a href="#getHistory">getHistory(devs, channel, start, stop, [varname], [handleFunc], [tagsv], [funcerr])</a></dt>
-<dd><p>Retrive history of a channel dataset of a  group of devices</p></dd>
-<dt><a href="#fetchHistoryToZip">fetchHistoryToZip(zipname, cams, start, stop, [tagsv], updateCall, errCall)</a></dt>
-<dd><p>Retrive history and write a local zip</p></dd>
-<dt><a href="#checkPeriodiocally">checkPeriodiocally(str, retry, checkFreq, checkFunc, okhandle, nokhandle)</a></dt>
-<dd><p>Helper function th check a periodically a condition<br>
-the difference with check live is the check function don't receive a dataset in input</p></dd>
-<dt><a href="#saveFullConfig">saveFullConfig()</a></dt>
-<dd><p>saveFullConfig<br>
-Save to local disk the state of fundamental configurations</p></dd>
-<dt><a href="#restoreFullConfigFromFile">restoreFullConfigFromFile()</a></dt>
-<dd><p>Restore a full configuration from file</p></dd>
-<dt><a href="#restoreFullConfig">restoreFullConfig(config, configToRestore)</a></dt>
-<dd><p>Restore a previously a configuration into the infrastructure</p></dd>
-<dt><a href="#activeAgentList">activeAgentList(cb)</a> ⇒ <code>Array.&lt;object&gt;</code></dt>
-<dd><p>activeAgentList<br>
-return a list of agents addresses in the callback</p></dd>
-<dt><a href="#getAllProcessInfo">getAllProcessInfo(agl, cb)</a></dt>
-<dd><p>Return a vector of process information in the callback</p></dd>
-<dt><a href="#findBestServer">findBestServer(cb:)</a> ⇒ <code>string</code></dt>
-<dd><p>findBestServer<br>
-return a list of agents ordered by occupation in the callback<br>
-NOTE: this function use a tcp port the is different from REST server one (it goes directly on the server)</p></dd>
-<dt><a href="#runScript">runScript(name, [parm], [okhandle], [errorhandle])</a></dt>
-<dd><p>runScript<br>
-Run the specified script on the chaos infrastructure</p></dd>
-<dt><a href="#encodeName">encodeName(str)</a> ⇒ <code>string</code></dt>
-<dd><p>Encode a path name<br>
-removes trailing</p></dd>
-<dt><a href="#checkLive">checkLive(str, devlist, retry, checkFreq, checkFunc, okhandle, nokhandle)</a></dt>
-<dd><p>This function used mainly in tests.<br>
-It checks for a variable change on a 'devlist', for 'retry' times, checking every 'checkFreq'<br>
-'checkFunc' takes in input the live and realize the check<br>
-okhandle is called if success<br>
-nokhandle if fails</p></dd>
-</dl>
+#### jchaos
+<p>!CHAOS REST Library</p>
 
-#### Typedefs
+**Version**: 1.0  
+**Author**: Andrea Michelotti  
 
-<dl>
-<dt><a href="#okcb">okcb</a> : <code>function</code></dt>
-<dd><p>Callback in asynchronous operations called when the operation is ok</p></dd>
-<dt><a href="#badcb">badcb</a> : <code>function</code></dt>
-<dd><p>Callback in asynchronous operations called when the operation is fails</p></dd>
-<dt><a href="#cmdPar">cmdPar</a> : <code>Object</code></dt>
-<dd><p>The command object for sendCU commands</p></dd>
-<dt><a href="#varpath">varpath</a> : <code>Object</code></dt>
-<dd><p>CU variable path</p></dd>
-<dt><a href="#channelid">channelid</a> : <code>integer</code></dt>
-<dd><p>Channel idintification mapping:<br>
--1 : all<br>
-0: output<br>
-1: input<br>
-2: custom<br>
-3: system<br>
-4: health<br>
-5: cu alarms<br>
-6: device alarms<br>
-128: status<br>
-255: health+system+ alarams</p></dd>
-<dt><a href="#ChaosOption">ChaosOption</a> : <code>object</code></dt>
-<dd></dd>
-</dl>
+* [jchaos](#module_jchaos)
+    * [~decodeCUPath(cupath)](#module_jchaos..decodeCUPath) ⇒ <code>varpath</code>
+    * [~toHHMMSS(sec_num)](#module_jchaos..toHHMMSS) ⇒ <code>string</code>
+    * [~setOption(opt)](#module_jchaos..setOption)
+    * [~basicRmt(server, func, param, handler, badhandler)](#module_jchaos..basicRmt)
+    * [~rmtGetEnvironment(server, varname, handler, badhandler)](#module_jchaos..rmtGetEnvironment) ⇒
+    * [~rmtSetProp(server, prop, handler, badhandler)](#module_jchaos..rmtSetProp) ⇒
+    * [~rmtCreateProcess(server, name, cmdline, ptype, workdir, handler, badhandler)](#module_jchaos..rmtCreateProcess) ⇒ <code>object</code>
+    * [~rmtCreateProcess(server, uid, workdir, handler, badhandler)](#module_jchaos..rmtCreateProcess)
+    * [~rmtUploadScript(server, name, ptype, content, handler, badhandler)](#module_jchaos..rmtUploadScript) ⇒ <code>object</code>
+    * [~rmtListProcess(server, handler, badhandler)](#module_jchaos..rmtListProcess) ⇒ <code>Array.&lt;object&gt;</code>
+    * [~rmtKill(server, uid, handler, badhandler)](#module_jchaos..rmtKill)
+    * [~rmtPurge(server, level, [handler], [badhandler])](#module_jchaos..rmtPurge)
+    * [~basicPost(func, params, [handler], [badhandler], [server])](#module_jchaos..basicPost)
+    * [~registerCU(cuid, obj, [handleFunc], [badhandler])](#module_jchaos..registerCU)
+    * [~pushCU(cuid, obj, [handleFunc], [badhandler])](#module_jchaos..pushCU)
+    * [~mdsBase(cmd, opt, [handleFunc], [errFunc])](#module_jchaos..mdsBase)
+    * [~tag(tagname, node_list, tag_type, tag_value, [handleFunc], [nok])](#module_jchaos..tag)
+    * [~checkRestore(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])](#module_jchaos..checkRestore)
+    * [~checkBurstRunning(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])](#module_jchaos..checkBurstRunning)
+    * [~checkEndBurst(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])](#module_jchaos..checkEndBurst)
+    * [~snapshot(_name, _what, _node_list, [value_], [handleFunc], [nok])](#module_jchaos..snapshot)
+    * [~node(_name, _what, _type, [_parent], [value_], handleFunc, nok)](#module_jchaos..node)
+    * [~variable(_name, _what, [value_], [handleFunc], [handleFunc])](#module_jchaos..variable)
+    * [~log(devs, _what, _type, _start, _end, [handleFunc], [handlerr])](#module_jchaos..log)
+    * [~search(_name, _what, _alive, [handleFunc], [handlerr])](#module_jchaos..search) ⇒
+    * [~findCUByImplementation(impl, alive, [handleFunc])](#module_jchaos..findCUByImplementation)
+    * [~getCUStatus(status_to_search, [handleFunc])](#module_jchaos..getCUStatus)
+    * [~convertArray2CSV(devs)](#module_jchaos..convertArray2CSV) ⇒ <code>string</code>
+    * [~getChannel(devs, channel_id, [handleFunc], [badfunc])](#module_jchaos..getChannel) ⇒ <code>object</code>
+    * [~setProperty(dev, prop, [handleFunc], [errFunc])](#module_jchaos..setProperty)
+    * [~loadUnload(dev, loadunload, [handleFunc], [nok])](#module_jchaos..loadUnload)
+    * [~sendCUCmd(devs, cmd, [param], [handleFunc], [handleFuncErr])](#module_jchaos..sendCUCmd)
+    * [~sendCUFullCmd(devs, cmd, [param], force, prio, [handleFunc], [handleFuncErr])](#module_jchaos..sendCUFullCmd)
+    * [~getHistory(devs, channel, start, stop, [varname], [handleFunc], [tagsv], [funcerr])](#module_jchaos..getHistory)
+    * [~fetchHistoryToZip(zipname, cams, start, stop, [tagsv], updateCall, errCall)](#module_jchaos..fetchHistoryToZip)
+    * [~checkPeriodiocally(str, retry, checkFreq, checkFunc, okhandle, nokhandle)](#module_jchaos..checkPeriodiocally)
+    * [~saveFullConfig()](#module_jchaos..saveFullConfig)
+    * [~restoreFullConfigFromFile()](#module_jchaos..restoreFullConfigFromFile)
+    * [~restoreFullConfig(config, configToRestore)](#module_jchaos..restoreFullConfig)
+    * [~activeAgentList(cb)](#module_jchaos..activeAgentList) ⇒ <code>Array.&lt;object&gt;</code>
+    * [~getAllProcessInfo(agl, cb)](#module_jchaos..getAllProcessInfo)
+    * [~findBestServer(cb:)](#module_jchaos..findBestServer) ⇒ <code>string</code>
+    * [~runScript(name, [parm], [okhandle], [errorhandle])](#module_jchaos..runScript)
+    * [~encodeName(str)](#module_jchaos..encodeName) ⇒ <code>string</code>
+    * [~checkLive(str, devlist, retry, checkFreq, checkFunc, okhandle, nokhandle)](#module_jchaos..checkLive)
+    * [~okcb](#module_jchaos..okcb) : <code>function</code>
+    * [~badcb](#module_jchaos..badcb) : <code>function</code>
+    * [~cmdPar](#module_jchaos..cmdPar) : <code>Object</code>
+    * [~varpath](#module_jchaos..varpath) : <code>Object</code>
+    * [~channelid](#module_jchaos..channelid) : <code>integer</code>
+    * [~ChaosOption](#module_jchaos..ChaosOption) : <code>object</code>
 
-<a name="decodeCUPath"></a>
+<a name="module_jchaos..decodeCUPath"></a>
 
-#### decodeCUPath(cupath) ⇒ [<code>varpath</code>](#varpath)
+##### jchaos~decodeCUPath(cupath) ⇒ <code>varpath</code>
 <p>Decode a CU dataset element path and return an object</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type |
 | --- | --- |
 | cupath | <code>string</code> | 
 
-<a name="toHHMMSS"></a>
+<a name="module_jchaos..toHHMMSS"></a>
 
-#### toHHMMSS(sec_num) ⇒ <code>string</code>
+##### jchaos~toHHMMSS(sec_num) ⇒ <code>string</code>
 <p>translate seconds in days hours minutes seconds string</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <code>string</code> - <p>return string xx days hh:mm:ss</p>  
 
 | Param | Type |
 | --- | --- |
 | sec_num | <code>integer</code> | 
 
-<a name="setOption"></a>
+<a name="module_jchaos..setOption"></a>
 
-#### setOption(opt)
+##### jchaos~setOption(opt)
 <p>Set Library options options</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type |
 | --- | --- |
 | opt | <code>object</code> | 
 
-<a name="basicRmt"></a>
+<a name="module_jchaos..basicRmt"></a>
 
-#### basicRmt(server, func, param, handler, badhandler)
+##### jchaos~basicRmt(server, func, param, handler, badhandler)
 <p>Helper function to post commands on the process remote management</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | server | <code>string</code> | <p>rest process remote management server</p> |
 | func | <code>string</code> | <p>REST function</p> |
 | param | <code>object</code> | <p>REST function parameters</p> |
-| handler | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| badhandler | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| handler | <code>okcb</code> | <p>handler on success</p> |
+| badhandler | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="rmtGetEnvironment"></a>
+<a name="module_jchaos..rmtGetEnvironment"></a>
 
-#### rmtGetEnvironment(server, varname, handler, badhandler) ⇒
+##### jchaos~rmtGetEnvironment(server, varname, handler, badhandler) ⇒
 <p>Retrive a given environemnt variable</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <p>the value on the specified handler.</p>  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | server | <code>string</code> | <p>rest process remote management server</p> |
 | varname | <code>string</code> | <p>environment variable name</p> |
-| handler | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| badhandler | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| handler | <code>okcb</code> | <p>handler on success</p> |
+| badhandler | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="rmtSetProp"></a>
+<a name="module_jchaos..rmtSetProp"></a>
 
-#### rmtSetProp(server, prop, handler, badhandler) ⇒
+##### jchaos~rmtSetProp(server, prop, handler, badhandler) ⇒
 <p>Set the specified propery</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <p>the value on the specified handler.</p>  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | server | <code>string</code> | <p>rest process remote management server</p> |
 | prop | <code>Object</code> | <p>property name</p> |
-| handler | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| badhandler | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| handler | <code>okcb</code> | <p>handler on success</p> |
+| badhandler | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="rmtCreateProcess"></a>
+<a name="module_jchaos..rmtCreateProcess"></a>
 
-#### rmtCreateProcess(server, name, cmdline, ptype, workdir, handler, badhandler) ⇒ <code>object</code>
+##### jchaos~rmtCreateProcess(server, name, cmdline, ptype, workdir, handler, badhandler) ⇒ <code>object</code>
 <p>Launch a process the specified process on the given remote server<br>
 return a process structure</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <code>object</code> - <p>return a process object with many status and information</p>  
 
 | Param | Type | Description |
@@ -238,32 +154,32 @@ return a process structure</p>
 | cmdline | <code>string</code> | <p>command line</p> |
 | ptype | <code>string</code> | <p>type (&quot;exec&quot;: binary, &quot;C++&quot;: C++ script&quot;)</p> |
 | workdir | <code>string</code> | <p>remote local directory</p> |
-| handler | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| badhandler | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| handler | <code>okcb</code> | <p>handler on success</p> |
+| badhandler | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="rmtCreateProcess"></a>
+<a name="module_jchaos..rmtCreateProcess"></a>
 
-#### rmtCreateProcess(server, uid, workdir, handler, badhandler)
+##### jchaos~rmtCreateProcess(server, uid, workdir, handler, badhandler)
 <p>Return a zip file contaning the working directory of the specified process<br>
 can be used to retrieve outputs of remote runs</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | server | <code>string</code> | <p>rest process remote management server</p> |
 | uid | <code>string</code> | <p>the process uid returned by the rmtCreateProcess</p> |
 | workdir | <code>string</code> | <p>working dir to retrieve and zip</p> |
-| handler | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| badhandler | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| handler | <code>okcb</code> | <p>handler on success</p> |
+| badhandler | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="rmtUploadScript"></a>
+<a name="module_jchaos..rmtUploadScript"></a>
 
-#### rmtUploadScript(server, name, ptype, content, handler, badhandler) ⇒ <code>object</code>
+##### jchaos~rmtUploadScript(server, name, ptype, content, handler, badhandler) ⇒ <code>object</code>
 <p>Upload a script/executable on the remote server<br>
 return the path</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <code>object</code> - <p>return the path of the remote process</p>  
 
 | Param | Type | Description |
@@ -272,115 +188,115 @@ return the path</p>
 | name | <code>string</code> | <p>program name</p> |
 | ptype | <code>string</code> | <p>type (&quot;exec&quot;: binary, &quot;C++&quot;: C++ script&quot;)</p> |
 | content | <code>string</code> | <p>base64 encoded content to upload</p> |
-| handler | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| badhandler | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| handler | <code>okcb</code> | <p>handler on success</p> |
+| badhandler | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="rmtListProcess"></a>
+<a name="module_jchaos..rmtListProcess"></a>
 
-#### rmtListProcess(server, handler, badhandler) ⇒ <code>Array.&lt;object&gt;</code>
+##### jchaos~rmtListProcess(server, handler, badhandler) ⇒ <code>Array.&lt;object&gt;</code>
 <p>Return a list of process on the given server</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <code>Array.&lt;object&gt;</code> - <p>return a list of process descriptors</p>  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | server | <code>string</code> | <p>rest process remote management server</p> |
-| handler | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| badhandler | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| handler | <code>okcb</code> | <p>handler on success</p> |
+| badhandler | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="rmtKill"></a>
+<a name="module_jchaos..rmtKill"></a>
 
-#### rmtKill(server, uid, handler, badhandler)
+##### jchaos~rmtKill(server, uid, handler, badhandler)
 <p>Kill the specified process</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | server | <code>string</code> | <p>rest process remote management server</p> |
 | uid | <code>string</code> | <p>the process uid returned by the rmtCreateProcess</p> |
-| handler | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| badhandler | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| handler | <code>okcb</code> | <p>handler on success</p> |
+| badhandler | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="rmtPurge"></a>
+<a name="module_jchaos..rmtPurge"></a>
 
-#### rmtPurge(server, level, [handler], [badhandler])
+##### jchaos~rmtPurge(server, level, [handler], [badhandler])
 <p>Purge a list of process to a given level (0 soft (EXCEPTION), 1 medium (ENDED and EXCEPTION), 2 hard (ALL)</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | server | <code>string</code> | <p>rest process remote management server</p> |
 | level | <code>integer</code> | <p>purge level</p> |
-| [handler] | [<code>okcb</code>](#okcb) | <p>handler on success</p> |
-| [badhandler] | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| [handler] | <code>okcb</code> | <p>handler on success</p> |
+| [badhandler] | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="basicPost"></a>
+<a name="module_jchaos..basicPost"></a>
 
-#### basicPost(func, params, [handler], [badhandler], [server])
+##### jchaos~basicPost(func, params, [handler], [badhandler], [server])
 <p>Helper function that is the base of all commands to the !CHAOS REST SERVER<br>
 the server is specified in the option</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | func | <code>string</code> | <p>REST function to perform</p> |
 | params | <code>string</code> | <p>parameters</p> |
-| [handler] | [<code>okcb</code>](#okcb) | <p>handler on success, if present the call will be asynchronous</p> |
-| [badhandler] | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| [handler] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
+| [badhandler] | <code>badcb</code> | <p>handler on failure</p> |
 | [server] | <code>string</code> | <p>override the default server</p> |
 
-<a name="registerCU"></a>
+<a name="module_jchaos..registerCU"></a>
 
-#### registerCU(cuid, obj, [handleFunc], [badhandler])
+##### jchaos~registerCU(cuid, obj, [handleFunc], [badhandler])
 <p>Registers a CU  dataset using REST</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | cuid | <code>string</code> |  |
 | obj | <code>object</code> | <p>the CU dataset to register/push</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>handler on success, if present the call will be asynchronous</p> |
-| [badhandler] | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| [handleFunc] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
+| [badhandler] | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="pushCU"></a>
+<a name="module_jchaos..pushCU"></a>
 
-#### pushCU(cuid, obj, [handleFunc], [badhandler])
+##### jchaos~pushCU(cuid, obj, [handleFunc], [badhandler])
 <p>Push a CU dataset using REST</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | cuid | <code>string</code> |  |
 | obj | <code>object</code> | <p>the CU dataset to register/push</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>handler on success, if present the call will be asynchronous</p> |
-| [badhandler] | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| [handleFunc] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
+| [badhandler] | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="mdsBase"></a>
+<a name="module_jchaos..mdsBase"></a>
 
-#### mdsBase(cmd, opt, [handleFunc], [errFunc])
+##### jchaos~mdsBase(cmd, opt, [handleFunc], [errFunc])
 <p>Helper function that wrap basic post used for query that regards generic MDS operations</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | cmd | <code>string</code> | <p>command to send</p> |
 | opt | <code>object</code> | <p>options</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>handler on success, if present the call will be asynchronous</p> |
-| [errFunc] | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| [handleFunc] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
+| [errFunc] | <code>badcb</code> | <p>handler on failure</p> |
 
-<a name="tag"></a>
+<a name="module_jchaos..tag"></a>
 
-#### tag(tagname, node_list, tag_type, tag_value, [handleFunc], [nok])
+##### jchaos~tag(tagname, node_list, tag_type, tag_value, [handleFunc], [nok])
 <p>Start tagging a list of nodes for an interval of given time, expressed in cycles or ms</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -388,8 +304,8 @@ the server is specified in the option</p>
 | node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> |  |
 | tag_type | <code>integer</code> | <p>(2= time in ms, 1=cycles)</p> |
 | tag_value | <code>integer</code> | <p>numer of ms or cycles</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>handler on success, if present the call will be asynchronous</p> |
-| [nok] | [<code>badcb</code>](#badcb) | <p>handler on failure</p> |
+| [handleFunc] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
+| [nok] | <code>badcb</code> | <p>handler on failure</p> |
 
 **Example**  
 ```js
@@ -397,35 +313,35 @@ the server is specified in the option</p>
 var camera_list=["TEST/FLAME/CMP/CAMERA/FLACMPFF","TEST/FLAME/CMP/CAMERA/FLMCMP01"];
 jchaos.tag("burstbyseconds",camera_list,2,10000,function(d){jchaos.print("tagging started");});
 ```
-<a name="checkRestore"></a>
+<a name="module_jchaos..checkRestore"></a>
 
-#### checkRestore(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
+##### jchaos~checkRestore(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
 <p>Check if a lists of CU have done a correct snapshot restore, the check is performed every timeout/10 ms for maximum timeout</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | _tagname | <code>string</code> | <p>name of the tag</p> |
 | _node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>list of nodes</p> |
 | _timeout | <code>integer</code> | <p>timeout</p> |
-| [_okhandler] | [<code>okcb</code>](#okcb) |  |
-| [_nokhandler] | [<code>badcb</code>](#badcb) |  |
+| [_okhandler] | <code>okcb</code> |  |
+| [_nokhandler] | <code>badcb</code> |  |
 
-<a name="checkBurstRunning"></a>
+<a name="module_jchaos..checkBurstRunning"></a>
 
-#### checkBurstRunning(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
+##### jchaos~checkBurstRunning(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
 <p>Helper function to check if a burst is running</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | _tagname | <code>string</code> | <p>name of the tag</p> |
 | _node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>list of nodes</p> |
 | _timeout | <code>integer</code> | <p>timeout</p> |
-| [_okhandler] | [<code>okcb</code>](#okcb) |  |
-| [_nokhandler] | [<code>badcb</code>](#badcb) |  |
+| [_okhandler] | <code>okcb</code> |  |
+| [_nokhandler] | <code>badcb</code> |  |
 
 **Example**  
 ```js
@@ -433,20 +349,20 @@ jchaos.tag("burstbyseconds",camera_list,2,10000,function(d){jchaos.print("taggin
 var camera_list=["TEST/FLAME/CMP/CAMERA/FLACMPFF","TEST/FLAME/CMP/CAMERA/FLMCMP01"];
 jchaos.checkBurstRunning("burstbyseconds",camera_list,10000,function(){jchaos.print("OK");},function(){chaos.error("BAD");})
 ```
-<a name="checkEndBurst"></a>
+<a name="module_jchaos..checkEndBurst"></a>
 
-#### checkEndBurst(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
+##### jchaos~checkEndBurst(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
 <p>Check if a list of CU ended correct burst, the check is performed every timeout/10 ms for maximum timeout</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | _tagname | <code>string</code> | <p>name of the tag</p> |
 | _node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>list of nodes</p> |
 | _timeout | <code>integer</code> | <p>timeout</p> |
-| [_okhandler] | [<code>okcb</code>](#okcb) |  |
-| [_nokhandler] | [<code>badcb</code>](#badcb) |  |
+| [_okhandler] | <code>okcb</code> |  |
+| [_nokhandler] | <code>badcb</code> |  |
 
 **Example**  
 ```js
@@ -454,9 +370,9 @@ jchaos.checkBurstRunning("burstbyseconds",camera_list,10000,function(){jchaos.pr
 var camera_list=["TEST/FLAME/CMP/CAMERA/FLACMPFF","TEST/FLAME/CMP/CAMERA/FLMCMP01"];
 jchaos.checkEndBurst(camera_list,10000,function(){jchaos.print("OK");},function(){chaos.error("BAD");})
 ```
-<a name="snapshot"></a>
+<a name="module_jchaos..snapshot"></a>
 
-#### snapshot(_name, _what, _node_list, [value_], [handleFunc], [nok])
+##### jchaos~snapshot(_name, _what, _node_list, [value_], [handleFunc], [nok])
 <p>Performs snapshot operations</p>
 <pre><code>
 create (create a new snapshot of the given list of CUs)
@@ -467,7 +383,7 @@ restore (restore a snapshot)
 burst (perform a burst tag operation see <b>tag</b>)
 </code></pre>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **See**: tag  
 
 | Param | Type | Description |
@@ -476,8 +392,8 @@ burst (perform a burst tag operation see <b>tag</b>)
 | _what | <code>&quot;create&quot;</code> \| <code>&quot;load&quot;</code> \| <code>&quot;set&quot;</code> \| <code>&quot;delete&quot;</code> \| <code>&quot;restore&quot;</code> \| <code>&quot;burst&quot;</code> | <p>operation to perform</p> |
 | _node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>nodes to snapshot</p> |
 | [value_] | <code>object</code> | <p>parameter for set command</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) |  |
-| [nok] | [<code>badcb</code>](#badcb) |  |
+| [handleFunc] | <code>okcb</code> |  |
+| [nok] | <code>badcb</code> |  |
 
 **Example**  
 ```js
@@ -518,12 +434,12 @@ var powersupply_setpoint = {
 				});
 			});
 ```
-<a name="node"></a>
+<a name="module_jchaos..node"></a>
 
-#### node(_name, _what, _type, [_parent], [value_], handleFunc, nok)
+##### jchaos~node(_name, _what, _type, [_parent], [value_], handleFunc, nok)
 <p>Perform and operation specified by '_what' onthe nodes of '_name' of type :'_type'</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -532,8 +448,8 @@ var powersupply_setpoint = {
 | _type | <code>&quot;us&quot;</code> \| <code>&quot;cu&quot;</code> \| <code>&quot;agent&quot;</code> | <p>target type of the command</p> |
 | [_parent] | <code>string</code> | <p>some commands needs a parent node to be specified</p> |
 | [value_] | <code>object</code> | <p>some commands needs a parameter</p> |
-| handleFunc | [<code>okcb</code>](#okcb) |  |
-| nok | [<code>badcb</code>](#badcb) |  |
+| handleFunc | <code>okcb</code> |  |
+| nok | <code>badcb</code> |  |
 
 **Example**  
 ```js
@@ -541,20 +457,20 @@ var powersupply_setpoint = {
 jchaos.node("BTF/QUADRUPOLE/QUATB001","stop","cu");
 jchaos.node("BTF/QUADRUPOLE/QUATB001","start","cu");
 ```
-<a name="variable"></a>
+<a name="module_jchaos..variable"></a>
 
-#### variable(_name, _what, [value_], [handleFunc], [handleFunc])
+##### jchaos~variable(_name, _what, [value_], [handleFunc], [handleFunc])
 <p>Allows to manage variables that are persistent (on DB)</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | _name | <code>string</code> \| <code>Array.&lt;string&gt;</code> |  |
 | _what | <code>&quot;set&quot;</code> \| <code>&quot;get&quot;</code> \| <code>&quot;del&quot;</code> \| <code>&quot;search&quot;</code> | <p>operation type</p> |
 | [value_] | <code>object</code> | <p>in case of set the object</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
-| [handleFunc] | [<code>badcb</code>](#badcb) | <p>callback if failure</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
+| [handleFunc] | <code>badcb</code> | <p>callback if failure</p> |
 
 **Example**  
 ```js
@@ -568,12 +484,12 @@ jchaos.variable("mypoint","get",function(ls){jchaos.print(JSON.stringify(ls));})
 // delete variable
 jchaos.variable("mypoint","del");
 ```
-<a name="log"></a>
+<a name="module_jchaos..log"></a>
 
-#### log(devs, _what, _type, _start, _end, [handleFunc], [handlerr])
+##### jchaos~log(devs, _what, _type, _start, _end, [handleFunc], [handlerr])
 <p>Search logs for the given CUs</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -582,18 +498,18 @@ jchaos.variable("mypoint","del");
 | _type | <code>&quot;all&quot;</code> \| <code>&quot;Info&quot;</code> \| <code>&quot;error&quot;</code> \| <code>&quot;warning&quot;</code> \| <code>&quot;log&quot;</code> \| <code>&quot;command&quot;</code> | <p>specify log type</p> |
 | _start | <code>integer</code> | <p>epoch in ms start of the search</p> |
 | _end | <code>integer</code> | <p>epoch md end of the search (-1 is now)</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
-| [handlerr] | [<code>badcb</code>](#badcb) | <p>callback if error</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
+| [handlerr] | <code>badcb</code> | <p>callback if error</p> |
 
 **Example**  
 ```js
 // retrieve all logs for a given CU till now
 jchaos.log("BTF/QUADRUPOLE/QUATB001","search","all",0,-1,function(ls){jchaos.print(JSON.stringify(ls));});
 ```
-<a name="search"></a>
+<a name="module_jchaos..search"></a>
 
-#### search(_name, _what, _alive, [handleFunc], [handlerr]) ⇒
-**Kind**: global function  
+##### jchaos~search(_name, _what, _alive, [handleFunc], [handlerr]) ⇒
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <p>an array of strings or objects</p>  
 
 | Param | Type | Description |
@@ -601,124 +517,124 @@ jchaos.log("BTF/QUADRUPOLE/QUATB001","search","all",0,-1,function(ls){jchaos.pri
 | _name | <code>string</code> | <p>is the substring of what you want search</p> |
 | _what | <code>&quot;cu&quot;</code> \| <code>&quot;us&quot;</code> \| <code>&quot;agent&quot;</code> \| <code>&quot;cds&quot;</code> \| <code>&quot;webui&quot;</code> \| <code>&quot;variable&quot;</code> \| <code>&quot;snapshotsof&quot;</code> \| <code>&quot;snapshots&quot;</code> \| <code>&quot;script&quot;</code> \| <code>&quot;zone&quot;</code> \| <code>&quot;class&quot;</code> | <p>operation type</p> |
 | _alive | <code>boolean</code> | <p>search among alive (true) or all(false)</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
-| [handlerr] | [<code>badcb</code>](#badcb) | <p>callback if error</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
+| [handlerr] | <code>badcb</code> | <p>callback if error</p> |
 
 **Example**  
 ```js
 // search all CU alive
 jchaos.search("","cu",true,function(ls){jchaos.print(JSON.stringify(ls));});
 ```
-<a name="findCUByImplementation"></a>
+<a name="module_jchaos..findCUByImplementation"></a>
 
-#### findCUByImplementation(impl, alive, [handleFunc])
+##### jchaos~findCUByImplementation(impl, alive, [handleFunc])
 <p>Find an array of CU with the given implementation</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | impl | <code>string</code> | <p>C++ implementation name to find</p> |
 | alive | <code>bool</code> | <p>search from alive or all</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
 
 **Example**  
 ```js
 // find implementation that starts with SCA(ctuators)
 jchaos.findCUByImplementation("SCA",true,function(ls){jchaos.print(JSON.stringify(ls));});
 ```
-<a name="getCUStatus"></a>
+<a name="module_jchaos..getCUStatus"></a>
 
-#### getCUStatus(status_to_search, [handleFunc])
+##### jchaos~getCUStatus(status_to_search, [handleFunc])
 <p>Return an array of CU that match a given status</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | status_to_search | <code>string</code> |  |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
 
-<a name="convertArray2CSV"></a>
+<a name="module_jchaos..convertArray2CSV"></a>
 
-#### convertArray2CSV(devs) ⇒ <code>string</code>
+##### jchaos~convertArray2CSV(devs) ⇒ <code>string</code>
 <p>convert an array into a CommaSepareted elements</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | devs | <code>Array.&lt;string&gt;</code> | <p>array</p> |
 
-<a name="getChannel"></a>
+<a name="module_jchaos..getChannel"></a>
 
-#### getChannel(devs, channel_id, [handleFunc], [badfunc]) ⇒ <code>object</code>
+##### jchaos~getChannel(devs, channel_id, [handleFunc], [badfunc]) ⇒ <code>object</code>
 <p>Retrive the specified dataset correspoding to a given CU</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <code>object</code> - <p>the specified dataset</p>  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | devs | <code>String</code> \| <code>Array.&lt;String&gt;</code> | <p>CU or array of CU</p> |
-| channel_id | [<code>channelid</code>](#channelid) | <p>(-1: all,0: output, 1: input, 2:custom,3:system, 4: health, 5 cu alarm, 6 dev alarms,128 status)</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
-| [badfunc] | [<code>badcb</code>](#badcb) | <p>bad callback</p> |
+| channel_id | <code>channelid</code> | <p>(-1: all,0: output, 1: input, 2:custom,3:system, 4: health, 5 cu alarm, 6 dev alarms,128 status)</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
+| [badfunc] | <code>badcb</code> | <p>bad callback</p> |
 
 **Example**  
 ```js
 //retrive all channels of a give CU
 chaos.getChannel("BTF/QUADRUPOLE/QUATB001",-1,function(ls){jchaos.print(JSON.stringify(ls));});
 ```
-<a name="setProperty"></a>
+<a name="module_jchaos..setProperty"></a>
 
-#### setProperty(dev, prop, [handleFunc], [errFunc])
+##### jchaos~setProperty(dev, prop, [handleFunc], [errFunc])
 <p>Set a CU property</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | dev | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>CU or array of CU</p> |
 | prop | <code>string</code> | <p>property name</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
-| [errFunc] | [<code>badcb</code>](#badcb) | <p>bad callback</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
+| [errFunc] | <code>badcb</code> | <p>bad callback</p> |
 
-<a name="loadUnload"></a>
+<a name="module_jchaos..loadUnload"></a>
 
-#### loadUnload(dev, loadunload, [handleFunc], [nok])
+##### jchaos~loadUnload(dev, loadunload, [handleFunc], [nok])
 <p>Load or Unload a CU</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | dev | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>CU or array of CU</p> |
 | loadunload | <code>bool</code> | <p>(true = load, false=unload)</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
-| [nok] | [<code>badcb</code>](#badcb) | <p>bad callback</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
+| [nok] | <code>badcb</code> | <p>bad callback</p> |
 
-<a name="sendCUCmd"></a>
+<a name="module_jchaos..sendCUCmd"></a>
 
-#### sendCUCmd(devs, cmd, [param], [handleFunc], [handleFuncErr])
+##### jchaos~sendCUCmd(devs, cmd, [param], [handleFunc], [handleFuncErr])
 <p>Sends a command to a CU</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | devs | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>CU or array of CU</p> |
-| cmd | [<code>cmdPar</code>](#cmdPar) | <p>command to send</p> |
+| cmd | <code>cmdPar</code> | <p>command to send</p> |
 | [param] | <code>object</code> | <p>optional and my be included into cmd</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
-| [handleFuncErr] | [<code>badcb</code>](#badcb) | <p>bad callback</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
+| [handleFuncErr] | <code>badcb</code> | <p>bad callback</p> |
 
-<a name="sendCUFullCmd"></a>
+<a name="module_jchaos..sendCUFullCmd"></a>
 
-#### sendCUFullCmd(devs, cmd, [param], force, prio, [handleFunc], [handleFuncErr])
+##### jchaos~sendCUFullCmd(devs, cmd, [param], force, prio, [handleFunc], [handleFuncErr])
 <p>Sends a command to a CU, with explicit params</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -727,15 +643,15 @@ chaos.getChannel("BTF/QUADRUPOLE/QUATB001",-1,function(ls){jchaos.print(JSON.str
 | [param] | <code>string</code> \| <code>object</code> |  |
 | force | <code>integer</code> |  |
 | prio | <code>integer</code> |  |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
-| [handleFuncErr] | [<code>badcb</code>](#badcb) | <p>bad callback</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
+| [handleFuncErr] | <code>badcb</code> | <p>bad callback</p> |
 
-<a name="getHistory"></a>
+<a name="module_jchaos..getHistory"></a>
 
-#### getHistory(devs, channel, start, stop, [varname], [handleFunc], [tagsv], [funcerr])
+##### jchaos~getHistory(devs, channel, start, stop, [varname], [handleFunc], [tagsv], [funcerr])
 <p>Retrive history of a channel dataset of a  group of devices</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -744,16 +660,16 @@ chaos.getChannel("BTF/QUADRUPOLE/QUATB001",-1,function(ls){jchaos.print(JSON.str
 | start | <code>integer</code> \| <code>string</code> | <p>epoch timestamp in ms (GMT) of start of search</p> |
 | stop | <code>integer</code> \| <code>string</code> | <p>epoch timestamp in ms (GMT) of start of search</p> |
 | [varname] | <code>string</code> | <p>optional name of the variable to retrieve (instead of all)</p> |
-| [handleFunc] | [<code>okcb</code>](#okcb) | <p>callback if ok, enable async mode</p> |
+| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
 | [tagsv] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>optional tags</p> |
-| [funcerr] | [<code>badcb</code>](#badcb) | <p>optional bad callback</p> |
+| [funcerr] | <code>badcb</code> | <p>optional bad callback</p> |
 
-<a name="fetchHistoryToZip"></a>
+<a name="module_jchaos..fetchHistoryToZip"></a>
 
-#### fetchHistoryToZip(zipname, cams, start, stop, [tagsv], updateCall, errCall)
+##### jchaos~fetchHistoryToZip(zipname, cams, start, stop, [tagsv], updateCall, errCall)
 <p>Retrive history and write a local zip</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -762,16 +678,16 @@ chaos.getChannel("BTF/QUADRUPOLE/QUATB001",-1,function(ls){jchaos.print(JSON.str
 | start | <code>integer</code> \| <code>string</code> | <p>epoch timestamp in ms (GMT) of start of search</p> |
 | stop | <code>integer</code> \| <code>string</code> | <p>epoch timestamp in ms (GMT) of start of search</p> |
 | [tagsv] | <code>Array.&lt;string&gt;</code> | <p>tags</p> |
-| updateCall | [<code>okcb</code>](#okcb) |  |
-| errCall | [<code>badcb</code>](#badcb) |  |
+| updateCall | <code>okcb</code> |  |
+| errCall | <code>badcb</code> |  |
 
-<a name="checkPeriodiocally"></a>
+<a name="module_jchaos..checkPeriodiocally"></a>
 
-#### checkPeriodiocally(str, retry, checkFreq, checkFunc, okhandle, nokhandle)
+##### jchaos~checkPeriodiocally(str, retry, checkFreq, checkFunc, okhandle, nokhandle)
 <p>Helper function th check a periodically a condition<br>
 the difference with check live is the check function don't receive a dataset in input</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **See**
 
 - checkLive
@@ -783,126 +699,126 @@ the difference with check live is the check function don't receive a dataset in 
 | str | <code>string</code> | <p>string to display each time the check is performed</p> |
 | retry | <code>integer</code> | <p>retry the check for a maximum of number of time</p> |
 | checkFreq | <code>integer</code> | <p>check frequency in ms</p> |
-| checkFunc | [<code>okcb</code>](#okcb) | <p>check function, should return true if ok or false if fails</p> |
-| okhandle | [<code>okcb</code>](#okcb) | <p>callback to call if test succeed</p> |
-| nokhandle | [<code>badcb</code>](#badcb) | <p>callback to call if fails</p> |
+| checkFunc | <code>okcb</code> | <p>check function, should return true if ok or false if fails</p> |
+| okhandle | <code>okcb</code> | <p>callback to call if test succeed</p> |
+| nokhandle | <code>badcb</code> | <p>callback to call if fails</p> |
 
-<a name="saveFullConfig"></a>
+<a name="module_jchaos..saveFullConfig"></a>
 
-#### saveFullConfig()
+##### jchaos~saveFullConfig()
 <p>saveFullConfig<br>
 Save to local disk the state of fundamental configurations</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Example**  
 ```js
 //save the infrastructure info.
 saveFullConfig();
 ```
-<a name="restoreFullConfigFromFile"></a>
+<a name="module_jchaos..restoreFullConfigFromFile"></a>
 
-#### restoreFullConfigFromFile()
+##### jchaos~restoreFullConfigFromFile()
 <p>Restore a full configuration from file</p>
 
-**Kind**: global function  
-<a name="restoreFullConfig"></a>
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
+<a name="module_jchaos..restoreFullConfig"></a>
 
-#### restoreFullConfig(config, configToRestore)
+##### jchaos~restoreFullConfig(config, configToRestore)
 <p>Restore a previously a configuration into the infrastructure</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | config | <code>object</code> |  |
 | configToRestore | <code>Array.&lt;string&gt;</code> | <p>array of things to restore &quot;us&quot;,&quot;agents&quot;,&quot;snapshots&quot;,&quot;graphs&quot;,&quot;custom_group&quot;,&quot;cu_templates&quot;</p> |
 
-<a name="activeAgentList"></a>
+<a name="module_jchaos..activeAgentList"></a>
 
-#### activeAgentList(cb) ⇒ <code>Array.&lt;object&gt;</code>
+##### jchaos~activeAgentList(cb) ⇒ <code>Array.&lt;object&gt;</code>
 <p>activeAgentList<br>
 return a list of agents addresses in the callback</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <code>Array.&lt;object&gt;</code> - <p>return in the callback the list descriptor of the agents</p>  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| cb | [<code>okcb</code>](#okcb) | <p>callback called with the agent object list</p> |
+| cb | <code>okcb</code> | <p>callback called with the agent object list</p> |
 
 **Example**  
 ```js
 jchaos.activeAgentList(function(cb){jchaos.print(JSON.stringify(cb));})
 ```
-<a name="getAllProcessInfo"></a>
+<a name="module_jchaos..getAllProcessInfo"></a>
 
-#### getAllProcessInfo(agl, cb)
+##### jchaos~getAllProcessInfo(agl, cb)
 <p>Return a vector of process information in the callback</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | agl | <code>Array.&lt;string&gt;</code> | <p>list of agents info</p> |
-| cb | [<code>okcb</code>](#okcb) | <p>callback called with the agent object list</p> |
+| cb | <code>okcb</code> | <p>callback called with the agent object list</p> |
 
-<a name="findBestServer"></a>
+<a name="module_jchaos..findBestServer"></a>
 
-#### findBestServer(cb:) ⇒ <code>string</code>
+##### jchaos~findBestServer(cb:) ⇒ <code>string</code>
 <p>findBestServer<br>
 return a list of agents ordered by occupation in the callback<br>
 NOTE: this function use a tcp port the is different from REST server one (it goes directly on the server)</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <code>string</code> - <p>return the best server</p>  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| cb: | [<code>okcb</code>](#okcb) | <p>return a list of active agents</p> |
+| cb: | <code>okcb</code> | <p>return a list of active agents</p> |
 
 **Example**  
 ```js
 // find the best server to run a script:
 jchaos.findBestServer(function(cb){jchaos.print(JSON.stringify(cb));})
 ```
-<a name="runScript"></a>
+<a name="module_jchaos..runScript"></a>
 
-#### runScript(name, [parm], [okhandle], [errorhandle])
+##### jchaos~runScript(name, [parm], [okhandle], [errorhandle])
 <p>runScript<br>
 Run the specified script on the chaos infrastructure</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | name | <code>string</code> | <p>the name of the script present in the DB</p> |
 | [parm] | <code>object</code> | <p>optional parameters</p> |
-| [okhandle] | [<code>okcb</code>](#okcb) | <p>called when ok</p> |
-| [errorhandle] | [<code>badcb</code>](#badcb) | <p>called when failed</p> |
+| [okhandle] | <code>okcb</code> | <p>called when ok</p> |
+| [errorhandle] | <code>badcb</code> | <p>called when failed</p> |
 
-<a name="encodeName"></a>
+<a name="module_jchaos..encodeName"></a>
 
-#### encodeName(str) ⇒ <code>string</code>
+##### jchaos~encodeName(str) ⇒ <code>string</code>
 <p>Encode a path name<br>
 removes trailing</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 **Returns**: <code>string</code> - <p>encoded string</p>  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | str | <code>string</code> | <p>string to encode</p> |
 
-<a name="checkLive"></a>
+<a name="module_jchaos..checkLive"></a>
 
-#### checkLive(str, devlist, retry, checkFreq, checkFunc, okhandle, nokhandle)
+##### jchaos~checkLive(str, devlist, retry, checkFreq, checkFunc, okhandle, nokhandle)
 <p>This function used mainly in tests.<br>
 It checks for a variable change on a 'devlist', for 'retry' times, checking every 'checkFreq'<br>
 'checkFunc' takes in input the live and realize the check<br>
 okhandle is called if success<br>
 nokhandle if fails</p>
 
-**Kind**: global function  
+**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -910,9 +826,9 @@ nokhandle if fails</p>
 | devlist | <code>Array.&lt;string&gt;</code> | <p>list of CU to check</p> |
 | retry | <code>integer</code> | <p>retry the ckeck for the given number of times</p> |
 | checkFreq | <code>integer</code> | <p>check frequency expressed in ms</p> |
-| checkFunc | [<code>okcb</code>](#okcb) | <p>call back to call that perform the check, it takes in input the dataset to check, should return true if the check succeed or false if not</p> |
-| okhandle | [<code>okcb</code>](#okcb) | <p>callback to call if the test complete successfully</p> |
-| nokhandle | [<code>badcb</code>](#badcb) | <p>callback to call if the test fails</p> |
+| checkFunc | <code>okcb</code> | <p>call back to call that perform the check, it takes in input the dataset to check, should return true if the check succeed or false if not</p> |
+| okhandle | <code>okcb</code> | <p>callback to call if the test complete successfully</p> |
+| nokhandle | <code>badcb</code> | <p>callback to call if the test fails</p> |
 
 **Example**  
 ```js
@@ -920,34 +836,34 @@ nokhandle if fails</p>
  var cu_status=["BTF/QUADRUPOLE/QUATB001","BTF/QUADRUPOLE/QUATB002","BTF/QUADRUPOLE/QUATB003"];
  jchaos.checkLive('check Start',cu_status, 20, 1000, function (ds) {jchaos.print("testing..."); return (ds!=null)&&ds.hasOwnProperty("health")&&ds.health.hasOwnProperty("nh_status")&&(ds.health.nh_status == "Start"); }, function () { jchaos.print("CHECK OK"); }, function () { jchaos.error("CHECK FAILED"); });
 ```
-<a name="okcb"></a>
+<a name="module_jchaos..okcb"></a>
 
-#### okcb : <code>function</code>
+##### jchaos~okcb : <code>function</code>
 <p>Callback in asynchronous operations called when the operation is ok</p>
 
-**Kind**: global typedef  
+**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>object</code> | <p>depend on the operation (typically a dataset)</p> |
 
-<a name="badcb"></a>
+<a name="module_jchaos..badcb"></a>
 
-#### badcb : <code>function</code>
+##### jchaos~badcb : <code>function</code>
 <p>Callback in asynchronous operations called when the operation is fails</p>
 
-**Kind**: global typedef  
+**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>string</code> \| <code>object</code> | <p>description of the error</p> |
 
-<a name="cmdPar"></a>
+<a name="module_jchaos..cmdPar"></a>
 
-#### cmdPar : <code>Object</code>
+##### jchaos~cmdPar : <code>Object</code>
 <p>The command object for sendCU commands</p>
 
-**Kind**: global typedef  
+**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
 **Properties**
 
 | Name | Type | Description |
@@ -956,12 +872,12 @@ nokhandle if fails</p>
 | prio | <code>integer</code> | <p>Priority</p> |
 | mode | <code>integer</code> | <p>mode</p> |
 
-<a name="varpath"></a>
+<a name="module_jchaos..varpath"></a>
 
-#### varpath : <code>Object</code>
+##### jchaos~varpath : <code>Object</code>
 <p>CU variable path</p>
 
-**Kind**: global typedef  
+**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
 **Properties**
 
 | Name | Type | Description |
@@ -972,9 +888,9 @@ nokhandle if fails</p>
 | const | <code>string</code> | <p>constantco:String</p> |
 | origin | <code>string</code> | <p>full path</p> |
 
-<a name="channelid"></a>
+<a name="module_jchaos..channelid"></a>
 
-#### channelid : <code>integer</code>
+##### jchaos~channelid : <code>integer</code>
 <p>Channel idintification mapping:<br>
 -1 : all<br>
 0: output<br>
@@ -987,11 +903,11 @@ nokhandle if fails</p>
 128: status<br>
 255: health+system+ alarams</p>
 
-**Kind**: global typedef  
-<a name="ChaosOption"></a>
+**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
+<a name="module_jchaos..ChaosOption"></a>
 
-#### ChaosOption : <code>object</code>
-**Kind**: global typedef  
+##### jchaos~ChaosOption : <code>object</code>
+**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
 **Properties**
 
 | Name | Type | Description |

@@ -2,7 +2,8 @@
  *  !CHAOS REST Library                                                                                                                                                                                           
  *@fileOverview                                                                                                                                                                               
  *@version 1.0                                                                                                                                                                                
- *@author Andrea Michelotti                                                                                                                                                                                            
+ *@author Andrea Michelotti
+ *@module jchaos
  */
 
 /**
@@ -59,6 +60,7 @@
  	* @class
  	*/
 	function createLibrary() {
+
 		var jchaos = {};
 		jchaos['latency']=0;
 		jchaos['latency_avg']=0;
