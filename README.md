@@ -1,917 +1,730 @@
-<a name="module_jchaos"></a>
-
-#### jchaos
-<p>!CHAOS REST Library</p>
-
-**Version**: 1.0  
-**Author**: Andrea Michelotti  
-
-* [jchaos](#module_jchaos)
-    * [~decodeCUPath(cupath)](#module_jchaos..decodeCUPath) ⇒ <code>varpath</code>
-    * [~toHHMMSS(sec_num)](#module_jchaos..toHHMMSS) ⇒ <code>string</code>
-    * [~setOption(opt)](#module_jchaos..setOption)
-    * [~basicRmt(server, func, param, handler, badhandler)](#module_jchaos..basicRmt)
-    * [~rmtGetEnvironment(server, varname, handler, badhandler)](#module_jchaos..rmtGetEnvironment) ⇒
-    * [~rmtSetProp(server, prop, handler, badhandler)](#module_jchaos..rmtSetProp) ⇒
-    * [~rmtCreateProcess(server, name, cmdline, ptype, workdir, handler, badhandler)](#module_jchaos..rmtCreateProcess) ⇒ <code>object</code>
-    * [~rmtCreateProcess(server, uid, workdir, handler, badhandler)](#module_jchaos..rmtCreateProcess)
-    * [~rmtUploadScript(server, name, ptype, content, handler, badhandler)](#module_jchaos..rmtUploadScript) ⇒ <code>object</code>
-    * [~rmtListProcess(server, handler, badhandler)](#module_jchaos..rmtListProcess) ⇒ <code>Array.&lt;object&gt;</code>
-    * [~rmtKill(server, uid, handler, badhandler)](#module_jchaos..rmtKill)
-    * [~rmtPurge(server, level, [handler], [badhandler])](#module_jchaos..rmtPurge)
-    * [~basicPost(func, params, [handler], [badhandler], [server])](#module_jchaos..basicPost)
-    * [~registerCU(cuid, obj, [handleFunc], [badhandler])](#module_jchaos..registerCU)
-    * [~pushCU(cuid, obj, [handleFunc], [badhandler])](#module_jchaos..pushCU)
-    * [~mdsBase(cmd, opt, [handleFunc], [errFunc])](#module_jchaos..mdsBase)
-    * [~tag(tagname, node_list, tag_type, tag_value, [handleFunc], [nok])](#module_jchaos..tag)
-    * [~checkRestore(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])](#module_jchaos..checkRestore)
-    * [~checkBurstRunning(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])](#module_jchaos..checkBurstRunning)
-    * [~checkEndBurst(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])](#module_jchaos..checkEndBurst)
-    * [~snapshot(_name, _what, _node_list, [value_], [handleFunc], [nok])](#module_jchaos..snapshot)
-    * [~node(_name, _what, _type, [_parent], [value_], handleFunc, nok)](#module_jchaos..node)
-    * [~variable(_name, _what, [value_], [handleFunc], [handleFunc])](#module_jchaos..variable)
-    * [~log(devs, _what, _type, _start, _end, [handleFunc], [handlerr])](#module_jchaos..log)
-    * [~search(_name, _what, _alive, [handleFunc], [handlerr])](#module_jchaos..search) ⇒
-    * [~findCUByImplementation(impl, alive, [handleFunc])](#module_jchaos..findCUByImplementation)
-    * [~getCUStatus(status_to_search, [handleFunc])](#module_jchaos..getCUStatus)
-    * [~convertArray2CSV(devs)](#module_jchaos..convertArray2CSV) ⇒ <code>string</code>
-    * [~getChannel(devs, channel_id, [handleFunc], [badfunc])](#module_jchaos..getChannel) ⇒ <code>object</code>
-    * [~setProperty(dev, prop, [handleFunc], [errFunc])](#module_jchaos..setProperty)
-    * [~loadUnload(dev, loadunload, [handleFunc], [nok])](#module_jchaos..loadUnload)
-    * [~sendCUCmd(devs, cmd, [param], [handleFunc], [handleFuncErr])](#module_jchaos..sendCUCmd)
-    * [~sendCUFullCmd(devs, cmd, [param], force, prio, [handleFunc], [handleFuncErr])](#module_jchaos..sendCUFullCmd)
-    * [~getHistory(devs, channel, start, stop, [varname], [handleFunc], [tagsv], [funcerr])](#module_jchaos..getHistory)
-    * [~fetchHistoryToZip(zipname, cams, start, stop, [tagsv], updateCall, errCall)](#module_jchaos..fetchHistoryToZip)
-    * [~checkPeriodiocally(str, retry, checkFreq, checkFunc, okhandle, nokhandle)](#module_jchaos..checkPeriodiocally)
-    * [~saveFullConfig()](#module_jchaos..saveFullConfig)
-    * [~restoreFullConfigFromFile()](#module_jchaos..restoreFullConfigFromFile)
-    * [~restoreFullConfig(config, configToRestore)](#module_jchaos..restoreFullConfig)
-    * [~activeAgentList(cb)](#module_jchaos..activeAgentList) ⇒ <code>Array.&lt;object&gt;</code>
-    * [~getAllProcessInfo(agl, cb)](#module_jchaos..getAllProcessInfo)
-    * [~findBestServer(cb:)](#module_jchaos..findBestServer) ⇒ <code>string</code>
-    * [~runScript(name, [parm], [okhandle], [errorhandle])](#module_jchaos..runScript)
-    * [~encodeName(str)](#module_jchaos..encodeName) ⇒ <code>string</code>
-    * [~checkLive(str, devlist, retry, checkFreq, checkFunc, okhandle, nokhandle)](#module_jchaos..checkLive)
-    * [~okcb](#module_jchaos..okcb) : <code>function</code>
-    * [~badcb](#module_jchaos..badcb) : <code>function</code>
-    * [~cmdPar](#module_jchaos..cmdPar) : <code>Object</code>
-    * [~varpath](#module_jchaos..varpath) : <code>Object</code>
-    * [~channelid](#module_jchaos..channelid) : <code>integer</code>
-    * [~ChaosOption](#module_jchaos..ChaosOption) : <code>object</code>
-
-<a name="module_jchaos..decodeCUPath"></a>
-
-##### jchaos~decodeCUPath(cupath) ⇒ <code>varpath</code>
-<p>Decode a CU dataset element path and return an object</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type |
-| --- | --- |
-| cupath | <code>string</code> | 
-
-<a name="module_jchaos..toHHMMSS"></a>
-
-##### jchaos~toHHMMSS(sec_num) ⇒ <code>string</code>
-<p>translate seconds in days hours minutes seconds string</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <code>string</code> - <p>return string xx days hh:mm:ss</p>  
-
-| Param | Type |
-| --- | --- |
-| sec_num | <code>integer</code> | 
-
-<a name="module_jchaos..setOption"></a>
-
-##### jchaos~setOption(opt)
-<p>Set Library options options</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type |
-| --- | --- |
-| opt | <code>object</code> | 
-
-<a name="module_jchaos..basicRmt"></a>
-
-##### jchaos~basicRmt(server, func, param, handler, badhandler)
-<p>Helper function to post commands on the process remote management</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| func | <code>string</code> | <p>REST function</p> |
-| param | <code>object</code> | <p>REST function parameters</p> |
-| handler | <code>okcb</code> | <p>handler on success</p> |
-| badhandler | <code>badcb</code> | <p>handler on failure</p> |
-
-<a name="module_jchaos..rmtGetEnvironment"></a>
-
-##### jchaos~rmtGetEnvironment(server, varname, handler, badhandler) ⇒
-<p>Retrive a given environemnt variable</p>
+  Andrea Michelotti Page 1 4/2/20   
+  --------------------------------- --
+                                    
+                                    
+                                    
+                                    
+                                    
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <p>the value on the specified handler.</p>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| varname | <code>string</code> | <p>environment variable name</p> |
-| handler | <code>okcb</code> | <p>handler on success</p> |
-| badhandler | <code>badcb</code> | <p>handler on failure</p> |
+Table of Contents {#table-of-contents .TOC-Heading}
+=================
 
-<a name="module_jchaos..rmtSetProp"></a>
+[Getting Started 2](#getting-started)
 
-##### jchaos~rmtSetProp(server, prop, handler, badhandler) ⇒
-<p>Set the specified propery</p>
+[CU View 3](#cu-view)
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <p>the value on the specified handler.</p>  
+[CU Context Menu 5](#cu-context-menu)
 
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| prop | <code>Object</code> | <p>property name</p> |
-| handler | <code>okcb</code> | <p>handler on success</p> |
-| badhandler | <code>badcb</code> | <p>handler on failure</p> |
+[Show/Set/Plot 7](#showsetplot)
 
-<a name="module_jchaos..rmtCreateProcess"></a>
+[Tagging 11](#tagging)
 
-##### jchaos~rmtCreateProcess(server, name, cmdline, ptype, workdir, handler, badhandler) ⇒ <code>object</code>
-<p>Launch a process the specified process on the given remote server<br>
-return a process structure</p>
+[Show Tag Info 12](#show-tag-info)
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <code>object</code> - <p>return a process object with many status and information</p>  
+[Retrive Zip History 13](#retrive-zip-history)
 
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| name | <code>string</code> | <p>program name</p> |
-| cmdline | <code>string</code> | <p>command line</p> |
-| ptype | <code>string</code> | <p>type (&quot;exec&quot;: binary, &quot;C++&quot;: C++ script&quot;)</p> |
-| workdir | <code>string</code> | <p>remote local directory</p> |
-| handler | <code>okcb</code> | <p>handler on success</p> |
-| badhandler | <code>badcb</code> | <p>handler on failure</p> |
+[Show description 14](#show-description)
 
-<a name="module_jchaos..rmtCreateProcess"></a>
+[Take Snapshot 15](#take-snapshot)
 
-##### jchaos~rmtCreateProcess(server, uid, workdir, handler, badhandler)
-<p>Return a zip file contaning the working directory of the specified process<br>
-can be used to retrieve outputs of remote runs</p>
+[Management View 17](#management-view)
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
+[Create an US 18](#create-an-us)
 
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| uid | <code>string</code> | <p>the process uid returned by the rmtCreateProcess</p> |
-| workdir | <code>string</code> | <p>working dir to retrieve and zip</p> |
-| handler | <code>okcb</code> | <p>handler on success</p> |
-| badhandler | <code>badcb</code> | <p>handler on failure</p> |
+[Adding CU 19](#adding-cu)
 
-<a name="module_jchaos..rmtUploadScript"></a>
+[Copy/Move CU 20](#copymove-cu)
 
-##### jchaos~rmtUploadScript(server, name, ptype, content, handler, badhandler) ⇒ <code>object</code>
-<p>Upload a script/executable on the remote server<br>
-return the path</p>
+[US lifecycle 21](#us-lifecycle)
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <code>object</code> - <p>return the path of the remote process</p>  
+[US associated to agent 21](#us-associated-to-agent)
 
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| name | <code>string</code> | <p>program name</p> |
-| ptype | <code>string</code> | <p>type (&quot;exec&quot;: binary, &quot;C++&quot;: C++ script&quot;)</p> |
-| content | <code>string</code> | <p>base64 encoded content to upload</p> |
-| handler | <code>okcb</code> | <p>handler on success</p> |
-| badhandler | <code>badcb</code> | <p>handler on failure</p> |
+[US manually launched 22](#us-manually-launched)
 
-<a name="module_jchaos..rmtListProcess"></a>
+[Associate a US to an Agent 22](#associate-a-us-to-an-agent)
 
-##### jchaos~rmtListProcess(server, handler, badhandler) ⇒ <code>Array.&lt;object&gt;</code>
-<p>Return a list of process on the given server</p>
+[Dashboard Settings 25](#process-view)
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <code>Array.&lt;object&gt;</code> - <p>return a list of process descriptors</p>  
+[Configuration 25](#configuration)
 
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| handler | <code>okcb</code> | <p>handler on success</p> |
-| badhandler | <code>badcb</code> | <p>handler on failure</p> |
+[About 26](#about)
 
-<a name="module_jchaos..rmtKill"></a>
+[Video Tutorials 27](#video-tutorials)
 
-##### jchaos~rmtKill(server, uid, handler, badhandler)
-<p>Kill the specified process</p>
+[Dashboard settings 27](#dashboard-settings-1)
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
+Getting Started
+===============
 
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| uid | <code>string</code> | <p>the process uid returned by the rmtCreateProcess</p> |
-| handler | <code>okcb</code> | <p>handler on success</p> |
-| badhandler | <code>badcb</code> | <p>handler on failure</p> |
+A web !CHAOS dashboard is associated to an installation of !CHAOS, at
+the moment there are two installations:
 
-<a name="module_jchaos..rmtPurge"></a>
+1 -- preproduction, used mainly for testing of things that are going to
+production <http://chaost-hawebui.lnf.infn.it/>
 
-##### jchaos~rmtPurge(server, level, [handler], [badhandler])
-<p>Purge a list of process to a given level (0 soft (EXCEPTION), 1 medium (ENDED and EXCEPTION), 2 hard (ALL)</p>
+2 -- production used in production <http://chaos-hawebui.lnf.infn.it/>
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
+i
 
-| Param | Type | Description |
-| --- | --- | --- |
-| server | <code>string</code> | <p>rest process remote management server</p> |
-| level | <code>integer</code> | <p>purge level</p> |
-| [handler] | <code>okcb</code> | <p>handler on success</p> |
-| [badhandler] | <code>badcb</code> | <p>handler on failure</p> |
+CU View
+=======
 
-<a name="module_jchaos..basicPost"></a>
+From this view its' possible to monitor and control CU in a generic way.
+The dashboard shows by default this view. On start the view is empty,
+the user has to make its own selection through the *Zone*, *Group* or
+*Custom search*. The information of the CU is given in a table view. The
+columns are self-explanatory.
 
-##### jchaos~basicPost(func, params, [handler], [badhandler], [server])
-<p>Helper function that is the base of all commands to the !CHAOS REST SERVER<br>
-the server is specified in the option</p>
+In the bottom of the CU view a generic control of the selected CU is
+shown (Figure 2 Monitor & Control).
 
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
+![](./myMediaFolder/media/image1.png){width="8.364583333333334in"
+height="6.202029746281715in"}
 
-| Param | Type | Description |
-| --- | --- | --- |
-| func | <code>string</code> | <p>REST function to perform</p> |
-| params | <code>string</code> | <p>parameters</p> |
-| [handler] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
-| [badhandler] | <code>badcb</code> | <p>handler on failure</p> |
-| [server] | <code>string</code> | <p>override the default server</p> |
-
-<a name="module_jchaos..registerCU"></a>
-
-##### jchaos~registerCU(cuid, obj, [handleFunc], [badhandler])
-<p>Registers a CU  dataset using REST</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| cuid | <code>string</code> |  |
-| obj | <code>object</code> | <p>the CU dataset to register/push</p> |
-| [handleFunc] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
-| [badhandler] | <code>badcb</code> | <p>handler on failure</p> |
-
-<a name="module_jchaos..pushCU"></a>
-
-##### jchaos~pushCU(cuid, obj, [handleFunc], [badhandler])
-<p>Push a CU dataset using REST</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| cuid | <code>string</code> |  |
-| obj | <code>object</code> | <p>the CU dataset to register/push</p> |
-| [handleFunc] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
-| [badhandler] | <code>badcb</code> | <p>handler on failure</p> |
-
-<a name="module_jchaos..mdsBase"></a>
-
-##### jchaos~mdsBase(cmd, opt, [handleFunc], [errFunc])
-<p>Helper function that wrap basic post used for query that regards generic MDS operations</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| cmd | <code>string</code> | <p>command to send</p> |
-| opt | <code>object</code> | <p>options</p> |
-| [handleFunc] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
-| [errFunc] | <code>badcb</code> | <p>handler on failure</p> |
-
-<a name="module_jchaos..tag"></a>
-
-##### jchaos~tag(tagname, node_list, tag_type, tag_value, [handleFunc], [nok])
-<p>Start tagging a list of nodes for an interval of given time, expressed in cycles or ms</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| tagname | <code>string</code> |  |
-| node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> |  |
-| tag_type | <code>integer</code> | <p>(2= time in ms, 1=cycles)</p> |
-| tag_value | <code>integer</code> | <p>numer of ms or cycles</p> |
-| [handleFunc] | <code>okcb</code> | <p>handler on success, if present the call will be asynchronous</p> |
-| [nok] | <code>badcb</code> | <p>handler on failure</p> |
-
-**Example**  
-```js
-//tagging for 10s two CU (cameras), give the name burstbyseconds  
-var camera_list=["TEST/FLAME/CMP/CAMERA/FLACMPFF","TEST/FLAME/CMP/CAMERA/FLMCMP01"];
-jchaos.tag("burstbyseconds",camera_list,2,10000,function(d){jchaos.print("tagging started");});
-```
-<a name="module_jchaos..checkRestore"></a>
-
-##### jchaos~checkRestore(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
-<p>Check if a lists of CU have done a correct snapshot restore, the check is performed every timeout/10 ms for maximum timeout</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| _tagname | <code>string</code> | <p>name of the tag</p> |
-| _node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>list of nodes</p> |
-| _timeout | <code>integer</code> | <p>timeout</p> |
-| [_okhandler] | <code>okcb</code> |  |
-| [_nokhandler] | <code>badcb</code> |  |
-
-<a name="module_jchaos..checkBurstRunning"></a>
-
-##### jchaos~checkBurstRunning(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
-<p>Helper function to check if a burst is running</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| _tagname | <code>string</code> | <p>name of the tag</p> |
-| _node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>list of nodes</p> |
-| _timeout | <code>integer</code> | <p>timeout</p> |
-| [_okhandler] | <code>okcb</code> |  |
-| [_nokhandler] | <code>badcb</code> |  |
-
-**Example**  
-```js
-// check the burst is running
-var camera_list=["TEST/FLAME/CMP/CAMERA/FLACMPFF","TEST/FLAME/CMP/CAMERA/FLMCMP01"];
-jchaos.checkBurstRunning("burstbyseconds",camera_list,10000,function(){jchaos.print("OK");},function(){chaos.error("BAD");})
-```
-<a name="module_jchaos..checkEndBurst"></a>
-
-##### jchaos~checkEndBurst(_tagname, _node_list, _timeout, [_okhandler], [_nokhandler])
-<p>Check if a list of CU ended correct burst, the check is performed every timeout/10 ms for maximum timeout</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| _tagname | <code>string</code> | <p>name of the tag</p> |
-| _node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>list of nodes</p> |
-| _timeout | <code>integer</code> | <p>timeout</p> |
-| [_okhandler] | <code>okcb</code> |  |
-| [_nokhandler] | <code>badcb</code> |  |
-
-**Example**  
-```js
-// check the burst is running
-var camera_list=["TEST/FLAME/CMP/CAMERA/FLACMPFF","TEST/FLAME/CMP/CAMERA/FLMCMP01"];
-jchaos.checkEndBurst(camera_list,10000,function(){jchaos.print("OK");},function(){chaos.error("BAD");})
-```
-<a name="module_jchaos..snapshot"></a>
-
-##### jchaos~snapshot(_name, _what, _node_list, [value_], [handleFunc], [nok])
-<p>Performs snapshot operations</p>
-<pre><code>
-create (create a new snapshot of the given list of CUs)
-load (retrive a create snapshot)
-set (create a snapshot from a value)
-delete (delete a snapshot)
-restore (restore a snapshot)
-burst (perform a burst tag operation see <b>tag</b>)
-</code></pre>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**See**: tag  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| _name | <code>string</code> | <p>name of the snapshot</p> |
-| _what | <code>&quot;create&quot;</code> \| <code>&quot;load&quot;</code> \| <code>&quot;set&quot;</code> \| <code>&quot;delete&quot;</code> \| <code>&quot;restore&quot;</code> \| <code>&quot;burst&quot;</code> | <p>operation to perform</p> |
-| _node_list | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>nodes to snapshot</p> |
-| [value_] | <code>object</code> | <p>parameter for set command</p> |
-| [handleFunc] | <code>okcb</code> |  |
-| [nok] | <code>badcb</code> |  |
-
-**Example**  
-```js
-// create a set point programmatically of a set of powersupply
-var ps=["BTF/QUADRUPOLE/QUATB001","BTF/QUADRUPOLE/QUATB002","BTF/QUADRUPOLE/QUATB003"];
-var powersupply_setpoint = {
-			"input": {
-				"ndk_uid": "undefined",
-				"current": 0.1,
-				"stby": true,
-				"polarity": 1
-			},
-			"output": {
-				"ndk_uid": "undefined",
-				"current": 0.1,
-				"stby": true,
-				"polarity": 1,
-				"local": false
-			}
-		};
-		var snapshot_set = [];
-			var polarity = 1;
-			var current = Number(0.0000001);
-
-			ps.forEach(function (elem) {
-				var snap = powersupply_setpoint;
-				snap.input.stby = true;
-				snap.input.current = current;
-				snap.input.ndk_uid = elem;
-				snap.input.polarity = polarity;
-				snap.output.ndk_uid = elem;
-				snap.output.polarity = polarity;
-				snap.output.stby = true;
-				snap.output.current = current;
-				polarity = polarity > 0 ? -1 : 1;
-				jchaos.snapshot("zero-stby", "set", "", snap, function (d) {
-					jchaos.print("set setpoint OK:"+JSON.stringify(snap));
-				});
-			});
-```
-<a name="module_jchaos..node"></a>
-
-##### jchaos~node(_name, _what, _type, [_parent], [value_], handleFunc, nok)
-<p>Perform and operation specified by '_what' onthe nodes of '_name' of type :'_type'</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| _name | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>the name of the nodes where to perform the operation</p> |
-| _what | <code>&quot;init&quot;</code> \| <code>&quot;deinit&quot;</code> \| <code>&quot;start&quot;</code> \| <code>&quot;stop&quot;</code> \| <code>&quot;get&quot;</code> \| <code>&quot;set&quot;</code> \| <code>&quot;del&quot;</code> \| <code>&quot;killcmd&quot;</code> \| <code>&quot;shutdown&quot;</code> \| <code>&quot;kill&quot;</code> \| <code>&quot;restart&quot;</code> \| <code>&quot;desc&quot;</code> \| <code>&quot;getlog&quot;</code> \| <code>&quot;health&quot;</code> \| <code>&quot;info&quot;</code> | <p>operation type</p> |
-| _type | <code>&quot;us&quot;</code> \| <code>&quot;cu&quot;</code> \| <code>&quot;agent&quot;</code> | <p>target type of the command</p> |
-| [_parent] | <code>string</code> | <p>some commands needs a parent node to be specified</p> |
-| [value_] | <code>object</code> | <p>some commands needs a parameter</p> |
-| handleFunc | <code>okcb</code> |  |
-| nok | <code>badcb</code> |  |
-
-**Example**  
-```js
-// stop|start|init|deinit a cu 
-jchaos.node("BTF/QUADRUPOLE/QUATB001","stop","cu");
-jchaos.node("BTF/QUADRUPOLE/QUATB001","start","cu");
-```
-<a name="module_jchaos..variable"></a>
-
-##### jchaos~variable(_name, _what, [value_], [handleFunc], [handleFunc])
-<p>Allows to manage variables that are persistent (on DB)</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| _name | <code>string</code> \| <code>Array.&lt;string&gt;</code> |  |
-| _what | <code>&quot;set&quot;</code> \| <code>&quot;get&quot;</code> \| <code>&quot;del&quot;</code> \| <code>&quot;search&quot;</code> | <p>operation type</p> |
-| [value_] | <code>object</code> | <p>in case of set the object</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [handleFunc] | <code>badcb</code> | <p>callback if failure</p> |
-
-**Example**  
-```js
-// store an object
-var point={x:10.34,y:14.0};
-jchaos.variable("mypoint","set",point);
-// perform list
-jchaos.variable("mypoint","search",function(ls){jchaos.print(JSON.stringify(ls));}); 
-// get and visualize variable stored
-jchaos.variable("mypoint","get",function(ls){jchaos.print(JSON.stringify(ls));});
-// delete variable
-jchaos.variable("mypoint","del");
-```
-<a name="module_jchaos..log"></a>
-
-##### jchaos~log(devs, _what, _type, _start, _end, [handleFunc], [handlerr])
-<p>Search logs for the given CUs</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| devs | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>to search</p> |
-| _what | <code>&quot;search&quot;</code> | <p>operation to perform</p> |
-| _type | <code>&quot;all&quot;</code> \| <code>&quot;Info&quot;</code> \| <code>&quot;error&quot;</code> \| <code>&quot;warning&quot;</code> \| <code>&quot;log&quot;</code> \| <code>&quot;command&quot;</code> | <p>specify log type</p> |
-| _start | <code>integer</code> | <p>epoch in ms start of the search</p> |
-| _end | <code>integer</code> | <p>epoch md end of the search (-1 is now)</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [handlerr] | <code>badcb</code> | <p>callback if error</p> |
-
-**Example**  
-```js
-// retrieve all logs for a given CU till now
-jchaos.log("BTF/QUADRUPOLE/QUATB001","search","all",0,-1,function(ls){jchaos.print(JSON.stringify(ls));});
-```
-<a name="module_jchaos..search"></a>
-
-##### jchaos~search(_name, _what, _alive, [handleFunc], [handlerr]) ⇒
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <p>an array of strings or objects</p>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| _name | <code>string</code> | <p>is the substring of what you want search</p> |
-| _what | <code>&quot;cu&quot;</code> \| <code>&quot;us&quot;</code> \| <code>&quot;agent&quot;</code> \| <code>&quot;cds&quot;</code> \| <code>&quot;webui&quot;</code> \| <code>&quot;variable&quot;</code> \| <code>&quot;snapshotsof&quot;</code> \| <code>&quot;snapshots&quot;</code> \| <code>&quot;script&quot;</code> \| <code>&quot;zone&quot;</code> \| <code>&quot;class&quot;</code> | <p>operation type</p> |
-| _alive | <code>boolean</code> | <p>search among alive (true) or all(false)</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [handlerr] | <code>badcb</code> | <p>callback if error</p> |
-
-**Example**  
-```js
-// search all CU alive
-jchaos.search("","cu",true,function(ls){jchaos.print(JSON.stringify(ls));});
-```
-<a name="module_jchaos..findCUByImplementation"></a>
-
-##### jchaos~findCUByImplementation(impl, alive, [handleFunc])
-<p>Find an array of CU with the given implementation</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| impl | <code>string</code> | <p>C++ implementation name to find</p> |
-| alive | <code>bool</code> | <p>search from alive or all</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-
-**Example**  
-```js
-// find implementation that starts with SCA(ctuators)
-jchaos.findCUByImplementation("SCA",true,function(ls){jchaos.print(JSON.stringify(ls));});
-```
-<a name="module_jchaos..getCUStatus"></a>
-
-##### jchaos~getCUStatus(status_to_search, [handleFunc])
-<p>Return an array of CU that match a given status</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| status_to_search | <code>string</code> |  |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-
-<a name="module_jchaos..convertArray2CSV"></a>
-
-##### jchaos~convertArray2CSV(devs) ⇒ <code>string</code>
-<p>convert an array into a CommaSepareted elements</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| devs | <code>Array.&lt;string&gt;</code> | <p>array</p> |
-
-<a name="module_jchaos..getChannel"></a>
-
-##### jchaos~getChannel(devs, channel_id, [handleFunc], [badfunc]) ⇒ <code>object</code>
-<p>Retrive the specified dataset correspoding to a given CU</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <code>object</code> - <p>the specified dataset</p>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| devs | <code>String</code> \| <code>Array.&lt;String&gt;</code> | <p>CU or array of CU</p> |
-| channel_id | <code>channelid</code> | <p>(-1: all,0: output, 1: input, 2:custom,3:system, 4: health, 5 cu alarm, 6 dev alarms,128 status)</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [badfunc] | <code>badcb</code> | <p>bad callback</p> |
-
-**Example**  
-```js
-//retrive all channels of a give CU
-chaos.getChannel("BTF/QUADRUPOLE/QUATB001",-1,function(ls){jchaos.print(JSON.stringify(ls));});
-```
-<a name="module_jchaos..setProperty"></a>
-
-##### jchaos~setProperty(dev, prop, [handleFunc], [errFunc])
-<p>Set a CU property</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| dev | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>CU or array of CU</p> |
-| prop | <code>string</code> | <p>property name</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [errFunc] | <code>badcb</code> | <p>bad callback</p> |
-
-<a name="module_jchaos..loadUnload"></a>
-
-##### jchaos~loadUnload(dev, loadunload, [handleFunc], [nok])
-<p>Load or Unload a CU</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| dev | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>CU or array of CU</p> |
-| loadunload | <code>bool</code> | <p>(true = load, false=unload)</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [nok] | <code>badcb</code> | <p>bad callback</p> |
-
-<a name="module_jchaos..sendCUCmd"></a>
-
-##### jchaos~sendCUCmd(devs, cmd, [param], [handleFunc], [handleFuncErr])
-<p>Sends a command to a CU</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| devs | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>CU or array of CU</p> |
-| cmd | <code>cmdPar</code> | <p>command to send</p> |
-| [param] | <code>object</code> | <p>optional and my be included into cmd</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [handleFuncErr] | <code>badcb</code> | <p>bad callback</p> |
-
-<a name="module_jchaos..sendCUFullCmd"></a>
-
-##### jchaos~sendCUFullCmd(devs, cmd, [param], force, prio, [handleFunc], [handleFuncErr])
-<p>Sends a command to a CU, with explicit params</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| devs | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>CU or array of CU</p> |
-| cmd | <code>string</code> | <p>command to send</p> |
-| [param] | <code>string</code> \| <code>object</code> |  |
-| force | <code>integer</code> |  |
-| prio | <code>integer</code> |  |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [handleFuncErr] | <code>badcb</code> | <p>bad callback</p> |
-
-<a name="module_jchaos..getHistory"></a>
-
-##### jchaos~getHistory(devs, channel, start, stop, [varname], [handleFunc], [tagsv], [funcerr])
-<p>Retrive history of a channel dataset of a  group of devices</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| devs | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>CU or array of CU</p> |
-| channel | <code>integer</code> | <p>channel to retrieve</p> |
-| start | <code>integer</code> \| <code>string</code> | <p>epoch timestamp in ms (GMT) of start of search</p> |
-| stop | <code>integer</code> \| <code>string</code> | <p>epoch timestamp in ms (GMT) of start of search</p> |
-| [varname] | <code>string</code> | <p>optional name of the variable to retrieve (instead of all)</p> |
-| [handleFunc] | <code>okcb</code> | <p>callback if ok, enable async mode</p> |
-| [tagsv] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>optional tags</p> |
-| [funcerr] | <code>badcb</code> | <p>optional bad callback</p> |
-
-<a name="module_jchaos..fetchHistoryToZip"></a>
-
-##### jchaos~fetchHistoryToZip(zipname, cams, start, stop, [tagsv], updateCall, errCall)
-<p>Retrive history and write a local zip</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| zipname | <code>string</code> |  |
-| cams | <code>string</code> \| <code>Array.&lt;string&gt;</code> | <p>array of CU</p> |
-| start | <code>integer</code> \| <code>string</code> | <p>epoch timestamp in ms (GMT) of start of search</p> |
-| stop | <code>integer</code> \| <code>string</code> | <p>epoch timestamp in ms (GMT) of start of search</p> |
-| [tagsv] | <code>Array.&lt;string&gt;</code> | <p>tags</p> |
-| updateCall | <code>okcb</code> |  |
-| errCall | <code>badcb</code> |  |
-
-<a name="module_jchaos..checkPeriodiocally"></a>
-
-##### jchaos~checkPeriodiocally(str, retry, checkFreq, checkFunc, okhandle, nokhandle)
-<p>Helper function th check a periodically a condition<br>
-the difference with check live is the check function don't receive a dataset in input</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**See**
-
-- checkLive
-- checkBurstRunning
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| str | <code>string</code> | <p>string to display each time the check is performed</p> |
-| retry | <code>integer</code> | <p>retry the check for a maximum of number of time</p> |
-| checkFreq | <code>integer</code> | <p>check frequency in ms</p> |
-| checkFunc | <code>okcb</code> | <p>check function, should return true if ok or false if fails</p> |
-| okhandle | <code>okcb</code> | <p>callback to call if test succeed</p> |
-| nokhandle | <code>badcb</code> | <p>callback to call if fails</p> |
-
-<a name="module_jchaos..saveFullConfig"></a>
-
-##### jchaos~saveFullConfig()
-<p>saveFullConfig<br>
-Save to local disk the state of fundamental configurations</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Example**  
-```js
-//save the infrastructure info.
-saveFullConfig();
-```
-<a name="module_jchaos..restoreFullConfigFromFile"></a>
-
-##### jchaos~restoreFullConfigFromFile()
-<p>Restore a full configuration from file</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-<a name="module_jchaos..restoreFullConfig"></a>
-
-##### jchaos~restoreFullConfig(config, configToRestore)
-<p>Restore a previously a configuration into the infrastructure</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| config | <code>object</code> |  |
-| configToRestore | <code>Array.&lt;string&gt;</code> | <p>array of things to restore &quot;us&quot;,&quot;agents&quot;,&quot;snapshots&quot;,&quot;graphs&quot;,&quot;custom_group&quot;,&quot;cu_templates&quot;</p> |
-
-<a name="module_jchaos..activeAgentList"></a>
-
-##### jchaos~activeAgentList(cb) ⇒ <code>Array.&lt;object&gt;</code>
-<p>activeAgentList<br>
-return a list of agents addresses in the callback</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <code>Array.&lt;object&gt;</code> - <p>return in the callback the list descriptor of the agents</p>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| cb | <code>okcb</code> | <p>callback called with the agent object list</p> |
-
-**Example**  
-```js
-jchaos.activeAgentList(function(cb){jchaos.print(JSON.stringify(cb));})
-```
-<a name="module_jchaos..getAllProcessInfo"></a>
-
-##### jchaos~getAllProcessInfo(agl, cb)
-<p>Return a vector of process information in the callback</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| agl | <code>Array.&lt;string&gt;</code> | <p>list of agents info</p> |
-| cb | <code>okcb</code> | <p>callback called with the agent object list</p> |
-
-<a name="module_jchaos..findBestServer"></a>
-
-##### jchaos~findBestServer(cb:) ⇒ <code>string</code>
-<p>findBestServer<br>
-return a list of agents ordered by occupation in the callback<br>
-NOTE: this function use a tcp port the is different from REST server one (it goes directly on the server)</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <code>string</code> - <p>return the best server</p>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| cb: | <code>okcb</code> | <p>return a list of active agents</p> |
-
-**Example**  
-```js
-// find the best server to run a script:
-jchaos.findBestServer(function(cb){jchaos.print(JSON.stringify(cb));})
-```
-<a name="module_jchaos..runScript"></a>
-
-##### jchaos~runScript(name, [parm], [okhandle], [errorhandle])
-<p>runScript<br>
-Run the specified script on the chaos infrastructure</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| name | <code>string</code> | <p>the name of the script present in the DB</p> |
-| [parm] | <code>object</code> | <p>optional parameters</p> |
-| [okhandle] | <code>okcb</code> | <p>called when ok</p> |
-| [errorhandle] | <code>badcb</code> | <p>called when failed</p> |
-
-<a name="module_jchaos..encodeName"></a>
-
-##### jchaos~encodeName(str) ⇒ <code>string</code>
-<p>Encode a path name<br>
-removes trailing</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-**Returns**: <code>string</code> - <p>encoded string</p>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| str | <code>string</code> | <p>string to encode</p> |
-
-<a name="module_jchaos..checkLive"></a>
-
-##### jchaos~checkLive(str, devlist, retry, checkFreq, checkFunc, okhandle, nokhandle)
-<p>This function used mainly in tests.<br>
-It checks for a variable change on a 'devlist', for 'retry' times, checking every 'checkFreq'<br>
-'checkFunc' takes in input the live and realize the check<br>
-okhandle is called if success<br>
-nokhandle if fails</p>
-
-**Kind**: inner method of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| str | <code>string</code> | <p>string to display when the check is peformed</p> |
-| devlist | <code>Array.&lt;string&gt;</code> | <p>list of CU to check</p> |
-| retry | <code>integer</code> | <p>retry the ckeck for the given number of times</p> |
-| checkFreq | <code>integer</code> | <p>check frequency expressed in ms</p> |
-| checkFunc | <code>okcb</code> | <p>call back to call that perform the check, it takes in input the dataset to check, should return true if the check succeed or false if not</p> |
-| okhandle | <code>okcb</code> | <p>callback to call if the test complete successfully</p> |
-| nokhandle | <code>badcb</code> | <p>callback to call if the test fails</p> |
-
-**Example**  
-```js
-// check if the list of CUs are in start
- var cu_status=["BTF/QUADRUPOLE/QUATB001","BTF/QUADRUPOLE/QUATB002","BTF/QUADRUPOLE/QUATB003"];
- jchaos.checkLive('check Start',cu_status, 20, 1000, function (ds) {jchaos.print("testing..."); return (ds!=null)&&ds.hasOwnProperty("health")&&ds.health.hasOwnProperty("nh_status")&&(ds.health.nh_status == "Start"); }, function () { jchaos.print("CHECK OK"); }, function () { jchaos.error("CHECK FAILED"); });
-```
-<a name="module_jchaos..okcb"></a>
-
-##### jchaos~okcb : <code>function</code>
-<p>Callback in asynchronous operations called when the operation is ok</p>
-
-**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| data | <code>object</code> | <p>depend on the operation (typically a dataset)</p> |
-
-<a name="module_jchaos..badcb"></a>
-
-##### jchaos~badcb : <code>function</code>
-<p>Callback in asynchronous operations called when the operation is fails</p>
-
-**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| data | <code>string</code> \| <code>object</code> | <p>description of the error</p> |
-
-<a name="module_jchaos..cmdPar"></a>
-
-##### jchaos~cmdPar : <code>Object</code>
-<p>The command object for sendCU commands</p>
-
-**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
-**Properties**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| cmd | <code>string</code> | <p>command name</p> |
-| prio | <code>integer</code> | <p>Priority</p> |
-| mode | <code>integer</code> | <p>mode</p> |
-
-<a name="module_jchaos..varpath"></a>
-
-##### jchaos~varpath : <code>Object</code>
-<p>CU variable path</p>
-
-**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
-**Properties**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| cu | <code>string</code> | <p>CU PATH</p> |
-| dir | <code>string</code> | <p>direction (input,output)</p> |
-| var | <code>string</code> | <p>variable dataset name</p> |
-| const | <code>string</code> | <p>constantco:String</p> |
-| origin | <code>string</code> | <p>full path</p> |
-
-<a name="module_jchaos..channelid"></a>
-
-##### jchaos~channelid : <code>integer</code>
-<p>Channel idintification mapping:<br>
--1 : all<br>
-0: output<br>
-1: input<br>
-2: custom<br>
-3: system<br>
-4: health<br>
-5: cu alarms<br>
-6: device alarms<br>
-128: status<br>
-255: health+system+ alarams</p>
-
-**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
-<a name="module_jchaos..ChaosOption"></a>
-
-##### jchaos~ChaosOption : <code>object</code>
-**Kind**: inner typedef of [<code>jchaos</code>](#module_jchaos)  
-**Properties**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| updateEachCall | <code>boolean</code> | <p>history update each call</p> |
-| uri | <code>string</code> | <p>address:port of the REST server</p> |
+Figure 1 Dashboard (CU view)
 
+The CU view has two parts:
+
+1.  Monitor table
+
+2.  Generic control panel
+
+In the monitor table the selected CU are shown with some parameter that
+is shown, has for instance its state and uptime.
+
+In the control panel its possible to give commands to one or more CU
+that are selected.
+
+**NOTE**: The ***Available commands*** is dynamically reconfigured in
+base to the last CU selected.
+
+![](./myMediaFolder/media/image3.png){width="6.649305555555555in"
+height="5.550694444444445in"}
+
+Figure 2 Monitor & Control
+
+CU Context Menu
+---------------
+
+In addition to the explicit generic control panel, a **context menu** is
+available once a CU is selected (yellow) shown in Figure 5 CU context
+menu. In order to access to the context menu, you should select a CU by
+clicking the mouse and then push the right button of the mouse.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image5.png){width="6.5in"
+height="2.0006944444444446in"}
+
+Figure 3 CU context menu
+
+The context menu allows easily to change status of one or more CUs (the
+same operation can be done by the generic control panel), here below a
+schema of the possible CU states:
+
+![A close up of a logo Description automatically
+generated](./myMediaFolder/media/image6.png){width="6.375in"
+height="4.024219160104987in"}
+
+Figure 4 CU states and transitions
+
+The status of a CU is reported in the *Status* column of the table view.
+
+A CU can be in different states:
+
+-   NOT LOADED
+
+-   LOADED
+
+-   INITIALIZED
+
+-   RUNNING
+
+-   STOPPED
+
+-   NOT INITIALIZED
+
+The diagram shows the possible CU states (uppercase labels) and their
+representative icons. The arrows indicate the commands
+
+Without going into details, suffice to say that -- in order to be fully
+operational -- a CU must stay in the RUNNING state.
+
+When a US starts, it puts all its CUs in a predefined state, as from its
+configuration data.
+
+### Show/Set/Plot 
+
+Through this item of the context menu is possible to visualize, set and
+plot CU dataset items.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image7.png){width="6.5in"
+height="4.3694444444444445in"}
+
+Figure 5 Setting an input attribute
+
+##### Set Attribute
+
+In the figure above is shown how to set the *speed* input attribute of
+the selected CU.
+
+Set attribute actions:
+
+1.  Select CU, RIGHT CLICK
+
+2.  Select *Show/Set/Plot*
+
+3.  Open *input* dataset
+
+4.  Go on *speed,* LEFT CLICK,
+
+5.  Write in the textbox the desired value
+
+6.  ENTER
+
+**NOTE:** Just attributes belonging to *input* dataset can be set.
+
+**\
+**
+
+##### Plot *attribute*
+
+The sequence to select the attribute is the same of Set Attribute, but
+instead of LEFT CLICK on the attribute, do RIGHT CLICK to open the plot
+menu.
+
+Plot attribute actions:
+
+1.  Select CU, RIGHT CLICK
+
+2.  Select *Show/Set/Plot*
+
+3.  Open *output* dataset
+
+4.  Go on *speed,* RIGHT CLICK,
+
+5.  On the plot menu select the plot type
+
+ENTER
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image8.png){width="6.5in"
+height="4.3694444444444445in"}
+
+Figure 6 Plotting an attribute
+
+In this example we'll plot the *output* attribute *position* on Y.
+
+Once selected a graph option dialog will open,
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image9.png){width="3.8230774278215223in"
+height="2.8215627734033246in"}
+
+Figure 6 Graph options
+
+We are going to setup the graph options of our new graph, here you can
+select the size of the graph, the type.
+
+Continuing the setup we have to add the attribute that we want to plot,
+the attribute that we have selected is ready to be inserted by clicking
+on the **Add Trace.**
+
+![A screenshot of a social media post Description automatically
+generated](./myMediaFolder/media/image10.png){width="4.223077427821522in"
+height="3.1167760279965004in"}
+
+Figure 8 Trace add
+
+**NOTE:** An attribute name is fully identified by concatenation of the
+CU path and the attribute name:
+*\<ZONEPATH\>/\<GROUP\>/\<CUNAME\>/\<dataset name\>/\<attribute name\>*
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image11.png){width="6.5in"
+height="4.4743055555555555in"}
+
+**NOTE:** if the attribute is a vector it's possible to select a
+particular component by adding \[\<*index*\>\], if *index=-1* all
+component are selected
+
+![](./myMediaFolder/media/image12.png){width="2.8538462379702536in"
+height="2.026963035870516in"}
+
+To plot live or historical values, press **RUN.**
+
+Saved graph can be recalled, from the *Graphs*
+
+### Tagging
+
+One or more CUs can be tagged for a given amount of time or for a number
+of acquisition cycles. !CHAOS tag allows the dataset to be saved into a
+permanent storage and identified with a given tag name.
+
+Data that are tagged can be retrieved easily specifying the name of the
+tag, and the system guaranties that those data are not swapped out by
+ageing operations.
+
+![](./myMediaFolder/media/image13.png){width="3.3829833770778652in"
+height="6.469231189851269in"}
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image14.png){width="3.58794728783902in"
+height="2.9769225721784776in"}
+
+Figure 9 Tag command
+
+Actions:
+
+1.  Select the CU to tag
+
+2.  CLICK RIGHT and select **Tag for..**
+
+3.  In the tag editor specify **tag name**
+
+4.  Choose between TIME or CYCLE
+
+5.  Specify a duration
+
+6.  An optional description
+
+7.  SAVE
+
+The tagging operation starts once the SAVE has been pressed.
+
+In the *status* column will appear the icon of
+![](./myMediaFolder/media/image15.png){width="0.25in" height="0.25in"}
+
+Figure 10 Tag editor
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image17.png){width="6.5in"
+height="1.7256944444444444in"}
+
+Figure 11 Tagging in progress
+
+### Show Tag Info
+
+Through this option you can visualize information about the tags
+associated to a particular CU.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image18.png){width="4.530768810148731in"
+height="4.742300962379702in"}
+
+Figure 12 Tag info dialog
+
+### Retrive Zip History
+
+Through this function is possible to retrieve data corresponding to a
+particular tag and or time interval, of a given CU. By selecting this
+option from the context menu a query dialog will open.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image19.png){width="2.7877635608048994in"
+height="1.2461537620297463in"}
+
+![](./myMediaFolder/media/image20.png){width="6.591666666666667in"
+height="3.261111111111111in"}
+
+Figure 12 Query Dialog
+
+The main parameters to set up the query are the epoch timestamps (GMT),
+that specify the interval of time we are interested of; *a time picker
+widget* can be used to facilitate the setup of the correct interval. The
+time picker has predefined time interval (Last 1h, Last 6h...) and the
+possibility to define a custom interval ranges.
+
+The user can specify also a tag from a combo box, and some more
+technical parameters that can speedup the search such as the page size
+and the chunk time in seconds.
+
+Once you've setup the parameters you can run the query, and the result
+will be displayed in a graph or returned as a JSON zip.
+
+##### Retrive ROOT Zip History
+
+This is a experimental option that allows to download data in CERN ROOT
+format, currently this option opens a Figure 12 Query Dialog, and launch
+a !CHAOS process (see ) that in background retrieves the required data
+that can be accessed just after this process ends.
+
+### Show description
+
+Through this option you can access to the full description of the
+selected CU, it gives for instance a detail information of the dataset,
+types, commands...
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image21.png){width="4.030768810148731in"
+height="4.367958223972003in"}
+
+Figure 13 Description Dialog
+
+### Take Snapshot
+
+This function allows to save the setpoint of a selected group of CUs and
+associate a name.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image22.png){width="6.5in"
+height="2.4805555555555556in"}
+
+Figure 15 Take Snapshot dialog
+
+A previously saved snapshot can be restored, through the menu always
+present in the top right of the web page.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image23.png){width="2.813953412073491in"
+height="1.1537849956255468in"}
+
+Figure 16 Access to the Snapshot Menu
+
+The snapshot menu, will show the snapshots associated to the selected CU
+or all the snapshots if no CU is selected.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image24.png){width="4.429957349081365in"
+height="2.584615048118985in"}
+
+Figure 17 Snapshot Menu
+
+The snapshot menu shows the CUs that belongs to a given snapshot.
+
+From this dialog is possible to:
+
+**Show:** the dataset that is going to be restored,
+
+**Apply**: the snapshot
+
+**Delete:** the snapshot
+
+**Upload:** a previously saved snapshot
+
+**Save:** the snapshot locally on disk
+
+Management View
+===============
+
+From this view it's possible to monitor, manage and control life cycle
+of !CHAOS nodes.
+
+All the operations can be performed just after having selected some
+!CHAOS nodes, the two combo on top of the page allows to select the type
+and the name of the !CHAOS node. The possible types are:\\
+
+1.  **US** (Unit Server), that are container of CU (Control Units)
+
+2.  **CU**(Control Unit), that are the node that abstract the control of
+    some HW or virtual device.
+
+3.  **Agent**, that are the CHAOS nodes that allows to launch US,
+    ExecutionUnit processes
+
+4.  **Webui**, that are the !CHAOS nodes that provide REST services
+    (i.e. for the dashboards)
+
+5.  **MDS**/CDS, that are the !CHAOS nodes that provide !CHAOS node
+    management, Live and History services
+
+Once a type is selected (2) it's possible to filter by name and by
+activity (3) (just live nodes or all nodes), a list of nodes with some
+other information should be displayed as a table.
+
+By clicking RIGHT mouse on one or more node (4) it's possible to access
+to the **context menu** that will show the possible operation on the
+selected node (5).
+
+Common operations are typically **Start**, **Stop** or **Kill**.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image25.png){width="6.326084864391951in"
+height="3.03125in"}
+
+Figure 18 Management View
+
+In the following paragraphs will be described the most common
+procedures.
+
+Create an US
+------------
+
+WE remind that an UnitServer is a container of Control Units/Execution
+Units. Create an US is essentially a creation of a container and a list
+of CU that it manages.
+
+To create an empty US we need just to RIGHT CLICK on the table and
+choose **New US..**
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image26.png){width="2.8012150043744533in"
+height="2.7461537620297465in"}
+
+Figure 19 New US
+
+An **US Editor**, will be open,
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image27.png){width="3.5076924759405075in"
+height="3.117199256342957in"}
+
+Figure 20 US Editor
+
+We need to provide an **unique** name that will identify the newly
+created US. At this point we can just **save generating an empty US, or
+we can upload an US configuration previously written on disk. This is
+the preferred way when you want to import a US from one infrastructure
+(i.e. test) to another (i.e. production).**
+
+### Adding CU
+
+To fill an empty US we can proceed in 3 ways:
+
+1.  Add a CU from an existing local configuration
+
+2.  Add a CU from a template
+
+3.  Copy/Move an existing CU into the new US
+
+For the first two we just have to select the new US and use the
+**context menu**.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image28.png){width="4.420158573928259in"
+height="3.007691382327209in"}
+
+Figure 21 Add a CU from menu
+
+The third method, is strongly suggested if the device has similar
+initializations, drivers; envision the use of the context menu specific
+for the CU **Node Type**, that explicitly has a copy/move function.
+
+### Copy/Move CU
+
+To copy or move a CU to a specific US we should:
+
+1.  Select **cu** in **Node Type**
+
+2.  Select **Search All**
+
+3.  Optional set the name or simply press **ENTER**
+
+4.  Select the CU to move/copy
+
+5.  ![](./myMediaFolder/media/image29.png){width="2.808333333333333in"
+    height="6.276388888888889in"}RIGHT click -\> Copy CU
+
+6.  Select **us** in **Node Type**
+
+7.  Select the target US
+
+8.  Paste/Move
+
+9.  Choose if move or copy
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image30.png){width="3.346153762029746in"
+height="2.267590769903762in"}![A screenshot of a cell phone Description
+automatically
+generated](./myMediaFolder/media/image31.png){width="2.193963254593176in"
+height="1.0873873578302713in"}
+
+After choosing the **CU Editor** will be open to modify name and
+optionally any other parameter.
+
+Figure 22 CU Editor
+
+US lifecycle 
+------------
+
+We should distinguish between:
+
+1.  US that are associated to a !CHAOS agents
+
+2.  US that are not associated and are started manually.
+
+In the first case, the life cycle and debug is simpler, because we can
+handle full lifecycle from the dashboard through the agent (start, stop,
+kill and console).
+
+**NOTE**: the last column (*parent*) tells which is the agent node that
+controls the US.
+
+### US associated to agent
+
+To start a US that is **not activ**e, we should:
+
+10. Select **us** in **Node Type**
+
+11. Select **Search All**
+
+12. Optional set the name or simply press **ENTER**
+
+13. Select the US
+
+14. RIGHT click -\> Start US..
+
+![A screenshot of a social media post Description automatically
+generated](./myMediaFolder/media/image32.png){width="6.5in"
+height="3.3361111111111112in"}
+
+Figure 19 Starting a US associated to Agent
+
+Here in the figure above a we are going to start a US named
+**FLAME\_TRL.**
+
+To stop a US that is **activ**e, we should:
+
+1.  Select **us** in **Node Type**
+
+2.  Select **Search Alive**
+
+3.  Optional set the name or simply press **ENTER**
+
+4.  Select the US
+
+5.  RIGHT click -\> Stop US.. or Kill Us.. or Shutdown
+
+**NOTE:** Kill a US will kill all the CU the are contained as well
+
+**NOTE:** Sometime the agent cannot kill in a ordered way the US, in
+this case the **Shutdown** option must be selected, it performs a brute
+force kill, that avoid also a clean response by the US, so the result of
+the operations is often reported as *failed*, even if the kill operation
+*succeed*.
+
+**NOTE:** in rare cases (i.e. driver blocked in IO) even the
+**shutdown** operation is not able to kill the process, in these cases
+an intervention of the system administrator of the machine that runs the
+US is required.
+
+### US manually launched
+
+In this case it's not possible to fully control the lifecycle, the
+dashboard can just try to stop the **US** performing a **shutdown**
+operation.
+
+**NOTE:** these US don't have the *parent column* set.
+
+### Associate a US to an Agent
+
+The easiest way to create an association is:
+
+1.  select the US to associate
+
+2.  RIGHT click accetto to the context menu and choose **Copy**.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image33.png){width="2.8in"
+height="2.7533344269466316in"}
+
+Figure 20 Copying a US
+
+3.  change **Node Type** to agent
+
+4.  select the destination agent
+
+5.  RIGHT click-\>Associate \<name of copied the US\>
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image34.png){width="4.084027777777778in"
+height="3.074802055993001in"}
+
+![](./myMediaFolder/media/image35.png){width="2.7215277777777778in"
+height="3.745833333333333in"}Figure 21 Associate US
+
+This point an **agent editor** will open, allowing to setup additional
+parameters to the start of the associated US.
+
+Figure 22 Agent Editor
+
+Process View
+============
+
+This view is mainly used to lunch, monitor and manage CHAOS processes.
+In the top of the page are shown an array of graphs that monitor the
+load of the available !CHAOS nodes that can host the execution of a new
+script, process or application. In the process table are also shown the
+US that are launched and managed by !CHAOS agents.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image36.png){width="7.048845144356956in"
+height="3.623076334208224in"}
+
+Figure 27 Process Table
+
+![](./myMediaFolder/media/image37.png){width="2.264744094488189in"
+height="1.835343394575678in"}By RIGHT clicking in the blu area (in the
+red rectangle), you can access to the context menu for launching and
+managing script.
+
+By selecting a process you can access the context menu of the process.
+
+ChaosShell View
+===============
+
+The chaos shell view offer the user the possibility to access !CHAOS
+resources, through a web console, that accepts javascript. This web
+console loads the *jchaos.js* library (the same used by the dashboard
+itself), that allows to access !CHAOS resources.
+
+The primary to use is to test and debug, or run control scripts on the
+client side.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image38.png){width="7.385405730533683in"
+height="3.6769225721784777in"}
+
+From this view is also possible load and execute file from you local
+disk.
+
+**NOTE**: scripts may be also launched directly into infrastructure
+through the Process View
+
+Jchaos.js library
+
+Configuration View
+==================
+
+Dashboard Settings
+==================
+
+Configuration
+-------------
+
+Through *Settings-\>Config* you can set some useful parameters like the
+default refresh rate of the !CHAOS nodes or the elements shown per page.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image39.png){width="2.4156627296587927in"
+height="2.4672430008748907in"}
+
+By selecting *Config..* a editor will open showing the parameters that
+can be edited.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image40.png){width="2.4155653980752407in"
+height="3.253011811023622in"}
+
+NOTE: these values will be saved into the cache of the browser so these
+parameters will be permanent until a clear cache is performed.
+
+About
+-----
+
+Through *Setting-\>About..* you can access to the info of the most
+important !CHAOS services: *mds, webui, agent*.
+
+For instantce a system administrator through this panel can check the
+build information of the different services.
+
+![A screenshot of a cell phone Description automatically
+generated](./myMediaFolder/media/image41.png){width="4.088286307961504in"
+height="4.0120472440944885in"}
+
+![](./myMediaFolder/media/image42.png){width="6.5in" height="4.093055555555556in"}Video Tutorials
+=================================================================================================
+
+Dashboard settings
+------------------
