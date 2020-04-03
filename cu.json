@@ -55,7 +55,7 @@
 	"dsndk_storage_type" : {
 		"type":"integer",
 		"default":2,
-		"description":"2=Just Live,1=Just Storage,3=Both, 4=FilesystemPosix"
+		"description":"2=Just Live,1=Storage,3=Both, 4=(FilesystemPosix), 8=(queue), 16=Logging(grafana),19=(Live,Storage,Log)"
 
 
 	},

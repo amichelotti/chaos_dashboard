@@ -166,6 +166,14 @@ function getWidget() {
       },
       updateInterfaceFn:function (tmpObj) {
         jqccs.updateInterfaceCU(tmpObj);
+        jchaos.getChannel(tmpObj['elems'], -1, function (selected) {
+          tmpObj.data = selected;
+    
+          jqccs.updateGenericTableDataset(tmpObj);
+        },function(str){
+          console.log(str);
+        });
+
         $(".select_camera_mode").change(function (e) {
           var value=e.currentTarget.value;
           console.log("name="+e.currentTarget.name+" value="+value);          
@@ -288,13 +296,13 @@ function getWidget() {
           html += "<td id='" + cuname + "'><select class='select_camera_mode span6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>Triggered</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
           
           html += "<td id='" + cuname + "_output_SHUTTER'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_shutter' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_SHUTTER' name='"+cu[i]+"/input/SHUTTER'></input></td>";
           
           html += "<td id='" + cuname + "_output_GAIN'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_gain' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_GAIN' name='"+cu[i]+"/input/GAIN'></input></td>";
           
           html += "<td id='" + cuname + "_output_BRIGHTNESS'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_brightness' name='"+cu[i]+"'></input></td>";
+          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_BRIGHTNESS' name='"+cu[i]+"/input/BRIGHTNESS'></input></td>";
     
           html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
           html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
@@ -310,8 +318,8 @@ function getWidget() {
         return html;
       },
       cmdFn:function(tmpObj) {
+        return jqccs.generateGenericControl(tmpObj);
         
-        return "";
     }
   }
   return chaos;
@@ -357,4 +365,24 @@ function getWidget() {
       var encoden = jchaos.encodeName(opt.items[cmd].cu);
       $("#cameraImage-" + encoden).cropper('destroy');
     }
+  }
+
+  function configureSliderCommands(tmpObj, slname, slinput) {
+    $("#" + slname).slider({
+      range: "max",
+      min: 0,
+      max: 100,
+      value: 1,
+      slide: function (event, ui) {
+        $("#" + slinput).val(ui.value);
+        var id = this.id;
+        var node_selected = tmpObj.node_selected;
+        var attr = id.split("-")[1];
+        jchaos.setAttribute(node_selected, attr, String(ui.value), function () {
+          //   instantMessage("Attribute ", "\"" + attr + "\"=\"" + ui.value + "\" sent", 1000)
+
+        });
+      }
+    });
+    $("#" + slinput).val($("#" + slname).slider("value"));
   }

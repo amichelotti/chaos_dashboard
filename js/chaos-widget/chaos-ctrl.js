@@ -315,6 +315,7 @@
     var started = 0;
     var stop_update = false;
     var showformat = 0;
+    var showdataset =8;
     var last_dataset = {};
     var name = jchaos.encodeName(cuname);
     var instant = $('<div id=dataset-' + name + '></div>').dialog({
@@ -336,6 +337,47 @@
               $(e.target).text("Not Update");
 
             }
+            // $(instant).dialog("close");
+          }
+        },{
+          text: "Dataset", id: 'dataset-type-' + name, click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            showdataset++;
+            switch (showdataset) {
+              case 0:
+                $(e.target).text("Output");
+                break;
+              case 1:
+                $(e.target).text("Input");
+                break;
+              case 2:
+                $(e.target).text("Custom");
+                break;
+              case 3:
+                $(e.target).text("System");
+                break;
+              case 4:
+                  $(e.target).text("Health");
+                break;
+              case 5:
+                  $(e.target).text("DevAlarm");
+              break;
+
+              case 6:
+                  $(e.target).text("CUAlarm");
+              break;
+              case 7:
+                $(e.target).text("Stat");
+              break;
+              case 8:
+                $(e.target).text("All");
+              break;
+              
+              default:
+                showdataset = 0;
+                $(e.target).text("Output");
+            }
+
             // $(instant).dialog("close");
           }
         }, {
@@ -394,7 +436,14 @@
             isediting = tmpObj.json_editing;
           }
           if ((!stop_update) && (isediting == false)) {
-            jchaos.getChannel(cuname, -1, function (imdata) {
+            var chnum=showdataset;
+            if(showdataset==7){
+              chnum=128;
+            } else if(chnum>7){
+              chnum=-1;
+            }
+
+            jchaos.getChannel(cuname, chnum, function (imdata) {
               last_dataset = imdata[0];
               if (showformat == 1) {
                 options["format"] = 10 + 0x100;
@@ -1457,7 +1506,7 @@
   /***
    * 
    */
-  function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj) {
+  function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj,ok,nok) {
     var instant = $('<div id=edit-temp></div>').dialog({
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
@@ -1477,7 +1526,7 @@
               // It's valid!
               var json_editor_value = json_editor.getValue();
               try{
-                ret = editorFn(json_editor_value, tmpObj);
+                ret = editorFn(json_editor_value, tmpObj,ok,nok);
               } catch(err){
                 if((typeof err ==="object" )){
                   if(err.hasOwnProperty('error_status')){
@@ -2312,167 +2361,6 @@
   }
 
 
-  function updateCameraInterface(tmpObj) {
-    var template = tmpObj.type
-    var tablename = "camera_table-" + template;
-
-
-
-    updateInterfaceCU(tmpObj);
-    $("#main_table-" + template + " tbody tr").off();
-    $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template, tmpObj, e);
-      if (tmpObj.node_multi_selected instanceof Array) {
-        var cnt = 0;
-
-        var html = '<table class="table table-bordered" id="' + tablename + '">';
-        var camlist = tmpObj.node_multi_selected;
-        if (camlist instanceof Array) {
-          var html = "";
-
-          camlist.forEach(function (key) {
-            if (cnt < dashboard_settings.camera.maxCameraCol) {
-              var encoden = jchaos.encodeName(key);
-              if ((cnt % dashboard_settings.camera.cameraPerRow) == 0) {
-                if (cnt > 0) {
-                  html += "</tr>"
-                }
-                html += '<tr class="row_element" id=camera-row"' + cnt + '">';
-              }
-              html += '<td class="td_element cameraMenu" id="camera-' + encoden + '" cuname="' + key + '" >'
-              //   html += '<div><b>'+key+'</b>';
-              html += '<div>';
-              html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 />';
-              html += '<div class="top-left">' + key + '</div>';
-
-              html += '</div>';
-
-              html += '</td>';
-
-              cnt++;
-            }
-          });
-
-          if (cnt > 0) {
-            html += "</tr>";
-
-          }
-        }
-        html += "</table>";
-        $("#cameraTable").html(html);
-        camlist.forEach(function (key) {
-          var encoden = jchaos.encodeName(key);
-
-          $("#cameraImage-" + encoden).on('click', function () {
-            $("#cameraImage-" + encoden).cropper({
-              aspectRatio: 16 / 9,
-              crop: function (event) {
-                tmpObj['crop'] = {};
-                tmpObj['crop'][key] = event.detail;
-
-                /*console.log(event.detail.x);
-                console.log(event.detail.y);
-                console.log(event.detail.width);
-                console.log(event.detail.height);
-                console.log(event.detail.rotate);
-                console.log(event.detail.scaleX);
-                console.log(event.detail.scaleY);*/
-              },
-              ready() {
-                // Do something here
-                // ...
-
-                // And then
-                this.cropper.crop();
-              }
-            });
-          })
-        });
-        $.contextMenu('destroy', '.cameraMenu');
-
-        $.contextMenu({
-          selector: '.cameraMenu',
-          zIndex:10000,
-          build: function ($trigger, e) {
-            var name = $(e.currentTarget).attr("cuname");
-            var cuitem = {};
-            if (tmpObj.hasOwnProperty('crop')) {
-              var crop_obj = tmpObj['crop'][name];
-              if (typeof crop_obj === "object") {
-                crop_obj['cu'] = name;
-                cuitem['set-roi'] = { name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
-                cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
-
-              }
-            
-            }
-            cuitem['exit-crop'] = { name: "Exit cropping", cu: name };
-            cuitem['sep1'] = "---------";
-            var ele=jchaos.getChannel(name,1,null);
-            var el=ele[0];
-            for(var k in el){
-                if(!(k.startsWith("dpck")||k.startsWith("ndk")||k.startsWith("cudk"))){
-                  var val=el[k];
-                  if(typeof el[k]==="object"){
-                    val=JSON.stringify(el[k]);
-                  }
-                  cuitem['set-'+k] = { name: "Set "+k, type:"text",value:val,events:(function(k){
-                    var events= {
-                      keyup: function(e) {
-                      // add some fancy key handling here?
-                        if(e.keyCode==13){
-                          jchaos.setAttribute(name,k,e.target.value,function(){
-                            instantMessage("Setting ", "\"" + k + "\"=\"" + e.target.value + "\" sent", 3000);
-                          });
-                        }   
-                  } 
-                }
-              return events;})(k)
-            }
-          }
-        }  
-          
-            
-
-            cuitem['sep2'] = "---------";
-
-            cuitem['quit'] = {
-              name: "Quit", icon: function () {
-                return 'context-menu-icon context-menu-icon-quit';
-              }
-
-            };
-
-            return {
-
-              callback: function (cmd, options) {
-                executeCameraMenuCmd(tmpObj, cmd, options);
-                return;
-              },
-              items: cuitem
-            }
-          }
-
-        });
-        $("#triggerType").off();
-        $("#triggerType").on("change", function () {
-          var node_selected = tmpObj.node_selected;
-          var value = $("#triggerType option:selected").val();
-          var attr = "TRIGGER_MODE";
-          jchaos.setAttribute(node_selected, attr, value, function () {
-            instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 2000, null, null, true)
-
-          }, function () {
-            instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 3000, null, null, false)
-
-          });
-        });
-
-      }
-    })
-  }
-
-
   jqccs.updateInterfaceCU=function(t){
     return updateInterfaceCU(t);
   }
@@ -2512,8 +2400,13 @@
       if ((event.which == 13)) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
+        jchaos.setSched(tmpObj.node_multi_selected, value,function(){
+          instantMessage("Set scheduling", "to "+value + " us Hz:"+1000000/Number(value), 2000, true);
 
-        jchaos.setSched(tmpObj.node_multi_selected, value);
+        },function(err){
+          instantMessage("ERROR Set scheduling", "to "+value+" err:"+err, 2000, false);
+
+        });
 
       }
     });
@@ -2690,7 +2583,21 @@
     $("input[type=radio][name=live-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
-      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
+      var node_multi_selected = tmpObj.node_multi_selected;
+      jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
+        function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+        function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+
+    });
+    $("input[type=radio][name=log-enable]").change(function (e) {
+      var dslive = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+      var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
       jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
         function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
@@ -2700,7 +2607,9 @@
     $("input[type=radio][name=histo-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
-      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
+      var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+
+      var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0)| ((dslog) ? 0x10 : 0);
       var node_multi_selected = tmpObj.node_multi_selected;
 
       jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
@@ -2779,18 +2688,17 @@
      */
     $(main_dom).on("keypress", "input.cucmdattr", function (e) {
       if (e.keyCode == 13) {
-        var id = this.id;
-        var attr = id.split("-")[1];
-        var value = $("#" + id).val();
-        var node_selected = tmpObj.node_selected;
-        jchaos.setAttribute(node_selected, attr, value, function () {
-          instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, true);
+        var value = e.target.value;
+        var attrname= e.target.name;
+        var desc=jchaos.decodeCUPath(attrname);
+        jchaos.setAttribute(desc.cu, desc.var, value, function () {
+          instantMessage(desc.cu + " Attribute "+desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, true)
 
         }, function () {
-          instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, false);
+          instantMessage(desc.cu+ " Attribute Error "+desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
         });
-        $("#" + this.id).toggle();
+        
         return false;
       }
       //var tt =prompt('type value');
@@ -3080,7 +2988,7 @@
         // open CB 
         var names = findTagsOf(tmpObj, currsel);
         element_sel("#select-tag", names, 0);
-        $("#select-tag").on("click", function () {
+        $("#select-tag").on("change", function () {
           var tagname = $("#select-tag option:selected").val();
           $("#query-tag").val(tagname);
           var tags = jchaos.variable("tags", "get", null, null);
@@ -3125,7 +3033,7 @@
     html += '</div>';
 
     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
-    html += '<h3>Elements</h3>';
+    html += '<h3>Group</h3>';
     html += '<select id="elements" size="auto"></select>';
     html += '</div>';
 
@@ -3148,6 +3056,13 @@
     html += generateActionBox();
     html += '</div>';
     html += generateModalActions();
+
+    html += '<div class="chaosrow pageindex">';
+    html +='<a href="#" class="chaositem previous_page round">&#8249;</a>';
+    html += '<div id="page_number" class="chaositem">0/0</div>';
+    html +='<a href="#" class="chaositem next_page round">&#8250;</a>';
+    html += '</div>';
+       
     html += '<div id="specific-table-' + tempObj.template + '"></div>';
     html += '<div id="specific-control-' + tempObj.template + '"></div>';
     return html;
@@ -3166,10 +3081,16 @@
     html += '<div class="span6">'
     html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
     html += '</div>'
+    
     // html += '<h3 class="span3">Search</h3>';
 
     html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
     html += '</div>';
+    html += '</div>';
+    html += '<div class="chaosrow pageindex">';
+    html +='<a href="#" class="chaositem previous_page round">&#8249;</a>';
+    html += '<div id="page_number" class="chaositem">0/0</div>';
+    html +='<a href="#" class="chaositem next_page round">&#8250;</a>';
     html += '</div>';
     html += generateEditJson();
     html += '<div id="specific-table-' + tempObj.template + '"></div>';
@@ -3188,21 +3109,31 @@
 
   function setupNode(tempObj) {
     var list_cu = [];
-    search_string = "";
+    
     var $radio = $("input:radio[name=search-alive]");
+    dashboard_settings.current_page=0;
+
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
     }
 
-    element_sel('#classe', ["us", "agent", "cu", "eu"], 1);
+    element_sel('#classe', ["us", "agent", "cu", "webui","mds"], 1);
+    $("#classe").off('change');
+    $("#classe").change(function(e){
+      dashboard_settings.current_page=0;
 
+      interface2NodeList(tempObj,function(list_cu){
+        tempObj['elems'] = list_cu;
 
+        updateInterface(tempObj);
+
+      });
+    });
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
-        interface = $("#classe").val();
-        search_string = $(this).val();
-        var alive = $("input[type=radio][name=search-alive]:checked").val();
-        interface2NodeList(tempObj, interface, alive,function(list_cu){
+        dashboard_settings.current_page=0;
+
+        interface2NodeList(tempObj,function(list_cu){
           tempObj['elems'] = list_cu;
 
           updateInterface(tempObj);
@@ -3213,16 +3144,44 @@
     });
 
     $("input[type=radio][name=search-alive]").change(function (e) {
-      var alive = $("input[type=radio][name=search-alive]:checked").val();
-      interface = $("#classe option:selected").val();
+      dashboard_settings.current_page=0;
 
-      interface2NodeList(tempObj, interface, alive,function(list_cu){
+      interface2NodeList(tempObj,function(list_cu){
         tempObj['elems'] = list_cu;
         updateInterface(tempObj);
       });
       
     });
-  }
+    $(".previous_page").click(function(e){
+      if(!dashboard_settings.hasOwnProperty('current_page')){
+        dashboard_settings['current_page']=0;
+      }
+      if(dashboard_settings.current_page>0){
+        dashboard_settings.current_page--;
+        interface2NodeList(tempObj,function(list_cu){
+          tempObj['elems'] = list_cu;
+          updateInterface(tempObj);
+        });
+      }
+
+    });
+    $(".next_page").click(function(e){
+      if(!dashboard_settings.hasOwnProperty('current_page')){
+        dashboard_settings['current_page']=0;
+      }
+      if(!dashboard_settings.hasOwnProperty('pages')){
+        dashboard_settings['pages']=1;
+      }
+      if(dashboard_settings.current_page<dashboard_settings.pages){
+        dashboard_settings.current_page++;
+        interface2NodeList(tempObj,function(list_cu){
+          tempObj['elems'] = list_cu;
+          updateInterface(tempObj);
+        });
+
+      }
+  });
+}
 
   function buildProcessInterface(tempObj) {
     var html = "";
@@ -3467,7 +3426,19 @@
     });
 
   }
+  function stateOutput(v,isError){
+    if(typeof errorCount ==="undefined" ){
+      errorCount=0;
+    }
+    if(isError){
+      errorCount++;
+      $("#refresh_rate_update").html('<b><font color="red">'+errorCount+"-"+v+'</font></b>');
+    } else {
+      $("#refresh_rate_update").html(v);
 
+    }
+
+  }
   function updateInterface(tmpObj) {
     var cuids = tmpObj['elems'];
     var template = tmpObj.type;
@@ -3509,10 +3480,12 @@
         return;
       }
       var now = (new Date()).getTime();
-      //$("#refresh_rate_update").html('<font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font>');
 
+      //$("#refresh_rate_update").html('<font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font>');
       if (tmpObj.upd_chan > -2) {
         jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
+          lat=(new Date()).getTime()-now;
+
           var node_live_selected = dat;
           if (node_live_selected.length == 0) {
             return;
@@ -3520,12 +3493,20 @@
 
           tmpObj.data = node_live_selected;
           tmpObj.updateFn(tmpObj);
+
         },function(err){
           console.log(err);
+          stateOutput(err,true);
+
         });
       } else {
         tmpObj.updateFn(tmpObj);
+
+
       }
+
+      stateOutput('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Latency:' + jchaos['latency'] + '</p><p>LatencyAvg:' + jchaos['latency_avg'].toFixed(2) + '</p><p>OpsOk:' + jchaos['numok'] + '</p><p>Errors:' + jchaos['errors'] + '</p><p>Timeouts:' + jchaos['timeouts'] + '</p></font></b>',false);
+
       if ((now - tmpObj.last_check) > tmpObj.check_interval) {
         if (tmpObj.data != null) {
           tmpObj.checkLiveFn(tmpObj);
@@ -3534,7 +3515,7 @@
         }
       }
       tmpObj.updateRefresh = now - tmpObj.lastUpdate;
-      $("#refresh_rate_update").html('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Errors:' + tmpObj.updateErrors + '</p></font></b>');
+
       tmpObj.lastUpdate = now;
     }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
@@ -3664,7 +3645,13 @@
         if (data != null) {
           //editorFn = cuSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj);
+          jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj,function(ok){
+            instantMessage("CU saved " + node_selected, " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Errro saving CU "+node_selected, bad , 2000,false);
+    
+          });
 
         }
       });
@@ -3682,7 +3669,13 @@
         if (data.hasOwnProperty("us_desc")) {
           //    editorFn = unitServerSave;
           //    jsonEdit(templ, data.us_desc);
-          jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj);
+          jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj,function(ok){
+            instantMessage("Unit server save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Unit server failed", bad , 2000,false);
+    
+          });
 
         }
       });
@@ -3694,7 +3687,15 @@
       }
       //editorFn = unitServerSave;
       //jsonEdit(templ, null);
-      jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj);
+      jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj,function(ok){
+        instantMessage("Unit server save ", " OK" , 2000,true);
+        
+      },function(bad){
+        instantMessage("Unit server failed", bad , 2000,false);
+
+      }
+
+      );
 
       return;
     } else if (cmd == "del-nt_unit_server") {
@@ -3704,13 +3705,20 @@
       }, "Cancel");
       return;
     } else if (cmd == "del-nt_control_unit") {
-      node_multi_selected.forEach(function (nod) {
+      node_multi_selected.forEach(function (nod,index) {
         jchaos.getDesc(nod, function (desc) {
           if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
             var parent = desc[0].instance_description.ndk_parent;
             confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
-              jchaos.node(nod, "del", "cu", parent, null);
-              updateInterface(tmpObj);
+              jchaos.node(nod, "del", "cu", parent, null,function(ok){
+                instantMessage("Deleted", "CU " + nod , 1000,true);
+                tmpObj['elems'].splice(index,1);
+                updateInterface(tmpObj);
+
+              },function(bad){
+                instantMessage("Deleting", "CU " + nod , 2000,false);
+
+              });
 
             }, "Cancel");
           }
@@ -3761,7 +3769,13 @@
         def_obj['ndk_uid'] = copia.ndk_uid + "_copied";
         def_obj['ndk_parent'] = node_selected;
         //jsonEdit(templ, tmp);
-        jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj);
+        jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj,function(ok){
+          instantMessage("CU save ", " OK" , 2000,true);
+          
+        },function(bad){
+          instantMessage("CU save failed", bad , 2000,false);
+  
+        });
 
       });
       return;
@@ -3810,7 +3824,13 @@
           // editorFn = jchaos.newCuSave;
           def_obj.ndk_parent = node_selected;
           //jsonEdit(templ, tmp);
-          jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
 
         }, "Cancel", function () {
@@ -3886,7 +3906,13 @@
           }
           // editorFn = jchaos.newCuSave;
           // jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
         } else {
           // custom
@@ -3899,7 +3925,13 @@
 
           //editorFn = jchaos.newCuSave;
           //jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj,function(ok){
+            instantMessage("CU save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("CU save failed", bad , 2000,false);
+    
+          });
 
         }
       }
@@ -3985,7 +4017,13 @@
           }
           //editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj);
+          jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj,function(ok){
+            instantMessage("Agent save ", " OK" , 2000,true);
+            
+          },function(bad){
+            instantMessage("Agent save failed", bad , 2000,false);
+    
+          });
 
         };
       });
@@ -5290,7 +5328,47 @@
     return list_eu;
   }
 
+  function buildInterfaceFromPagedSearch(tmpObj,what){
+    var alive = $("input[type=radio][name=search-alive]:checked").val()
+    var interface = $("#classe option:selected").val();
+    var element_selected = $("#elements option:selected").val();
+    var zone_selected = $("#zones option:selected").val();
+    var search_string = "";
+    if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
+      search_string = zone_selected;
+    }
+    if ((typeof element_selected !=="undefined")&&(element_selected != "ALL") && (element_selected != "--Select--")) {
+      search_string += "/" + element_selected;
+    }
+    if($("#search-chaos").val()!=null && $("#search-chaos").val().length>0){
+      if(search_string.length>0){
+        search_string += "/"+$("#search-chaos").val();
+      } else {
+        search_string += $("#search-chaos").val();
+      }
+    }
 
+    var sopt={"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage};
+    if(interface != "--Select--" && interface!= "ALL"){
+      sopt['impl']=implementation_map[interface];
+    }
+    jchaos.search(search_string,what,(alive == "true"),sopt,function(list_cu){
+      var search_query={
+        search:search_string,
+        type:"cu",
+        alive:(alive == "true"),
+        opt:{"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage}
+      }
+      dashboard_settings['pages']=list_cu.pages;
+      tmpObj['search_query']=search_query;
+      $(".pageindex").css("visibility", "visible");
+      $("#page_number").html((dashboard_settings.current_page+1)+"/"+dashboard_settings.pages);
+
+      buildCUPage(tmpObj, list_cu.list, implementation_map[interface]);
+
+    });
+
+  }
   function mainCU(tmpObj) {
     var list_cu = [];
     var classe = ["powersupply", "scraper", "camera", "BPM"];
@@ -5300,52 +5378,81 @@
     }
     jchaos.search("", "zone", true, function (zones) {
       element_sel('#zones', zones, 1);
+    },function(error){
+      stateOutput(error,true);
     });
-
+    
+    $("#zones").click(function () {
+      if($("#zones option").length==0){
+        jchaos.search("", "zone", true, function (zones) {
+          element_sel('#zones', zones, 1);
+        },function(error){
+          stateOutput(error,true);
+        });
+      }
+    });
     element_sel('#classe', classe, 1);
     $("#zones").change(function () {
       var zone_selected;
-      zone_selected = $("#zones option:selected").val();
-      search_string = zone_selected;
+      var zone_selected = $("#zones option:selected").val();
+
+      $("#search-chaos").val("");
+
       if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non � selezionata la zona
         $("#elements").attr('disabled', 'disabled');
       } else {
         $("#elements").removeAttr('disabled');
       }
       if (zone_selected == "ALL") {
-        search_string = "";
         var alive = $("[input=search-alive]:checked").val()
         jchaos.search(search_string, "class", (alive == "true"), function (ll) {
           element_sel('#elements', ll, 1);
         });
 
       } else {
-        search_string = zone_selected;
 
         jchaos.search(zone_selected, "class", true, function (ll) {
           element_sel('#elements', ll, 1);
         });
       }
-      $("#search-chaos").val(search_string);
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
-      var interface = $("#classe option:selected").val();
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
+     
+   //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
+    $(".previous_page").click(function(e){
+      if(!dashboard_settings.hasOwnProperty('current_page')){
+        dashboard_settings['current_page']=0;
+      }
+      if(dashboard_settings.current_page>0){
+        dashboard_settings.current_page--;
+        if(tmpObj.hasOwnProperty('search_query')){
+          var query=tmpObj['search_query'];
+          buildInterfaceFromPagedSearch(tmpObj,query.what);
 
-      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
+        }
+      }
+
+    });
+    $(".next_page").click(function(e){
+      if(!dashboard_settings.hasOwnProperty('current_page')){
+        dashboard_settings['current_page']=0;
+      }
+      if(!dashboard_settings.hasOwnProperty('pages')){
+        dashboard_settings['pages']=1;
+      }
+      if(dashboard_settings.current_page<dashboard_settings.pages){
+        dashboard_settings.current_page++;
+        var query=tmpObj['search_query'];
+        buildInterfaceFromPagedSearch(tmpObj,query.what);
+
+      }
+    });
     });
 
     $("#elements").change(function () {
       var element_selected = $("#elements option:selected").val();
       var zone_selected = $("#zones option:selected").val();
-      search_string = "";
-      if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
-        search_string = zone_selected;
-      }
-      if ((element_selected != "ALL") && (node_selected != "--Select--")) {
-        search_string += "/" + element_selected;
-      }
-
+      $("#search-chaos").val("");
 
       if (element_selected == "--Select--" || zone_selected == "--Select--") {
         $(".btn-main-function").hasClass("disabled");
@@ -5354,75 +5461,76 @@
         $(".btn-main-function").removeClass("disabled");
 
       }
-      $("#search-chaos").val(search_string);
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
 
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-      var interface = $("#classe option:selected").val();
-
-      buildCUPage(tmpObj, list_cu, implementation_map[interface], "cu");
+      dashboard_settings.current_page=0;
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
     });
     $("#classe").change(function () {
-      var interface = $("#classe option:selected").val();
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
+      dashboard_settings.current_page=0;
+      $("#search-chaos").val("");
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
 
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-
-      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
 
     });
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
-        var interface = $("#classe").val();
         search_string = $(this).val();
-        var alive = $("input[type=radio][name=search-alive]:checked").val()
+        dashboard_settings.current_page=0;
 
-        list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-        buildCUPage(tmpObj, list_cu, implementation_map[interface]);
+        buildInterfaceFromPagedSearch(tmpObj,"cu");
 
       }
       //var tt =prompt('type value');
     });
 
     $("input[type=radio][name=search-alive]").change(function (e) {
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-      var interface = $("#classe option:selected").val();
+      dashboard_settings.current_page=0;
 
-      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
+      buildInterfaceFromPagedSearch(tmpObj,"cu");
+
     });
 
 
   }
 
 
-  function interface2NodeList(tempObj, inter, alive,handler) {
+  function interface2NodeList(tempObj,handler) {
+    var inter = $("#classe").val();
+    var search_string = $("#search-chaos").val();
+    var alive = $("input[type=radio][name=search-alive]:checked").val();
+        
     var tmp = [];
-    if ((inter != "agent") && (inter != "us") && (inter != "cu")) {
-      jchaos.search(search_string, "us", (alive == "true"), function(node){
+    var sopt={"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage};
+    var search_query={
+      search:search_string,
+      type:inter,
+      alive:(alive == "true"),
+      opt:{"pagestart":dashboard_settings.current_page,"pagelen":dashboard_settings.maxNodesPerPage}
+    }
+    if ((inter == "ALL") || (inter == "--Select--") ) {
+      search_query['type']="server";
+      jchaos.search(search_string, "server", (alive == "true"), sopt,function(node){
+        dashboard_settings['pages']=node.pages;
+        tempObj['search_query']=search_query;
         tempObj.type = "ALL";
-
-        node.forEach(function (item) {
-          tmp.push(item);
-        });
-        jchaos.search(search_string, "agent", (alive == "true"),function(node){
-          node.forEach(function (item) {
-            tmp.push(item);
-          });
-          jchaos.search(search_string, "cu", (alive == "true"),function(node){
-            node.forEach(function (item) {
-              tmp.push(item);
-            });
-            handler(tmp);
-          });
-        });
+        $(".pageindex").css("visibility", "visible");
+        $("#page_number").html((dashboard_settings.current_page+1)+"/"+dashboard_settings.pages);
+        handler(node.list);
         
       });
       
     } else {
       tempObj.type = inter;
-      jchaos.search(search_string, inter, (alive == "true"), handler);
+      jchaos.search(search_string, inter, (alive == "true"),sopt,
+      function(list){
+        dashboard_settings['pages']=list.pages;
+        tempObj['search_query']=search_query;
+        $(".pageindex").css("visibility", "visible");
+        $("#page_number").html((dashboard_settings.current_page+1)+"/"+dashboard_settings.pages);
+
+        handler(list.list);
+      } );
 
     }
     if (inter == "eu") {
@@ -5581,157 +5689,8 @@
     tmpObj.last_index_selected = $(e.currentTarget).index();
 
   }
-  function generateCameraTable(tmpObj) {
-    var cu = tmpObj.elems;
-    var template = tmpObj.type;
-
-    var html = '<div>';
-
-
-    html += '<div id="cameraTable"></div>';
-    html += '</div>';
-
-    var cu = tmpObj.elems;
-    var template = tmpObj.type;
-    var html = '<div class="row-fluid" z-index=-1 id="table-space">';
-    html += '<div class="box span12">';
-    html += '<div class="box-content span12">';
-    if (cu.length == 0) {
-      html += '<p id="no-result-monitoring">No results match</p>';
-
-    } else {
-      html += '<p id="no-result-monitoring"></p>';
-
-    }
-
-    html += '<table class="table table-bordered" id="main_table-' + template + '">';
-    html += '<thead class="box-header">';
-    html += '<tr>';
-    html += '<th>Name CU</th>';
-    html += '<th colspan="3">Status</th>';
-    html += '<th colspan="2">Mode</th>';
-    html += '<th colspan="2">Shutter</th>';
-    html += '<th colspan="2">Gain</th>';
-    html += '<th colspan="2">Brightness</th>';
-    html += '<th colspan="2">Error</th>';
-    html += '<th colspan="2">Rate Hz-KB/s</th>';
-    html += '</tr>';
-
-
-    html += '</thead> ';
-    $(cu).each(function (i) {
-      var cuname = jchaos.encodeName(cu[i]);
-      html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-      html += "<td class='name_element'>" + cu[i] + "</td>";
-      html += "<td id='" + cuname + "_health_status'></td>";
-      html += "<td id='" + cuname + "_system_busy'></td>";
-      html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-      
-      html += "<td id='" + cuname + "_camera_mode'></td>";
-      html += "<td id='" + cuname + "'><select class='select_camera_mode' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>Triggered</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
-      
-      html += "<td id='" + cuname + "_output_shutter'></td>";
-      html += "<td id='" + cuname + "'><input id='" + cuname + "_shutter' name='"+cu[i]+"'></input></td>";
-      
-      html += "<td id='" + cuname + "_output_gain'></td>";
-      html += "<td id='" + cuname + "'><input id='" + cuname + "_gain' name='"+cu[i]+"'></input></td>";
-      
-      html += "<td id='" + cuname + "_output_brightness'></td>";
-      html += "<td id='" + cuname + "'><input id='" + cuname + "_brightness' name='"+cu[i]+"'></input></td>";
-
-      html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
-      html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-      html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></td></tr>";
-
-
-    });
-
-    html += '</table>';
-    html += '</div>';
-    html += '</div>';
-    html += '</div>';
-
-    /*html += '<div class="box span12">';
-    html += '<div class="box-content">';
-
-    html += '<h3 class="box-header" id=image-options>Image Options</h3>';
-
-    html += '<label class="label span3" >Trigger</label>';
-    html += '<select id="triggerType" class="span9">';
-    html += '<option value="0" selected="0">Continuos</option>';
-    html += '<option value="1">Single Shot</option>';
-    html += '<option value="2">Software</option>';
-    html += '<option value="3">HW HI trigger</option>';
-    html += '<option value="4">HW LOW trigger</option>';
-    html += '</select>';
-
-    html += '<label class="label span3">Width </label>';
-    html += '<input class="input-xlarge focused span4" id="image-WIDTH_READOUT" readonly title="Readout Resize image width" type="text" value="640">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-WIDTH" title="SET Resize image width" type="number" value=640>';
-
-    html += '<label class="label span3">Height </label>';
-    html += '<input class="input-xlarge focused span4" id="image-HEIGHT_READOUT" readonly title="Readout Resize image height" type="text" value="480">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-HEIGHT" title="Resize image height" type="text" value=480>';
-
-    html += '<label class="label span3">Offset X</label>';
-    html += '<input class="input-xlarge focused span4 json-keyinput" id="image-OFFSETX" readonly title="Readout Image Offset X (ROI)" type="text" value="0">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-OFFSETX" title="Image Offset X (ROI)" type="number" value=0>';
-
-    html += '<label class="label span3">Offset Y</label>';
-    html += '<input class="input-xlarge focused span4 json-keyinput" id="image-OFFSETY" readonly title="Readout Image Offset X (ROI)" type="text" value="0">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-OFFSETY" title="SET Image Offset Y (ROI)" type="text" value=0>';
-
-    html += '<label class="label span3">Gain:</label>';
-    html += '<input class="input-xlarge focused span4" id="image-GAIN_READOUT" readonly title="Image Readout Gain" type="text" value="0">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-GAIN" title="Set Gain" type="number" value=0>';
-    //  html += '<div class="span3" id="slider-GAIN" title="Camera Gain"> </div>';
-
-    html += '<label class="label span3">Brightness</label>';
-    html += '<input class="input-xlarge focused span4" id="image-BRIGHTNESS_READOUT" readonly title="Image Readout Brightnessn" type="text">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-BRIGHTNESS" title="SET Brightness" type="number" value=0>';
-    // html += '<div class="span3" id="slider-BRIGHTNESS" title="Camera Brightness"></div>';
-
-    html += '<label class="label span3">Shutter</label>';
-    html += '<input class="input-xlarge focused span4" id="image-SHUTTER_READOUT" readonly title="Camera Readout Shutter" type="text">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-SHUTTER" title="SET Shutter" type="number" value=0>';
-    // html += '<div class="span3" id="slider-SHUTTER" title="Camera Shutter"> </div>';
-
-
-    html += '<label class="label span3">Contrast</label>';
-    html += '<input class="input-xlarge focused span4" id="image-CONTRAST_READOUT" readonly title="Camera Readout Contrast" type="text">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-CONTRAST" title="SET Contrast" type="number" value=0>';
-    // html += '<div class="span3" id="slider-CONTRAST" title="Camera Contrast"> </div>';
-
-    html += '<label class="label span3">Sharpness</label>';
-    html += '<input class="input-xlarge focused span4" id="image-SHARPNESS_READOUT" readonly title="Camera Readout Sharpness" type="text">';
-    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-SHARPNESS" title="SET Sharpness" type="number" value=0>';
-    // html += '<div class="span3" id="slider-SHARPNESS" title="Camera Sharpness"> </div>';
-
-    html += '</div>';
-    html += '</div>';
-*/
-    html += generateGenericTable(tmpObj);
-    return html;
-  }
-  function configureSliderCommands(tmpObj, slname, slinput) {
-    $("#" + slname).slider({
-      range: "max",
-      min: 0,
-      max: 100,
-      value: 1,
-      slide: function (event, ui) {
-        $("#" + slinput).val(ui.value);
-        var id = this.id;
-        var node_selected = tmpObj.node_selected;
-        var attr = id.split("-")[1];
-        jchaos.setAttribute(node_selected, attr, String(ui.value), function () {
-          //   instantMessage("Attribute ", "\"" + attr + "\"=\"" + ui.value + "\" sent", 1000)
-
-        });
-      }
-    });
-    $("#" + slinput).val($("#" + slname).slider("value"));
-  }
+  
+  
 
   /********************* */
   function generateGenericTable(tmpObj) {
@@ -6574,98 +6533,6 @@
 
     }
   }
-  function updateCameraTable(tmpObj) {
-    var cu = tmpObj.elems;
-
-    if (tmpObj.node_multi_selected instanceof Array) {
-
-      var cnt = 0;
-      tmpObj.node_multi_selected.forEach(function (elem) {
-        tmpObj.skip_fetch++;
-        jchaos.getChannel(elem, -1, function (d) {
-          if (tmpObj.skip_fetch > 0)
-            tmpObj.skip_fetch--;
-          var selected = d[0];
-          //    var selected = tmpObj.data[tmpObj.index];
-          if (selected != null && selected.hasOwnProperty("output")) {
-            // $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
-            if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
-              var bin = selected.output.FRAMEBUFFER.$binary.base64;
-              var fmt = "png";
-              if (selected.hasOwnProperty("input")) {
-                if (selected.input.FMT != null) {
-                  fmt = selected.input.FMT;
-                }
-                /* updateCameraProperties("GAIN", selected);
-                 updateCameraProperties("WIDTH", selected);
-                 updateCameraProperties("HEIGHT", selected);
-                 updateCameraProperties("OFFSETX", selected);
-                 updateCameraProperties("OFFSETY", selected);
-                 updateCameraProperties("BRIGHTNESS", selected);
-                 updateCameraProperties("SHUTTER", selected);
-                 updateCameraProperties("CONTRAST", selected);
-                 updateCameraProperties("SHARPNESS", selected);*/
-
-              }
-              //$('#triggerType').val(selected.output.TRIGGER_MODE)
-
-              // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-              $("#cameraImage-" + jchaos.encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
-              /* $("#cameraImage-" + jchaos.encodeName(elem)).one("load", function() {
-                 if(typeof tmpObj['selectArea-'+ jchaos.encodeName(elem)] === "undefined"){
-                   tmpObj['selectArea-'+ jchaos.encodeName(elem)]={};
-                 $('#cameraImage-' + jchaos.encodeName(elem)).cropper({
-                   aspectRatio: 16 / 9,
-                   crop: function(event) {
-                     console.log(event.detail.x);
-                     console.log(event.detail.y);
-                     console.log(event.detail.width);
-                     console.log(event.detail.height);
-                     console.log(event.detail.rotate);
-                     console.log(event.detail.scaleX);
-                     console.log(event.detail.scaleY);
-                   }
-                 });
-               }
-                 // do stuff
-               })*/
-              /* if(typeof tmpObj['selectArea-'+ jchaos.encodeName(elem)] === "undefined"){
-                 tmpObj['selectArea-'+ jchaos.encodeName(elem)]={};
-                 
-             }*/
-            }
-          }
-          var cindex = tmpObj.node_name_to_index[elem];
-
-          tmpObj.data[cindex] = d[0];
-          if (++cnt == tmpObj.node_multi_selected.length) {
-            
-            updateGenericTableDataset(tmpObj);
-          }
-
-
-        }, function (d) {
-          if (tmpObj.skip_fetch > 0)
-            tmpObj.skip_fetch--;
-
-          tmpObj.updateErrors++;
-          // $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
-        });
-
-      });
-    }
-
-
-    jchaos.getChannel(tmpObj['elems'], 255, function (selected) {
-      tmpObj.data = selected;
-
-      updateGenericCU(tmpObj);
-    },function(str){
-      console.log(str);
-    });
-
-    
-  }
   
 
   function generateGraphList() {
@@ -7331,10 +7198,12 @@
   }
 
   function createQueryDialog(querycb, opencb) {
+    var dstart = new Date();
+    dstart.setHours(0,0,0,0);
     if (typeof query_params === "undefined") {
       query_params = {
         page: dashboard_settings.defaultPage,
-        start: 0,
+        start: dstart.getTime(),
         stop: (new Date()).getTime(),
         tag: "",
         chunk: dashboard_settings.defaultChunk,
@@ -7364,7 +7233,7 @@
     html += '</div>';
 
     html += '<label class="label span3">Start </label>';
-    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value=' + query_params.start + '>';
+    html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
     html += '<label class="label span3">Stop </label>';
     html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
 
@@ -7390,12 +7259,10 @@
     createCustomDialog(opt, html, "Run", function () {
 
       query_params['page'] = Number($("#query-page").val());
-      if (typeof $("#query-start").val() === "number") {
-        query_params['start'] = Number($("#query-start").val());
-      }
-      if (typeof $("#query-stop").val() === "number") {
-        query_params['stop'] = Number($("#query-stop").val());
-      }
+      query_params['start'] = Number($("#query-start").val());
+      
+      query_params['stop'] = Number($("#query-stop").val());
+      
       query_params['tag'] = $("#query-tag").val();
       query_params['chunk'] = Number($("#query-chunk").val());
       query_params['reduction'] = Number($("#query-reduction").val());
@@ -8783,7 +8650,9 @@
   }
 
 
-
+jqccs.generateGenericControl=function(tmpObj){
+  return generateGenericControl(tmpObj);
+}
   function generateGenericControl(tmpObj) {
     var template = tmpObj.type;
     var html = "";
@@ -8798,7 +8667,7 @@
     html += '<div class="row-fluid">';
 
     html += "<div class='span3 statbox'>";
-    html += "<h3 id='scheduling_title'></h3>";
+    html += "<h3 id='scheduling_title'>Scheduling(us)</h3>";
     html += "<input type='text' class='setSchedule'>";
     html += "</div>";
 
@@ -8824,6 +8693,11 @@
     html += '<div class="span2">'
     html += '<label for="live-enable">enable live</label><input class="input-xlarge" id="live-true" title="Enable Live" name="live-enable" type="radio" value="true">';
     html += '<label for="live-enable">disable live</label><input class="input-xlarge" id="live-false" title="Disable Live" name="live-enable" type="radio" value="false">';
+    html += '</div>'
+
+    html += '<div class="span2">'
+    html += '<label for="log-enable">enable log</label><input class="input-xlarge" id="log-true" title="Enable Logging on Grafana " name="log-enable" type="radio" value="true">';
+    html += '<label for="log-enable">disable log</label><input class="input-xlarge" id="log-false" title="Disable Logging on Grafana" name="log-enable" type="radio" value="false">';
     html += '</div>'
 
     html += '<div class="span2">'
@@ -9348,7 +9222,7 @@
         $("#cmd-load-unload").show();
       }
     }
-    if (cu.hasOwnProperty('system') && (tmpObj.off_line[encoden] == 0)) {   //if el system
+    if (cu.hasOwnProperty('system') /*&& (tmpObj.off_line[encoden] == 0)*/) {   //if el system
       $("#scheduling_title").html("Actual scheduling (us):" + cu.system.cudk_thr_sch_delay);
 
       if (cu.system.cudk_bypass_state == false) {
@@ -9366,6 +9240,11 @@
           $("input[name=live-enable][value='true']").prop("checked", true);
         } else {
           $("input[name=live-enable][value='false']").prop("checked", true);
+        }
+        if (cu.system.dsndk_storage_type & 0x10) {
+          $("input[name=log-enable][value='true']").prop("checked", true);
+        } else {
+          $("input[name=log-enable][value='false']").prop("checked", true);
         }
         if (cu.system.dsndk_storage_type & 0x1) {
           $("input[name=histo-enable][value='true']").prop("checked", true);
@@ -9658,7 +9537,7 @@
     var html="";
     for(var key in dev_alarm){
       var value=dev_alarm[key];
-      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
+      if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
         if(value>0){
           if(value>2){
             value=2;
@@ -9680,6 +9559,7 @@
         localStorage['chaos_dashboard_settings'] = JSON.stringify(json);
         dashboard_settings = json;
       });
+      dashboard_settings['current_page']=0;
     } else {
       dashboard_settings = JSON.parse(sett);
       $.getJSON("dashboard-settings-def.json", function (json) {
@@ -9687,6 +9567,8 @@
         localStorage['chaos_dashboard_settings'] = JSON.stringify(dashboard_settings);
       });
     }
+    dashboard_settings['current_page']=0;
+
 
   }
 
@@ -9786,7 +9668,10 @@
           var e = jQuery.Event('keypress');
           e.which = 13;
           e.keyCode = 13;
-
+          jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
+          templateObj.check_interval = dashboard_settings.checkLive;
+          templateObj.refresh_rate = dashboard_settings.generalRefresh;
+          
           $("#search-chaos").trigger(e);
         }, null);
 
