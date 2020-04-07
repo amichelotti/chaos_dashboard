@@ -1797,17 +1797,25 @@
         });
 
         $("#snap-delete").on('click', function(e) {
+            $("#mdl-snap").modal("hide");
+
             if (snap_selected != "") {
-                jchaos.snapshot(snap_selected, "delete", "", function() {
-                    instantMessage(snap_selected + " deleted ", 1000, null, null, true);
 
-                    updateSnapshotTable(tmpObj, true);
+                confirm("Delete Snapshot", "Your are deleting snapshot: " + snap_selected, "Ok", function() {
 
-                }, function(err) {
-                    instantMessage(snap_selected + " error deleting " + err, 2000, null, null, false);
+                    jchaos.snapshot(snap_selected, "delete", "", function() {
+                        instantMessage(snap_selected + " deleted ", 1000, null, null, true);
 
-                });
+                        updateSnapshotTable(tmpObj, true);
 
+                    }, function(err) {
+                        instantMessage(snap_selected + " error deleting " + err, 2000, null, null, false);
+
+                    });
+                }, "Cancel");
+
+            } else {
+                alert("No snapshot selected");
             }
         });
 
@@ -1917,8 +1925,16 @@
                             fullname = portname + "[0]";
                         }
                         if (cmd == "show-graph") {
+                            graph_selected = null;
+                            trace_list = [];
+                            $("#table_trace").find("tr:gt(0)").remove();
+
                             $("#mdl-graph-list").modal("show");
                         } else if (cmd == "plot-x") {
+                            graph_selected = null;
+                            trace_list = [];
+                            $("#table_trace").find("tr:gt(0)").remove();
+
                             $("#mdl-graph").modal("show");
 
                             $("#trace-name").val(fullname);
@@ -1926,6 +1942,10 @@
                             $("#graph_save_name").val(jchaos.encodeName(fullname));
 
                         } else if (cmd == "plot-y") {
+                            graph_selected = null;
+                            trace_list = [];
+                            $("#table_trace").find("tr:gt(0)").remove();
+
                             $("#mdl-graph").modal("show");
 
                             $("#trace-name").val(fullname);
@@ -1933,6 +1953,10 @@
                             $("#graph_save_name").val(jchaos.encodeName(fullname));
 
                         } else if (cmd == "plot-histo") {
+                            graph_selected = null;
+                            trace_list = [];
+                            $("#table_trace").find("tr:gt(0)").remove();
+
                             $("#mdl-graph").modal("show");
 
                             $("#trace-name").val(fullname);
@@ -2196,10 +2220,16 @@
         });
 
         $("#graph-save").on('click', function() {
-            saveGraph();
-            $("#graph-save").effect("highlight", { color: 'green' }, 1000);
+            saveGraph(function() {
+                graph_selected = $("#graph_save_name").val();
+                $("#graph-save").effect("highlight", { color: 'green' }, 1000);
+                $("#graph-run").removeAttr('disabled');
+                instantMessage("Graph", "Graph " + graphname + " saved", 2000, true);
+            }, function() {
+                instantMessage("Graph", "Graph " + graphname + " Error saving", 2000, false);
 
-            $("#graph-run").removeAttr('disabled');
+            });
+
 
         });
         $("#graph-run").off('click');
@@ -2282,6 +2312,7 @@
                     delete active_plots[graph_selected];
                 }
                 graph_selected = null;
+                trace_list = [];
                 jchaos.variable("highcharts", "set", high_graphs, null);
 
                 updateGraph($("#graph_search").val());
@@ -6906,44 +6937,59 @@
     function getValueFromCUList(culist, path) {
         for (var cnt = 0; cnt < culist.length; cnt++) {
             var item = culist[cnt];
-            if (path.cu == item.health.ndk_uid) {
-                if (path.dir == "output") {
-                    if (item.output.hasOwnProperty(path.var)) {
+            for (var keys in item) {
+                if (path.cu == item[keys].ndk_uid) {
+                    if ((path.dir == keys) && (item[keys].hasOwnProperty(path.var))) {
                         if (path.index != null) {
-                            var val = convertBinaryToArrays(item.output[path.var]);
+                            var val = convertBinaryToArrays(item[keys][path.var]);
                             if (path.index == "-1") {
                                 return val;
                             } else {
                                 return Number(val[path.index]);
                             }
                         }
-                        return Number(item.output[path.var]);
-                    }
-                } else if (path.dir == "input") {
-                    if (item.input.hasOwnProperty(path.var)) {
-                        if (path.index != null) {
-                            var val = convertBinaryToArrays(item.input[path.var]);
-                            if (path.index == "-1") {
-                                return val;
-                            } else {
-                                return Number(val[path.index]);
-                            }
-                        }
-                        return Number(item.input[path.var]);
-                    }
-                } else if (path.dir == "health") {
-                    if (item.health.hasOwnProperty(path.var)) {
-                        if (path.index != null) {
-                            var val = convertBinaryToArrays(item.health[path.var]);
-
-
-                            return Number(val[path.index]);
-                        }
-                        return item.health[path.var];
+                        return Number(item[keys][path.var]);
                     }
                 }
-
             }
+            /* if (path.cu == item.health.ndk_uid) {
+                 if (path.dir == "output") {
+                     if (item.output.hasOwnProperty(path.var)) {
+                         if (path.index != null) {
+                             var val = convertBinaryToArrays(item.output[path.var]);
+                             if (path.index == "-1") {
+                                 return val;
+                             } else {
+                                 return Number(val[path.index]);
+                             }
+                         }
+                         return Number(item.output[path.var]);
+                     }
+                 } else if (path.dir == "input") {
+                     if (item.input.hasOwnProperty(path.var)) {
+                         if (path.index != null) {
+                             var val = convertBinaryToArrays(item.input[path.var]);
+                             if (path.index == "-1") {
+                                 return val;
+                             } else {
+                                 return Number(val[path.index]);
+                             }
+                         }
+                         return Number(item.input[path.var]);
+                     }
+                 } else if (path.dir == "health") {
+                     if (item.health.hasOwnProperty(path.var)) {
+                         if (path.index != null) {
+                             var val = convertBinaryToArrays(item.health[path.var]);
+
+
+                             return Number(val[path.index]);
+                         }
+                         return item.health[path.var];
+                     }
+                 }
+
+             }*/
         }
         return null;
     }
@@ -7837,7 +7883,7 @@
         }
     }
 
-    function saveGraph() {
+    function saveGraph(handler, badhandler) {
         var graphtype = $("#graphtype option:selected").val();
         var tracetype = $("#trace-type option:selected").val();
 
@@ -8021,11 +8067,7 @@
         };
         console.log("saving Graph:" + JSON.stringify(high_graphs[graphname]));
 
-        jchaos.variable("highcharts", "set", high_graphs, function() {
-            instantMessage("Graph", "Graph " + graphname + " saved", 2000, true);
-
-        });
-        graph_selected = graphname;
+        jchaos.variable("highcharts", "set", high_graphs, handler, badhandler);
 
     }
 
