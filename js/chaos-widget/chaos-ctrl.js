@@ -9080,6 +9080,8 @@
                 return "Control Unit";
             case "nt_unit_server":
                 return "Unit Server";
+            default:
+                return "";
 
         }
     }
@@ -9135,7 +9137,9 @@
         var node_selected = tmpObj.node_selected;
         // var cindex = tmpObj.node_name_to_index[node_name];
         var node = tmpObj.node_name_to_desc[node_name];
+        var node_type = null;
         if (interface == "us") {
+            node_type = "nt_unit_server"
             items['new-nt_unit_server'] = { name: "New  Unit Server..." };
 
             if ((us_copied != null) && us_copied.hasOwnProperty("ndk_uid")) {
@@ -9149,11 +9153,16 @@
                 items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
             }
         }
-        if (node == null) {
-            return items;
+
+        if ((typeof node === "undefined") || (node == null)) {
+            if ((node_type == null)) {
+                return items;
+            }
+        } else {
+            node_type = node.desc.ndk_type;
+
         }
 
-        node_type = node.desc.ndk_type;
         items['edit-' + node_type] = { name: "Edit ..." };
 
         if (node_type == "nt_unit_server") {
