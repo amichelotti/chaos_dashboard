@@ -9146,7 +9146,9 @@
                 items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
             }
         } else {
-
+            if (interface == "cu") {
+                node_type = "nt_control_unit";
+            }
             items['new-nt_unit_server'] = { name: "New  Unit Server..." };
 
             if ((us_copied != null) && us_copied.hasOwnProperty("ndk_uid")) {
