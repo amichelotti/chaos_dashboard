@@ -1367,8 +1367,10 @@
                 if ((typeof handleFunc !== "function")) {
                     return jchaos.basicPost("CU", str_url_cu, null);
                 }
-                jchaos.basicPost("CU", str_url_cu, function(datav) { jchaos.lastChannel = datav;
-                    handleFunc(datav); }, badfunc);
+                jchaos.basicPost("CU", str_url_cu, function(datav) {
+                    jchaos.lastChannel = datav;
+                    handleFunc(datav);
+                }, badfunc);
             }
             /***
              * Retrieve a full description og the specified CU
@@ -1391,8 +1393,10 @@
             if ((typeof handleFunc !== "function")) {
                 return jchaos.basicPost("CU", str_url_cu, null);
             }
-            jchaos.basicPost("CU", str_url_cu, function(datav) { jchaos.lastChannel = datav;
-                handleFunc(datav); });
+            jchaos.basicPost("CU", str_url_cu, function(datav) {
+                jchaos.lastChannel = datav;
+                handleFunc(datav);
+            });
         }
 
         /***
@@ -2113,7 +2117,11 @@
 
             });
 
-            jchaos.node(node_selected, "set", "us", "", json, ok, nok);
+            jchaos.node(node_selected, "set", "us", "", json, function() {
+                if (typeof ok === "function") {
+                    ok(json);
+                }
+            }, nok);
             return 0;
         }
 
@@ -2296,11 +2304,10 @@
                         });
 
                     }
-                    if ((sel == "cu_templates") && (config instanceof Object) && (!config.hasOwnProperty("cu_desc"))) {
+                    if ((sel == "cu_templates") && (config instanceof Object) && (config.hasOwnProperty("cu_templates"))) {
 
-                        jchaos.variable("cu_templates", "set", config, function(s) {
-                            console.log("restoring CU templates:" + JSON.stringify(config));
-                            cu_templates = config;
+                        jchaos.variable("cu_templates", "set", config["cu_templates"], function(s) {
+                            console.log("restoring CU templates:" + JSON.stringify(config["cu_templates"]));
                         });
 
                     }

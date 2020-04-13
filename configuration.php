@@ -62,6 +62,12 @@ require_once('header.php');
 
 					<div class="span11 box">
 						<h3 class="box-header">Variables</h3>
+						<div class="row-fluid">
+							<input class="input-xlarge focused span7" id="varname" type="text" title="variable name search" value=""/>
+
+							<a class="quick-button-small span2" id="update-variable"><i class='material-icons verde'>search</i><p>Search</p></a>
+						</div>
+
 						<div id="chaos_variables"></div>
 					</div>
 				</div>
@@ -86,6 +92,43 @@ require_once('header.php');
 
 
 <script>
+    function varupdate(varname){
+		var variables={};
+
+		jchaos.search(varname, "variable", false, function (vl) {
+		vl.forEach(function(v){
+			jchaos.variable(v, "get", null, function(d){
+				variables[v]=d;
+				var dom="#chaos_variables";
+				$(dom).html(jqccs.json2html(variables));
+
+				jqccs.jsonSetup(dom,function(e){
+
+    			},function(e){
+      			if (e.keyCode == 13) {
+       
+        			var value = e.target.value;
+        			var attrname= e.target.name;
+       
+					console.log("setting "+attrname+" ="+value);
+
+        			return true;
+      				} else {
+        				return false;
+					  }
+					
+					});
+					$(".json-toggle").trigger("click");
+
+				/* Simulate click on toggle button when placeholder is clicked */
+				//$("a.json-placeholder").click(function () {
+				
+				
+			});
+		});
+	})
+
+	}
 	function pathToVariable(variable,str,value){
 		var n=str.indexOf("/");
 		if(n!=-1){
@@ -118,6 +161,10 @@ require_once('header.php');
 	  $("#save-configuration").on("click",function(){
 		  jchaos.saveFullConfig();
 	  });
+
+	  $("#update-variable").on("click",function(){
+		varupdate($("#varname").val());
+	});
 	  $('#upload-file').on('change', function() {
 		var reader = new FileReader();
 		reader.onload = function(e) {
@@ -128,38 +175,7 @@ require_once('header.php');
 	};
 	reader.readAsText(this.files[0]);
 	});
-	var variables={};
-	jchaos.search("", "variable", false, function (vl) {
-		vl.forEach(function(v){
-			jchaos.variable(v, "get", null, function(d){
-				variables[v]=d;
-				var dom="#chaos_variables";
-				$(dom).html(jqccs.json2html(variables));
-
-				jqccs.jsonSetup(dom,function(e){
-
-    			},function(e){
-      			if (e.keyCode == 13) {
-       
-        			var value = e.target.value;
-        			var attrname= e.target.name;
-       
-					console.log("setting "+attrname+" ="+value);
-
-        			return true;
-      				} else {
-        				return false;
-					  }
-					
-    				});
-				/* Simulate click on toggle button when placeholder is clicked */
-				//$("a.json-placeholder").click(function () {
-				
-				
-			});
-		});
-	})
-
+	varupdate("");
 </script>
 	
 

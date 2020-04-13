@@ -7,9 +7,8 @@
     // library jquery chaos control studio
     var jqccs = {};
     var json_editor;
-    var cu_templates = null;
     var dashboard_settings = null;
-    var interface; // interface we are looking for
+    var interface;
     var cu_copied = {};
     var us_copied = {};
     var algo_copied;
@@ -3720,6 +3719,13 @@
 
     }
 
+    function updateNodeEvent() {
+        var e = jQuery.Event("keypress");
+        e.keyCode = 13; // # Some key code value
+        $("#search-chaos").trigger(e);
+
+    }
+
     function executeNodeMenuCmd(tmpObj, cmd, opt) {
         try {
             node_selected = tmpObj.node_selected;
@@ -3802,6 +3808,10 @@
                 jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj, function(ok) {
                         instantMessage("Unit server save ", " OK", 2000, true);
 
+                        $("#search-alive-false").prop('checked', true);
+                        $("#search-chaos").val(ok.ndk_uid);
+                        updateNodeEvent();
+
                     }, function(bad) {
                         instantMessage("Unit server failed", bad, 2000, false);
 
@@ -3813,9 +3823,80 @@
             } else if (cmd == "del-nt_unit_server") {
 
                 confirm("Delete US", "Your are deleting US: " + node_selected, "Ok", function() {
-                    jchaos.node(node_selected, "del", "us", null, null);
+                    jchaos.node(node_selected, "del", "us", function() {
+                        instantMessage("Unit server deleted ", " OK", 2000, true);
+                        updateNodeEvent();
+                    }, function(err) {
+                        instantMessage("cannot delete server US:", err, 2000, false);
+
+                    });
                 }, "Cancel");
                 return;
+            } else if (cmd == "maketemplate-nt_control_unit") {
+                var template = jchaos.variable("cu_templates", "get", null, null);
+                if (typeof template !== "object") {
+                    template = {};
+                }
+                var cu = jchaos.node(node_selected, "get", "cu", null, null);
+                var impl = null;
+                var driver = null;
+                if (typeof cu === "object") {
+                    if (typeof cu['control_unit_implementation'] === "string") {
+                        if (((impl = getInterfaceFromClass(cu['control_unit_implementation'])) == null)) {
+                            impl = cu['control_unit_implementation'];
+                        }
+
+                    }
+                    if (impl == null) {
+                        alert("cannot create a template from a null implementation");
+                        return;
+                    }
+                    driver = "generic";
+                    cu['ndk_uid'] = "<here " + impl + " CU unique name>";
+                    cu["ndk_parent"] = "<here pather US unique name>";
+                    cu['cudk_desc'] = "<here your CU " + impl + " description with drivers " + driver + ">";
+                    if (cu['cudk_driver_description'] instanceof Array) {
+                        driver = "";
+
+                        cu['cudk_driver_description'].forEach(function(item, index) {
+                            if (typeof item['cudk_driver_description_name'] === "string") {
+                                if (cu['cudk_driver_description'].length == 1) {
+                                    driver = item.cudk_driver_description_name;
+
+                                } else {
+                                    driver += item.cudk_driver_description_name + "[" + index + "]";
+
+                                }
+                            }
+                        });
+                    }
+                    var templ = {
+                        $ref: "cu.json",
+                        format: "tabs"
+                    }
+                    jsonEditWindow("Template Editor " + impl, templ, cu, function(json, obj, ok, bad) {
+                        if ((json != null) && json.hasOwnProperty("ndk_uid")) {
+
+                            template[impl] = {};
+                            template[impl][driver] = json;
+                            jchaos.variable("cu_templates", "set", template, ok, bad);
+                            return 0;
+                        }
+                        bad("cu not valid:" + JSON.stringify(json));
+                        return 0;
+                    }, tmpObj, function(ok) {
+                        instantMessage("Created template:" + impl, " Driver:" + driver, 1000, true);
+
+                    }, function(bad) {
+                        instantMessage("Failed create template:" + impl, " Driver:" + driver, 2000, false);
+
+                    });
+
+
+                }
+
+
+
             } else if (cmd == "del-nt_control_unit") {
                 node_multi_selected.forEach(function(nod, index) {
                     jchaos.getDesc(nod, function(desc) {
@@ -3825,8 +3906,7 @@
                                 jchaos.node(nod, "del", "cu", parent, null, function(ok) {
                                     instantMessage("Deleted", "CU " + nod, 1000, true);
                                     tmpObj['elems'].splice(index, 1);
-                                    updateInterface(tmpObj);
-
+                                    updateNodeEvent();
                                 }, function(bad) {
                                     instantMessage("Deleting", "CU " + nod, 2000, false);
 
@@ -4005,10 +4085,12 @@
                     function() {});
                 return;
             } else if (cmd.includes("new-nt_control_unit")) {
-                var regex = /new-nt_control_unit-(.*)$/;
+                var regex = /new-nt_control_unit-(.*)-(.*)$/;
                 var match = regex.exec(cmd);
                 if (match != null) {
-                    var template = cu_templates[match[1]];
+                    var cu_templates = jchaos.variable("cu_templates", "get", null, null);
+
+                    var template = cu_templates[match[1]][match[2]];
 
                     if (template != null) {
                         template["ndk_parent"] = node_selected;
@@ -9118,13 +9200,23 @@
 
     function cuCreateSubMenu() {
         var items = {};
+        var subitem = {};
         items["new-nt_control_unit-fromfile"] = { name: "CU from file..." };
 
-        cu_templates = jchaos.variable("cu_templates", "get", null, null);
+        var cu_templates = jchaos.variable("cu_templates", "get", null, null);
+        var cnt = 0;
         for (var item in cu_templates) {
-            items["new-nt_control_unit-" + item] = { name: "" + item };
+            var sub2item = {};
+
+            for (var types in cu_templates[item]) {
+                sub2item["new-nt_control_unit-" + item + "-" + types] = { name: types };
+            }
+            cnt++;
+            subitem['fold' + cnt] = { name: item, "items": sub2item };
 
         }
+        items['fold1'] = { name: "templates", "items": subitem };
+
         items["new-nt_control_unit-custom"] = { name: "Custom CU" };
         items["new-nt_control_unit-mcimport"] = { name: "MemCache import CU" };
 
@@ -9195,6 +9287,8 @@
                 items['sep6'] = "---------";
             }
         } else if (node_type == "nt_control_unit") {
+            items['maketemplate-' + node_type] = { name: "Make Template " };
+
             items['del-' + node_type] = { name: "Del " + node_selected };
             items['copy-' + node_type] = { name: "Copy " + node_selected };
             items['save-' + node_type] = { name: "Save To Disk " + node_selected };
