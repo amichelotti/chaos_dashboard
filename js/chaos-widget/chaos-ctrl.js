@@ -9820,7 +9820,12 @@
         return instantMessage(msghead, msg, tim, sizex, sizey, ok);
 
     }
-
+    /**
+     * Create a graph dialog
+     * @param  {string} gname name of the graph
+     * @param  {} id
+     * @param  {} options
+     */
     jqccs.createGraphDialog = function(gname, id, options) {
         return createGraphDialog(gname, id, options);
     }
