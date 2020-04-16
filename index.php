@@ -41,11 +41,8 @@ require_once('header.php');
 				</ul>
 			
 				<div id="main-dashboard"></div>
-
-				
-								
-	
-		</div><!--/fluid-row--> -->
+			</div>
+		</div><!--/fluid-row-->
 	</div>
 	
 

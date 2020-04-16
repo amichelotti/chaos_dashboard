@@ -3134,22 +3134,22 @@
 
         var html = '<div class="row-fluid">';
 
-        html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+        html += '<div class="statbox purple span2" >';
         html += '<h3>Zones</h3>';
         html += '<select id="zones" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+        html += '<div class="statbox purple span2">';
         html += '<h3>Group</h3>';
         html += '<select id="elements" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
+        html += '<div class="statbox purple span2">'
         html += '<h3>Class</h3>';
         html += '<select id="classe" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+        html += '<div class="statbox purple row-fluid span3">'
         html += '<div class="span3">'
         html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
@@ -3177,12 +3177,12 @@
 
     function buildNodeInterface(tempObj) {
         var html = '<div class="row-fluid">';
-        html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
+        html += '<div class="statbox purple span3">'
         html += '<h3>Node Type</h3>';
         html += '<select id="classe" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+        html += '<div class="statbox purple row-fluid span3">'
         html += '<div class="span6">'
         html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
@@ -3289,6 +3289,7 @@
 
             }
         });
+
     }
 
     function buildProcessInterface(tempObj) {
@@ -5543,6 +5544,13 @@
         var interface = $("#classe option:selected").val();
         var element_selected = $("#elements option:selected").val();
         var zone_selected = $("#zones option:selected").val();
+
+        dashboard_settings['last_alive']=alive;
+        dashboard_settings['last_interface']=interface;
+        dashboard_settings['last_group']=element_selected;
+        dashboard_settings['last_zone']=zone_selected;
+        localStorage['chaos_dashboard_settings'] = JSON.stringify(dashboard_settings);
+            
         var search_string = "";
         if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
             search_string = zone_selected;
@@ -5587,12 +5595,10 @@
         if ($radio.is(":checked") === false) {
             $radio.filter("[value=true]").prop('checked', true);
         }
-        jchaos.search("", "zone", true, function(zones) {
-            element_sel('#zones', zones, 1);
-        }, function(error) {
-            stateOutput(error, true);
-        });
+        var zones=jchaos.search("", "zone", true);
+        element_sel('#zones', zones, 1);
 
+      
         $("#zones").click(function() {
             if ($("#zones option").length == 0) {
                 jchaos.search("", "zone", true, function(zones) {
@@ -5603,10 +5609,10 @@
             }
         });
         element_sel('#classe', classe, 1);
+        
         $("#zones").change(function() {
             var zone_selected;
             var zone_selected = $("#zones option:selected").val();
-
             $("#search-chaos").val("");
 
             if (zone_selected == "--Select--") { //Disabilito la select dei magneti se non � selezionata la zona
@@ -5672,7 +5678,7 @@
                 $(".btn-main-function").removeClass("disabled");
 
             }
-
+            
             dashboard_settings.current_page = 0;
             buildInterfaceFromPagedSearch(tmpObj, "cu");
 
@@ -5681,7 +5687,7 @@
             dashboard_settings.current_page = 0;
             $("#search-chaos").val("");
             buildInterfaceFromPagedSearch(tmpObj, "cu");
-
+            
 
         });
         $("#search-chaos").keypress(function(e) {
@@ -5701,7 +5707,45 @@
             buildInterfaceFromPagedSearch(tmpObj, "cu");
 
         });
+        var defzone="";
+        var defgroup="";
+        var definterface="";
+        if(dashboard_settings.hasOwnProperty("defaultZone")&&(dashboard_settings.defaultZone!="")&&(dashboard_settings.defaultZone!="ALL")){
+            defzone=dashboard_settings.defaultZone;
+        } else if(dashboard_settings.hasOwnProperty("last_zone")&&(dashboard_settings.last_zone!="")){
+            defzone=dashboard_settings.last_zone;
+        }
+        if(dashboard_settings.hasOwnProperty("defaultGroup")&&(dashboard_settings.defaultGroup!="")){
+            defgroup=dashboard_settings.defaultGroup;
+        } else if(dashboard_settings.hasOwnProperty("last_group")&&(dashboard_settings.last_group!="")){
+            defgroup=dashboard_settings.last_group;
+        }
+        if(dashboard_settings.hasOwnProperty("defaultInterface")&&(dashboard_settings.defaultInterface!="")){
+            definterface=dashboard_settings.defaultInterface;
+        } else if(dashboard_settings.hasOwnProperty("last_interface")&&(dashboard_settings.last_interface!="")){
+            definterface=dashboard_settings.last_interface;
+        }
+        if(defzone!=""){
+          $("#zones option[value=\""+defzone+"\"]").prop('selected', true);
+            //$("#zones").val(defzone);
+            
+        }
+        if(defgroup!=""){
+            var cl=jchaos.search((defzone=="ALL")?"":defzone, "class", true);
 
+            element_sel('#elements', cl, 1);
+
+            $("#elements option[value=\""+defgroup+"\"]").prop('selected', true);
+        }
+        if(definterface!=""){
+            $("#classe option[value=\""+definterface+"\"]").prop('selected', true);
+           $("#classe").val(definterface);
+
+        }
+        if(defzone!=""||defgroup!="" ||definterface!=""){
+            buildInterfaceFromPagedSearch(tmpObj, "cu");
+
+        }
 
     }
 
@@ -5906,7 +5950,10 @@
 
     /********************* */
     function generateGenericTable(tmpObj) {
-        var cu = tmpObj.elems;
+        var cu=[];
+        if(tmpObj['elems'] instanceof Array){
+             cu = tmpObj.elems;
+        }
         var template = tmpObj.type;
         var html = '<div class="row-fluid" z-index=-1 id="table-space">';
         html += '<div class="box span12">';
@@ -6005,489 +6052,17 @@
         });
     }
 
-    function generateBPMTable(tmpObj) {
-        var cu = tmpObj.elems;
-        var template = tmpObj.type;
+    
 
-        var html = '<table class="table table-bordered" id="graph_table_BPM">';
-        html += '</table>';
-
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
-        html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
-        html += '<thead class="box-header">';
-        html += '<tr>';
-        html += '<th>Element</th>';
-        html += '<th colspan="3">Status</th>';
-        html += '<th>X</th>';
-        html += '<th>Y</th>';
-        html += '<th>VA</th>';
-        html += '<th>VB</th>';
-        html += '<th>VC</th>';
-        html += '<th>VD</th>';
-        html += '<th>SUM</th>';
-        html += '<th colspan="2">Samples/Trigger</th>';
-        html += '<th colspan="2">Alarms dev/cu</th>';
-        html += '</tr>';
-        html += '</thead>';
-
-
-        $(cu).each(function(i) {
-            var cuname = jchaos.encodeName(cu[i]);
-            html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-            html += "<td class='td_element td_name'>" + cu[i] + "</td>";
-            html += "<td id='" + cuname + "_health_status'></td>";
-            html += "<td id='" + cuname + "_system_busy'></td>";
-            html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-            html += "<td title='Calculated X position' id='" + cuname + "_output_X'></td>";
-            html += "<td title='Calculated Y position' id='" + cuname + "_output_Y'></td>";
-            html += "<td title='VA' id='" + cuname + "_output_VA'></td>";
-            html += "<td title='VB' id='" + cuname + "_output_VB'></td>";
-            html += "<td title='VC' id='" + cuname + "_output_VC'></td>";
-            html += "<td title='VD' id='" + cuname + "_output_VD'></td>";
-            html += "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
-            html += "<td title='Samples' id='" + cuname + "_input_SAMPLES'></td>";
-            html += "<td title='Trigger' id='" + cuname + "_input_TRIGGER'></td>";
-
-            html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
-            html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
-
-        });
-
-        html += '</table>';
-        html += '</div>';
-        html += '</div>';
-
-        html += '</div>';
-
-        return html;
-    }
-
-    function generateBPMCmd() {
-        var html = '<div class="row-fluid">';
-        html += '<div class="box span12 box-cmd">';
-        html += '<div class="box-header green">';
-        html += '<h3 id="h3-cmd">Commands</h3>';
-        html += '</div>';
-        html += '<div class="box-content">';
-        html += '<div class="span12 statbox">';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
-        html += '<i class="material-icons verde">trending_down</i>';
-        html += '<p class="name-cmd">SlowAcquisition</p>';
-        html += '</a>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_da"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":1,\"loops\":-1,\"samples\":1024}>';
-        html += '<i class="material-icons verde">trending_up</i>';
-        html += '<p class="name-cmd">DataOnDemand</p>';
-        html += '</a>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_tda"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":257,\"loops\":-1,\"samples\":1024}>';
-        html += '<i class="material-icons verde">timer</i>';
-        html += '<p class="name-cmd">DataOnDemand (Triggered)</p>';
-        html += '</a>';
-        html += "<div class='span3 statbox'>";
-        html += "<h3>Samples</h3>";
-        html += "<input type='number' id='acquire_samples'>";
-        html += "</div>";
-
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_stop"  cucmdid="cu_clear_current_cmd" >';
-        html += '<i class="material-icons rosso">pause_circle_outline</i>';
-        html += '<p class="name-cmd">Stop Acquisition</p>';
-        html += '</a>';
-
-
-        html += '</div>';
-        html += '<div class="span12 statbox">';
-        html += '<textarea class="form-control" rows="5" id="BPM_STATUS"></textarea>';
-
-        //html += '<p id="BPM_STATUS"/>';    
-        html += '</div>';
-
-        html += '</div>';
-
-        html += '</div>';
-        html += '</div>';
-
-        html += '</div>';
-
-        return html;
-    }
+    
 
     function generateScraperTable(tmpObj) {
 
     }
 
-    function updateBPM(tmpObj) {
-        var cu = tmpObj.data;
-        if (JSON.stringify(tmpObj['elems']) !== JSON.stringify(tmpObj['old_elems'])) {
-            var chart_options = {
-                maxpoints: 10,
-                npoints: 0,
-                chart: {
-
-                },
-                title: {
-                    text: ''
-                },
-
-                xAxis: {
-                    type: "datetime",
-                    title: {
-                        text: 'Time'
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: 'V'
-                    }
-
-                },
-                legend: {
-                    layout: 'vertical',
-                    align: 'right',
-                    verticalAlign: 'middle'
-                },
-
-                plotOptions: {
-                    series: {
-                        label: {
-                            connectorAllowed: false
-                        },
-                    }
-                },
-                series: [{
-                    name: 'VA',
-                    data: []
-                }, {
-                    name: 'VB',
-                    data: []
-                }, {
-                    name: 'VC',
-                    data: []
-                }, {
-                    name: 'VD',
-                    data: []
-                }, {
-                    name: 'SUM',
-                    data: []
-                }]
-            };
-            makeDynamicGraphTable(tmpObj, "graph_table_BPM", chart_options, tmpObj['elems']);
-            tmpObj['old_elems'] = tmpObj['elems'];
-        }
-        var now = (new Date()).getTime();
-        updateGenericTableDataset(tmpObj);
-
-        cu.forEach(function(elem) {
-            if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) { //if el health
-
-                var cuname = jchaos.encodeName(elem.health.ndk_uid);
-                if ((tmpObj.node_selected != null) && (elem.health.ndk_uid == tmpObj.node_selected)) {
-                    $("#BPM_STATUS").html(elem.output.STATUS);
-                }
-                $("#" + cuname + "_output_X").html(elem.output.X.toFixed(3));
-                $("#" + cuname + "_output_Y").html(elem.output.Y.toFixed(3));
-                $("#" + cuname + "_output_VA").html(elem.output.VA);
-                $("#" + cuname + "_output_VB").html(elem.output.VB);
-                $("#" + cuname + "_output_VC").html(elem.output.VC);
-                $("#" + cuname + "_output_VD").html(elem.output.VD);
-                $("#" + cuname + "_output_SUM").html(elem.output.SUM);
-                $("#" + cuname + "_input_SAMPLES").html(elem.input.SAMPLES);
-                if (elem.input.TRIGGER) {
-                    $("#" + cuname + "_input_TRIGGER").html("Triggered");
-                } else {
-                    $("#" + cuname + "_input_TRIGGER").html("No Trigger");
-                }
-                if (tmpObj.hasOwnProperty("graph_table_BPM")) {
-                    var chart = tmpObj['graph_table_BPM'][cuname];
-                    if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
-                        var shift = false;
-                        if (tmpObj['graph_table_BPM'][cuname].options.npoints > tmpObj['graph_table_BPM'][cuname].options.maxpoints) {
-                            shift = true;
-                        }
-                        tmpObj['graph_table_BPM'][cuname].options.npoints++;
-                        if ((elem.output.MODE & 0x1) && (elem.output.hasOwnProperty("SUM_ACQ"))) {
-                            var arrv = [];
-                            arrv[0] = convertBinaryToArrays(elem.output.VA_ACQ);
-                            arrv[1] = convertBinaryToArrays(elem.output.VB_ACQ);
-                            arrv[2] = convertBinaryToArrays(elem.output.VC_ACQ);
-                            arrv[3] = convertBinaryToArrays(elem.output.VD_ACQ);
-                            arrv[4] = convertBinaryToArrays(elem.output.SUM_ACQ);
-                            for (var i = 0; i < 5; i++) {
-                                if (arrv[i] instanceof Array) {
-                                    var setp = []
-                                    arrv[i].forEach(function(elem, n) {
-                                        setp.push([now + n, elem]);
-
-                                    });
-                                    chart.series[i].setData(setp, true, true, true);
-                                }
-                            }
-                        } else {
-                            chart.series[0].addPoint([now, elem.output.VA], false, shift);
-                            chart.series[1].addPoint([now, elem.output.VB], false, shift);
-                            chart.series[2].addPoint([now, elem.output.VC], false, shift);
-                            chart.series[3].addPoint([now, elem.output.VD], false, shift);
-                            chart.series[3].addPoint([now, elem.output.SUM], false, shift);
-                        }
-                        chart.redraw();
-
-                    }
-
-                }
-            }
-        });
+    
 
 
-
-    }
-
-    function updateScraper(tmpObj) {
-        var cu = tmpObj.data;
-
-        cu.forEach(function(elem) {
-            if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) { //if el health
-
-                var cuname = jchaos.encodeName(elem.health.ndk_uid);
-
-                $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
-                if (elem.output.hasOwnProperty("POI")) {
-                    $("#" + cuname + "_output_poi").html(elem.output.POI);
-                }
-                $("#" + cuname + "_input_position").html(elem.input.position.toFixed(3));
-                if (elem.input.hasOwnProperty("POI")) {
-                    $("#" + cuname + "_input_poi").html(elem.input.POI);
-                }
-                /* switch (elem.output.polarity) {
-           case 1:
-             $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
-             break;
-           case -1:
-             $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
-             break;
-           case 0:
-             $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
-             break;
- 
-         }*/
-
-                if (elem.output.home) {
-                    $("#" + cuname + "_flag_home").html();
-                } else {
-                    $("#" + cuname + "_flag_home").html('');
-
-                }
-                if (elem.output.powerOn) {
-                    $("#" + cuname + "_flag_output_status").html('<i class="material-icons verde">trending_down</i>');
-
-                } else {
-                    $("#" + cuname + "_flag_output_status").html('<i class="material-icons rosso">pause_circle_outline</i>');
-
-                }
-                if (elem.output.NegativeLimitSwitchActive) {
-                    $("#" + cuname + "_flag_out").html('<i id="out_icon_' + cuname + '" class="icon-caret-left verde"></i>');
-                } else {
-                    $("#" + cuname + "_flag_out").html('');
-                }
-
-
-                if (elem.output.PositiveLimitSwitchActive) {
-                    $("#" + cuname + "_flag_in").html('<i id="in_icon_' + cuname + '" class="icon-caret-right verde"></i>');
-                } else {
-                    $("#" + cuname + "_flag_in").html('');
-                }
-
-            }
-            if (elem.health.ndk_uid == tmpObj.node_selected) {
-                if (elem.hasOwnProperty('custom')) {
-                    if (elem.custom.hasOwnProperty('cudk_load_param')) {
-                        if (elem.custom.cudk_load_param.hasOwnProperty('poi')) {
-                            $("#mov_abs_poi").empty();
-                            for (var i in elem.custom.cudk_load_param.poi) {
-                                $("#mov_abs_poi").append("<option value='" + elem.custom.cudk_load_param.poi[i] + "'>" + i + "</option>");
-
-                            }
-                        }
-                    }
-                }
-                if (elem.output.powerOn) {
-
-                    $("#scraper_setPoweron").prop('disabled', true);
-                    $("#scraper_setPoweroff").prop('disabled', false);
-                    //   $("#scraper_setPoweron").childen().remove();
-                    //html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
-                    //html += '<i class="material-icons green">trending_down</i>';
-                    //html += '<p class="name-cmd">OFF</p>';
-                    //html += '</a>';
-                    //$("#scraper_setPoweron").html(html);
-                } else {
-                    // $("#scraper_setPoweron").childen().remove();
-                    $("#scraper_setPoweron").prop('disabled', false);
-                    $("#scraper_setPoweroff").prop('disabled', true);
-
-                }
-            }
-        });
-
-        updateGenericTableDataset(tmpObj);
-
-
-    }
-
-    function generateScraperCmd(tmpObj) {
-
-    }
-
-    function generateCameraCmd(tmpObj) {
-        var html = '<div class="row-fluid">';
-        html += '<div class="box span12 box-cmd">';
-        html += '<div>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
-        html += '<i class="material-icons rosso">error</i>';
-        html += '<p class="name-cmd">Reset</p>';
-        html += '</a>';
-        html += '<div class="span2" id="input-value">';
-        html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="1">';
-        html += '</div>';
-        html += '<div class="span2" id="input-value">';
-        html += '<select class="input" id="mov_abs_poi"></select>';
-        html += '</div>';
-        html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
-        html += '<p>Set Absolute</p>';
-        html += '</a>';
-
-        html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
-        html += '<i class="material-icons green">trending_down</i>';
-        html += '<p class="name-cmd">ON</p>';
-        html += '</a>';
-        html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
-        html += '<i class="material-icons rosso">cancel</i>';
-        html += '<p class="name-cmd">STOP</p>';
-        html += '</a>';
-
-        html += '</div>';
-        html += '<div class="span12 statbox" style="margin-left:0">';
-        html += '<a class="quick-button-small span1 btn-cmd offset0 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
-        html += '<i class="icon-angle-left"></i>';
-        html += '<p class="name-cmd">In</p>';
-        html += '</a>';
-        // in case of cucmdvalue = null, a item named 'cucmd'_<commandparam>
-        html += '<div class="span3" id="input-value-due">';
-        html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value=1>';
-        html += '</div>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
-        html += '<i class="icon-angle-right"></i>';
-        html += '<p class="name-cmd">Out</p>';
-        html += '</a>';
-
-        html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweroff" cucmdid="poweron" cucmdvalue={\"on\":0}>';
-        html += '<i class="material-icons red">pause</i>';
-        html += '<p class="name-cmd">OFF</p>';
-        html += '</a>';
-        html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd cucmd" cucmdid="homing" cucmdvalue=1>';
-        html += '<i class="icon-home"></i>';
-        html += '<p class="name-cmd">Homing</p>';
-        html += '</a>';
-
-
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-        if (tmpObj.hasOwnProperty('elems')) {
-            jchaos.getChannel(tmpObj.elems, 2, function(customs) {
-                customs.forEach(function(custom) {
-                    var name = jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
-                    $("#" + name).hide();
-                    if (custom.hasOwnProperty('cudk_load_param') && custom.cudk_load_param.hasOwnProperty('poi')) {
-                        var name = jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
-                        $("#" + name).show();
-                        $("#" + name).empty();
-                        for (var i in custom.cudk_load_param.poi) {
-                            $("#" + name).append("<option value='" + custom.cudk_load_param.poi[i] + "'>" + i + "</option>");
-
-                        }
-                        $("#" + name).on("click", function(s) {
-
-                            var cuname = $(this).attr('name');
-                            var poiv = $(this).find("option:selected").text();
-                            var param = {
-                                poi: poiv
-                            }
-
-                            jchaos.sendCUCmd(cuname, "mov_abs", param, function(d) {
-
-                                instantMessage(cuname, "Move to:" + poiv, 1000, true)
-                            }, function(d) {
-                                instantMessage(cuname, "ERROR OCCURRED:" + d, 2000, 350, 400, false);
-
-                            });
-                        })
-
-
-                    }
-                });
-            });
-        };
-
-
-
-        return html;
-    }
-
-    function generatePStable(tmpObj) {
-        var cu = tmpObj.elems;
-        var template = tmpObj.type;
-        var html = '<div class="row-fluid">';
-        html += '<div class="box span12">';
-        html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
-        html += '<thead class="box-header">';
-        html += '<tr>';
-        html += '<th>Element</th>';
-        html += '<th>Status</th>';
-        html += '<th>Readout [A]</th>';
-        html += '<th>Setting [A]</th>';
-        html += '<th colspan="3">Saved</th>';
-        html += '<th colspan="7">Flags</th>';
-        html += '</tr>';
-        html += '</thead>';
-
-        $(cu).each(function(i) {
-            var cuname = jchaos.encodeName(cu[i]);
-            html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-            html += "<td class='td_element td_name'>" + cu[i] + "</td>";
-            html += "<td id='" + cuname + "_health_status'></td>";
-            html += "<td title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
-            html += "<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
-            html += "<td class='td_element' title='Restore setpoint current'  id='" + cuname + "_input_saved_current'></td>";
-            html += "<td class='td_element' title='Restore Stanby/Operational' id='" + cuname + "_input_saved_stby'></td>";
-            html += "<td class='td_element' title='Restore setpoint polarity' id='" + cuname + "_input_saved_polarity'></td>";
-            html += "<td class='td_element' id='" + cuname + "_output_stby'></td>";
-            html += "<td class='td_element' id='" + cuname + "_output_polarity'></td>";
-            html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-            html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
-            html += "<td class='td_element' id='" + cuname + "_system_busy'></td>";
-            html += "<td class='td_element' title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-            html += "<td class='td_element' title='Device alarms' id='" + cuname + "_system_device_alarm'></td></tr>";
-        });
-        html += '</table>';
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-
-        return html;
-    }
-
-    function updateCameraProperties(propname, json) {
-        if (json.input.hasOwnProperty(propname)) {
-            $("#image-" + propname + "_SET").val(json.input[propname]);
-            //   $("#slider-"+propname).val(json.input[propname]);
-        }
-        if (json.output.hasOwnProperty(propname)) {
-            $("#image-" + propname + "_READOUT").val(json.output[propname]);
-
-        }
-    }
 
     function notSelectedElems(tmpObj) {
         var ret = [];
@@ -8637,7 +8212,7 @@
 
 
     function generateActionBox() {
-        var html = '<div class="box black span3" onTablet="span4" onDesktop="span4">';
+        var html = '<div class="box black span2">';
         html += '<div class="box-header">';
         html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Actions</h2>';
         html += '<div class="box-icon">';
@@ -10040,7 +9615,16 @@
                  */
             $(this).html(templateObj.buildInterfaceFn(templateObj));
             templateObj.setupInterfaceFn(templateObj)
+            var htmlt, htmlc;
+            if(typeof templateObj.generateTableFn === "function"){
+                htmlt = templateObj.generateTableFn(templateObj);
+                $("#specific-table-" + templateObj.template).html(htmlt);
 
+            }
+            if(typeof templateObj.generateCmdFn === "function"){
+                htmlc = templateObj.generateCmdFn(templateObj);    
+                $("#specific-control-" + templateObj.template).html(htmlc);
+            }
             $("#menu-dashboard").html(generateMenuBox());
             $("#query-page").val(dashboard_settings.defaultPage);
             $("#query-chunk").val(dashboard_settings.defaultChunk);
@@ -10048,6 +9632,10 @@
             //   initializeTimePicker();
 
             //jsonSetup($(this));
+             $(".btn-minimize").click(function(t){
+            $(this).children().toggleClass('chevron-down');
+            $(this).parent().parent().parent().find("ul.dashboard-list").toggle();
+        });
             $(".savetofile").on("click", function(e) {
                 var t = $(e.target);
                 if (save_obj instanceof Object) {

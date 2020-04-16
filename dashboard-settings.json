@@ -25,6 +25,11 @@
 		"default":"ALL",
 		"description":"Default Group to open"
 	},
+	"defaultInterface" : {
+		"type":"string",
+		"default":"ALL",
+		"description":"Default Interface to open"
+	},
 	"generalControlRefresh" : {
 		"type":"integer",
 		"default":500,

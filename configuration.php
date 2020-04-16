@@ -12,8 +12,8 @@ $curr_page = "Home";
 require_once('header.php');
 ?>
 
-	<div class="container-fluid-full">
-		<div class="row-fluid">
+	<div class="container-fluid-full fill">
+		<div class="row-fluid ">
 				
 			<!-- start: Main Menu -->
 			<div id="sidebar-left" class="span2">
@@ -29,7 +29,7 @@ require_once('header.php');
 			
 			
 			<!-- start: Content -->
-			<div id="content" class="span10">
+			<div id="content" class="span10 fill">
 			
 				<ul class="breadcrumb">
 					<li>
@@ -39,7 +39,7 @@ require_once('header.php');
 					</li>
 				</ul>
 			
-    	<div class="row-fluid">
+    	<div class="row-fluid fill">
 
 			<div class="box span12">
     			<div class="box-content">
@@ -77,12 +77,11 @@ require_once('header.php');
 
 				
 								
-	
-		</div><!--/fluid-row--> -->
+		</div> <!-- content -->
+		</div><!--/fluid-row-->
 	</div>
 	
 	<div id="jsoneditor"> </div>
-	<div class="clearfix"></div>
 	
 	<footer><?php require_once('footer.php');?></footer>
 	
