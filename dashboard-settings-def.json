@@ -6,8 +6,8 @@
 	"maxNodesPerPage" :10,
 	"defaultPage":30,
 	"defaultChunk":3600,
-	"defaultZone":"ALL",
-	"defaultGroup":"ALL",
+	"defaultZone":"",
+	"defaultGroup":"",
 	"camera":{
 		"cameraRefresh":1000,
 		"cameraPerRow" :2,

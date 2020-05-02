@@ -9,7 +9,10 @@ function getWidget() {
       
       },
       tableFn:function (tmpObj) {
-        var cu = tmpObj.elems;
+        var cu=[];
+        if(tmpObj['elems'] instanceof Array){
+             cu = tmpObj.elems;
+        }        
         var template = tmpObj.type;
     
         var html = '<table class="table table-bordered" id="graph_table_BPM">';

@@ -235,11 +235,14 @@
 =================================================================== */
 
 body {
-	background: #F5F5F5;
+	background: #1C2B36;
 	color: #333;
 	border: none;
 	font-family: 'Open Sans', sans-serif;
 	font-weight: 400;
+	min-height: 100%;
+  margin: 0; padding: 0; 
+
 }
 
 a {
@@ -2494,7 +2497,7 @@ div.uploader{
 
 footer {
 	min-height: 24px;
-	background: #1C2B36;;
+	background: #1C2B36;
 	color: #fff !important;
 	-webkit-border-radius: 0px;
 	   -moz-border-radius: 0px;

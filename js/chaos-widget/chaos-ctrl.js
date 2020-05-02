@@ -2,7 +2,7 @@
  * jQuery chaos widget
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
  */
-(function($) {
+(function ($) {
 
     // library jquery chaos control studio
     var jqccs = {};
@@ -33,6 +33,16 @@
     var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera", "BPM": "SCLibera" };
     var hostWidth = 640;
     var hostHeight = 640;
+    function GetURLParameter(sParam) {
+        var sPageURL = window.location.search.substring(1);
+        var sURLVariables = sPageURL.split('&');
+        for (var i = 0; i < sURLVariables.length; i++) {
+            var sParameterName = sURLVariables[i].split('=');
+            if (sParameterName[0] == sParam) {
+                return sParameterName[1];
+            }
+        }
+    }
 
     function getInterfaceFromClass(impl_class) {
         for (var key in implementation_map) {
@@ -157,7 +167,7 @@
 
             title: msg,
             position: "top",
-            open: function() {
+            open: function () {
                 progressbar = $("#" + id)
                 var progressLabel = $(".progress-label");
                 progressbar.progressbar({
@@ -166,12 +176,12 @@
                           var val = progressbar.progressbar("value");
                           progressLabel.text(val + "%");
                         },*/
-                    complete: function() {
+                    complete: function () {
                         $(this).parent().dialog("close");
                     }
                 });
             },
-            close: function() {
+            close: function () {
                 $(this).remove();
             }
         });
@@ -183,12 +193,12 @@
             height: 400,
             title: msghead,
             position: "center",
-            open: function() {
+            open: function () {
                 $(this).css("opacity", 0.5);
                 var main = $(this);
-                $('#upload-file').on('change', function() {
+                $('#upload-file').on('change', function () {
                     var reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         try {
                             var json = JSON.parse(e.target.result);
                             handler(json);
@@ -207,7 +217,7 @@
             },
             buttons: [{
                 text: "Close",
-                click: function(e) {
+                click: function (e) {
                     $(this).dialog("close").remove();
 
                 }
@@ -220,7 +230,7 @@
         var html = '<div><div id="specific-table-ctrl"></div>';
         html += '<div id="specific-control-ctrl"></div></div>';
         newObj.template = "ctrl";
-        changeView(newObj, cutype, function(newObj) {
+        changeView(newObj, cutype, function (newObj) {
             var nintervals = 0;
             var orginal_list = [];
             var instant = $(html).dialog({
@@ -230,17 +240,17 @@
                 position: "center",
                 resizable: true,
                 buttons: [{
-                        text: "close",
-                        click: function(e) {
-                            $(this).dialog('close');
+                    text: "close",
+                    click: function (e) {
+                        $(this).dialog('close');
 
 
-                        }
                     }
+                }
 
 
                 ],
-                close: function(event, ui) {
+                close: function (event, ui) {
                     //var last_interval = setInterval(function () { }, 100000);
                     /*for (var i = nintervals; i <= last_interval; i++) {
                       clearInterval(i);
@@ -257,8 +267,8 @@
                             buildCUPage(tmpObj, implementation_map[interface], "cu");
                             */
                 },
-                open: function() {
-                    nintervals = setInterval(function() {}, 100000); // Get a reference to the last
+                open: function () {
+                    nintervals = setInterval(function () { }, 100000); // Get a reference to the last
                     // interval +1
                     orginal_list = node_list;
                     console.log(name + " OPEN control interval:" + nintervals);
@@ -280,26 +290,26 @@
             title: msg,
             resizable: true,
             buttons: [{
-                    text: "save",
-                    click: function(e) {
-                        var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
-                        saveAs(blob, name + ".json");
-                    }
-                },
-                {
-                    text: "close",
-                    click: function(e) {
-                        $("#desc-" + name).dialog('close');
-                    }
+                text: "save",
+                click: function (e) {
+                    var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
+                    saveAs(blob, name + ".json");
                 }
+            },
+            {
+                text: "close",
+                click: function (e) {
+                    $("#desc-" + name).dialog('close');
+                }
+            }
 
 
             ],
-            close: function(event, ui) {
+            close: function (event, ui) {
 
                 $(this).remove();
             },
-            open: function() {
+            open: function () {
                 console.log(cuname + " description");
                 //   $("#desc-"+name).width(hostWidth/4);
                 //  $("#desc-"+name).height(hostHeight/4);
@@ -332,137 +342,137 @@
             title: msghead,
             resizable: true,
             buttons: [{
-                    text: "Update",
-                    id: 'dataset-update-' + name,
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        stop_update = !stop_update;
-                        if (stop_update) {
-                            // $('#dataset-update-' + name).text("Update");
-                            $(e.target).text("Update");
-                        } else {
-                            // $('#dataset-update-' + name).text("Not Update");
-                            $(e.target).text("Not Update");
-
-                        }
-                        // $(instant).dialog("close");
-                    }
-                }, {
-                    text: "Dataset",
-                    id: 'dataset-type-' + name,
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        showdataset++;
-                        switch (showdataset) {
-                            case 0:
-                                $(e.target).text("Output");
-                                vardir = "output";
-                                break;
-                            case 1:
-                                $(e.target).text("Input");
-                                vardir = "input";
-
-                                break;
-                            case 2:
-                                $(e.target).text("Custom");
-                                vardir = "custom";
-
-                                break;
-                            case 3:
-                                $(e.target).text("System");
-                                vardir = "system";
-
-                                break;
-                            case 4:
-                                $(e.target).text("Health");
-                                vardir = "health";
-
-                                break;
-                            case 5:
-                                $(e.target).text("DevAlarm");
-                                vardir = "device_alarms";
-
-                                break;
-
-                            case 6:
-                                $(e.target).text("CUAlarm");
-                                vardir = "cu_alarms";
-
-                                break;
-                            case 7:
-                                $(e.target).text("Stat");
-                                vardir = "stat";
-
-                                break;
-                            case 8:
-                                $(e.target).text("All");
-                                vardir = "";
-
-                                break;
-
-                            default:
-                                showdataset = 0;
-                                $(e.target).text("Output");
-                                vardir = "output";
-
-                        }
-
-                        // $(instant).dialog("close");
-                    }
-                }, {
-                    text: "Format",
-                    id: 'dataset-radix-' + name,
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        showformat++;
-                        switch (showformat) {
-                            case 0:
-                                $(e.target).text("Dec(s)");
-                                break;
-                            case 1:
-                                $(e.target).text("Dec(u)");
-                                break;
-                            case 2:
-                                $(e.target).text("Hex");
-                                break;
-                            case 3:
-                                $(e.target).text("Bin");
-                                break;
-                            default:
-                                showformat = 0;
-                                $(e.target).text("Dec(s)");
-                        }
-
-                        // $(instant).dialog("close");
-                    }
-                }, {
-                    text: "save",
-                    click: function(e) {
-                        var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
-                        saveAs(blob, name + ".json");
-                    }
-                },
-                {
-                    text: "close",
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        $("#dataset-" + name).dialog('close');
+                text: "Update",
+                id: 'dataset-update-' + name,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    stop_update = !stop_update;
+                    if (stop_update) {
+                        // $('#dataset-update-' + name).text("Update");
+                        $(e.target).text("Update");
+                    } else {
+                        // $('#dataset-update-' + name).text("Not Update");
+                        $(e.target).text("Not Update");
 
                     }
+                    // $(instant).dialog("close");
                 }
+            }, {
+                text: "Dataset",
+                id: 'dataset-type-' + name,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    showdataset++;
+                    switch (showdataset) {
+                        case 0:
+                            $(e.target).text("Output");
+                            vardir = "output";
+                            break;
+                        case 1:
+                            $(e.target).text("Input");
+                            vardir = "input";
+
+                            break;
+                        case 2:
+                            $(e.target).text("Custom");
+                            vardir = "custom";
+
+                            break;
+                        case 3:
+                            $(e.target).text("System");
+                            vardir = "system";
+
+                            break;
+                        case 4:
+                            $(e.target).text("Health");
+                            vardir = "health";
+
+                            break;
+                        case 5:
+                            $(e.target).text("DevAlarm");
+                            vardir = "device_alarms";
+
+                            break;
+
+                        case 6:
+                            $(e.target).text("CUAlarm");
+                            vardir = "cu_alarms";
+
+                            break;
+                        case 7:
+                            $(e.target).text("Stat");
+                            vardir = "stat";
+
+                            break;
+                        case 8:
+                            $(e.target).text("All");
+                            vardir = "";
+
+                            break;
+
+                        default:
+                            showdataset = 0;
+                            $(e.target).text("Output");
+                            vardir = "output";
+
+                    }
+
+                    // $(instant).dialog("close");
+                }
+            }, {
+                text: "Format",
+                id: 'dataset-radix-' + name,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    showformat++;
+                    switch (showformat) {
+                        case 0:
+                            $(e.target).text("Dec(s)");
+                            break;
+                        case 1:
+                            $(e.target).text("Dec(u)");
+                            break;
+                        case 2:
+                            $(e.target).text("Hex");
+                            break;
+                        case 3:
+                            $(e.target).text("Bin");
+                            break;
+                        default:
+                            showformat = 0;
+                            $(e.target).text("Dec(s)");
+                    }
+
+                    // $(instant).dialog("close");
+                }
+            }, {
+                text: "save",
+                click: function (e) {
+                    var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
+                    saveAs(blob, name + ".json");
+                }
+            },
+            {
+                text: "close",
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $("#dataset-" + name).dialog('close');
+
+                }
+            }
 
 
             ],
-            close: function(event, ui) {
+            close: function (event, ui) {
 
                 clearInterval(update);
                 $(this).remove();
             },
-            open: function() {
+            open: function () {
 
                 console.log(cuname + "dataset update refresh:" + refresh);
                 //$(".ui-dialog-titlebar-close", ui.dialog | ui).show();
-                update = setInterval(function() {
+                update = setInterval(function () {
 
                     var isediting = false;
                     if (tmpObj.hasOwnProperty('json_editing')) {
@@ -476,7 +486,7 @@
                             chnum = -1;
                         }
 
-                        jchaos.getChannel(cuname, chnum, function(imdata) {
+                        jchaos.getChannel(cuname, chnum, function (imdata) {
                             last_dataset = imdata[0];
                             if (showformat == 1) {
                                 options["format"] = 10 + 0x100;
@@ -507,7 +517,7 @@
                                 $(".json-toggle").trigger("click");
                                 jsonEnableContext(cuname);
                             }
-                        }, function(err) {
+                        }, function (err) {
                             console.log(err);
                         });
                     }
@@ -537,50 +547,50 @@
             resizable: true,
             dialogClass: 'no-close',
             buttons: [{
-                    text: "download",
-                    id: 'console-download-' + pid,
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        jchaos.rmtGetConsole(server, pid, 0, -1, function(r) {
-                            var str = decodeURIComponent(escape(atob(r.data.console)));
-                            var name = pid + "_" + r.data.process.last_log_time;
-                            var blob = new Blob([str], { type: "json;charset=utf-8" });
-                            saveAs(blob, name + ".log");
-                        }, function(bad) {
-                            console.log("Some error getting console occur:" + JSON.stringify(bad));
-                        });
-                    }
-                },
-                {
-                    text: "update",
-                    id: 'console-update-' + pid,
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        stop_update = !stop_update;
-
-                    }
-                },
-
-                {
-                    text: "close",
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-
-                        clearInterval(update);
-                        // $(instant).dialog("close");
-                        $(this).remove();
-                    }
+                text: "download",
+                id: 'console-download-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    jchaos.rmtGetConsole(server, pid, 0, -1, function (r) {
+                        var str = decodeURIComponent(escape(atob(r.data.console)));
+                        var name = pid + "_" + r.data.process.last_log_time;
+                        var blob = new Blob([str], { type: "json;charset=utf-8" });
+                        saveAs(blob, name + ".log");
+                    }, function (bad) {
+                        console.log("Some error getting console occur:" + JSON.stringify(bad));
+                    });
                 }
+            },
+            {
+                text: "update",
+                id: 'console-update-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    stop_update = !stop_update;
+
+                }
+            },
+
+            {
+                text: "close",
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+
+                    clearInterval(update);
+                    // $(instant).dialog("close");
+                    $(this).remove();
+                }
+            }
 
             ],
-            close: function(event, ui) {
+            close: function (event, ui) {
                 //  var interval=$(this).attr("refresh_time");
 
                 clearInterval(update);
                 // $(instant).dialog("close");
                 $(this).remove();
             },
-            open: function(e) {
+            open: function (e) {
                 console.log(msghead + "opening terminal refresh:" + refresh);
                 //$(e.target).parent().css('background-color', 'black');
                 $('#console-' + pid).css('background-color', 'black')
@@ -589,28 +599,28 @@
                     "fromline": 0,
                     "toline": -1
                 };
-                $("#buffer-update").keypress(function(e) {
+                $("#buffer-update").keypress(function (e) {
                     if (e.keyCode == 13) {
                         var update = Number($("#buffer-update").val());
                         var prop = {
                             uid: pid,
                             consoleBuffering: update
                         }
-                        jchaos.rmtSetProp(server, prop, function() {
+                        jchaos.rmtSetProp(server, prop, function () {
                             instantMessage("Remote Console Buffering ", "Updated " + update, 2000, null, null, true);
 
-                        }, function() {
+                        }, function () {
                             instantMessage("Remote Console Buffering ", "Failed " + update, 2000, null, null, false);
 
                         });
                     }
                 });
-                $('#console-' + pid).terminal(function(command) {
+                $('#console-' + pid).terminal(function (command) {
                     if (command !== '') {
-                        jchaos.rmtSetConsole(server, pid, command, function(r) {
+                        jchaos.rmtSetConsole(server, pid, command, function (r) {
                             console.log("sent command:" + command)
 
-                        }, function(bad) {
+                        }, function (bad) {
                             console.log("Some error getting console occur:" + bad);
                         }, server);
                     } else {
@@ -623,7 +633,7 @@
 
                 });
                 var last_log_time = 0;
-                update = setInterval(function() {
+                update = setInterval(function () {
                     if (stop_update) {
                         $('#console-update-' + pid).text("Update");
                     } else {
@@ -631,7 +641,7 @@
                     }
                     if (!stop_update) {
 
-                        jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function(r) {
+                        jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function (r) {
                             if (r.data.process.last_log_time != last_log_time) {
                                 //  var str = decodeURIComponent(escape(atob(r.data.console)));
                                 var str = atob(r.data.console);
@@ -640,7 +650,7 @@
                             }
                             last_log_time = r.data.process.last_log_time;
 
-                        }, function(bad) {
+                        }, function (bad) {
                             console.log("Some error getting console occur:" + JSON.stringify(bad));
                         });
 
@@ -652,11 +662,11 @@
         if (typeof type !== "undefined" && (type == "CPP")) {
             opt['buttons'].push({
                 text: "Root EXIT",
-                click: function(e) {
+                click: function (e) {
                     // var interval=$(this).attr("refresh_time");
-                    jchaos.rmtSetConsole(server, pid, ".exit", function(r) {
+                    jchaos.rmtSetConsole(server, pid, ".exit", function (r) {
 
-                    }, function(bad) {
+                    }, function (bad) {
                         console.log("Some error getting console occur:" + bad);
                     }, server);
                 }
@@ -678,60 +688,60 @@
             resizable: true,
             dialogClass: 'no-close',
             buttons: [{
-                    text: "save",
-                    click: function(e) {
-                        var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
-                        /* var len = binary_string.length;
-                         var bytes = new Uint8Array(len);
-                         for (var i = 0; i < len; i++) {
-                           bytes[i] = binary_string.charCodeAt(i);
-                         }
-                         var blob = new Blob([bytes], { type: "image/png" });
-                        */
-                        saveAsBinary(binary_string, name + ".png");
+                text: "save",
+                click: function (e) {
+                    var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
+                    /* var len = binary_string.length;
+                     var bytes = new Uint8Array(len);
+                     for (var i = 0; i < len; i++) {
+                       bytes[i] = binary_string.charCodeAt(i);
+                     }
+                     var blob = new Blob([bytes], { type: "image/png" });
+                    */
+                    saveAsBinary(binary_string, name + ".png");
 
-                    }
-                },
-                {
-                    text: "update",
-                    id: 'pict-update-' + name,
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        stop_update = !stop_update;
-
-                    }
-                },
-                {
-                    text: "close",
-                    click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-
-                        clearInterval(update);
-                        // $(instant).dialog("close");
-                        $(this).remove();
-                    }
                 }
+            },
+            {
+                text: "update",
+                id: 'pict-update-' + name,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    stop_update = !stop_update;
+
+                }
+            },
+            {
+                text: "close",
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+
+                    clearInterval(update);
+                    // $(instant).dialog("close");
+                    $(this).remove();
+                }
+            }
 
 
             ],
-            close: function(event, ui) {
+            close: function (event, ui) {
                 //  var interval=$(this).attr("refresh_time");
 
                 clearInterval(update);
                 // $(instant).dialog("close");
                 $(this).remove();
             },
-            open: function() {
+            open: function () {
                 console.log(msghead + " refresh:" + refresh, " fmt:" + fmt);
 
-                update = setInterval(function() {
+                update = setInterval(function () {
                     if (stop_update) {
                         $('#pict-update-' + name).text("Update");
                     } else {
                         $('#pict-update-' + name).text("Not Update");
                     }
                     if (!stop_update) {
-                        jchaos.getChannel(cuname, 0, function(imdata) {
+                        jchaos.getChannel(cuname, 0, function (imdata) {
                             data = imdata[0];
                             if (data.hasOwnProperty("FRAMEBUFFER") && data.FRAMEBUFFER.hasOwnProperty("$binary") && data.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
                                 var bin = data.FRAMEBUFFER.$binary.base64;
@@ -743,7 +753,7 @@
                                 $(this).remove();
 
                             }
-                        }, function(err) {
+                        }, function (err) {
                             console.log(err);
                         });
                     }
@@ -761,11 +771,11 @@
         if (sizey == null) {
             sizey = 200;
         }
-        if (typeof(sizex) === "boolean") {
+        if (typeof (sizex) === "boolean") {
             ok = sizex;
             sizex = 350;
         }
-        if (typeof(sizey) === "boolean") {
+        if (typeof (sizey) === "boolean") {
             ok = sizey;
             sizey = 200;
         }
@@ -775,7 +785,7 @@
             title: msghead,
             // position: "center",
             dialogClass: 'instantOk',
-            open: function() {
+            open: function () {
                 if (ok != null) {
                     if (ok) {
                         console.log(msghead + ":" + msg);
@@ -794,7 +804,7 @@
 
                 $(this).css("opacity", 0.5);
 
-                setTimeout(function() {
+                setTimeout(function () {
                     $(instant).dialog("close");
                 }, tim);
             }
@@ -860,13 +870,13 @@
         var node_name_to_desc = tmpObj.node_name_to_desc;
         if (tmpObj.node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
             var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
-            desc.forEach(function(item) {
+            desc.forEach(function (item) {
                 if (item.bc_alias == alias) {
                     var params = item.bc_parameters;
                     if ((params == null) || (params.length == 0)) {
                         return arglist;
                     }
-                    params.forEach(function(par) {
+                    params.forEach(function (par) {
                         var arg = {};
                         arg['name'] = par.bc_parameter_name;
                         arg['desc'] = par.bc_parameter_description;
@@ -906,7 +916,7 @@
     // return a filled argument list ready to be send
     function buildCmdParams(arglist) {
         var cmdparam = {};
-        arglist.forEach(function(par) {
+        arglist.forEach(function (par) {
             var parname = par['name'];
             var parvalue = par['value'];
             var type = par['type'];
@@ -970,7 +980,7 @@
 
     function cusWithInterface(tmpObj, culist, interface) {
         var retlist = [];
-        culist.forEach(function(name) {
+        culist.forEach(function (name) {
             if (tmpObj.node_name_to_desc[name] == null) {
                 var desc = jchaos.getDesc(name, null);
                 tmpObj.node_name_to_desc[name] = desc[0];
@@ -986,7 +996,7 @@
     }
     //Funzione per controllare che il timestamp di ogni singolo magnete si stia aggiornando
     function checkTimestamp() {
-        setInterval(function() {
+        setInterval(function () {
             for (var i = 0; i < refresh_time.length; i++) {
                 if (refresh_time[i] != old_time[i]) {
                     $("#name_element_" + i).css('color', 'green');
@@ -1075,7 +1085,7 @@
         html += '<div class="span6">'
         html += '<label for="search-algo">Search Instanced</label><input class="input-xlarge" id="search-instance" title="Search Instanced Algorithms" name="search-algo" type="radio" value=false>';
         html += '</div>'
-            // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="span3">Search</h3>';
 
         html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
@@ -1140,7 +1150,7 @@
             html += '<th>Instance seq</th>';
             html += '</tr>';
             html += '</thead> ';
-            cu.forEach(function(elem) {
+            cu.forEach(function (elem) {
                 var name = elem.instance_name;
                 var nameid = jchaos.encodeName(name);
                 html += "<tr class='row_element algoInstanceMenu' cuname='" + name + "' id='" + nameid + "'>";
@@ -1161,7 +1171,7 @@
             html += '<th>Language</th>';
             html += '</tr>';
             html += '</thead> ';
-            cu.forEach(function(elem) {
+            cu.forEach(function (elem) {
                 var name = elem.script_name;
                 var nameid = jchaos.encodeName(name);
                 html += "<tr class='row_element algoMenu' cuname='" + name + "' id='" + nameid + "'>";
@@ -1265,7 +1275,7 @@
 
 
         html += '</thead> ';
-        $(cu).each(function(i) {
+        $(cu).each(function (i) {
             var cuname = jchaos.encodeName(cu[i]);
             html += "<tr class='row_element nodeMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
             html += "<td class='name_element'>" + cu[i] + "</td>";
@@ -1302,7 +1312,7 @@
         var node_list = tmpObj['elems'];
         var cutype = tmpObj.type;
 
-        jchaos.node(node_list, "health", cutype, function(data) {
+        jchaos.node(node_list, "health", cutype, function (data) {
             tmpObj.data = data;
             updateGenericTableDataset(tmpObj);
 
@@ -1327,7 +1337,7 @@
 
     function updateNodeTable(tmpObj) {
         var cu = tmpObj['elems'];
-        cu.forEach(function(v) {
+        cu.forEach(function (v) {
             if (tmpObj.node_name_to_desc != null && tmpObj.node_name_to_desc[v] != null) {
                 var elem = tmpObj.node_name_to_desc[v];
 
@@ -1364,7 +1374,7 @@
     }
 
     function algoLoadFromFile(obj) {
-        getFile("Script Loading", "select the Script to load", function(script) {
+        getFile("Script Loading", "select the Script to load", function (script) {
             var scriptTmp = {};
             var name = script['name'];
             var language = "bash";
@@ -1431,24 +1441,24 @@
         json['eudk_script_language'] = json.eudk_script_language[0];
         proc[json.script_name] = json;
         //    jchaos.variable("script", "set", proc, null);
-        jchaos.search(json.script_name, "script", false, function(l) {
+        jchaos.search(json.script_name, "script", false, function (l) {
             var script_inst = l['found_script_list'];
             if (!(script_inst instanceof Array) || (script_inst.length == 0)) {
-                jchaos.saveScript(json, function(data) {
+                jchaos.saveScript(json, function (data) {
                     console.log("saving script:" + JSON.stringify(json));
                     instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
 
                 });
             } else {
-                confirm("Script Already Exist", "Do you want to replace:" + json.script_name, "Ok", function() {
+                confirm("Script Already Exist", "Do you want to replace:" + json.script_name, "Ok", function () {
                     var cnt = 0;
-                    script_inst.forEach(function(elem) {
-                        jchaos.rmScript(elem, function(data) {
+                    script_inst.forEach(function (elem) {
+                        jchaos.rmScript(elem, function (data) {
                             cnt++;
                             console.log(cnt + "] removing script:" + json.script_name);
 
                             if (cnt == script_inst.length) {
-                                jchaos.saveScript(json, function(data) {
+                                jchaos.saveScript(json, function (data) {
                                     console.log("Replacing script:" + json.script_name);
                                     instantMessage("Replacing Script " + json.script_name, "Saved", 1000, null, null, true)
 
@@ -1466,7 +1476,7 @@
 
     function algoSaveInstance(json, obj) {
         var node_name_to_desc = obj.node_name_to_desc;
-        jchaos.updateScriptInstance(json, node_name_to_desc[pather_selected], function(data) {
+        jchaos.updateScriptInstance(json, node_name_to_desc[pather_selected], function (data) {
             console.log("saving Instance:" + JSON.stringify(json));
         });
 
@@ -1506,7 +1516,7 @@
         cudk_load_param['dataset'] = [];
         json['ndk_parent'] = node_selected;
         json['control_unit_implementation'] = "DataImport";
-        json.mc_imported_keys.forEach(function(elem) {
+        json.mc_imported_keys.forEach(function (elem) {
             var tmp = elem;
             tmp['type'] = elem.type[0];
             cudk_load_param['dataset'].push(tmp);
@@ -1536,7 +1546,7 @@
         delete json.mc_buffer_size;
 
         if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
-            jchaos.node(node_selected, "get", "us", "", null, function(data) {
+            jchaos.node(node_selected, "get", "us", "", null, function (data) {
                 console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
                 json.ndk_parent = node_selected;
                 if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
@@ -1544,7 +1554,7 @@
                 } else {
                     data.us_desc["cu_desc"] = [json];
                 }
-                jchaos.node(node_selected, "set", "us", "", data.us_desc, function(data) {
+                jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
                     console.log("unitServer [" + json.ndk_parent + "] save: \"" + json.ndk_uid + "\" value:" + JSON.stringify(json));
                 });
             });
@@ -1570,80 +1580,80 @@
             position: "center",
             resizable: true,
             buttons: [{
-                    text: "save",
-                    click: function(e) {
-                        // editor validation
-                        var errors = json_editor.validate();
-                        var ret = 0;
-                        if (errors.length) {
-                            alert("JSON NOT VALID");
-                            console.log(errors);
-                        } else {
-                            // It's valid!
-                            var json_editor_value = json_editor.getValue();
-                            try {
-                                ret = editorFn(json_editor_value, tmpObj, ok, nok);
-                            } catch (err) {
-                                if ((typeof err === "object")) {
-                                    if (err.hasOwnProperty('error_status')) {
-                                        instantMessage("Error ", err.error_status, 4000, false);
-                                    } else {
-                                        instantMessage("Error ", JSON.stringify(err), 4000, false);
-
-                                    }
+                text: "save",
+                click: function (e) {
+                    // editor validation
+                    var errors = json_editor.validate();
+                    var ret = 0;
+                    if (errors.length) {
+                        alert("JSON NOT VALID");
+                        console.log(errors);
+                    } else {
+                        // It's valid!
+                        var json_editor_value = json_editor.getValue();
+                        try {
+                            ret = editorFn(json_editor_value, tmpObj, ok, nok);
+                        } catch (err) {
+                            if ((typeof err === "object")) {
+                                if (err.hasOwnProperty('error_status')) {
+                                    instantMessage("Error ", err.error_status, 4000, false);
                                 } else {
-                                    alert(err)
+                                    instantMessage("Error ", JSON.stringify(err), 4000, false);
 
                                 }
+                            } else {
+                                alert(err)
+
                             }
                         }
-                        if (ret <= 0) {
-                            $(this).remove();
-                        }
                     }
-                }, {
-                    text: "download",
-                    click: function(e) {
-                        var errors = json_editor.validate();
-
-                        if (errors.length) {
-                            alert("JSON NOT VALID");
-                            console.log(errors);
-                        } else {
-                            // It's valid!
-                            var json_editor_value = json_editor.getValue();
-                            var blob = new Blob([JSON.stringify(json_editor_value)], { type: "json;charset=utf-8" });
-                            saveAs(blob, name + ".json");
-                        }
-
-                    }
-                }, {
-                    text: "Upload",
-                    click: function(e) {
-                        getFile("Upload", "upload the json", function(obj) {
-                            $("#edit-temp").dialog('close');
-                            console.log("uploaded:" + JSON.stringify(obj));
-                            jsonEditWindow(name, jsontemp, obj, editorFn, tmpObj);
-                            $(this).remove();
-                        });
-
-                    }
-                },
-                {
-                    text: "close",
-                    click: function(e) {
-                        $("#edit-temp").dialog('close');
+                    if (ret <= 0) {
                         $(this).remove();
                     }
                 }
+            }, {
+                text: "download",
+                click: function (e) {
+                    var errors = json_editor.validate();
+
+                    if (errors.length) {
+                        alert("JSON NOT VALID");
+                        console.log(errors);
+                    } else {
+                        // It's valid!
+                        var json_editor_value = json_editor.getValue();
+                        var blob = new Blob([JSON.stringify(json_editor_value)], { type: "json;charset=utf-8" });
+                        saveAs(blob, name + ".json");
+                    }
+
+                }
+            }, {
+                text: "Upload",
+                click: function (e) {
+                    getFile("Upload", "upload the json", function (obj) {
+                        $("#edit-temp").dialog('close');
+                        console.log("uploaded:" + JSON.stringify(obj));
+                        jsonEditWindow(name, jsontemp, obj, editorFn, tmpObj);
+                        $(this).remove();
+                    });
+
+                }
+            },
+            {
+                text: "close",
+                click: function (e) {
+                    $("#edit-temp").dialog('close');
+                    $(this).remove();
+                }
+            }
 
 
             ],
-            close: function(event, ui) {
+            close: function (event, ui) {
 
                 $(this).remove();
             },
-            open: function() {
+            open: function () {
                 console.log("Open Editor");
                 var element = $("#edit-temp");
                 var jopt = {};
@@ -1704,7 +1714,7 @@
             $(field).append("<option value='ALL'>ALL</option>");
 
         }
-        $(arr).each(function(i) {
+        $(arr).each(function (i) {
             $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
 
         });
@@ -1712,22 +1722,22 @@
     }
 
     function logSetup(tempObj) {
-        $("a.show_log").click(function() {
+        $("a.show_log").click(function () {
             updateLog(tempObj.node_selected);
             //$("#mdl-log").modal("show");
         });
         $("#log_search").off('keypress');
-        $("#log_search").keypress(function(e) {
+        $("#log_search").keypress(function (e) {
             var sel = $("#log_search").val();
             updateLog(sel);
         });
         $("#log-search-go").off('click');
-        $("#log-search-go").click(function() {
+        $("#log-search-go").click(function () {
             var sel = $("#log_search").val();
             updateLog(sel);
             //$("#mdl-log").modal("show");
         });
-        $("#log-close").click(function() {
+        $("#log-close").click(function () {
             $("#mdl-log").modal("hide");
 
         });
@@ -1740,25 +1750,25 @@
     function snapSetup(tmpObj) {
         var node_multi_selected = tmpObj.node_multi_selected;
         var node_selected = tmpObj.node_selected;
-        $("#snap-load").on('click', function() {
+        $("#snap-load").on('click', function () {
             $("#mdl-snap").modal("hide");
-            getFile("LOAD JSON SNAPSHOT/SETPOINT", "select the JSON to load", function(config) {
-                getEntryWindow("JSON Loaded", "Snapshot Name", "name", "Save", function(name) {
+            getFile("LOAD JSON SNAPSHOT/SETPOINT", "select the JSON to load", function (config) {
+                getEntryWindow("JSON Loaded", "Snapshot Name", "name", "Save", function (name) {
                     var vsets;
                     if (config instanceof Array) {
                         vsets = config;
                     } else {
                         vsets = [config];
                     }
-                    vsets.forEach(function(elem) {
-                        jchaos.snapshot(name, "set", "", JSON.stringify(elem), function(d) {
+                    vsets.forEach(function (elem) {
+                        jchaos.snapshot(name, "set", "", JSON.stringify(elem), function (d) {
                             console.log("saving " + elem.name + " in " + name);
                         });
                     });
                 }, "Cancel");
             });
         });
-        $("#snap-save").on('click', function() {
+        $("#snap-save").on('click', function () {
             var value = $("#snap_save_name").val();
             if (snap_selected != "") {
                 var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
@@ -1784,30 +1794,30 @@
             //var snap_table = $(this).find('a.show_snapshot');
         });
 
-        $("#snap-close").on('click', function() {
+        $("#snap-close").on('click', function () {
             $("#mdl-snap").modal("hide");
             cu_name_to_saved = [];
         });
 
 
-        $("a.show_snapshot").click(function() {
+        $("a.show_snapshot").click(function () {
 
             updateSnapshotTable(tmpObj, true);
         });
 
-        $("#snap-delete").on('click', function(e) {
+        $("#snap-delete").on('click', function (e) {
             $("#mdl-snap").modal("hide");
 
             if (snap_selected != "") {
 
-                confirm("Delete Snapshot", "Your are deleting snapshot: " + snap_selected, "Ok", function() {
+                confirm("Delete Snapshot", "Your are deleting snapshot: " + snap_selected, "Ok", function () {
 
-                    jchaos.snapshot(snap_selected, "delete", "", function() {
+                    jchaos.snapshot(snap_selected, "delete", "", function () {
                         instantMessage(snap_selected + " deleted ", 1000, null, null, true);
 
                         updateSnapshotTable(tmpObj, true);
 
-                    }, function(err) {
+                    }, function (err) {
                         instantMessage(snap_selected + " error deleting " + err, 2000, null, null, false);
 
                     });
@@ -1818,24 +1828,24 @@
             }
         });
 
-        $("#snap-show").on('click', function(e) {
+        $("#snap-show").on('click', function (e) {
             $("#mdl-snap").modal("hide");
 
             if (snap_selected != "") {
-                jchaos.snapshot(snap_selected, "load", null, "", function(dataset) {
+                jchaos.snapshot(snap_selected, "load", null, "", function (dataset) {
                     showJson(null, "Snapshot " + snap_selected, snap_selected, dataset);
                 });
             }
         });
-        $("#snap-apply").on('click', function(e) {
+        $("#snap-apply").on('click', function (e) {
 
             if (snap_selected != "") {
                 $("#mdl-snap").modal("hide");
 
-                jchaos.snapshot(snap_selected, "restore", "", function() {
+                jchaos.snapshot(snap_selected, "restore", "", function () {
                     instantMessage(snap_selected, " Sending restore ok .. ", 1000, true);
 
-                }, function(err) {
+                }, function (err) {
                     instantMessage(snap_selected, " Sending error restoring: " + err, 2000, false);
 
                 });
@@ -1852,7 +1862,7 @@
      */
 
     function descriptionSetup() {
-        $("#description-close").on('click', function() {
+        $("#description-close").on('click', function () {
             $("#mdl-description").modal("hide");
         });
         /*
@@ -1880,7 +1890,7 @@
 
         $.contextMenu({
             selector: '.json-key',
-            build: function($trigger, e) {
+            build: function ($trigger, e) {
                 var cuitem = {};
                 //  var portdir = $(e.currentTarget).attr("portdir");
                 var portname = $(e.currentTarget).attr("portname");
@@ -1906,14 +1916,14 @@
 
                 cuitem['quit'] = {
                     name: "Quit",
-                    icon: function() {
+                    icon: function () {
                         return 'context-menu-icon context-menu-icon-quit';
                     }
                 };
 
                 return {
 
-                    callback: function(cmd, options) {
+                    callback: function (cmd, options) {
 
                         var fullname;
                         if (portarray == "0") {
@@ -1981,7 +1991,7 @@
 
     function datasetSetup(tmpObj) {
         var node_selected = tmpObj.node_selected;
-        $("a.show_dataset").on('click', function() {
+        $("a.show_dataset").on('click', function () {
             var dataset = jchaos.getChannel(node_selected, -1, null);
             var converted = convertBinaryToArrays(dataset[0]);
             var jsonhtml = json2html(converted, options, node_selected);
@@ -2004,14 +2014,14 @@
                 containment: 'window'
             });
             $("#X-axis").droppable({
-                drop: function(e, ui) {
+                drop: function (e, ui) {
                     var draggable = ui.draggable;
                     alert('Something X "' + draggable.attr('id') + '" was dropped onto me!');
                 }
             });
 
             $("#Y-axis").droppable({
-                drop: function(e, ui) {
+                drop: function (e, ui) {
                     var draggable = ui.draggable;
                     alert('Something Y "' + draggable.attr('id') + '" was dropped onto me!');
 
@@ -2020,7 +2030,7 @@
             jsonEnableContext(node_selected);
         });
 
-        $("#dataset-close").on('click', function() {
+        $("#dataset-close").on('click', function () {
             $("#mdl-dataset").modal("hide");
         });
         if (notupdate_dataset) {
@@ -2028,7 +2038,7 @@
         } else {
             $("#dataset-update").html('Pause');
         }
-        $("#dataset-update").on('click', function() {
+        $("#dataset-update").on('click', function () {
             notupdate_dataset = !notupdate_dataset;
             if (notupdate_dataset) {
                 $("#dataset-update").html('Update');
@@ -2053,20 +2063,20 @@
             tmpObj['json_editing'] = false;
 
         }
-        jqccs.jsonSetup(dom, function(e) {
+        jqccs.jsonSetup(dom, function (e) {
             tmpObj['json_editing'] = true;
 
-        }, function(e) {
+        }, function (e) {
             if (e.keyCode == 13) {
 
                 var value = e.target.value;
                 var attrname = e.target.name;
                 var desc = jchaos.decodeCUPath(attrname);
-                jchaos.setAttribute(desc.cu, desc.var, value, function() {
-                    instantMessage(desc.cu + " Attribute " + desc.dir, "\"" + desc.var+"\"=\"" + value + "\" sent", 1000, true)
+                jchaos.setAttribute(desc.cu, desc.var, value, function () {
+                    instantMessage(desc.cu + " Attribute " + desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, true)
 
-                }, function() {
-                    instantMessage(desc.cu + " Attribute Error " + desc.dir, "\"" + desc.var+"\"=\"" + value + "\" sent", 1000, false)
+                }, function () {
+                    instantMessage(desc.cu + " Attribute Error " + desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, false)
 
                 });
                 tmpObj['json_editing'] = false;
@@ -2085,11 +2095,11 @@
     function graphSetup() {
         $("#mdl-graph").draggable();
         $("#mdl-graph-list").draggable();
-        $('#mdl-graph-list').on('shown.bs.modal', function() {
+        $('#mdl-graph-list').on('shown.bs.modal', function () {
             graph_selected = null;
         });
 
-        $('#mdl-graph').on('shown.bs.modal', function() {
+        $('#mdl-graph').on('shown.bs.modal', function () {
             var $radio = $("input:radio[name=graph-shift]");
             if ($radio.is(":checked") === false) {
                 $radio.filter("[value=false]").prop('checked', true);
@@ -2172,7 +2182,7 @@
             }
 
         });
-        $(main_dom).on("click", "#table_graph_items tbody tr", function(e) {
+        $(main_dom).on("click", "#table_graph_items tbody tr", function (e) {
             $(".row_element").removeClass("row_snap_selected");
             var tname = $(this).attr("tracename");
             $(this).addClass("row_snap_selected");
@@ -2199,32 +2209,32 @@
         $("#graph-list-save").off('click');
         $("#graph-list-upload").off('click');
 
-        $("#graph-close").on('click', function() {
+        $("#graph-close").on('click', function () {
             $("#mdl-graph").modal("hide");
 
         });
-        $("xtype").on("change", function() {
+        $("xtype").on("change", function () {
             if ($("#xtype option:selected").val() == "datetime") {
                 $("#xvar").val("timestamp");
             }
         });
-        $("ytype").on("change", function() {
+        $("ytype").on("change", function () {
             if ($("#ytype option:selected").val() == "datetime") {
                 $("#yvar").val("timestamp");
             }
         });
-        $("#graph-list-close").on('click', function() {
+        $("#graph-list-close").on('click', function () {
             $("#mdl-graph-list").modal("hide");
 
         });
 
-        $("#graph-save").on('click', function() {
-            saveGraph(function() {
+        $("#graph-save").on('click', function () {
+            saveGraph(function () {
                 graph_selected = $("#graph_save_name").val();
                 $("#graph-save").effect("highlight", { color: 'green' }, 1000);
                 $("#graph-run").removeAttr('disabled');
                 instantMessage("Graph", "Graph " + graphname + " saved", 2000, true);
-            }, function() {
+            }, function () {
                 instantMessage("Graph", "Graph " + graphname + " Error saving", 2000, false);
 
             });
@@ -2233,7 +2243,7 @@
         });
         $("#graph-run").off('click');
 
-        $("#graph-run").on('click', function() {
+        $("#graph-run").on('click', function () {
             $("#graph-run").effect("highlight", { color: 'green' }, 1000);
 
             runGraph(graph_selected);
@@ -2241,7 +2251,7 @@
 
         });
         $("#graph_search").off('keypress');
-        $("#graph_search").on('keypress', function(event) {
+        $("#graph_search").on('keypress', function (event) {
             var t = $(event.target);
             var value = $(t).attr("value");
             updateGraph(value);
@@ -2254,18 +2264,18 @@
 
         });
         $("#graph-list-run").off('click');
-        $("#graph-list-run").on('click', function() {
+        $("#graph-list-run").on('click', function () {
             runGraph(graph_selected);
             $("#mdl-graph-list").modal("hide");
 
         });
-        $("#graph-list-edit").on('click', function() {
+        $("#graph-list-edit").on('click', function () {
             if (graph_selected != null) {
                 $("#mdl-graph-list").modal("hide");
                 $("#mdl-graph").modal("show");
             }
         });
-        $("#graph-list-save").on('click', function() {
+        $("#graph-list-save").on('click', function () {
             if ((graph_selected != null) && (high_graphs[graph_selected] != null)) {
                 var tmp = {
                     graph_name: graph_selected,
@@ -2275,11 +2285,11 @@
                 saveAs(blob, graph_selected + ".json");
             }
         });
-        $("#graph-list-upload").on('click', function() {
-            getFile("Graph Loading", "select a graph to  upload", function(g) {
+        $("#graph-list-upload").on('click', function () {
+            getFile("Graph Loading", "select a graph to  upload", function (g) {
                 if (g.hasOwnProperty("graph_name") && g.hasOwnProperty("graph_settings")) {
                     high_graphs[g.graph_name] = g.graph_settings;
-                    jchaos.variable("highcharts", "set", high_graphs, function() {
+                    jchaos.variable("highcharts", "set", high_graphs, function () {
                         instantMessage("Graph", "Graph " + g.graph_name + " uploaded", 2000, true);
 
                     });
@@ -2289,14 +2299,14 @@
             });
 
         });
-        $("#graph-delete").on('click', function() {
+        $("#graph-delete").on('click', function () {
             if (graph_selected == null) {
                 alert("no graph selected");
                 return;
             }
             $("#mdl-graph-list").modal("hide");
 
-            confirm("Delete Graph", "Your are deleting GRAPH: " + graph_selected, "Ok", function() {
+            confirm("Delete Graph", "Your are deleting GRAPH: " + graph_selected, "Ok", function () {
 
                 delete high_graphs[graph_selected];
 
@@ -2315,7 +2325,7 @@
                 jchaos.variable("highcharts", "set", high_graphs, null);
 
                 updateGraph($("#graph_search").val());
-            }, "Cancel", function() {
+            }, "Cancel", function () {
                 $("#mdl-graph-list").modal("show");
 
             });
@@ -2324,7 +2334,7 @@
 
 
 
-        $("#graph_save_name").on("keypress", function() {
+        $("#graph_save_name").on("keypress", function () {
             if ($("#graph_save_name").val() != "") {
                 var rowCount = $('#table_graph_items tr').length;
                 if (rowCount > 1) {
@@ -2342,7 +2352,7 @@
 
             }
         });
-        $("#trace-add").click(function() {
+        $("#trace-add").click(function () {
             var tracename = $("#trace-name").val();
             var xpath = $("#xvar").val();
             var ypath = $("#yvar").val();
@@ -2377,7 +2387,7 @@
 
         });
 
-        $("#trace-replace").click(function() {
+        $("#trace-replace").click(function () {
             var tracename = $("#trace-name").val();
             var trace_color = $("#trace-color").val();
             var xpath = $("#xvar").val();
@@ -2418,7 +2428,7 @@
             trace_selected = tname;
         });
 
-        $("#trace-up").click(function(e) {
+        $("#trace-up").click(function (e) {
             var tname = $("#" + trace_selected);
             var prev = $(tname).prev();
             var index = $(tname).index();
@@ -2433,7 +2443,7 @@
             }
 
         });
-        $("#trace-down").click(function(e) {
+        $("#trace-down").click(function (e) {
             var tname = $("#" + trace_selected);
             var next = $(tname).next();
             var index = $(tname).index();
@@ -2447,7 +2457,7 @@
             }
 
         });
-        $("#trace-rem").click(function() {
+        $("#trace-rem").click(function () {
             if (trace_selected != null) {
                 var tname = $("#" + trace_selected).attr("tracename");
                 $("#" + trace_selected).remove();
@@ -2457,32 +2467,32 @@
             }
         });
 
-        $("a.show_graph").on('click', function() {
+        $("a.show_graph").on('click', function () {
             updateGraph();
             //$("#mdl-log").modal("show");
         });
     }
 
 
-    jqccs.updateInterfaceCU = function(t) {
-            return updateInterfaceCU(t);
-        }
-        /****
-         * 
-         * Setup CU Interface
-         * 
-         */
-        // the interface has all the main elements
+    jqccs.updateInterfaceCU = function (t) {
+        return updateInterfaceCU(t);
+    }
+    /****
+     * 
+     * Setup CU Interface
+     * 
+     */
+    // the interface has all the main elements
     function updateInterfaceCU(tmpObj) {
         var template = tmpObj.type;
         var descs = jchaos.getDesc(tmpObj['elems'], null);
         if (descs instanceof Array) {
-            descs.forEach(function(elem, id) {
+            descs.forEach(function (elem, id) {
                 var name = tmpObj['elems'][id];
                 tmpObj.node_name_to_desc[name] = elem;
             });
         }
-        $("#main_table-" + template + " tbody tr").click(function(e) {
+        $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
             if (tmpObj.hasOwnProperty('tableClickFn')) {
                 tmpObj.tableClickFn(tmpObj);
@@ -2497,23 +2507,23 @@
 
 
         $(".setSchedule").off('keypress');
-        $(".setSchedule").on('keypress', function(event) {
+        $(".setSchedule").on('keypress', function (event) {
             var t = $(event.target);
 
             if ((event.which == 13)) {
                 //  var name = $(t).attr("cuname");
                 var value = $(t).attr("value");
-                jchaos.setSched(tmpObj.node_multi_selected, value, function() {
+                jchaos.setSched(tmpObj.node_multi_selected, value, function () {
                     instantMessage("Set scheduling", "to " + value + " us Hz:" + 1000000 / Number(value), 2000, true);
 
-                }, function(err) {
+                }, function (err) {
                     instantMessage("ERROR Set scheduling", "to " + value + " err:" + err, 2000, false);
 
                 });
 
             }
         });
-        $(".cucmd").click(function() {
+        $(".cucmd").click(function () {
             var alias = $(this).attr("cucmdid");
             var parvalue = $(this).attr("cucmdvalue");
             var mult = $(this).attr("cucmdvalueMult");
@@ -2526,9 +2536,9 @@
                 cuselection = tmpObj.node_selected;
             }
             if (alias == "cu_clear_current_cmd") {
-                jchaos.node(cuselection, "killcmd", "cu", function() {
+                jchaos.node(cuselection, "killcmd", "cu", function () {
                     instantMessage("Clear Current Command", "Clearing last command OK", 1000, true);
-                }, function() {
+                }, function () {
                     instantMessage("ERROR Clear Current Command", "Clearing last command ", 3000, false);
                 });
                 return;
@@ -2559,7 +2569,7 @@
                 var arglist;
                 var arguments = {};
                 arglist = retriveCurrentCmdArguments(tmpObj, alias);
-                arglist.forEach(function(item, index) {
+                arglist.forEach(function (item, index) {
                     // search for values
                     if (parvalue == null) {
                         parvalue = $("#" + alias + "_" + item['name']).val();
@@ -2577,7 +2587,7 @@
                 cmdparam = buildCmdParams(arglist);
             }
 
-            jchaos.sendCUCmd(cuselection, alias, cmdparam, function(d) {
+            jchaos.sendCUCmd(cuselection, alias, cmdparam, function (d) {
                 var pp;
                 if ((cmdparam != null) && (cmdparam instanceof Object)) {
                     pp = JSON.stringify(cmdparam);
@@ -2585,14 +2595,14 @@
                     pp = cmdparam;
                 }
                 instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" sent", 1000, true)
-            }, function(d) {
+            }, function (d) {
                 instantMessage(cuselection, "ERROR OCCURRED:" + d, 2000, 350, 400, false);
 
             });
 
         });
 
-        $(".cucmdbase").click(function() {
+        $(".cucmdbase").click(function () {
             var cmd = $(this).attr("cucmdid");
             var cuselection;
             if (tmpObj.node_multi_selected.length > 0) {
@@ -2602,79 +2612,79 @@
             }
             if (cuselection != null && cmd != null) {
                 if (cmd == "init") {
-                    jchaos.node(cuselection, "init", "cu", function(data) {
+                    jchaos.node(cuselection, "init", "cu", function (data) {
                         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                    }, function(data) {
+                    }, function (data) {
                         instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000, false);
 
                     });
                 } else if (cmd == "deinit") {
-                    jchaos.node(cuselection, "deinit", "cu", function(data) {
+                    jchaos.node(cuselection, "deinit", "cu", function (data) {
                         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                    }, function(data) {
+                    }, function (data) {
                         instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000, false);
 
                     });
                 } else if (cmd == "bypasson") {
-                    jchaos.setBypass(cuselection, true, function(data) {
+                    jchaos.setBypass(cuselection, true, function (data) {
                         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                    }, function(data) {
+                    }, function (data) {
                         instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000, false);
 
                     });
                     return;
                 } else if (cmd == "bypassoff") {
-                    jchaos.setBypass(cuselection, false, function(data) {
+                    jchaos.setBypass(cuselection, false, function (data) {
                         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                    }, function(data) {
+                    }, function (data) {
                         instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000, false);
 
                     });
                     return;
                 } else if (cmd == "load") {
-                    jchaos.loadUnload(cuselection, true, function(data) {
+                    jchaos.loadUnload(cuselection, true, function (data) {
                         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                    }, function(data) {
+                    }, function (data) {
                         instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000, false);
 
                     });
                     return;
                 } else if (cmd == "unload") {
-                    jchaos.loadUnload(cuselection, false, function(data) {
+                    jchaos.loadUnload(cuselection, false, function (data) {
                         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                    }, function(data) {
+                    }, function (data) {
                         instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000, false);
 
                     });
                     return;
                 } else if (cmd == "start") {
-                    jchaos.node(cuselection, "start", "cu", function(data) {
+                    jchaos.node(cuselection, "start", "cu", function (data) {
                         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                    }, function(data) {
+                    }, function (data) {
                         instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000, false);
 
                     });
                 } else if (cmd == "stop") {
-                    jchaos.node(cuselection, "stop", "cu", function(data) {
+                    jchaos.node(cuselection, "stop", "cu", function (data) {
                         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                    }, function(data) {
+                    }, function (data) {
                         instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000, false);
 
                     });
                 }
 
-                jchaos.sendCUCmd(cuselection, cmd, "", function(data) {
+                jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
                     instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
 
-                }, function(d) {
+                }, function (d) {
                     instantMessage(cuselection, "ERROR OCCURRED:" + d, 2000, 350, 400, false);
 
                 });
@@ -2683,7 +2693,7 @@
         });
 
 
-        $("input[type=radio][name=live-enable]").change(function(e) {
+        $("input[type=radio][name=live-enable]").change(function (e) {
             var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
             var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
             var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
@@ -2691,11 +2701,11 @@
             var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0) | ((dslog) ? 0x10 : 0);
             var node_multi_selected = tmpObj.node_multi_selected;
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function() { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function() { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
         });
-        $("input[type=radio][name=log-enable]").change(function(e) {
+        $("input[type=radio][name=log-enable]").change(function (e) {
             var dslive = ($("input[type=radio][name=log-enable]:checked").val() == "true");
             var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
             var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
@@ -2703,11 +2713,11 @@
             var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0) | ((dslog) ? 0x10 : 0);
             var node_multi_selected = tmpObj.node_multi_selected;
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function() { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function() { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
         });
-        $("input[type=radio][name=histo-enable]").change(function(e) {
+        $("input[type=radio][name=histo-enable]").change(function (e) {
             var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
             var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
             var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
@@ -2716,32 +2726,32 @@
             var node_multi_selected = tmpObj.node_multi_selected;
 
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function() { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function() { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
         });
-        $("#cu_clear_current_cmd").click(function(e) {
+        $("#cu_clear_current_cmd").click(function (e) {
             var node_multi_selected = tmpObj.node_multi_selected;
 
-            jchaos.node(node_multi_selected, "killcmd", "cu", function() {
+            jchaos.node(node_multi_selected, "killcmd", "cu", function () {
                 instantMessage("Clear Current Command", node_multi_selected + ":Clearing last command OK", 1000, true);
-            }, function() {
+            }, function () {
                 instantMessage("ERROR Clear Current Command", node_multi_selected[0] + ":Clearing last command ", 3000, false);
             });
         });
 
-        $("#cu_clear_queue").click(function(e) {
+        $("#cu_clear_queue").click(function (e) {
             var node_multi_selected = tmpObj.node_multi_selected;
 
-            jchaos.node(node_multi_selected, "clrcmdq", "cu", function() {
+            jchaos.node(node_multi_selected, "clrcmdq", "cu", function () {
                 instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
-            }, function() {
+            }, function () {
                 instantMessage("ERROR Command Queue", node_multi_selected[0] + ":Clearing Command Queue ", 3000, false);
             });
 
         });
 
-        $("#cu_full_commands_send").click(function(e) {
+        $("#cu_full_commands_send").click(function (e) {
             //show the command
             var cmdselected = $("#cu_full_commands option:selected").val();
             generateCmdModal(tmpObj, cmdselected, curr_cu_selected);
@@ -2751,7 +2761,7 @@
 
         $.contextMenu({
             selector: '.cuMenu',
-            build: function($trigger, e) {
+            build: function ($trigger, e) {
                 var template = tmpObj.type;
                 var cuname = $(e.currentTarget).attr(template + "-name");
                 var cuitem = updateCUMenu(tmpObj, cuname);
@@ -2759,7 +2769,7 @@
 
                 cuitem['quit'] = {
                     name: "Quit",
-                    icon: function() {
+                    icon: function () {
                         //$('.context-menu-list').trigger('contextmenu:hide');
                         return 'context-menu-icon context-menu-icon-quit';
                     }
@@ -2767,7 +2777,7 @@
 
                 return {
 
-                    callback: function(cmd, options) {
+                    callback: function (cmd, options) {
                         // $('.context-menu-list').trigger('contextmenu:hide');
 
                         executeCUMenuCmd(tmpObj, cmd, options);
@@ -2790,16 +2800,16 @@
          configureSliderCommands(tmpObj,"slider-CONTRAST", "image_contrast");
          configureSliderCommands(tmpObj,"slider-SHARPNESS", "image_sharpness");
          */
-        $(main_dom).on("keypress", "input.cucmdattr", function(e) {
+        $(main_dom).on("keypress", "input.cucmdattr", function (e) {
             if (e.keyCode == 13) {
                 var value = e.target.value;
                 var attrname = e.target.name;
                 var desc = jchaos.decodeCUPath(attrname);
-                jchaos.setAttribute(desc.cu, desc.var, value, function() {
-                    instantMessage(desc.cu + " Attribute " + desc.dir, "\"" + desc.var+"\"=\"" + value + "\" sent", 1000, null, null, true)
+                jchaos.setAttribute(desc.cu, desc.var, value, function () {
+                    instantMessage(desc.cu + " Attribute " + desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, true)
 
-                }, function() {
-                    instantMessage(desc.cu + " Attribute Error " + desc.dir, "\"" + desc.var+"\"=\"" + value + "\" sent", 1000, null, null, false)
+                }, function () {
+                    instantMessage(desc.cu + " Attribute Error " + desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
                 });
 
@@ -2817,7 +2827,7 @@
         tmpObj['tags'] = tags;
         for (var key in tags) {
             var elems = tags[key].tag_elements;
-            elems.forEach(function(elem) {
+            elems.forEach(function (elem) {
                 if (elem == currsel) {
                     names.push(key);
                 }
@@ -2835,10 +2845,10 @@
             var x = crop_opt.x.toFixed();
             var y = crop_opt.y.toFixed();
 
-            jchaos.setAttribute(crop_opt.cu, "REFOFFSETX", String(x), function() {
-                jchaos.setAttribute(crop_opt.cu, "REFOFFSETY", String(y), function() {
-                    jchaos.setAttribute(crop_opt.cu, "REFSIZEX", String(width), function() {
-                        jchaos.setAttribute(crop_opt.cu, "REFSIZEY", String(height), function() {
+            jchaos.setAttribute(crop_opt.cu, "REFOFFSETX", String(x), function () {
+                jchaos.setAttribute(crop_opt.cu, "REFOFFSETY", String(y), function () {
+                    jchaos.setAttribute(crop_opt.cu, "REFSIZEX", String(width), function () {
+                        jchaos.setAttribute(crop_opt.cu, "REFSIZEY", String(height), function () {
                             instantMessage("SET REFERENCE " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
 
                         });
@@ -2853,10 +2863,10 @@
             var y = crop_opt.y.toFixed();
             var width = crop_opt.width.toFixed();
             var height = crop_opt.height.toFixed();
-            jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function() {
-                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function() {
-                    jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function() {
-                        jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function() {
+            jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
+                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
+                    jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
+                        jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
                             instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
 
                         });
@@ -2878,11 +2888,11 @@
         if (cmd == "snapshot-cu") {
             var instUnique = (new Date()).getTime();
 
-            getEntryWindow("Snapshotting", "Snap Name", "NONAME_" + instUnique, "Create", function(inst_name) {
-                jchaos.snapshot(inst_name, "create", tmpObj.node_multi_selected, null, function() {
+            getEntryWindow("Snapshotting", "Snap Name", "NONAME_" + instUnique, "Create", function (inst_name) {
+                jchaos.snapshot(inst_name, "create", tmpObj.node_multi_selected, null, function () {
                     instantMessage("Snapshot \"" + inst_name + "\"", " created ", 1000, true);
 
-                }, function() {
+                }, function () {
                     instantMessage("Snapshot ERROR \"" + inst_name + "\"", " NOT created ", 1000, false);
 
                 });
@@ -2901,13 +2911,13 @@
             def['tag_name'] = "NONAME_" + (new Date()).getTime();
             def['tag_duration'] = 1;
             def['tag_desc'] = JSON.stringify(tmpObj.node_multi_selected) + " at:" + (new Date());
-            jsonEditWindow("TAG Editor", templ, def, function(data, obj) {
+            jsonEditWindow("TAG Editor", templ, def, function (data, obj) {
                 var ttype = 2;
                 if (data.tag_type == "CYCLE") {
                     ttype = 1;
                 }
                 jchaos.tag(data.tag_name, obj.node_multi_selected, ttype, data.tag_duration,
-                    function() {
+                    function () {
                         var tag_obj = jchaos.variable("tags", "get", null, null);
                         data.tag_ts = (new Date()).getTime();
                         data.tag_elements = obj.node_multi_selected;
@@ -2916,7 +2926,7 @@
                         instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
 
                     },
-                    function() {
+                    function () {
 
                         instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
 
@@ -2926,62 +2936,62 @@
 
         } else if (cmd == "load") {
 
-            jchaos.loadUnload(tmpObj.node_multi_selected, true, function(data) {
+            jchaos.loadUnload(tmpObj.node_multi_selected, true, function (data) {
                 instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000, true);
                 //  $('.context-menu-list').trigger('contextmenu:hide')
 
-            }, function(data) {
+            }, function (data) {
                 instantMessage("ERROR LOAD ", "Command:\"" + cmd + "\" sent", 1000, false);
                 //  $('.context-menu-list').trigger('contextmenu:hide')
 
             });
 
         } else if (cmd == "unload") {
-            jchaos.loadUnload(tmpObj.node_multi_selected, false, function(data) {
+            jchaos.loadUnload(tmpObj.node_multi_selected, false, function (data) {
                 instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000, true);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
-            }, function(data) {
+            }, function (data) {
                 instantMessage("ERROR UNLOAD ", "Command:\"" + cmd + "\" sent", 1000, true);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
         } else if (cmd == "init") {
-            jchaos.node(tmpObj.node_multi_selected, "init", "cu", function(data) {
+            jchaos.node(tmpObj.node_multi_selected, "init", "cu", function (data) {
                 instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000, true);
                 //    $('.context-menu-list').trigger('contextmenu:hide')
 
-            }, function(data) {
+            }, function (data) {
                 instantMessage("ERROR INIT ", "Command:\"" + cmd + "\" sent", 1000, false);
                 //    $('.context-menu-list').trigger('contextmenu:hide')
 
             });
         } else if (cmd == "deinit") {
-            jchaos.node(tmpObj.node_multi_selected, "deinit", "cu", function(data) {
+            jchaos.node(tmpObj.node_multi_selected, "deinit", "cu", function (data) {
                 instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000, true);
                 //    $('.context-menu-list').trigger('contextmenu:hide')
 
-            }, function(data) {
+            }, function (data) {
                 instantMessage("ERROR DEINIT ", "Command:\"" + cmd + "\" sent", 1000, false);
                 //    $('.context-menu-list').trigger('contextmenu:hide')
 
             });
         } else if (cmd == "start") {
-            jchaos.node(tmpObj.node_multi_selected, "start", "cu", function(data) {
+            jchaos.node(tmpObj.node_multi_selected, "start", "cu", function (data) {
                 instantMessage("START ", "Command:\"" + cmd + "\" sent", 1000, true);
                 //    $('.context-menu-list').trigger('contextmenu:hide')
 
-            }, function(data) {
+            }, function (data) {
                 instantMessage("ERROR START ", "Command:\"" + cmd + "\" sent", 1000, false);
                 //    $('.context-menu-list').trigger('contextmenu:hide')
 
             });
         } else if (cmd == "stop") {
-            jchaos.node(tmpObj.node_multi_selected, "stop", "cu", function(data) {
+            jchaos.node(tmpObj.node_multi_selected, "stop", "cu", function (data) {
                 instantMessage("STOP ", "Command:\"" + cmd + "\" sent", 1000, true);
                 //    $('.context-menu-list').trigger('contextmenu:hide')
 
-            }, function(data) {
+            }, function (data) {
                 instantMessage("STOP ", "Command:\"" + cmd + "\" sent", 1000, false);
                 //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -2994,40 +3004,40 @@
 
         } else if (cmd == "live-cu-disable") {
             jchaos.storageLive(node_multi_selected, 0,
-                function() { instantMessage("Live CU disabled", node_multi_selected[0], 2000, true); },
-                function() { instantMessage("Error Live CU disabled", node_multi_selected[0], 2000, false); });
+                function () { instantMessage("Live CU disabled", node_multi_selected[0], 2000, true); },
+                function () { instantMessage("Error Live CU disabled", node_multi_selected[0], 2000, false); });
 
 
         } else if (cmd == "live-cu-enable") {
             jchaos.storageLive(node_multi_selected, 1,
-                function() { instantMessage("Live CU enabled", node_multi_selected[0], 2000, true); },
-                function() { instantMessage("Error Live CU enabled", node_multi_selected[0], 2000, false); });
+                function () { instantMessage("Live CU enabled", node_multi_selected[0], 2000, true); },
+                function () { instantMessage("Error Live CU enabled", node_multi_selected[0], 2000, false); });
 
         } else if (cmd == "histo-cu-disable") {
             jchaos.storageHisto(node_multi_selected, 0,
-                function() { instantMessage("History CU disabled", node_multi_selected[0], 2000, true); },
-                function() { instantMessage("Error History CU disabled", node_multi_selected[0], 2000, false); });
+                function () { instantMessage("History CU disabled", node_multi_selected[0], 2000, true); },
+                function () { instantMessage("Error History CU disabled", node_multi_selected[0], 2000, false); });
 
         } else if (cmd == "histo-cu-enable") {
             jchaos.storageHisto(node_multi_selected, 1,
-                function() { instantMessage("History CU disabled", node_multi_selected[0], 2000, true); },
-                function() { instantMessage("Error History CU disabled", node_multi_selected[0], 2000, false); });
+                function () { instantMessage("History CU disabled", node_multi_selected[0], 2000, true); },
+                function () { instantMessage("Error History CU disabled", node_multi_selected[0], 2000, false); });
 
         } else if (cmd == "show-dataset") {
             showDataset(currsel, currsel, 1000, tmpObj);
         } else if (cmd == "show-desc") {
-            jchaos.getDesc(currsel, function(data) {
+            jchaos.getDesc(currsel, function (data) {
                 tmpObj.node_name_to_desc[currsel] = data[0];
 
                 showJson(tmpObj, "Description " + currsel, currsel, data[0]);
             });
 
         } else if (cmd == "show-tags") {
-            jchaos.variable("tags", "get", null, function(tags) {
+            jchaos.variable("tags", "get", null, function (tags) {
                 var names = [];
                 for (var key in tags) {
                     var elems = tags[key].tag_elements;
-                    elems.forEach(function(elem) {
+                    elems.forEach(function (elem) {
                         if (elem == currsel) {
                             names.push(tags[key]);
                         }
@@ -3043,7 +3053,7 @@
 
 
         } else if (cmd == "show-picture") {
-            jchaos.getChannel(currsel, -1, function(imdata) {
+            jchaos.getChannel(currsel, -1, function (imdata) {
                 var cu = imdata[0];
                 var refresh = 1000;
                 if (cu.hasOwnProperty("health") && cu.health.hasOwnProperty("cuh_dso_prate")) {
@@ -3059,12 +3069,12 @@
                 } else {
                     alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
                 }
-            }, function(err) {
+            }, function (err) {
                 console.log(err);
             });
 
         } else if (cmd == "history-cu-root") {
-            createQueryDialog(function(query) {
+            createQueryDialog(function (query) {
                 // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
                 //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
                 //console.log("start:"+start_s + " end:"+end_s);
@@ -3075,27 +3085,27 @@
             })
 
         } else if (cmd == "history-cu") {
-            createQueryDialog(function(query) {
+            createQueryDialog(function (query) {
                 //query call back
                 progressBar("Retrive and Zip", "zipprogress", "zipping");
                 jchaos.setOptions({ "timeout": 60000 });
 
-                jchaos.fetchHistoryToZip(query.tag, tmpObj.node_multi_selected, query.start, query.stop, query.tag, function(meta) {
+                jchaos.fetchHistoryToZip(query.tag, tmpObj.node_multi_selected, query.start, query.stop, query.tag, function (meta) {
                     $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
                     console.log("percent:" + parseInt(meta.percent.toFixed(2)));
 
-                }, function(msg) {
+                }, function (msg) {
                     $("#zipprogress").parent().remove();
 
                     instantMessage("fetchHistoryToZip ", "failed:" + msg, 3000, false);
                 });
 
 
-            }, function() {
+            }, function () {
                 // open CB 
                 var names = findTagsOf(tmpObj, currsel);
                 element_sel("#select-tag", names, 0);
-                $("#select-tag").on("change", function() {
+                $("#select-tag").on("change", function () {
                     var tagname = $("#select-tag option:selected").val();
                     $("#query-tag").val(tagname);
                     var tags = jchaos.variable("tags", "get", null, null);
@@ -3114,11 +3124,11 @@
         } else if (cnd == 'set-roi') {
             return executeCameraMenuCmd(tmpObj, cmd, opt);
         } else {
-            jchaos.sendCUCmd(tmpObj.node_multi_selected, cmd, "", function(data) {
+            jchaos.sendCUCmd(tmpObj.node_multi_selected, cmd, "", function (data) {
                 instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
-            }, function(d) {
+            }, function (d) {
                 instantMessage(cuselection, "ERROR OCCURRED:" + d, 2000, false)
 
             });
@@ -3134,29 +3144,29 @@
 
         var html = '<div class="row-fluid">';
 
-        html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+        html += '<div class="statbox purple span2" >';
         html += '<h3>Zones</h3>';
         html += '<select id="zones" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+        html += '<div class="statbox purple span2">';
         html += '<h3>Group</h3>';
         html += '<select id="elements" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
+        html += '<div class="statbox purple span2">'
         html += '<h3>Class</h3>';
         html += '<select id="classe" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+        html += '<div class="statbox purple row-fluid span3">'
         html += '<div class="span3">'
         html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
         html += '<div class="span3">'
         html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
         html += '</div>'
-            // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="span3">Search</h3>';
 
         html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
@@ -3177,12 +3187,12 @@
 
     function buildNodeInterface(tempObj) {
         var html = '<div class="row-fluid">';
-        html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
+        html += '<div class="statbox purple span3">'
         html += '<h3>Node Type</h3>';
         html += '<select id="classe" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+        html += '<div class="statbox purple row-fluid span3">'
         html += '<div class="span6">'
         html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
@@ -3227,21 +3237,21 @@
 
         element_sel('#classe', ["us", "agent", "cu", "webui", "mds"], 1);
         $("#classe").off('change');
-        $("#classe").change(function(e) {
+        $("#classe").change(function (e) {
             dashboard_settings.current_page = 0;
 
-            interface2NodeList(tempObj, function(list_cu) {
+            interface2NodeList(tempObj, function (list_cu) {
                 tempObj['elems'] = list_cu;
 
                 updateInterface(tempObj);
 
             });
         });
-        $("#search-chaos").keypress(function(e) {
+        $("#search-chaos").keypress(function (e) {
             if (e.keyCode == 13) {
                 dashboard_settings.current_page = 0;
 
-                interface2NodeList(tempObj, function(list_cu) {
+                interface2NodeList(tempObj, function (list_cu) {
                     tempObj['elems'] = list_cu;
 
                     updateInterface(tempObj);
@@ -3251,29 +3261,29 @@
             //var tt =prompt('type value');
         });
 
-        $("input[type=radio][name=search-alive]").change(function(e) {
+        $("input[type=radio][name=search-alive]").change(function (e) {
             dashboard_settings.current_page = 0;
 
-            interface2NodeList(tempObj, function(list_cu) {
+            interface2NodeList(tempObj, function (list_cu) {
                 tempObj['elems'] = list_cu;
                 updateInterface(tempObj);
             });
 
         });
-        $(".previous_page").click(function(e) {
+        $(".previous_page").click(function (e) {
             if (!dashboard_settings.hasOwnProperty('current_page')) {
                 dashboard_settings['current_page'] = 0;
             }
             if (dashboard_settings.current_page > 0) {
                 dashboard_settings.current_page--;
-                interface2NodeList(tempObj, function(list_cu) {
+                interface2NodeList(tempObj, function (list_cu) {
                     tempObj['elems'] = list_cu;
                     updateInterface(tempObj);
                 });
             }
 
         });
-        $(".next_page").click(function(e) {
+        $(".next_page").click(function (e) {
             if (!dashboard_settings.hasOwnProperty('current_page')) {
                 dashboard_settings['current_page'] = 0;
             }
@@ -3282,13 +3292,14 @@
             }
             if (dashboard_settings.current_page < dashboard_settings.pages) {
                 dashboard_settings.current_page++;
-                interface2NodeList(tempObj, function(list_cu) {
+                interface2NodeList(tempObj, function (list_cu) {
                     tempObj['elems'] = list_cu;
                     updateInterface(tempObj);
                 });
 
             }
         });
+
     }
 
     function buildProcessInterface(tempObj) {
@@ -3332,7 +3343,7 @@
     }
 
     function updateProcessServer(tmpObj, cb) {
-        jchaos.activeAgentList(function(agents) {
+        jchaos.activeAgentList(function (agents) {
             tmpObj['agent_list'] = agents;
             if (typeof cb === "function") {
                 cb(tmpObj);
@@ -3352,11 +3363,11 @@
             delete tempObj['update-server-interval'];
         }
         updateProcessServer(tempObj);
-        tempObj['update-server-interval'] = setInterval(function() {
+        tempObj['update-server-interval'] = setInterval(function () {
             updateProcessServer(tempObj);
         }, 10000);
 
-        updateProcessList(tempObj, function(tmpObj) {
+        updateProcessList(tempObj, function (tmpObj) {
             updateProcessTable(tmpObj);
             var proclist = tmpObj.data;
 
@@ -3374,7 +3385,7 @@
         if ($radio.is(":checked") === false) {
             $radio.filter("[value=true]").prop('checked', true);
         }
-        $("#zones").change(function() {
+        $("#zones").change(function () {
             var zone_selected = $("#zones option:selected").val();
             var alive = $("[input=search-alive]:checked").val()
             var str_name = $("#search-chaos").val();
@@ -3399,7 +3410,7 @@
             updateInterface(tempObj);
         });
 
-        $("#elements").change(function() {
+        $("#elements").change(function () {
             var element_selected = $("#elements option:selected").val();
             var zone_selected = $("#zones option:selected").val();
             search_string = "";
@@ -3426,7 +3437,7 @@
             updateInterface(tempObj);
 
         });
-        $("#classe").change(function() {
+        $("#classe").change(function () {
             var interface = $("#classe option:selected").val();
             var alive = $("input[type=radio][name=search-alive]:checked").val()
             var zone_selected = $("#zones option:selected").val();
@@ -3442,7 +3453,7 @@
             updateInterface(tempObj);
 
         });
-        $("#search-chaos").keypress(function(e) {
+        $("#search-chaos").keypress(function (e) {
             if (e.keyCode == 13) {
                 var interface = $("#classe").val();
                 search_string = $(this).val();
@@ -3455,7 +3466,7 @@
             //var tt =prompt('type value');
         });
 
-        $("input[type=radio][name=search-alive]").change(function(e) {
+        $("input[type=radio][name=search-alive]").change(function (e) {
             var alive = $("input[type=radio][name=search-alive]:checked").val()
             list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
             tempObj['elems'] = list_eu;
@@ -3464,7 +3475,7 @@
         });
 
         $("#process_search").off('keypress');
-        $("#process_search").on('keypress', function(event) {
+        $("#process_search").on('keypress', function (event) {
             var t = $(event.target);
             var value = $(t).attr("value");
             tempObj['filter'] = value;
@@ -3489,7 +3500,7 @@
     function checkLiveCU(tmpObj) {
         var node_live_selected = tmpObj.data;
 
-        node_live_selected.forEach(function(elem, index) {
+        node_live_selected.forEach(function (elem, index) {
             var curr_time;
             var name = "";
             if (elem.hasOwnProperty("dpck_ats")) {
@@ -3561,7 +3572,7 @@
                 node_list = cuids;
             }
         }
-        node_list.forEach(function(elem, id) {
+        node_list.forEach(function (elem, id) {
             tmpObj.index = -1;
             tmpObj.health_time_stamp_old[elem] = 0;
             tmpObj.off_line[elem] = 2;
@@ -3585,7 +3596,7 @@
         tmpObj.last_check = 0;
         tmpObj.updateErrors = 0;
         tmpObj.skip_fetch = 0;
-        tmpObj.node_list_interval = setInterval(function() {
+        tmpObj.node_list_interval = setInterval(function () {
             if (tmpObj.skip_fetch > 0) {
                 return;
             }
@@ -3593,7 +3604,7 @@
 
             //$("#refresh_rate_update").html('<font color="white"><p>Update:'+tmpObj.updateRefresh+'</p><p>Errors:'+tmpObj.updateErrors+'</p></font>');
             if (tmpObj.upd_chan > -2) {
-                jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function(dat) {
+                jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
                     lat = (new Date()).getTime() - now;
 
                     var node_live_selected = dat;
@@ -3604,7 +3615,7 @@
                     tmpObj.data = node_live_selected;
                     tmpObj.updateFn(tmpObj);
 
-                }, function(err) {
+                }, function (err) {
                     console.log(err);
                     stateOutput(err, true);
 
@@ -3667,7 +3678,7 @@
 
 
         }
-        $.getScript("/js/chaos-widget/" + tmpObj.type + ".js", function(data, textStatus, jqxhr) {
+        $.getScript("/js/chaos-widget/" + tmpObj.type + ".js", function (data, textStatus, jqxhr) {
             var w = getWidget();
             tmpObj.htmlFn = w.dsFn;
             tmpObj.generateTableFn = w.tableFn;
@@ -3738,7 +3749,7 @@
                     format: "tabs"
                 }
 
-                jchaos.node(node_selected, "info", "agent", function(data) {
+                jchaos.node(node_selected, "info", "agent", function (data) {
                     if (data != null) {
                         // editorFn = agentSave;
                         //jsonEdit(templ, data);
@@ -3759,14 +3770,14 @@
                     $ref: "cu.json",
                     format: "tabs"
                 }
-                jchaos.node(node_selected, "get", "cu", function(data) {
+                jchaos.node(node_selected, "get", "cu", function (data) {
                     if (data != null) {
                         //editorFn = cuSave;
                         //jsonEdit(templ, data);
-                        jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj, function(ok) {
+                        jsonEditWindow("CU Editor", templ, data, jchaos.cuSave, tmpObj, function (ok) {
                             instantMessage("CU saved " + node_selected, " OK", 2000, true);
 
-                        }, function(bad) {
+                        }, function (bad) {
                             instantMessage("Errro saving CU " + node_selected, bad, 2000, false);
 
                         });
@@ -3783,14 +3794,14 @@
                     alert("not US selected!");
                     return;
                 }
-                jchaos.node(node_selected, "get", "us", function(data) {
+                jchaos.node(node_selected, "get", "us", function (data) {
                     if (data.hasOwnProperty("us_desc")) {
                         //    editorFn = unitServerSave;
                         //    jsonEdit(templ, data.us_desc);
-                        jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj, function(ok) {
+                        jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, tmpObj, function (ok) {
                             instantMessage("Unit server save ", " OK", 2000, true);
 
-                        }, function(bad) {
+                        }, function (bad) {
                             instantMessage("Unit server failed", bad, 2000, false);
 
                         });
@@ -3800,33 +3811,33 @@
                 return;
             } else if (cmd == "new-nt_unit_server") {
                 var templ = {
-                        $ref: "us.json",
-                        format: "tabs"
-                    }
-                    //editorFn = unitServerSave;
-                    //jsonEdit(templ, null);
-                jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj, function(ok) {
-                        instantMessage("Unit server save ", " OK", 2000, true);
+                    $ref: "us.json",
+                    format: "tabs"
+                }
+                //editorFn = unitServerSave;
+                //jsonEdit(templ, null);
+                jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, tmpObj, function (ok) {
+                    instantMessage("Unit server save ", " OK", 2000, true);
 
-                        $("#search-alive-false").prop('checked', true);
-                        $("#search-chaos").val(ok.ndk_uid);
-                        updateNodeEvent();
+                    $("#search-alive-false").prop('checked', true);
+                    $("#search-chaos").val(ok.ndk_uid);
+                    updateNodeEvent();
 
-                    }, function(bad) {
-                        instantMessage("Unit server failed", bad, 2000, false);
+                }, function (bad) {
+                    instantMessage("Unit server failed", bad, 2000, false);
 
-                    }
+                }
 
                 );
 
                 return;
             } else if (cmd == "del-nt_unit_server") {
 
-                confirm("Delete US", "Your are deleting US: " + node_selected, "Ok", function() {
-                    jchaos.node(node_selected, "del", "us", function() {
+                confirm("Delete US", "Your are deleting US: " + node_selected, "Ok", function () {
+                    jchaos.node(node_selected, "del", "us", function () {
                         instantMessage("Unit server deleted ", " OK", 2000, true);
                         updateNodeEvent();
-                    }, function(err) {
+                    }, function (err) {
                         instantMessage("cannot delete server US:", err, 2000, false);
 
                     });
@@ -3858,7 +3869,7 @@
                     if (cu['cudk_driver_description'] instanceof Array) {
                         driver = "";
 
-                        cu['cudk_driver_description'].forEach(function(item, index) {
+                        cu['cudk_driver_description'].forEach(function (item, index) {
                             if (typeof item['cudk_driver_description_name'] === "string") {
                                 if (cu['cudk_driver_description'].length == 1) {
                                     driver = item.cudk_driver_description_name;
@@ -3874,7 +3885,7 @@
                         $ref: "cu.json",
                         format: "tabs"
                     }
-                    jsonEditWindow("Template Editor " + impl, templ, cu, function(json, obj, ok, bad) {
+                    jsonEditWindow("Template Editor " + impl, templ, cu, function (json, obj, ok, bad) {
                         if ((json != null) && json.hasOwnProperty("ndk_uid")) {
 
                             template[impl] = {};
@@ -3884,10 +3895,10 @@
                         }
                         bad("cu not valid:" + JSON.stringify(json));
                         return 0;
-                    }, tmpObj, function(ok) {
+                    }, tmpObj, function (ok) {
                         instantMessage("Created template:" + impl, " Driver:" + driver, 1000, true);
 
-                    }, function(bad) {
+                    }, function (bad) {
                         instantMessage("Failed create template:" + impl, " Driver:" + driver, 2000, false);
 
                     });
@@ -3898,16 +3909,16 @@
 
 
             } else if (cmd == "del-nt_control_unit") {
-                node_multi_selected.forEach(function(nod, index) {
-                    jchaos.getDesc(nod, function(desc) {
+                node_multi_selected.forEach(function (nod, index) {
+                    jchaos.getDesc(nod, function (desc) {
                         if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
                             var parent = desc[0].instance_description.ndk_parent;
-                            confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function() {
-                                jchaos.node(nod, "del", "cu", parent, null, function(ok) {
+                            confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
+                                jchaos.node(nod, "del", "cu", parent, null, function (ok) {
                                     instantMessage("Deleted", "CU " + nod, 1000, true);
                                     tmpObj['elems'].splice(index, 1);
                                     updateNodeEvent();
-                                }, function(bad) {
+                                }, function (bad) {
                                     instantMessage("Deleting", "CU " + nod, 2000, false);
 
                                 });
@@ -3920,7 +3931,7 @@
             } else if (cmd == "copy-nt_control_unit") {
 
 
-                jchaos.node(node_selected, "get", "cu", function(data) {
+                jchaos.node(node_selected, "get", "cu", function (data) {
                     if (data != null) {
                         cu_copied = data;
                         //  copyToClipboard(JSON.stringify(data));
@@ -3930,7 +3941,7 @@
             } else if (cmd == "save-nt_control_unit") {
 
 
-                jchaos.node(node_selected, "get", "cu", function(data) {
+                jchaos.node(node_selected, "get", "cu", function (data) {
                     if (data != null) {
                         if (data instanceof Object) {
                             var tmp = { cu_desc: data };
@@ -3945,13 +3956,13 @@
                 /*check the status of the device must be not alive*/
 
                 copia.ndk_parent = node_selected;
-                confirm("Move or Copy", "Copy or Moving CU: \"" + cu_copied.ndk_uid + "\" into US:\"" + node_selected + "\"", "Move", function() {
+                confirm("Move or Copy", "Copy or Moving CU: \"" + cu_copied.ndk_uid + "\" into US:\"" + node_selected + "\"", "Move", function () {
                     if (tmpObj.off_line[cu_copied.ndk_uid] == 0) {
                         alert("CU " + cu_copied.ndk_uid + " cannot be MOVED if alive, please bring it to 'unload' state");
                         return;
                     }
-                    jchaos.node(cu_copied.ndk_uid, "set", "cu", node_selected, copia, function() {});
-                }, "Copy", function() {
+                    jchaos.node(cu_copied.ndk_uid, "set", "cu", node_selected, copia, function () { });
+                }, "Copy", function () {
 
                     var def_obj = copia;
                     var templ = {
@@ -3961,10 +3972,10 @@
                     def_obj['ndk_uid'] = copia.ndk_uid + "_copied";
                     def_obj['ndk_parent'] = node_selected;
                     //jsonEdit(templ, tmp);
-                    jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj, function(ok) {
+                    jsonEditWindow("Copied CU", templ, def_obj, jchaos.newCuSave, tmpObj, function (ok) {
                         instantMessage("CU save ", " OK", 2000, true);
 
-                    }, function(bad) {
+                    }, function (bad) {
                         instantMessage("CU save failed", bad, 2000, false);
 
                     });
@@ -3972,7 +3983,7 @@
                 });
                 return;
             } else if (cmd == "copy-nt_unit_server") {
-                jchaos.node(node_selected, "get", "us", function(data) {
+                jchaos.node(node_selected, "get", "us", function (data) {
                     if (data.hasOwnProperty("us_desc")) {
                         us_copied = data.us_desc;
                         copyToClipboard(JSON.stringify(data));
@@ -3981,7 +3992,7 @@
                 });
                 return;
             } else if (cmd == "save-nt_unit_server") {
-                jchaos.node(node_selected, "get", "us", function(data) {
+                jchaos.node(node_selected, "get", "us", function (data) {
                     if (data.hasOwnProperty("us_desc")) {
                         if (data.us_desc instanceof Object) {
                             var blob = new Blob([JSON.stringify(data.us_desc)], { type: "json;charset=utf-8" });
@@ -3992,7 +4003,7 @@
                 });
                 return;
             } else if (cmd == "new-nt_control_unit-fromfile") {
-                getFile("LOAD JSON CU description", "select the JSON to load", function(config) {
+                getFile("LOAD JSON CU description", "select the JSON to load", function (config) {
                     //console.log("loaded:"+JSON.stringify(data));
                     var cuname;
                     var def_obj;
@@ -4008,24 +4019,24 @@
                         alert("Invalid CU");
                         return;
                     }
-                    confirm("Add CU " + cuname, "Add CU to " + node_selected + "?", "Add", function() {
+                    confirm("Add CU " + cuname, "Add CU to " + node_selected + "?", "Add", function () {
                         var templ = {
-                                $ref: "cu.json",
-                                format: "tabs"
-                            }
-                            // editorFn = jchaos.newCuSave;
+                            $ref: "cu.json",
+                            format: "tabs"
+                        }
+                        // editorFn = jchaos.newCuSave;
                         def_obj.ndk_parent = node_selected;
                         //jsonEdit(templ, tmp);
-                        jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj, function(ok) {
+                        jsonEditWindow("New CU", templ, def_obj, jchaos.newCuSave, tmpObj, function (ok) {
                             instantMessage("CU save ", " OK", 2000, true);
 
-                        }, function(bad) {
+                        }, function (bad) {
                             instantMessage("CU save failed", bad, 2000, false);
 
                         });
 
 
-                    }, "Cancel", function() {});
+                    }, "Cancel", function () { });
 
                 });
                 return;
@@ -4033,13 +4044,13 @@
 
                 // custom
                 var templ = {
-                        $ref: "cu_mc_import.json",
-                        format: "tabs"
-                    }
-                    //var def = {};
-                    //def['ndk_parent']=node_selected;
-                    //editorFn = jchaos.newCuSave;
-                    //jsonEdit(templ, template);
+                    $ref: "cu_mc_import.json",
+                    format: "tabs"
+                }
+                //var def = {};
+                //def['ndk_parent']=node_selected;
+                //editorFn = jchaos.newCuSave;
+                //jsonEdit(templ, template);
                 jsonEditWindow("New MemCache import CU", templ, null, newMCCuSave, tmpObj);
 
 
@@ -4047,42 +4058,42 @@
                 return;
             } else if (cmd == "shutdown-nt_control_unit") {
                 confirm("Do you want to IMMEDIATELY SHUTDOWN CU/EU:" + node_selected, "Pay attention ANY CU of the same US will be killed as well", "Kill",
-                    function() {
-                        jchaos.node(node_selected, "shutdown", "cu", function() {
+                    function () {
+                        jchaos.node(node_selected, "shutdown", "cu", function () {
                             instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, true);
-                        }, function() {
+                        }, function () {
                             instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, false);
-                        }, function() {
+                        }, function () {
                             // handle error ok
                         })
                     }, "Joke",
-                    function() {});
+                    function () { });
                 return;
             } else if (cmd == "shutdown-nt_unit_server") {
                 confirm("Do you want to IMMEDIATELY SHUTDOWN US:" + node_selected, "Pay attention ANY CU will be killed as well", "Kill",
-                    function() {
-                        jchaos.node(node_selected, "shutdown", "us", function() {
+                    function () {
+                        jchaos.node(node_selected, "shutdown", "us", function () {
                             instantMessage("US SHUTDOWN", "Killing " + node_selected + "", 1000, true);
-                        }, function() {
+                        }, function () {
                             instantMessage("US SHUTDOWN", "Killing " + node_selected + "", 1000, false);
-                        }, function() {
+                        }, function () {
                             // handle error ok
                         })
                     }, "Joke",
-                    function() {});
+                    function () { });
                 return;
             } else if (cmd == "shutdown-nt_agent") {
                 confirm("Do you want to IMMEDIATELY SHUTDOWN AGENT:" + node_selected, "Pay attention ANY US/CU will be killed as well", "Kill",
-                    function() {
-                        jchaos.node(node_selected, "shutdown", "agent", function() {
+                    function () {
+                        jchaos.node(node_selected, "shutdown", "agent", function () {
                             instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, true);
-                        }, function() {
+                        }, function () {
                             instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, false);
-                        }, function() {
+                        }, function () {
                             // handle error ok
                         })
                     }, "Joke",
-                    function() {});
+                    function () { });
                 return;
             } else if (cmd.includes("new-nt_control_unit")) {
                 var regex = /new-nt_control_unit-(.*)-(.*)$/;
@@ -4097,15 +4108,15 @@
 
                         console.log("selected template:\"" + match[1]);
                         var templ = {
-                                $ref: "cu.json",
-                                format: "tabs"
-                            }
-                            // editorFn = jchaos.newCuSave;
-                            // jsonEdit(templ, template);
-                        jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj, function(ok) {
+                            $ref: "cu.json",
+                            format: "tabs"
+                        }
+                        // editorFn = jchaos.newCuSave;
+                        // jsonEdit(templ, template);
+                        jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj, function (ok) {
                             instantMessage("CU save ", " OK", 2000, true);
 
-                        }, function(bad) {
+                        }, function (bad) {
                             instantMessage("CU save failed", bad, 2000, false);
 
                         });
@@ -4121,10 +4132,10 @@
 
                         //editorFn = jchaos.newCuSave;
                         //jsonEdit(templ, template);
-                        jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj, function(ok) {
+                        jsonEditWindow("New CU from Template", templ, template, jchaos.newCuSave, tmpObj, function (ok) {
                             instantMessage("CU save ", " OK", 2000, true);
 
-                        }, function(bad) {
+                        }, function (bad) {
                             instantMessage("CU save failed", bad, 2000, false);
 
                         });
@@ -4136,17 +4147,17 @@
                 alert("Not Implemented, try with Edit.. ");
                 return;
             } else if (cmd == "start-node") {
-                jchaos.node(node_multi_selected, "start", "us", function() {
+                jchaos.node(node_multi_selected, "start", "us", function () {
                     instantMessage("US START", "Starting " + node_selected + " via agent", 1000, true);
-                }, function() {
+                }, function () {
                     instantMessage("ERROR US START", "Starting " + node_selected + " via agent", 1000, false);
                 });
                 return;
             } else if (cmd == "stop-node") {
-                jchaos.node(node_multi_selected, "stop", "us", function() {
+                jchaos.node(node_multi_selected, "stop", "us", function () {
                     instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000, true);
 
-                }, function() {
+                }, function () {
                     instantMessage("ERROR US STOP", "Stopping " + node_selected + " via agent", 1000, false);
 
                 });
@@ -4154,7 +4165,7 @@
             } else if (cmd == "console-node") {
                 var agentn = node_name_to_desc[node_selected].parent;
                 var server = node_name_to_desc[node_selected].desc.ndk_host_name;
-                jchaos.node(agentn, "get", "agent", node_selected, null, function(data) {
+                jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
                     console.log("->" + JSON.stringify(data));
                     getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
                 });
@@ -4162,37 +4173,37 @@
 
             } else if (cmd == "kill-node") {
                 confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
-                    function() {
-                        jchaos.node(node_selected, "kill", "us", function() {
+                    function () {
+                        jchaos.node(node_selected, "kill", "us", function () {
                             instantMessage("US KILL", "Killing " + node_selected + " via agent", 1000, true);
-                        }, function() {
+                        }, function () {
                             instantMessage("ERROR US KILL", "Killing " + node_selected + " via agent", 1000, false);
                         })
                     }, "Joke",
-                    function() {});
+                    function () { });
                 return;
             } else if (cmd == "restart-node") {
                 confirm("Do you want to RESTART?", "Pay attention ANY CU will be restarted as well", "Restart",
-                    function() {
-                        jchaos.node(node_selected, "restart", "us", function() {
+                    function () {
+                        jchaos.node(node_selected, "restart", "us", function () {
                             instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000, true);
-                        }, function() {
+                        }, function () {
                             instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000, false);
                         })
                     }, "Joke",
-                    function() {});
+                    function () { });
                 return;
             } else if (cmd == "associate-node") {
                 var templ = {
                     $ref: "agent.json",
                     format: "tabs"
                 }
-                jchaos.node(node_selected, "info", "agent", function(data) {
+                jchaos.node(node_selected, "info", "agent", function (data) {
                     if (data != null) {
 
                         if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
                             var found = 0;
-                            data.andk_node_associated.forEach(function(item) {
+                            data.andk_node_associated.forEach(function (item) {
                                 if (item.hasOwnProperty("ndk_uid")) {
                                     if (item.ndk_uid == us_copied.ndk_uid) {
                                         alert("node already associated");
@@ -4215,10 +4226,10 @@
                         }
                         //editorFn = agentSave;
                         //jsonEdit(templ, data);
-                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj, function(ok) {
+                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj, function (ok) {
                             instantMessage("Agent save ", " OK", 2000, true);
 
-                        }, function(bad) {
+                        }, function (bad) {
                             instantMessage("Agent save failed", bad, 2000, false);
 
                         });
@@ -4257,7 +4268,7 @@
                 format: "tabs"
             }
             if (node_selected != null && node_name_to_desc[node_selected] != null) {
-                jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function(data) {
+                jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function (data) {
                     console.log("script:" + node_selected + " =" + JSON.stringify(data));
 
                     jsonEditWindow(node_selected, templ, data, algoSave, tmpObj);
@@ -4271,8 +4282,8 @@
 
         if (cmd == "delete-algo") {
 
-            confirm("Delete Algorithm", "Your are deleting Algorithm: " + node_selected, "Ok", function() {
-                jchaos.rmScript(node_name_to_desc[node_selected], function(data) {
+            confirm("Delete Algorithm", "Your are deleting Algorithm: " + node_selected, "Ok", function () {
+                jchaos.rmScript(node_name_to_desc[node_selected], function (data) {
                     instantMessage("Remove Script", "removed:" + node_selected, 2000);
 
                 });
@@ -4284,7 +4295,7 @@
 
         if (cmd == "copy-algo") {
 
-            jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function(data) {
+            jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function (data) {
                 algo_copied = data;
                 instantMessage("Copy Script", "copied " + node_selected, 1000);
             });
@@ -4292,7 +4303,7 @@
             return;
         }
         if (cmd == "save-algo") {
-            jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function(data) {
+            jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function (data) {
                 if (data != null) {
                     if (data instanceof Object) {
                         var blob = new Blob([JSON.stringify(data)], { type: "json;charset=utf-8" });
@@ -4311,7 +4322,7 @@
                     $ref: "algo.json",
                     format: "tabs"
                 }
-                getEntryWindow("Rename Algo", "Algo Name", node_selected + "_" + instUnique, "Create", function(inst_name) {
+                getEntryWindow("Rename Algo", "Algo Name", node_selected + "_" + instUnique, "Create", function (inst_name) {
                     //editorFn = algoSave;
                     algo_copied.script_name = inst_name;
                     //jsonEdit(algo_copied, null);
@@ -4327,8 +4338,8 @@
         if (cmd == "create-instance") {
             var instUnique = (new Date()).getTime();
 
-            getEntryWindow("Create Instance", "Instance Name", node_selected + "/" + node_selected + "_" + instUnique, "Create", function(inst_name) {
-                jchaos.manageInstanceScript(node_selected, node_name_to_desc[node_selected].seq, inst_name, true, function(data) {
+            getEntryWindow("Create Instance", "Instance Name", node_selected + "/" + node_selected + "_" + instUnique, "Create", function (inst_name) {
+                jchaos.manageInstanceScript(node_selected, node_name_to_desc[node_selected].seq, inst_name, true, function (data) {
                     instantMessage("Create Instance", "instance of " + node_selected + "created with name:" + inst_name, 1000);
 
                 });
@@ -4345,7 +4356,7 @@
 
             if (node_name_to_desc[pather_selected] != null && node_name_to_desc[pather_selected].hasOwnProperty('instances')) {
                 var arr = node_name_to_desc[pather_selected].instances;
-                arr.forEach(function(item) {
+                arr.forEach(function (item) {
                     if (item.instance_name == node_selected) {
                         console.log("editing instance: " + node_selected + " of:" + pather_selected + ":" + JSON.stringify(item));
                         var fname = jchaos.encodeName(node_selected);
@@ -4357,8 +4368,8 @@
             return;
         }
         if (cmd == "delete-instance") {
-            confirm("Delete Algorithm Instance", "Your are deleting Instance Algorithm: " + node_selected + "(" + pather_selected + ")", "Ok", function() {
-                jchaos.manageInstanceScript(pather_selected, node_name_to_desc[pather_selected].seq, node_selected, false, function(data) {
+            confirm("Delete Algorithm Instance", "Your are deleting Instance Algorithm: " + node_selected + "(" + pather_selected + ")", "Ok", function () {
+                jchaos.manageInstanceScript(pather_selected, node_name_to_desc[pather_selected].seq, node_selected, false, function (data) {
                     instantMessage("Delete Instance", "instance of " + pather_selected + "created with name:" + node_selected, 1000);
 
                 });
@@ -4380,11 +4391,11 @@
         var template = tmpObj.type;
         var node_list = tmpObj['elems'];
         var cutype = tmpObj.type;
-        jchaos.node(node_list, "desc", cutype, function(data) {
+        jchaos.node(node_list, "desc", cutype, function (data) {
             var cnt = 0;
             var us_list = [];
             var cu_list = [];
-            node_list.forEach(function(elem, index) {
+            node_list.forEach(function (elem, index) {
                 var type = data[index].ndk_type;
                 tmpObj.node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
                 if ((type == "nt_control_unit")) {
@@ -4394,9 +4405,9 @@
                 }
             });
             if (cu_list.length > 0) {
-                jchaos.getDesc(cu_list, function(data) {
+                jchaos.getDesc(cu_list, function (data) {
                     var cnt = 0;
-                    data.forEach(function(cu) {
+                    data.forEach(function (cu) {
                         if (cu.hasOwnProperty("instance_description")) {
                             tmpObj.node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
                             tmpObj.node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
@@ -4406,9 +4417,9 @@
                 });
             }
             if (us_list.length > 0) {
-                jchaos.node(us_list, "parent", "us", function(data) {
+                jchaos.node(us_list, "parent", "us", function (data) {
                     var cnt = 0;
-                    data.forEach(function(us) {
+                    data.forEach(function (us) {
                         if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
                             tmpObj.node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
                         }
@@ -4417,7 +4428,7 @@
                 });
             }
         });
-        $("#main_table-" + template + " tbody tr").click(function(e) {
+        $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
         n = $('#main_table-' + template + ' tr').size();
@@ -4438,7 +4449,7 @@
 
         $.contextMenu({
             selector: '.nodeMenu',
-            build: function($trigger, e) {
+            build: function ($trigger, e) {
                 var template = tmpObj.type;
 
                 var cuname = $(e.currentTarget).attr(template + "-name");
@@ -4448,14 +4459,14 @@
 
                 cuitem['quit'] = {
                     name: "Quit",
-                    icon: function() {
+                    icon: function () {
                         return 'context-menu-icon context-menu-icon-quit';
                     }
                 };
 
                 return {
 
-                    callback: function(cmd, options) {
+                    callback: function (cmd, options) {
                         executeNodeMenuCmd(tmpObj, cmd, options);
                         return;
                     },
@@ -4595,10 +4606,10 @@
             }
         }
         if (interface !== "algo-instance") {
-            node_list.forEach(function(elem) {
+            node_list.forEach(function (elem) {
                 node_name_to_desc[elem.script_name] = elem;
                 var tmp_array = [];
-                jchaos.searchScriptInstance(elem.script_name, "", function(script_inst) {
+                jchaos.searchScriptInstance(elem.script_name, "", function (script_inst) {
                     for (var key in script_inst) {
                         if (script_inst[key] instanceof Array) {
                             tmp_array = tmp_array.concat(script_inst[key]);
@@ -4622,7 +4633,7 @@
         $("#specific-table-" + type).html(htmlt);
 
 
-        $("#main_table-" + template + " tbody tr").click(function(e) {
+        $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
         n = $('#main_table-' + template + ' tr').size();
@@ -4637,21 +4648,21 @@
 
         $.contextMenu({
             selector: '.algoMenu',
-            build: function($trigger, e) {
+            build: function ($trigger, e) {
                 var algoname = $(e.currentTarget).attr("cuname");
                 var cuitem = updateAlgoMenu(algoname);
                 cuitem['sep1'] = "---------";
 
                 cuitem['quit'] = {
                     name: "Quit",
-                    icon: function() {
+                    icon: function () {
                         return 'context-menu-icon context-menu-icon-quit';
                     }
                 };
 
                 return {
 
-                    callback: function(cmd, options) {
+                    callback: function (cmd, options) {
                         executeAlgoMenuCmd(cmd, options);
                         return;
                     },
@@ -4665,21 +4676,21 @@
 
         $.contextMenu({
             selector: '.algoInstanceMenu',
-            build: function($trigger, e) {
+            build: function ($trigger, e) {
                 var algoname = $(e.currentTarget).attr("cuname");
                 var cuitem = updateInstanceAlgoMenu(algoname);
                 cuitem['sep1'] = "---------";
 
                 cuitem['quit'] = {
                     name: "Quit",
-                    icon: function() {
+                    icon: function () {
                         return 'context-menu-icon context-menu-icon-quit';
                     }
                 };
 
                 return {
 
-                    callback: function(cmd, options) {
+                    callback: function (cmd, options) {
                         executeAlgoMenuCmd(cmd, options);
                         return;
                     },
@@ -4720,7 +4731,7 @@
             var server = tmpObj.data[node_selected].hostname + ":8071";
             jchaos.setOptions({ "timeout": 60000 });
 
-            jchaos.rmtDownload(server, node_selected, "", function(r) {
+            jchaos.rmtDownload(server, node_selected, "", function (r) {
                 instantMessage("Downloading", "Zipping Output of " + node_selected + " ", 1000, true);
                 var zipname = node_selected + ".zip";
                 var binary_string = atob(r.data.base64);
@@ -4728,24 +4739,24 @@
                 jchaos.setOptions({ "timeout": 5000 });
 
 
-            }, function(bad) {
+            }, function (bad) {
                 instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent", 1000, false);
                 jchaos.setOptions({ "timeout": 5000 });
 
             });
         } else if (cmd == "kill-process") {
             confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
-                function() {
+                function () {
                     var server = tmpObj.data[node_selected].hostname + ":8071";
-                    jchaos.rmtKill(server, node_selected, function(r) {
+                    jchaos.rmtKill(server, node_selected, function (r) {
                         instantMessage("US KILL", "Killing " + node_selected + " ", 1000, true);
 
-                    }, function(bad) {
+                    }, function (bad) {
                         instantMessage("ERROR US KILL", "Killing " + node_selected + " via agent", 1000, false);
                     });
 
                 }, "Joke",
-                function() {});
+                function () { });
             return;
         } else if (cmd == "new-script") {
             var templ = {
@@ -4773,7 +4784,7 @@
                 format: "tabs"
             }
 
-            jsonEditWindow("New Process Template", templ, null, function(data, obj) {
+            jsonEditWindow("New Process Template", templ, null, function (data, obj) {
                 var processTemplates = jchaos.variable("app_templates", "get", processTemplates, null);
                 var name = data['app_name'];
                 processTemplates[name] = data;
@@ -4800,7 +4811,7 @@
                         format: "tabs"
                     }
 
-                    jsonEditWindow("Application Run", templ, processTemplates[k], function(data, obj) {
+                    jsonEditWindow("Application Run", templ, processTemplates[k], function (data, obj) {
                         // save template and run template
                         jchaos.variable("app_templates", "set", processTemplates, null);
                         var server;
@@ -4810,7 +4821,7 @@
                             server = findBestServer(obj);
                         }
 
-                        jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function(r) {
+                        jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
                             if (r.err != 0) {
                                 instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
                                 return;
@@ -4821,12 +4832,12 @@
                                 if (data['app_broadcast']) {
                                     var serverlist = obj['agents'];
                                     for (var server in serverlist) {
-                                        jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function(r) {
+                                        jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
                                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                                             getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
 
-                                        }, function(bad) {
+                                        }, function (bad) {
                                             console.log("Some error getting loading script:" + bad);
                                             instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
 
@@ -4839,12 +4850,12 @@
                                         server = findBestServer(obj);
                                     }
 
-                                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function(r) {
+                                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
                                         console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                         instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                                         getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
 
-                                    }, function(bad) {
+                                    }, function (bad) {
                                         console.log("Some error getting loading script:" + bad);
                                         instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
 
@@ -4864,7 +4875,7 @@
         var serverlist = tmpObj['agents'];
         for (var key in serverlist) {
             var server = key;
-            jchaos.rmtPurge(server + ":8071", level, function(r) {}, function(bad) {
+            jchaos.rmtPurge(server + ":8071", level, function (r) { }, function (bad) {
                 instantMessage("Purge Error", "Failed to purge ", 2000, false);
 
             })
@@ -4876,9 +4887,9 @@
         var maxIdle = 0;
         var server = null;
         if (typeof func == "function") {
-            updateProcessServer(kk, function(kk) {
+            updateProcessServer(kk, function (kk) {
 
-                updateProcessList(kk, function(tt) {
+                updateProcessList(kk, function (tt) {
                     var serverlist = tt['agents'];
                     for (var key in serverlist) {
                         if (serverlist[key].idle > maxIdle) {
@@ -4911,7 +4922,7 @@
     function runRemoteScript(tmpObj, name, language, additional_args) {
         var launch_arg = "";
         var chaos_prefix = "";
-        findBestServer(function(server) {
+        findBestServer(function (server) {
             if (tmpObj.hasOwnProperty('target-agent')) {
                 server = tmpObj['target-agent'];
             }
@@ -4919,7 +4930,7 @@
                 alert("NO Server Available");
                 return;
             }
-            jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function(r) {
+            jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
                 if (r.err != 0) {
                     instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
                     return;
@@ -4941,33 +4952,33 @@
                     if (typeof additional_args === "undefined") {
 
 
-                        getEntryWindow(name, "Additional args", '', "Run", function(parm) {
+                        getEntryWindow(name, "Additional args", '', "Run", function (parm) {
 
-                            jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "", function(r) {
+                            jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "", function (r) {
                                 console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                 var node_selected = tmpObj.node_selected;
                                 instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                                 getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000, language);
-                            }, function(bad) {
+                            }, function (bad) {
                                 console.log("Some error getting loading script:" + bad);
                                 instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
 
                             });
                         }, "Cancel");
                     } else {
-                        jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + additional_args, language, "", function(r) {
+                        jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + additional_args, language, "", function (r) {
                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                             var node_selected = tmpObj.node_selected;
                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                             getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000), language;
-                        }, function(bad) {
+                        }, function (bad) {
                             console.log("Some error getting loading script:" + bad);
                             instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
 
                         });
                     }
                 }
-            }, function(bad) {
+            }, function (bad) {
                 console.log("Some error getting environment:" + bad);
                 instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
 
@@ -5093,10 +5104,10 @@
         var template = tmpObj.type;
         tmpObj['node_name_to_desc'] = {};
 
-        jchaos.search("", "script", false, function(l) {
+        jchaos.search("", "script", false, function (l) {
             if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
                 var list_algo = l['found_script_list'];
-                list_algo.forEach(function(p) {
+                list_algo.forEach(function (p) {
                     var encoden = jchaos.encodeName(p.script_name);
                     var date = new Date(p.seq);
                     tmpObj.node_name_to_desc[p.script_name] = p;
@@ -5115,7 +5126,7 @@
 
             $("#mdl-script").modal("show");
 
-            $("#table_script tbody tr").click(function(e) {
+            $("#table_script tbody tr").click(function (e) {
                 mainTableCommonHandling("table_script", tmpObj, e);
             });
 
@@ -5128,9 +5139,9 @@
             // load on all servers
             var ag = tmpObj['agent_list'];
             var cnt = ag.length;
-            ag.forEach(function(ser) {
+            ag.forEach(function (ser) {
                 var server = ser.ndk_host_name;
-                jchaos.rmtUploadScript(server + ":8071", jsonscript, function(r) {
+                jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
                     if (r.err != 0) {
                         instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);
                     } else {
@@ -5141,19 +5152,19 @@
                     }
 
 
-                }, function(bad) {
+                }, function (bad) {
                     console.log("Some error getting loading script:" + bad);
                     instantMessage("Load Script", "Exception  loading:" + bad, 5000, false);
 
                 });
             });
         } else {
-            serveList.forEach(function(elem) {
-                jchaos.rmtUploadScript(elem + ":8071", jsonscript, function(r) {
+            serveList.forEach(function (elem) {
+                jchaos.rmtUploadScript(elem + ":8071", jsonscript, function (r) {
 
                     console.log("Script loaded onto:" + elem + " :" + JSON.stringify(r));
 
-                }, function(bad) {
+                }, function (bad) {
                     console.log("Some error getting loading script:" + bad);
                 });
             });
@@ -5172,7 +5183,7 @@
         $("#" + graph_table_name).find("tr:gt(0)").remove();
         highchartOpt['chart']['height'] = (1 / (num_chart) * 100) + '%';
         highchartOpt['chart']['width'] = (hostWidth / (num_chart + 1));
-        culist.forEach(function(key) {
+        culist.forEach(function (key) {
             var encoden = jchaos.encodeName(key);
             if ((cnt % num_chart) == 0) {
                 if (cnt > 0) {
@@ -5187,7 +5198,7 @@
         if (cnt > 0) {
             html += "</tr>";
             $("#" + graph_table_name).append(html);
-            culist.forEach(function(key) {
+            culist.forEach(function (key) {
                 var encoden = jchaos.encodeName(key);
                 highchartOpt.title.text = key;
 
@@ -5200,10 +5211,10 @@
     }
 
     function runScript(name, parm) {
-        jchaos.runScript(name, parm, function(ok) {
+        jchaos.runScript(name, parm, function (ok) {
             instantMessage("runScript:" + JSON.stringify(ok), 2000, true);
 
-        }, function(bad) {
+        }, function (bad) {
             instantMessage("runScript:" + bad, 2000, false);
 
         });
@@ -5363,7 +5374,7 @@
 
         }
 
-        $("#main_table-" + template + " tbody tr").click(function(e) {
+        $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
         n = $('#main_table-' + template + ' tr').size();
@@ -5376,7 +5387,7 @@
 
         $.contextMenu({
             selector: '.processMenu',
-            build: function($trigger, e) {
+            build: function ($trigger, e) {
                 var template = tmpObj.type;
 
                 var cuitem = updateProcessMenu(tmpObj, $(e.currentTarget));
@@ -5385,14 +5396,14 @@
 
                 cuitem['quit'] = {
                     name: "Quit",
-                    icon: function() {
+                    icon: function () {
                         return 'context-menu-icon context-menu-icon-quit';
                     }
                 };
 
                 return {
 
-                    callback: function(cmd, options) {
+                    callback: function (cmd, options) {
                         executeProcessMenuCmd(tmpObj, cmd, options);
                         return;
                     },
@@ -5405,19 +5416,19 @@
         actionJsonEditor(tmpObj);
         $("#script-delete").off('click');
 
-        $("#script-delete").on('click', function() {
+        $("#script-delete").on('click', function () {
             console.log("delete " + tmpObj.node_selected);
-            jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function(data) {
+            jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function (data) {
                 instantMessage("Remove Script", "removed:" + tmpObj.node_selected, 2000, true);
                 updateScriptModal(tmpObj);
 
             });
         });
         $("#script-edit").off('click');
-        $("#script-edit").on('click', function() {
+        $("#script-edit").on('click', function () {
             console.log("show " + tmpObj.node_selected);
 
-            jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function(data) {
+            jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
                 var templ = {
                     $ref: "algo.json",
                     format: "tabs"
@@ -5431,24 +5442,24 @@
                 data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
                 jsonEditWindow(tmpObj.node_selected, templ, data, algoSave, tmpObj);
 
-            }, function(data) {
+            }, function (data) {
                 instantMessage("Load Script", "failed:" + JSON.stringify(data), 4000, false);
             });
 
         });
         $("#script-run").off('click');
-        $("#script-run").on('click', function() {
+        $("#script-run").on('click', function () {
             $("#mdl-script").modal("hide");
-            jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function(data) {
+            jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
                 var defargs = data['default_argument']
-                getEntryWindow(data['script_name'], "Additional args", defargs, "Run", function(parm) {
+                getEntryWindow(data['script_name'], "Additional args", defargs, "Run", function (parm) {
                     runScript(tmpObj.node_selected, parm);
                 }, "Cancel");
             });
         });
         $("#script-save").off('click');
-        $("#script-save").on('click', function() {
-            jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function(data) {
+        $("#script-save").on('click', function () {
+            jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
 
                 var obj = atob(data['eudk_script_content']);
                 var blob = new Blob([obj], { type: "json;charset=utf-8" });
@@ -5457,14 +5468,14 @@
 
         });
         $("#script-load").off('click');
-        $("#script-load").on('click', function() {
+        $("#script-load").on('click', function () {
             $("#mdl-script").modal("hide");
             algoLoadFromFile(tmpObj);
             tmpObj.node_selected = null;
 
         });
         $("#script-close").off('click');
-        $("#script-close").on('click', function() {
+        $("#script-close").on('click', function () {
             $("#mdl-script").modal("hide");
             tmpObj.node_selected = null;
         });
@@ -5472,7 +5483,7 @@
     }
 
     function updateProcess(tmpObj) {
-        updateProcessList(tmpObj, function(t) {
+        updateProcessList(tmpObj, function (t) {
             var new_ele;
             var old_ele;
             if (t['elems'] instanceof Array) {
@@ -5498,7 +5509,7 @@
         }
         var ag = tmpObj['agent_list'];
 
-        jchaos.getAllProcessInfo(ag, function(pl) {
+        jchaos.getAllProcessInfo(ag, function (pl) {
             tmpObj['data'] = pl['data'];
             tmpObj['elems'] = pl['elems'];
             tmpObj['agents'] = pl['agents'];
@@ -5543,18 +5554,38 @@
         var interface = $("#classe option:selected").val();
         var element_selected = $("#elements option:selected").val();
         var zone_selected = $("#zones option:selected").val();
+
+        dashboard_settings['last_alive'] = alive;
+        dashboard_settings['last_interface'] = interface;
+        dashboard_settings['last_group'] = element_selected;
+        dashboard_settings['last_zone'] = zone_selected;
+        localStorage['chaos_dashboard_settings'] = JSON.stringify(dashboard_settings);
+
         var search_string = "";
+        if ((typeof GetURLParameter('ALIVE') === "string") && (GetURLParameter('ALIVE') != "")) {
+            alive = GetURLParameter('ALIVE');
+        }
+
         if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
             search_string = zone_selected;
         }
         if ((typeof element_selected !== "undefined") && (element_selected != "ALL") && (element_selected != "--Select--")) {
             search_string += "/" + element_selected;
         }
-        if ($("#search-chaos").val() != null && $("#search-chaos").val().length > 0) {
+        if ((typeof GetURLParameter('SEARCH') === "string") && (GetURLParameter('SEARCH') != "")) {
             if (search_string.length > 0) {
-                search_string += "/" + $("#search-chaos").val();
+                search_string += "/" + GetURLParameter('SEARCH');
             } else {
-                search_string += $("#search-chaos").val();
+                search_string += GetURLParameter('SEARCH');
+            }
+            $("#search-chaos").val(GetURLParameter('SEARCH'));
+        } else {
+            if ($("#search-chaos").val() != null && $("#search-chaos").val().length > 0) {
+                if (search_string.length > 0) {
+                    search_string += "/" + $("#search-chaos").val();
+                } else {
+                    search_string += $("#search-chaos").val();
+                }
             }
         }
 
@@ -5562,7 +5593,8 @@
         if (interface != "--Select--" && interface != "ALL") {
             sopt['impl'] = implementation_map[interface];
         }
-        jchaos.search(search_string, what, (alive == "true"), sopt, function(list_cu) {
+
+        jchaos.search(search_string, what, (alive == "true"), sopt, function (list_cu) {
             var search_query = {
                 search: search_string,
                 type: "cu",
@@ -5587,26 +5619,24 @@
         if ($radio.is(":checked") === false) {
             $radio.filter("[value=true]").prop('checked', true);
         }
-        jchaos.search("", "zone", true, function(zones) {
-            element_sel('#zones', zones, 1);
-        }, function(error) {
-            stateOutput(error, true);
-        });
+        var zones = jchaos.search("", "zone", true);
+        element_sel('#zones', zones, 1);
 
-        $("#zones").click(function() {
+
+        $("#zones").click(function () {
             if ($("#zones option").length == 0) {
-                jchaos.search("", "zone", true, function(zones) {
+                jchaos.search("", "zone", true, function (zones) {
                     element_sel('#zones', zones, 1);
-                }, function(error) {
+                }, function (error) {
                     stateOutput(error, true);
                 });
             }
         });
         element_sel('#classe', classe, 1);
-        $("#zones").change(function() {
+
+        $("#zones").change(function () {
             var zone_selected;
             var zone_selected = $("#zones option:selected").val();
-
             $("#search-chaos").val("");
 
             if (zone_selected == "--Select--") { //Disabilito la select dei magneti se non � selezionata la zona
@@ -5616,13 +5646,13 @@
             }
             if (zone_selected == "ALL") {
                 var alive = $("[input=search-alive]:checked").val()
-                jchaos.search(search_string, "class", (alive == "true"), function(ll) {
+                jchaos.search(search_string, "class", (alive == "true"), function (ll) {
                     element_sel('#elements', ll, 1);
                 });
 
             } else {
 
-                jchaos.search(zone_selected, "class", true, function(ll) {
+                jchaos.search(zone_selected, "class", true, function (ll) {
                     element_sel('#elements', ll, 1);
                 });
             }
@@ -5630,7 +5660,7 @@
 
 
             //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-            $(".previous_page").click(function(e) {
+            $(".previous_page").click(function (e) {
                 if (!dashboard_settings.hasOwnProperty('current_page')) {
                     dashboard_settings['current_page'] = 0;
                 }
@@ -5644,7 +5674,7 @@
                 }
 
             });
-            $(".next_page").click(function(e) {
+            $(".next_page").click(function (e) {
                 if (!dashboard_settings.hasOwnProperty('current_page')) {
                     dashboard_settings['current_page'] = 0;
                 }
@@ -5660,7 +5690,7 @@
             });
         });
 
-        $("#elements").change(function() {
+        $("#elements").change(function () {
             var element_selected = $("#elements option:selected").val();
             var zone_selected = $("#zones option:selected").val();
             $("#search-chaos").val("");
@@ -5677,14 +5707,14 @@
             buildInterfaceFromPagedSearch(tmpObj, "cu");
 
         });
-        $("#classe").change(function() {
+        $("#classe").change(function () {
             dashboard_settings.current_page = 0;
             $("#search-chaos").val("");
             buildInterfaceFromPagedSearch(tmpObj, "cu");
 
 
         });
-        $("#search-chaos").keypress(function(e) {
+        $("#search-chaos").keypress(function (e) {
             if (e.keyCode == 13) {
                 search_string = $(this).val();
                 dashboard_settings.current_page = 0;
@@ -5695,13 +5725,63 @@
             //var tt =prompt('type value');
         });
 
-        $("input[type=radio][name=search-alive]").change(function(e) {
+        $("input[type=radio][name=search-alive]").change(function (e) {
             dashboard_settings.current_page = 0;
 
             buildInterfaceFromPagedSearch(tmpObj, "cu");
 
         });
+        var defzone = "";
+        var defgroup = "";
+        var definterface = "";
+        if ((typeof GetURLParameter('ZONE') === "string") && (GetURLParameter('ZONE') != "")) {
+            defzone = GetURLParameter('ZONE');
+        } else {
+            if (dashboard_settings.hasOwnProperty("defaultZone") && (dashboard_settings.defaultZone != "") && (dashboard_settings.defaultZone != "ALL")) {
+                defzone = dashboard_settings.defaultZone;
+            } else if (dashboard_settings.hasOwnProperty("last_zone") && (dashboard_settings.last_zone != "")) {
+                defzone = dashboard_settings.last_zone;
+            }
+        }
+        if ((typeof GetURLParameter('GROUP') === "string") && (GetURLParameter('GROUP') != "")) {
+            defgroup = GetURLParameter('GROUP');
+        } else {
+            if (dashboard_settings.hasOwnProperty("defaultGroup") && (dashboard_settings.defaultGroup != "")) {
+                defgroup = dashboard_settings.defaultGroup;
+            } else if (dashboard_settings.hasOwnProperty("last_group") && (dashboard_settings.last_group != "")) {
+                defgroup = dashboard_settings.last_group;
+            }
+        }
+        if ((typeof GetURLParameter('CLASS') === "string") && (GetURLParameter('CLASS') != "")) {
+            definterface = GetURLParameter('CLASS');
+        } else {
+            if (dashboard_settings.hasOwnProperty("defaultInterface") && (dashboard_settings.defaultInterface != "")) {
+                definterface = dashboard_settings.defaultInterface;
+            } else if (dashboard_settings.hasOwnProperty("last_interface") && (dashboard_settings.last_interface != "")) {
+                definterface = dashboard_settings.last_interface;
+            }
+        }
+        if (defzone != "") {
+            $("#zones option[value=\"" + defzone + "\"]").prop('selected', true);
+            //$("#zones").val(defzone);
 
+        }
+        if (defgroup != "") {
+            var cl = jchaos.search((defzone == "ALL") ? "" : defzone, "class", true);
+
+            element_sel('#elements', cl, 1);
+
+            $("#elements option[value=\"" + defgroup + "\"]").prop('selected', true);
+        }
+        if (definterface != "") {
+            $("#classe option[value=\"" + definterface + "\"]").prop('selected', true);
+            $("#classe").val(definterface);
+
+        }
+        if (defzone != "" || defgroup != "" || definterface != "") {
+            buildInterfaceFromPagedSearch(tmpObj, "cu");
+
+        }
 
     }
 
@@ -5721,7 +5801,7 @@
         }
         if ((inter == "ALL") || (inter == "--Select--")) {
             search_query['type'] = "server";
-            jchaos.search(search_string, "server", (alive == "true"), sopt, function(node) {
+            jchaos.search(search_string, "server", (alive == "true"), sopt, function (node) {
                 dashboard_settings['pages'] = node.pages;
                 tempObj['search_query'] = search_query;
                 tempObj.type = "ALL";
@@ -5734,7 +5814,7 @@
         } else {
             tempObj.type = inter;
             jchaos.search(search_string, inter, (alive == "true"), sopt,
-                function(list) {
+                function (list) {
                     dashboard_settings['pages'] = list.pages;
                     tempObj['search_query'] = search_query;
                     $(".pageindex").css("visibility", "visible");
@@ -5745,7 +5825,8 @@
 
         }
         if (inter == "eu") {
-            jchaos.variable("eu", "get", function(eu_process) {;
+            jchaos.variable("eu", "get", function (eu_process) {
+                ;
                 for (var g in eu_process) {
                     if (search_string != "") {
                         if (g.indexOf(search_string)) {
@@ -5768,7 +5849,7 @@
         //  var interface=$("#classe option:selected").val();
         var algo_instance = ($("input[type=radio][name=search-algo]:checked").val() == "true");
         if (algo_instance) {
-            jchaos.search(search_string, "script", true, function(list_algo) {
+            jchaos.search(search_string, "script", true, function (list_algo) {
                 buildAlgoInterface(list_algo, interface, template);
 
             });
@@ -5781,7 +5862,7 @@
                 alert("Please select an algorithm before");
                 return;
             }
-            jchaos.searchScriptInstance(node_selected, search_string, function(list_instances) {
+            jchaos.searchScriptInstance(node_selected, search_string, function (list_instances) {
 
                 buildAlgoInterface(list_instances, "algo-instance", template);
 
@@ -5820,17 +5901,17 @@
         /*  $("#classe").change(function () {
             rebuildAlgoInterface(template);
           });*/
-        $("#search-chaos").keypress(function(e) {
+        $("#search-chaos").keypress(function (e) {
             if (e.keyCode == 13) {
                 algos_names = [];
                 algos = [];
-                jchaos.search(search_string, "script", true, function(list_algo) {
+                jchaos.search(search_string, "script", true, function (list_algo) {
                     for (var key in list_algo) {
                         if (list_algo[key] instanceof Array) {
                             algos = algos.concat(list_algo[key]);
                         }
                     }
-                    algos.forEach(function(elem) {
+                    algos.forEach(function (elem) {
                         if (elem.hasOwnProperty("script_name")) {
                             algos_names.push(elem.script_name)
                         }
@@ -5843,7 +5924,7 @@
             //var tt =prompt('type value');
         });
 
-        $("input[type=radio][name=search-alive]").change(function(e) {
+        $("input[type=radio][name=search-alive]").change(function (e) {
             rebuildAlgoInterface(template);
 
         });
@@ -5906,7 +5987,10 @@
 
     /********************* */
     function generateGenericTable(tmpObj) {
-        var cu = tmpObj.elems;
+        var cu = [];
+        if (tmpObj['elems'] instanceof Array) {
+            cu = tmpObj.elems;
+        }
         var template = tmpObj.type;
         var html = '<div class="row-fluid" z-index=-1 id="table-space">';
         html += '<div class="box span12">';
@@ -5934,7 +6018,7 @@
 
 
         html += '</thead> ';
-        $(cu).each(function(i) {
+        $(cu).each(function (i) {
             var cuname = jchaos.encodeName(cu[i]);
             html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
             html += "<td class='name_element'>" + cu[i] + "</td>";
@@ -5963,7 +6047,7 @@
     }
 
 
-    jqccs.updateGenericTableDataset = function(tmpObj) {
+    jqccs.updateGenericTableDataset = function (tmpObj) {
         return updateGenericTableDataset(tmpObj);
     }
 
@@ -5978,7 +6062,7 @@
 
 
         $("a.device-alarm").off();
-        $("a.device-alarm").click(function(e) {
+        $("a.device-alarm").click(function (e) {
             //var id = $(this).attr("cuname");
             //show_dev_alarm(id);
             //var node=tmpObj.node_selected;
@@ -5992,7 +6076,7 @@
             }
         });
         $("a.cu-alarm").off();
-        $("a.cu-alarm").click(function(e) {
+        $("a.cu-alarm").click(function (e) {
 
             //      var node=tmpObj.node_selected;
             var node = $(this).attr("cuname");
@@ -6005,489 +6089,17 @@
         });
     }
 
-    function generateBPMTable(tmpObj) {
-        var cu = tmpObj.elems;
-        var template = tmpObj.type;
-
-        var html = '<table class="table table-bordered" id="graph_table_BPM">';
-        html += '</table>';
-
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
-        html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
-        html += '<thead class="box-header">';
-        html += '<tr>';
-        html += '<th>Element</th>';
-        html += '<th colspan="3">Status</th>';
-        html += '<th>X</th>';
-        html += '<th>Y</th>';
-        html += '<th>VA</th>';
-        html += '<th>VB</th>';
-        html += '<th>VC</th>';
-        html += '<th>VD</th>';
-        html += '<th>SUM</th>';
-        html += '<th colspan="2">Samples/Trigger</th>';
-        html += '<th colspan="2">Alarms dev/cu</th>';
-        html += '</tr>';
-        html += '</thead>';
 
 
-        $(cu).each(function(i) {
-            var cuname = jchaos.encodeName(cu[i]);
-            html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-            html += "<td class='td_element td_name'>" + cu[i] + "</td>";
-            html += "<td id='" + cuname + "_health_status'></td>";
-            html += "<td id='" + cuname + "_system_busy'></td>";
-            html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-            html += "<td title='Calculated X position' id='" + cuname + "_output_X'></td>";
-            html += "<td title='Calculated Y position' id='" + cuname + "_output_Y'></td>";
-            html += "<td title='VA' id='" + cuname + "_output_VA'></td>";
-            html += "<td title='VB' id='" + cuname + "_output_VB'></td>";
-            html += "<td title='VC' id='" + cuname + "_output_VC'></td>";
-            html += "<td title='VD' id='" + cuname + "_output_VD'></td>";
-            html += "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
-            html += "<td title='Samples' id='" + cuname + "_input_SAMPLES'></td>";
-            html += "<td title='Trigger' id='" + cuname + "_input_TRIGGER'></td>";
 
-            html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
-            html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
-
-        });
-
-        html += '</table>';
-        html += '</div>';
-        html += '</div>';
-
-        html += '</div>';
-
-        return html;
-    }
-
-    function generateBPMCmd() {
-        var html = '<div class="row-fluid">';
-        html += '<div class="box span12 box-cmd">';
-        html += '<div class="box-header green">';
-        html += '<h3 id="h3-cmd">Commands</h3>';
-        html += '</div>';
-        html += '<div class="box-content">';
-        html += '<div class="span12 statbox">';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
-        html += '<i class="material-icons verde">trending_down</i>';
-        html += '<p class="name-cmd">SlowAcquisition</p>';
-        html += '</a>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_da"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":1,\"loops\":-1,\"samples\":1024}>';
-        html += '<i class="material-icons verde">trending_up</i>';
-        html += '<p class="name-cmd">DataOnDemand</p>';
-        html += '</a>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_tda"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":257,\"loops\":-1,\"samples\":1024}>';
-        html += '<i class="material-icons verde">timer</i>';
-        html += '<p class="name-cmd">DataOnDemand (Triggered)</p>';
-        html += '</a>';
-        html += "<div class='span3 statbox'>";
-        html += "<h3>Samples</h3>";
-        html += "<input type='number' id='acquire_samples'>";
-        html += "</div>";
-
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_stop"  cucmdid="cu_clear_current_cmd" >';
-        html += '<i class="material-icons rosso">pause_circle_outline</i>';
-        html += '<p class="name-cmd">Stop Acquisition</p>';
-        html += '</a>';
-
-
-        html += '</div>';
-        html += '<div class="span12 statbox">';
-        html += '<textarea class="form-control" rows="5" id="BPM_STATUS"></textarea>';
-
-        //html += '<p id="BPM_STATUS"/>';    
-        html += '</div>';
-
-        html += '</div>';
-
-        html += '</div>';
-        html += '</div>';
-
-        html += '</div>';
-
-        return html;
-    }
 
     function generateScraperTable(tmpObj) {
 
     }
 
-    function updateBPM(tmpObj) {
-        var cu = tmpObj.data;
-        if (JSON.stringify(tmpObj['elems']) !== JSON.stringify(tmpObj['old_elems'])) {
-            var chart_options = {
-                maxpoints: 10,
-                npoints: 0,
-                chart: {
-
-                },
-                title: {
-                    text: ''
-                },
-
-                xAxis: {
-                    type: "datetime",
-                    title: {
-                        text: 'Time'
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: 'V'
-                    }
-
-                },
-                legend: {
-                    layout: 'vertical',
-                    align: 'right',
-                    verticalAlign: 'middle'
-                },
-
-                plotOptions: {
-                    series: {
-                        label: {
-                            connectorAllowed: false
-                        },
-                    }
-                },
-                series: [{
-                    name: 'VA',
-                    data: []
-                }, {
-                    name: 'VB',
-                    data: []
-                }, {
-                    name: 'VC',
-                    data: []
-                }, {
-                    name: 'VD',
-                    data: []
-                }, {
-                    name: 'SUM',
-                    data: []
-                }]
-            };
-            makeDynamicGraphTable(tmpObj, "graph_table_BPM", chart_options, tmpObj['elems']);
-            tmpObj['old_elems'] = tmpObj['elems'];
-        }
-        var now = (new Date()).getTime();
-        updateGenericTableDataset(tmpObj);
-
-        cu.forEach(function(elem) {
-            if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) { //if el health
-
-                var cuname = jchaos.encodeName(elem.health.ndk_uid);
-                if ((tmpObj.node_selected != null) && (elem.health.ndk_uid == tmpObj.node_selected)) {
-                    $("#BPM_STATUS").html(elem.output.STATUS);
-                }
-                $("#" + cuname + "_output_X").html(elem.output.X.toFixed(3));
-                $("#" + cuname + "_output_Y").html(elem.output.Y.toFixed(3));
-                $("#" + cuname + "_output_VA").html(elem.output.VA);
-                $("#" + cuname + "_output_VB").html(elem.output.VB);
-                $("#" + cuname + "_output_VC").html(elem.output.VC);
-                $("#" + cuname + "_output_VD").html(elem.output.VD);
-                $("#" + cuname + "_output_SUM").html(elem.output.SUM);
-                $("#" + cuname + "_input_SAMPLES").html(elem.input.SAMPLES);
-                if (elem.input.TRIGGER) {
-                    $("#" + cuname + "_input_TRIGGER").html("Triggered");
-                } else {
-                    $("#" + cuname + "_input_TRIGGER").html("No Trigger");
-                }
-                if (tmpObj.hasOwnProperty("graph_table_BPM")) {
-                    var chart = tmpObj['graph_table_BPM'][cuname];
-                    if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
-                        var shift = false;
-                        if (tmpObj['graph_table_BPM'][cuname].options.npoints > tmpObj['graph_table_BPM'][cuname].options.maxpoints) {
-                            shift = true;
-                        }
-                        tmpObj['graph_table_BPM'][cuname].options.npoints++;
-                        if ((elem.output.MODE & 0x1) && (elem.output.hasOwnProperty("SUM_ACQ"))) {
-                            var arrv = [];
-                            arrv[0] = convertBinaryToArrays(elem.output.VA_ACQ);
-                            arrv[1] = convertBinaryToArrays(elem.output.VB_ACQ);
-                            arrv[2] = convertBinaryToArrays(elem.output.VC_ACQ);
-                            arrv[3] = convertBinaryToArrays(elem.output.VD_ACQ);
-                            arrv[4] = convertBinaryToArrays(elem.output.SUM_ACQ);
-                            for (var i = 0; i < 5; i++) {
-                                if (arrv[i] instanceof Array) {
-                                    var setp = []
-                                    arrv[i].forEach(function(elem, n) {
-                                        setp.push([now + n, elem]);
-
-                                    });
-                                    chart.series[i].setData(setp, true, true, true);
-                                }
-                            }
-                        } else {
-                            chart.series[0].addPoint([now, elem.output.VA], false, shift);
-                            chart.series[1].addPoint([now, elem.output.VB], false, shift);
-                            chart.series[2].addPoint([now, elem.output.VC], false, shift);
-                            chart.series[3].addPoint([now, elem.output.VD], false, shift);
-                            chart.series[3].addPoint([now, elem.output.SUM], false, shift);
-                        }
-                        chart.redraw();
-
-                    }
-
-                }
-            }
-        });
 
 
 
-    }
-
-    function updateScraper(tmpObj) {
-        var cu = tmpObj.data;
-
-        cu.forEach(function(elem) {
-            if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) { //if el health
-
-                var cuname = jchaos.encodeName(elem.health.ndk_uid);
-
-                $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
-                if (elem.output.hasOwnProperty("POI")) {
-                    $("#" + cuname + "_output_poi").html(elem.output.POI);
-                }
-                $("#" + cuname + "_input_position").html(elem.input.position.toFixed(3));
-                if (elem.input.hasOwnProperty("POI")) {
-                    $("#" + cuname + "_input_poi").html(elem.input.POI);
-                }
-                /* switch (elem.output.polarity) {
-           case 1:
-             $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
-             break;
-           case -1:
-             $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
-             break;
-           case 0:
-             $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
-             break;
- 
-         }*/
-
-                if (elem.output.home) {
-                    $("#" + cuname + "_flag_home").html();
-                } else {
-                    $("#" + cuname + "_flag_home").html('');
-
-                }
-                if (elem.output.powerOn) {
-                    $("#" + cuname + "_flag_output_status").html('<i class="material-icons verde">trending_down</i>');
-
-                } else {
-                    $("#" + cuname + "_flag_output_status").html('<i class="material-icons rosso">pause_circle_outline</i>');
-
-                }
-                if (elem.output.NegativeLimitSwitchActive) {
-                    $("#" + cuname + "_flag_out").html('<i id="out_icon_' + cuname + '" class="icon-caret-left verde"></i>');
-                } else {
-                    $("#" + cuname + "_flag_out").html('');
-                }
-
-
-                if (elem.output.PositiveLimitSwitchActive) {
-                    $("#" + cuname + "_flag_in").html('<i id="in_icon_' + cuname + '" class="icon-caret-right verde"></i>');
-                } else {
-                    $("#" + cuname + "_flag_in").html('');
-                }
-
-            }
-            if (elem.health.ndk_uid == tmpObj.node_selected) {
-                if (elem.hasOwnProperty('custom')) {
-                    if (elem.custom.hasOwnProperty('cudk_load_param')) {
-                        if (elem.custom.cudk_load_param.hasOwnProperty('poi')) {
-                            $("#mov_abs_poi").empty();
-                            for (var i in elem.custom.cudk_load_param.poi) {
-                                $("#mov_abs_poi").append("<option value='" + elem.custom.cudk_load_param.poi[i] + "'>" + i + "</option>");
-
-                            }
-                        }
-                    }
-                }
-                if (elem.output.powerOn) {
-
-                    $("#scraper_setPoweron").prop('disabled', true);
-                    $("#scraper_setPoweroff").prop('disabled', false);
-                    //   $("#scraper_setPoweron").childen().remove();
-                    //html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
-                    //html += '<i class="material-icons green">trending_down</i>';
-                    //html += '<p class="name-cmd">OFF</p>';
-                    //html += '</a>';
-                    //$("#scraper_setPoweron").html(html);
-                } else {
-                    // $("#scraper_setPoweron").childen().remove();
-                    $("#scraper_setPoweron").prop('disabled', false);
-                    $("#scraper_setPoweroff").prop('disabled', true);
-
-                }
-            }
-        });
-
-        updateGenericTableDataset(tmpObj);
-
-
-    }
-
-    function generateScraperCmd(tmpObj) {
-
-    }
-
-    function generateCameraCmd(tmpObj) {
-        var html = '<div class="row-fluid">';
-        html += '<div class="box span12 box-cmd">';
-        html += '<div>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
-        html += '<i class="material-icons rosso">error</i>';
-        html += '<p class="name-cmd">Reset</p>';
-        html += '</a>';
-        html += '<div class="span2" id="input-value">';
-        html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="1">';
-        html += '</div>';
-        html += '<div class="span2" id="input-value">';
-        html += '<select class="input" id="mov_abs_poi"></select>';
-        html += '</div>';
-        html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
-        html += '<p>Set Absolute</p>';
-        html += '</a>';
-
-        html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
-        html += '<i class="material-icons green">trending_down</i>';
-        html += '<p class="name-cmd">ON</p>';
-        html += '</a>';
-        html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
-        html += '<i class="material-icons rosso">cancel</i>';
-        html += '<p class="name-cmd">STOP</p>';
-        html += '</a>';
-
-        html += '</div>';
-        html += '<div class="span12 statbox" style="margin-left:0">';
-        html += '<a class="quick-button-small span1 btn-cmd offset0 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
-        html += '<i class="icon-angle-left"></i>';
-        html += '<p class="name-cmd">In</p>';
-        html += '</a>';
-        // in case of cucmdvalue = null, a item named 'cucmd'_<commandparam>
-        html += '<div class="span3" id="input-value-due">';
-        html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value=1>';
-        html += '</div>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
-        html += '<i class="icon-angle-right"></i>';
-        html += '<p class="name-cmd">Out</p>';
-        html += '</a>';
-
-        html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweroff" cucmdid="poweron" cucmdvalue={\"on\":0}>';
-        html += '<i class="material-icons red">pause</i>';
-        html += '<p class="name-cmd">OFF</p>';
-        html += '</a>';
-        html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd cucmd" cucmdid="homing" cucmdvalue=1>';
-        html += '<i class="icon-home"></i>';
-        html += '<p class="name-cmd">Homing</p>';
-        html += '</a>';
-
-
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-        if (tmpObj.hasOwnProperty('elems')) {
-            jchaos.getChannel(tmpObj.elems, 2, function(customs) {
-                customs.forEach(function(custom) {
-                    var name = jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
-                    $("#" + name).hide();
-                    if (custom.hasOwnProperty('cudk_load_param') && custom.cudk_load_param.hasOwnProperty('poi')) {
-                        var name = jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
-                        $("#" + name).show();
-                        $("#" + name).empty();
-                        for (var i in custom.cudk_load_param.poi) {
-                            $("#" + name).append("<option value='" + custom.cudk_load_param.poi[i] + "'>" + i + "</option>");
-
-                        }
-                        $("#" + name).on("click", function(s) {
-
-                            var cuname = $(this).attr('name');
-                            var poiv = $(this).find("option:selected").text();
-                            var param = {
-                                poi: poiv
-                            }
-
-                            jchaos.sendCUCmd(cuname, "mov_abs", param, function(d) {
-
-                                instantMessage(cuname, "Move to:" + poiv, 1000, true)
-                            }, function(d) {
-                                instantMessage(cuname, "ERROR OCCURRED:" + d, 2000, 350, 400, false);
-
-                            });
-                        })
-
-
-                    }
-                });
-            });
-        };
-
-
-
-        return html;
-    }
-
-    function generatePStable(tmpObj) {
-        var cu = tmpObj.elems;
-        var template = tmpObj.type;
-        var html = '<div class="row-fluid">';
-        html += '<div class="box span12">';
-        html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
-        html += '<thead class="box-header">';
-        html += '<tr>';
-        html += '<th>Element</th>';
-        html += '<th>Status</th>';
-        html += '<th>Readout [A]</th>';
-        html += '<th>Setting [A]</th>';
-        html += '<th colspan="3">Saved</th>';
-        html += '<th colspan="7">Flags</th>';
-        html += '</tr>';
-        html += '</thead>';
-
-        $(cu).each(function(i) {
-            var cuname = jchaos.encodeName(cu[i]);
-            html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-            html += "<td class='td_element td_name'>" + cu[i] + "</td>";
-            html += "<td id='" + cuname + "_health_status'></td>";
-            html += "<td title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
-            html += "<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
-            html += "<td class='td_element' title='Restore setpoint current'  id='" + cuname + "_input_saved_current'></td>";
-            html += "<td class='td_element' title='Restore Stanby/Operational' id='" + cuname + "_input_saved_stby'></td>";
-            html += "<td class='td_element' title='Restore setpoint polarity' id='" + cuname + "_input_saved_polarity'></td>";
-            html += "<td class='td_element' id='" + cuname + "_output_stby'></td>";
-            html += "<td class='td_element' id='" + cuname + "_output_polarity'></td>";
-            html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-            html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
-            html += "<td class='td_element' id='" + cuname + "_system_busy'></td>";
-            html += "<td class='td_element' title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-            html += "<td class='td_element' title='Device alarms' id='" + cuname + "_system_device_alarm'></td></tr>";
-        });
-        html += '</table>';
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-
-        return html;
-    }
-
-    function updateCameraProperties(propname, json) {
-        if (json.input.hasOwnProperty(propname)) {
-            $("#image-" + propname + "_SET").val(json.input[propname]);
-            //   $("#slider-"+propname).val(json.input[propname]);
-        }
-        if (json.output.hasOwnProperty(propname)) {
-            $("#image-" + propname + "_READOUT").val(json.output[propname]);
-
-        }
-    }
 
     function notSelectedElems(tmpObj) {
         var ret = [];
@@ -6495,7 +6107,7 @@
             return tmpObj['elems'];
         }
 
-        tmpObj['elems'].forEach(function(g) {
+        tmpObj['elems'].forEach(function (g) {
             if (!tmpObj.node_multi_selected.includes(g)) {
                 ret.push(g);
             }
@@ -6509,7 +6121,7 @@
             return;
         }
         var cu = tmpObj.data;
-        cu.forEach(function(el) {
+        cu.forEach(function (el) {
             try {
                 var name_device_db, name_id;
                 var status;
@@ -6561,7 +6173,7 @@
                         //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
                         $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
                         $("#Error-" + name_id).off('click');
-                        $("#Error-" + name_id).on("click", function() {
+                        $("#Error-" + name_id).on("click", function () {
                             $("#name-FE-device").html(el.health.ndk_uid);
                             $("#status_message").html(status);
 
@@ -6682,7 +6294,7 @@
                         }
                     }
                 }
-                for (var dstype of["output", "input", "custom"]) {
+                for (var dstype of ["output", "input", "custom"]) {
                     if (el.hasOwnProperty(dstype) && (el[dstype].hasOwnProperty("ndk_uid"))) {
                         name_device_db = el[dstype].ndk_uid;
                         name_id = jchaos.encodeName(name_device_db);
@@ -7157,14 +6769,14 @@
         };
         query_opt['reduction'] = autoreduction;
         query_opt['count'] = 0;
-        graph_opt.culist.forEach(function(item) {
+        graph_opt.culist.forEach(function (item) {
             projections[item] = {
                 0: ["dpck_ats"],
                 1: ["dpck_ats"],
                 4: ["dpck_ats"]
             }
         });
-        graph_opt.culist.forEach(function(item) {
+        graph_opt.culist.forEach(function (item) {
             for (k in tr) {
                 if (tr[k].x.cu === item) {
                     dirlist[tr[k].x.dir] = dir2channel(tr[k].x.dir);
@@ -7199,7 +6811,7 @@
                     for (var start_chunk = start; start_chunk < stop; start_chunk += chunk) {
                         var stop_chunk = ((start_chunk + chunk) > stop) ? stop : (start_chunk + chunk);
                         query_opt['projection'] = projections[item][dirlist[dir]];
-                        jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", function(data) {
+                        jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", function (data) {
 
                             for (k in tr) {
                                 var trname = tr[k].name;
@@ -7216,7 +6828,7 @@
                                             $("#info-download-" + gname).html(items).css('color', 'green');
                                         }
 
-                                        data.Y.forEach(function(ds) {
+                                        data.Y.forEach(function (ds) {
                                             if (tr[k].x.index != null && tr[k].x.index != "-1") {
                                                 var tmp = Number(ds[variable]);
                                                 histdataset[trname].x.push(tmp[tr[k].x.index]);
@@ -7242,7 +6854,7 @@
                                             $("#info-download-" + gname).html(items).css('color', 'green');
                                         }
 
-                                        data.Y.forEach(function(ds) {
+                                        data.Y.forEach(function (ds) {
                                             if (tr[k].y.index != null && tr[k].y.index != "-1") {
                                                 var tmp = ds[variable];
                                                 histdataset[trname].y.push(Number(tmp[tr[k].y.index]));
@@ -7278,7 +6890,7 @@
             // no correlation simple plot
             var targetDate = new Date();
             var time_off = (targetDate.getTimezoneOffset() * 60 * 1000);
-            graph_opt.culist.forEach(function(item) {
+            graph_opt.culist.forEach(function (item) {
                 console.log("to retrive CU:" + item);
 
                 for (var dir in dirlist) {
@@ -7289,18 +6901,18 @@
 
                     query_opt['projection'] = projections[item][dirlist[dir]];
 
-                    var download_handler = function(data) {
+                    var download_handler = function (data) {
                         var dev = data['devs'];
                         var qstop = data['query']['end']
                         var cnt = 0,
                             ele_count = 0;
-                        if (!data.hasOwnProperty("nitems")) {}
+                        if (!data.hasOwnProperty("nitems")) { }
                         for (k in tr) {
                             if (tr[k].y.origin == "histogram") {
                                 if (tr[k].x.cu === dev) {
                                     var variable = tr[k].x.var;
 
-                                    data.Y.forEach(function(ds) {
+                                    data.Y.forEach(function (ds) {
                                         //dataset.push(ds[variable]);
                                         chart.series[cnt + 1].addPoint(ds[variable], false, false);
 
@@ -7322,7 +6934,7 @@
                                     var variable = tr[k].y.var;
                                     var index = tr[k].y.index;
                                     ele_count = 0;
-                                    data.Y.forEach(function(ds) {
+                                    data.Y.forEach(function (ds) {
                                         if (ds.hasOwnProperty(variable)) {
                                             var ts = data.X[ele_count++] - time_off;
                                             var tmp = ds[variable];
@@ -7365,7 +6977,7 @@
                         if (start_chunk < stop) {
                             var stop_chunk = ((start_chunk + chunk) > stop) ? stop : (start_chunk + chunk);
 
-                            jchaos.getHistory(dev, dirlist[dir], start_chunk, stop_chunk, "", download_handler, query_opt, function(err) {
+                            jchaos.getHistory(dev, dirlist[dir], start_chunk, stop_chunk, "", download_handler, query_opt, function (err) {
                                 alert(err);
                             });
 
@@ -7373,7 +6985,7 @@
                         // true until close if false the history loop retrive breaks
                         return true;
                     };
-                    jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", download_handler, query_opt, function(err) {
+                    jchaos.getHistory(item, dirlist[dir], start_chunk, stop_chunk, "", download_handler, query_opt, function (err) {
                         alert(err);
                     });
 
@@ -7431,7 +7043,7 @@
         cb(start, end);
         if (typeof queryfn === "function") {
             $('#reportrange-' + id).off('apply.daterangepicker');
-            $('#reportrange-' + id).on('apply.daterangepicker', function(ev, picker) {
+            $('#reportrange-' + id).on('apply.daterangepicker', function (ev, picker) {
                 queryfn(ev, picker);
 
             });
@@ -7502,7 +7114,7 @@
             width: 'auto',
             resizable: true
         }
-        createCustomDialog(opt, html, "Run", function() {
+        createCustomDialog(opt, html, "Run", function () {
 
             query_params['page'] = Number($("#query-page").val());
             query_params['start'] = Number($("#query-start").val());
@@ -7515,9 +7127,9 @@
 
             querycb(query_params)
 
-        }, "Cancel", null, function() {
+        }, "Cancel", null, function () {
             //open handle
-            initializeTimePicker(function(ev, picker) {
+            initializeTimePicker(function (ev, picker) {
                 //do something, like clearing an input
                 // $('#daterange').val('');
                 var start = new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
@@ -7600,8 +7212,8 @@
             $(html_target).append(html);
         }
         dlg_opt = {
-            open: function() {
-                initializeTimePicker(function(ev, picker) {
+            open: function () {
+                initializeTimePicker(function (ev, picker) {
                     //do something, like clearing an input
                     // $('#daterange').val('');
                     var start = new Date(picker.startDate.format('MMMM D, YYYY HH:mm'));
@@ -7638,259 +7250,259 @@
 
             },
             buttons: [{
-                    text: "Live",
-                    click: function(e) {
+                text: "Live",
+                click: function (e) {
 
-                        console.log("Start  Live Graph:" + gname);
-                        console.log("graph options:" + JSON.stringify(opt));
+                    console.log("Start  Live Graph:" + gname);
+                    console.log("graph options:" + JSON.stringify(opt));
 
-                        if (active_plots[gname].hasOwnProperty('interval')) {
-                            clearInterval(active_plots[gname].interval);
-                            delete active_plots[gname].interval;
-                            $(e.target).html("Continue Live");
-                            return;
-                        }
-                        $(e.target).html("Pause Live");
-                        var chart = active_plots[gname]['graph'];
-                        var seriesLength = chart.series.length;
+                    if (active_plots[gname].hasOwnProperty('interval')) {
+                        clearInterval(active_plots[gname].interval);
+                        delete active_plots[gname].interval;
+                        $(e.target).html("Continue Live");
+                        return;
+                    }
+                    $(e.target).html("Pause Live");
+                    var chart = active_plots[gname]['graph'];
+                    var seriesLength = chart.series.length;
 
-                        for (var i = seriesLength - 1; i > -1; i--) {
-                            chart.series[i].setData([]);
-                        }
-                        var timebuffer = Number(opt.highchart_opt['timebuffer']) * 1000;
-                        active_plots[gname].start_time = (new Date()).getTime();
-                        var refresh = setInterval(function() {
-                            var data = jchaos.getChannel(opt.culist, -1, null);
-                            var set = [];
-                            var x, y;
-                            var cnt = 0;
-                            var tr = opt.trace;
-                            var enable_shift = false;
-                            var targetDate = new Date();
+                    for (var i = seriesLength - 1; i > -1; i--) {
+                        chart.series[i].setData([]);
+                    }
+                    var timebuffer = Number(opt.highchart_opt['timebuffer']) * 1000;
+                    active_plots[gname].start_time = (new Date()).getTime();
+                    var refresh = setInterval(function () {
+                        var data = jchaos.getChannel(opt.culist, -1, null);
+                        var set = [];
+                        var x, y;
+                        var cnt = 0;
+                        var tr = opt.trace;
+                        var enable_shift = false;
+                        var targetDate = new Date();
 
-                            for (k in tr) {
-                                if ((tr[k].x == null)) {
-                                    x = null;
-                                } else if ((tr[k].x.origin == "timestamp")) {
+                        for (k in tr) {
+                            if ((tr[k].x == null)) {
+                                x = null;
+                            } else if ((tr[k].x.origin == "timestamp")) {
 
-                                    x = targetDate.getTime() - (targetDate.getTimezoneOffset() * 60 * 1000); // current time
-                                    if (opt.highchart_opt.shift && ((targetDate.getTime() - active_plots[gname].start_time) > timebuffer)) {
-                                        enable_shift = true;
-                                    }
-                                } else if (tr[k].x.const != null) {
-                                    x = tr[k].x.const;
-                                } else if (tr[k].x.var != null) {
-                                    x = getValueFromCUList(data, tr[k].x);
-
-                                } else {
-                                    x = null;
+                                x = targetDate.getTime() - (targetDate.getTimezoneOffset() * 60 * 1000); // current time
+                                if (opt.highchart_opt.shift && ((targetDate.getTime() - active_plots[gname].start_time) > timebuffer)) {
+                                    enable_shift = true;
                                 }
-                                if ((tr[k].y == null)) {
-                                    y = null;
-                                } else if ((tr[k].y.origin == "timestamp")) {
-                                    y = targetDate.getTime() - (targetDate.getTimezoneOffset() * 60 * 1000);
-                                } else if (tr[k].y.const != null) {
-                                    y = tr[k].y.const;
-                                } else if (tr[k].y.var != null) {
-                                    y = getValueFromCUList(data, tr[k].y);
+                            } else if (tr[k].x.const != null) {
+                                x = tr[k].x.const;
+                            } else if (tr[k].x.var != null) {
+                                x = getValueFromCUList(data, tr[k].x);
 
-                                } else {
-                                    y = null;
-                                }
-                                if (opt.highchart_opt['tracetype'] == "multi") {
-                                    if ((y instanceof Array)) {
-                                        var inc;
-                                        if (x == null) {
-                                            x = 0;
-                                            inc = 1;
-                                        } else {
-                                            inc = 1.0 / y.length;
-                                        }
+                            } else {
+                                x = null;
+                            }
+                            if ((tr[k].y == null)) {
+                                y = null;
+                            } else if ((tr[k].y.origin == "timestamp")) {
+                                y = targetDate.getTime() - (targetDate.getTimezoneOffset() * 60 * 1000);
+                            } else if (tr[k].y.const != null) {
+                                y = tr[k].y.const;
+                            } else if (tr[k].y.var != null) {
+                                y = getValueFromCUList(data, tr[k].y);
 
-                                        var set = [];
-
-                                        for (var cntt = 0; cntt < y.length; cntt++) {
-                                            set.push([x + inc * cntt, y[cntt]]);
-                                        }
-
-
-                                        chart.series[cnt].setData(set, true, true, true);
-
-                                    } else if (x instanceof Array) {
-                                        var inc;
-                                        var set = [];
-                                        if (y == null) {
-                                            y = 0;
-                                            inc = 1;
-                                        } else {
-                                            inc = 1.0 / x.length;
-                                        }
-                                        if (tr[k].y.origin == "histogram") {
-                                            set.push(x[cntt]);
-
-                                            chart.series[cnt + 1].setData(set, true, true, true);
-
-                                        } else {
-                                            for (var cntt = 0; cntt < y.length; cntt++) {
-                                                set.push([x[cntt], y + (inc * cntt)]);
-                                            }
-                                            chart.series[cnt].setData(set, true, true, true);
-
-                                        }
-
+                            } else {
+                                y = null;
+                            }
+                            if (opt.highchart_opt['tracetype'] == "multi") {
+                                if ((y instanceof Array)) {
+                                    var inc;
+                                    if (x == null) {
+                                        x = 0;
+                                        inc = 1;
                                     } else {
-                                        if (tr[k].y.origin == "histogram") {
-                                            if ($.isNumeric(x)) {
-                                                chart.series[cnt + 1].addPoint(x, false, false);
-                                            }
+                                        inc = 1.0 / y.length;
+                                    }
 
-                                        } else {
-                                            chart.series[cnt].addPoint([x, y], false, enable_shift);
-                                        }
+                                    var set = [];
+
+                                    for (var cntt = 0; cntt < y.length; cntt++) {
+                                        set.push([x + inc * cntt, y[cntt]]);
+                                    }
+
+
+                                    chart.series[cnt].setData(set, true, true, true);
+
+                                } else if (x instanceof Array) {
+                                    var inc;
+                                    var set = [];
+                                    if (y == null) {
+                                        y = 0;
+                                        inc = 1;
+                                    } else {
+                                        inc = 1.0 / x.length;
                                     }
                                     if (tr[k].y.origin == "histogram") {
-                                        cnt += 2;
+                                        set.push(x[cntt]);
+
+                                        chart.series[cnt + 1].setData(set, true, true, true);
 
                                     } else {
-                                        cnt++;
-                                    }
-                                } else {
-                                    // single
-                                    if ((y instanceof Array)) {
-                                        var inc = 1.0 / y.length;
-                                        var xx = x;
-
-                                        y.forEach(function(item, index) {
-                                            if (x == null) {
-                                                set.push([index, item]);
-
-                                            } else {
-                                                set.push([xx, item]);
-                                                xx = (xx + inc);
-                                            }
-
-                                        });
-
-                                    } else if (x instanceof Array) {
-                                        var inc = 1.0 / y;
-                                        var yy = y;
-
-                                        x.forEach(function(item, index) {
-                                            if (y == null) {
-                                                set.push([item, index]);
-
-                                            } else {
-                                                set.push([item, yy]);
-
-                                                yy = (yy + inc);
-                                            }
-                                        });
-
-                                    } else {
-                                        if (tr[k].y.origin == "histogram") {
-                                            if ($.isNumeric(x)) {
-                                                set.push(x);
-                                            }
-                                        } else {
-                                            set.push({ x, y });
+                                        for (var cntt = 0; cntt < y.length; cntt++) {
+                                            set.push([x[cntt], y + (inc * cntt)]);
                                         }
+                                        chart.series[cnt].setData(set, true, true, true);
+
+                                    }
+
+                                } else {
+                                    if (tr[k].y.origin == "histogram") {
+                                        if ($.isNumeric(x)) {
+                                            chart.series[cnt + 1].addPoint(x, false, false);
+                                        }
+
+                                    } else {
+                                        chart.series[cnt].addPoint([x, y], false, enable_shift);
                                     }
                                 }
-                                if (opt.highchart_opt['tracetype'] == "single") {
-                                    chart.series[0].setData(set, true, true, true);
+                                if (tr[k].y.origin == "histogram") {
+                                    cnt += 2;
+
+                                } else {
+                                    cnt++;
+                                }
+                            } else {
+                                // single
+                                if ((y instanceof Array)) {
+                                    var inc = 1.0 / y.length;
+                                    var xx = x;
+
+                                    y.forEach(function (item, index) {
+                                        if (x == null) {
+                                            set.push([index, item]);
+
+                                        } else {
+                                            set.push([xx, item]);
+                                            xx = (xx + inc);
+                                        }
+
+                                    });
+
+                                } else if (x instanceof Array) {
+                                    var inc = 1.0 / y;
+                                    var yy = y;
+
+                                    x.forEach(function (item, index) {
+                                        if (y == null) {
+                                            set.push([item, index]);
+
+                                        } else {
+                                            set.push([item, yy]);
+
+                                            yy = (yy + inc);
+                                        }
+                                    });
+
+                                } else {
+                                    if (tr[k].y.origin == "histogram") {
+                                        if ($.isNumeric(x)) {
+                                            set.push(x);
+                                        }
+                                    } else {
+                                        set.push({ x, y });
+                                    }
                                 }
                             }
-
-                            chart.redraw();
-                        }, opt.update);
-                        active_plots[gname]['interval'] = refresh;
-
-                    }
-                },
-                {
-                    text: "Query..",
-                    click: function() {
-
-                        console.log("Start  History Graph:" + gname);
-
-                        if (opt.highchart_opt.yAxis.type == "datetime") {
-                            alert("Y axis cannot be as datetime!")
-                            return;
+                            if (opt.highchart_opt['tracetype'] == "single") {
+                                chart.series[0].setData(set, true, true, true);
+                            }
                         }
-                        /* $('input[name="datetimes"]').daterangepicker({
-                           timePicker: true,
-                           timePicker24Hour:true,
-                           linkedCalendars:false,
-                           startDate: moment().startOf('hour'),
-                           endDate: moment().startOf('hour').add(32, 'hour'),
-                           locale: {
-                             format: 'DD/M hh:mm A'
-                           }
-                         });*/
-                        createQueryDialog(function(query) {
-                            runQueryToGraph(gname, query.start, query.stop, { tag: query.tag, page: query.page, chunck: query.chunk, reduction: query.reduction });
-                        });
 
+                        chart.redraw();
+                    }, opt.update);
+                    active_plots[gname]['interval'] = refresh;
 
+                }
+            },
+            {
+                text: "Query..",
+                click: function () {
+
+                    console.log("Start  History Graph:" + gname);
+
+                    if (opt.highchart_opt.yAxis.type == "datetime") {
+                        alert("Y axis cannot be as datetime!")
+                        return;
                     }
-                }, {
-                    text: "Save",
-                    click: function() {
-                        var graph_opt = high_graphs[gname];
-                        var chart = active_plots[gname]['graph'];
-                        var obj = {};
-                        if (chart.series instanceof Array) {
-                            chart.series.forEach(function(item) {
-                                obj[item.name] = [];
-                                item.data.forEach(function(dat) {
-                                    var x = dat.x;
-                                    var y = dat.y;
-                                    obj[item.name].push([x, y]);
-                                });
+                    /* $('input[name="datetimes"]').daterangepicker({
+                       timePicker: true,
+                       timePicker24Hour:true,
+                       linkedCalendars:false,
+                       startDate: moment().startOf('hour'),
+                       endDate: moment().startOf('hour').add(32, 'hour'),
+                       locale: {
+                         format: 'DD/M hh:mm A'
+                       }
+                     });*/
+                    createQueryDialog(function (query) {
+                        runQueryToGraph(gname, query.start, query.stop, { tag: query.tag, page: query.page, chunck: query.chunk, reduction: query.reduction });
+                    });
+
+
+                }
+            }, {
+                text: "Save",
+                click: function () {
+                    var graph_opt = high_graphs[gname];
+                    var chart = active_plots[gname]['graph'];
+                    var obj = {};
+                    if (chart.series instanceof Array) {
+                        chart.series.forEach(function (item) {
+                            obj[item.name] = [];
+                            item.data.forEach(function (dat) {
+                                var x = dat.x;
+                                var y = dat.y;
+                                obj[item.name].push([x, y]);
                             });
-                            var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
-                            saveAs(blob, gname + ".json");
-                        }
-                    }
-                }, {
-                    text: "Load",
-                    click: function() {
-                        var graph_opt = high_graphs[gname];
-                        var chart = active_plots[gname]['graph'];
-                        getFile("TRACE LOAD", "select the trace to load", function(data) {
-                            //console.log("loaded:"+JSON.stringify(data));
-
-                            for (var key in data) {
-                                var newseries = {};
-
-                                var xy = data[key];
-                                newseries['name'] = key;
-                                newseries['data'] = xy;
-                                chart.addSeries(newseries);
-                                /*xy.forEach(function(c){
-                                  chart.series[index].addPoint(c, false, false);
-                                });*/
-
-                            }
-
                         });
-                    }
-
-                }, {
-                    text: "Close",
-                    click: function() {
-                        console.log("Removing graph:" + gname);
-                        if (active_plots.hasOwnProperty(gname)) {
-                            if (active_plots[gname].hasOwnProperty('interval')) {
-                                clearInterval(active_plots[gname].interval);
-                            }
-                            delete active_plots[gname]['graph'];
-                            delete active_plots[gname];
-                        }
-
-                        $(this).dialog('close');
+                        var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
+                        saveAs(blob, gname + ".json");
                     }
                 }
+            }, {
+                text: "Load",
+                click: function () {
+                    var graph_opt = high_graphs[gname];
+                    var chart = active_plots[gname]['graph'];
+                    getFile("TRACE LOAD", "select the trace to load", function (data) {
+                        //console.log("loaded:"+JSON.stringify(data));
+
+                        for (var key in data) {
+                            var newseries = {};
+
+                            var xy = data[key];
+                            newseries['name'] = key;
+                            newseries['data'] = xy;
+                            chart.addSeries(newseries);
+                            /*xy.forEach(function(c){
+                              chart.series[index].addPoint(c, false, false);
+                            });*/
+
+                        }
+
+                    });
+                }
+
+            }, {
+                text: "Close",
+                click: function () {
+                    console.log("Removing graph:" + gname);
+                    if (active_plots.hasOwnProperty(gname)) {
+                        if (active_plots[gname].hasOwnProperty('interval')) {
+                            clearInterval(active_plots[gname].interval);
+                        }
+                        delete active_plots[gname]['graph'];
+                        delete active_plots[gname];
+                    }
+
+                    $(this).dialog('close');
+                }
+            }
             ]
 
 
@@ -8274,7 +7886,7 @@
     }
 
     function actionJsonEditor(tmpObj) {
-        $("#save_jsonedit").on('click', function() {
+        $("#save_jsonedit").on('click', function () {
             // editor validation
             var errors = json_editor.validate();
 
@@ -8290,7 +7902,7 @@
             }
         });
 
-        $("#close_jsonclose").on('click', function() {
+        $("#close_jsonclose").on('click', function () {
             $("#mdl-jsonedit").modal("hide");
         });
     }
@@ -8416,7 +8028,7 @@
         html += '<th>Type</th>';
         html += '<th>Value</th>';
         html += '</tr>';
-        arguments.forEach(function(item) {
+        arguments.forEach(function (item) {
             if (item['type'] == "string") {
                 input_type = "text";
             }
@@ -8443,16 +8055,16 @@
             width: 640,
             height: 480,
             title: node_selected + " Setup " + cmdselected,
-            open: function() {},
+            open: function () { },
             buttons: [{
                 text: "SEND",
-                click: function(e) {
+                click: function (e) {
                     var cuselection;
                     var cmdselected = $("#cu_full_commands option:selected").val();
                     var arguments = retriveCurrentCmdArguments(tmpObj, cmdselected);
                     var force = $("#cmd-force option:selected").val();
 
-                    arguments.forEach(function(item, index) {
+                    arguments.forEach(function (item, index) {
                         var value = $("#" + cmdselected + "_" + item["name"]).val();
                         if ((value == null || value == "") && (item["optional"] == false)) {
                             alert("argument '" + item['name'] + "' is required in command:'" + cmdselected + "'");
@@ -8466,10 +8078,10 @@
                     } else {
                         cuselection = tmpObj.node_selected;
                     }
-                    jchaos.sendCUFullCmd(cuselection, cmdselected, parm, ((force == "normal") ? 0 : 1), 0, function() {
+                    jchaos.sendCUFullCmd(cuselection, cmdselected, parm, ((force == "normal") ? 0 : 1), 0, function () {
                         instantMessage("Command", "Command:\"" + cmdselected + "\"  params:" + JSON.stringify(parm) + " sent", 2000, true);
 
-                    }, function(d) {
+                    }, function (d) {
                         instantMessage(cuselection, "ERROR OCCURRED:" + d, 3000, 350, 400, false)
 
                     });
@@ -8479,7 +8091,7 @@
 
             }, {
                 text: "Close",
-                click: function(e) {
+                click: function (e) {
                     $(this).dialog('destroy');
 
                 }
@@ -8637,7 +8249,7 @@
 
 
     function generateActionBox() {
-        var html = '<div class="box black span3" onTablet="span4" onDesktop="span4">';
+        var html = '<div class="box black span2">';
         html += '<div class="box-header">';
         html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Actions</h2>';
         html += '<div class="box-icon">';
@@ -8699,69 +8311,69 @@
         html += '</div>';
         return html;
     }
-    jqccs.json2html = function(json, options, pather) {
+    jqccs.json2html = function (json, options, pather) {
         return json2html(json, options, pather);
     }
-    jqccs.jsonSetup = function(dom, clickHandler, editHandler) {
+    jqccs.jsonSetup = function (dom, clickHandler, editHandler) {
 
-            $(dom).off('click');
-            $(dom).off('keypress');
+        $(dom).off('click');
+        $(dom).off('keypress');
 
-            $(dom).on("click", "a.json-toggle", function() {
-                var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
-                target.toggle();
-                if (target.is(':visible')) {
-                    target.siblings('.json-placeholder').remove();
-                } else {
-                    var count = target.children('li').length;
-                    var placeholder = count + (count > 1 ? ' items' : ' item');
-                    target.after('<a href class="json-placeholder">' + placeholder + '</a>');
-                }
-                return false;
-            });
+        $(dom).on("click", "a.json-toggle", function () {
+            var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
+            target.toggle();
+            if (target.is(':visible')) {
+                target.siblings('.json-placeholder').remove();
+            } else {
+                var count = target.children('li').length;
+                var placeholder = count + (count > 1 ? ' items' : ' item');
+                target.after('<a href class="json-placeholder">' + placeholder + '</a>');
+            }
+            return false;
+        });
 
-            $(dom).on("click", "span.json-key", function(e) {
-                var id = $(e.currentTarget).attr("portname");
-                var enc = jchaos.encodeName(id);
-                $("#attr-" + enc).toggle();
-                if (typeof clickHandler === "function") {
-                    clickHandler(e);
-                }
-                return false;
-            });
+        $(dom).on("click", "span.json-key", function (e) {
+            var id = $(e.currentTarget).attr("portname");
+            var enc = jchaos.encodeName(id);
+            $("#attr-" + enc).toggle();
+            if (typeof clickHandler === "function") {
+                clickHandler(e);
+            }
+            return false;
+        });
 
-            //$("input.json-keyinput").keypress(function (e) {
-            $(dom).on("keypress", "input.json-keyinput", function(e) {
-                if (typeof editHandler === "function") {
-                    if (editHandler(e)) {
-                        $("#" + this.id).toggle();
-
-                    }
-
-                } else {
+        //$("input.json-keyinput").keypress(function (e) {
+        $(dom).on("keypress", "input.json-keyinput", function (e) {
+            if (typeof editHandler === "function") {
+                if (editHandler(e)) {
                     $("#" + this.id).toggle();
 
                 }
 
-                return this;
-            });
-            /* Simulate click on toggle button when placeholder is clicked */
-            //$("a.json-placeholder").click(function () {
-            $(dom).on("click", "a.json-placeholder", function() {
-                $(dom).siblings('a.json-toggle').click();
-                return false;
-            });
-            /* Trigger click to collapse all nodes */
+            } else {
+                $("#" + this.id).toggle();
 
-            /*if (options.collapsed == true) {
-              $(this).find('a.json-toggle').click();
-            }*/
+            }
 
-        }
-        /**
-         * Transform a json object into html representation
-         * @return string
-         */
+            return this;
+        });
+        /* Simulate click on toggle button when placeholder is clicked */
+        //$("a.json-placeholder").click(function () {
+        $(dom).on("click", "a.json-placeholder", function () {
+            $(dom).siblings('a.json-toggle').click();
+            return false;
+        });
+        /* Trigger click to collapse all nodes */
+
+        /*if (options.collapsed == true) {
+          $(this).find('a.json-toggle').click();
+        }*/
+
+    }
+    /**
+     * Transform a json object into html representation
+     * @return string
+     */
     function json2html(json, options, pather) {
         var html = '';
         if (typeof options === "undefined") {
@@ -8854,7 +8466,7 @@
 
                         }
                         html += ': ' + json2html(json[key], options, pather + "/" + key);
-                        if ((!jchaos.isCollapsable(json[key])) /*&& (pather == "input")*/ ) {
+                        if ((!jchaos.isCollapsable(json[key])) /*&& (pather == "input")*/) {
                             //  var id=pather +"/"+key ;
                             // var enc=jchaos.encodeName(id);
                             html += '<input class="json-keyinput" name="' + id + '" id="attr-' + enc + '"/>';
@@ -8893,7 +8505,7 @@
     }
 
 
-    jqccs.generateGenericControl = function(tmpObj) {
+    jqccs.generateGenericControl = function (tmpObj) {
         return generateGenericControl(tmpObj);
     }
 
@@ -9011,19 +8623,19 @@
                 buttons: [{
                     id: "confirm-no",
                     text: "Close",
-                    click: function(e) {
+                    click: function (e) {
                         $(this).dialog("close");
                     }
                 }],
-                close: function(event, ui) {
+                close: function (event, ui) {
                     clearInterval(updateLogInterval);
                     $(this).remove();
                     jchaos.setOptions({ "timeout": 5000 });
 
                 },
-                open: function(event, ui) {
-                    updateLogInterval = setInterval(function() {
-                        jchaos.node(name, "getlog", "agent", function(data) {
+                open: function (event, ui) {
+                    updateLogInterval = setInterval(function () {
+                        jchaos.node(name, "getlog", "agent", function (data) {
                             $("#culog").append(JSON.stringify(data));
                         });
                     }, 1000);
@@ -9036,20 +8648,20 @@
 
         var dlg_opt = {};
         dlg_opt['buttons'] = [];
-        dlg_opt['close'] = function(event, ui) {
+        dlg_opt['close'] = function (event, ui) {
             if (typeof close_handle === "function") {
                 close_handle(event, ui);
             } else {
                 $(this).remove();
             }
         }
-        dlg_opt['open'] = function(event, ui) {
+        dlg_opt['open'] = function (event, ui) {
             if (typeof open_handle === "function") {
                 open_handle(event, ui);
             }
         }
         if (opt.hasOwnProperty('buttons') && (opt.buttons instanceof Array)) {
-            opt.buttons.forEach(function(elem) {
+            opt.buttons.forEach(function (elem) {
                 dlg_opt['buttons'].push(elem);
             });
             delete opt.buttons;
@@ -9058,7 +8670,7 @@
             dlg_opt['buttons'].push({
                 id: "confirm-yes",
                 text: butyes,
-                click: function(e) {
+                click: function (e) {
                     if (typeof yeshandle === "function") {
                         yeshandle();
                     }
@@ -9070,7 +8682,7 @@
             dlg_opt['buttons'].push({
                 id: "confirm-no",
                 text: cancelText,
-                click: function(e) {
+                click: function (e) {
                     if (typeof nohandle === "function") {
                         nohandle();
                     }
@@ -9098,7 +8710,7 @@
             width: 'auto',
             resizable: true
         }
-        createCustomDialog(opt, html, butyes, function() {
+        createCustomDialog(opt, html, butyes, function () {
             if (typeof yeshandle === "function") {
                 yeshandle($("#getEntryWindow_name").val());
             }
@@ -9111,7 +8723,7 @@
         var htmp = "";
         if (def_msg_v instanceof Array) {
             var cnt = 0;
-            def_msg_v.forEach(function(item) {
+            def_msg_v.forEach(function (item) {
                 htmp += '<div><h6>' + item + '</h6><input type="text" id="getEntryWindow_name_' + cnt + '" value=' + def_text_v[cnt] + ' class="text ui-widget-content ui-corner-all"></div>';
                 cnt++;
             });
@@ -9126,11 +8738,11 @@
             width: 'auto',
             resizable: true
         }
-        createCustomDialog(opt, htmp, butyes, function() {
+        createCustomDialog(opt, htmp, butyes, function () {
             if (typeof yeshandle === "function") {
                 var answ = [];
                 var cnt = 0;
-                def_text_v.forEach(function(item) {
+                def_text_v.forEach(function (item) {
                     answ.push($("#getEntryWindow_name_" + cnt).val());
                     cnt++;
                 });
@@ -9513,7 +9125,7 @@
                 $("#cmd-load-unload").show();
             }
         }
-        if (cu.hasOwnProperty('system') /*&& (tmpObj.off_line[encoden] == 0)*/ ) { //if el system
+        if (cu.hasOwnProperty('system') /*&& (tmpObj.off_line[encoden] == 0)*/) { //if el system
             $("#scheduling_title").html("Actual scheduling (us):" + cu.system.cudk_thr_sch_delay);
 
             if (cu.system.cudk_bypass_state == false) {
@@ -9551,7 +9163,7 @@
             $("#cu_full_commands").empty();
 
             if (tmpObj.node_name_to_desc[name] == null) {
-                jchaos.getDesc(tmpObj.node_selected, function(desc) {
+                jchaos.getDesc(tmpObj.node_selected, function (desc) {
                     if (desc[0] != null) {
                         tmpObj.node_name_to_desc[name] = desc[0];
                     }
@@ -9561,7 +9173,7 @@
                 var desc = tmpObj.node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
                 $("#cu_full_commands").add("<option>--Select--</option>");
 
-                desc.forEach(function(item) {
+                desc.forEach(function (item) {
                     $("#cu_full_commands").append("<option value='" + item.bc_alias + "'>" + item.bc_alias + " (\"" + item.bc_description + "\")</option>");
                 });
             }
@@ -9572,18 +9184,18 @@
         if (snaplist.length > 0) {
             var dataset;
             snap_selected = "";
-            snaplist.forEach(function(dataset, index) {
+            snaplist.forEach(function (dataset, index) {
                 var date = new Date(dataset.ts);
                 $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
             });
-            $("#table_snap tbody tr").click(function(e) {
+            $("#table_snap tbody tr").click(function (e) {
                 $(".row_element").removeClass("row_snap_selected");
                 $("#table_snap_nodes").find("tr:gt(0)").remove();
 
                 $(this).addClass("row_snap_selected");
                 snap_selected = $(this).attr("id");
                 var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
-                dataset.forEach(function(elem) {
+                dataset.forEach(function (elem) {
                     var name;
                     if (elem.hasOwnProperty("input")) {
                         name = elem.input.ndk_uid;
@@ -9623,9 +9235,9 @@
         var logtype = $("#logtype option:selected").val();
         $("#log_search").val(cu);
 
-        jchaos.log(cu, "search", logtype, 0, 10000000000000, function(data) {
+        jchaos.log(cu, "search", logtype, 0, 10000000000000, function (data) {
             if (data.hasOwnProperty("result_list")) {
-                data.result_list.forEach(function(item) {
+                data.result_list.forEach(function (item) {
                     if ((item.mdsndk_nl_ld == logtype) || (logtype == "all")) {
                         var dat = new Date(item.mdsndk_nl_lts).toString();
                         var nam = item.mdsndk_nl_sid;
@@ -9667,7 +9279,7 @@
             }
         }
 
-        $("#table_graph tbody tr").click(function(e) {
+        $("#table_graph tbody tr").click(function (e) {
             $(".row_element").removeClass("row_snap_selected");
             $("#table_trace").find("tr:gt(0)").remove();
 
@@ -9740,13 +9352,13 @@
                 var cu = node_multi_selected[0];
                 $("#list_snapshot").html("List snapshot of " + cu);
 
-                jchaos.search(cu, "snapshotsof", false, function(snaplist) {
+                jchaos.search(cu, "snapshotsof", false, function (snaplist) {
                     populateSnapList(tmpObj, snaplist);
 
                 });
             } else {
                 // list all snapshots
-                jchaos.search("", "snapshots", false, function(snaplist) {
+                jchaos.search("", "snapshots", false, function (snaplist) {
                     populateSnapList(tmpObj, snaplist);
                 });
             }
@@ -9768,7 +9380,7 @@
         if (tosnapshot.length > 0) {
             $("#list_snapshot").html("Snapshotting the following group:");
 
-            tosnapshot.forEach(function(elem) {
+            tosnapshot.forEach(function (elem) {
                 var type;
                 if (tmpObj.node_name_to_desc[elem] == null) {
                     var desc = jchaos.getDesc(elem, null);
@@ -9792,42 +9404,47 @@
      * @param json: a javascript object
      * @param options: an optional options hash
      */
-    $.fn.generateMenuBox = function() {
+    $.fn.generateMenuBox = function () {
         $(this).html(generateMenuBox());
     }
 
-    $.fn.generateQueryTable = function() {
+    $.fn.generateQueryTable = function () {
         $(this).html(generateQueryTable());
     }
-    $.fn.generateEditJson = function() {
+    $.fn.generateEditJson = function () {
         $(this).html(generateEditJson());
     }
-    $.fn.editActions = function() {
+    $.fn.editActions = function () {
         actionJsonEditor();
     }
 
 
-    $.fn.getFile = function(msghead, msg, handler) {
+    $.fn.getFile = function (msghead, msg, handler) {
         return getFile(msghead, msg, handler);
     }
-    $.fn.getValueFromCUList = function(culist, path) {
+    $.fn.getValueFromCUList = function (culist, path) {
         return getValueFromCUList(culist, path);
     }
-    jqccs.runQueryToGraph = function(gname, start, stop, options) {
+    jqccs.runQueryToGraph = function (gname, start, stop, options) {
         return runQueryToGraph(gname, start, stop, options);
     }
-    jqccs.instantMessage = function(msghead, msg, tim, sizex, sizey, ok) {
+    jqccs.instantMessage = function (msghead, msg, tim, sizex, sizey, ok) {
         return instantMessage(msghead, msg, tim, sizex, sizey, ok);
 
     }
-
-    jqccs.createGraphDialog = function(gname, id, options) {
+    /**
+     * Create a graph dialog
+     * @param  {string} gname name of the graph
+     * @param  {} id
+     * @param  {} options
+     */
+    jqccs.createGraphDialog = function (gname, id, options) {
         return createGraphDialog(gname, id, options);
     }
-    jqccs.generateScraperTable = function(tmpObj) {
+    jqccs.generateScraperTable = function (tmpObj) {
         return generateScraperTable(tmpObj);
     }
-    jqccs.generateAlarmTable = function(dev_alarm) {
+    jqccs.generateAlarmTable = function (dev_alarm) {
         var html = "";
         for (var key in dev_alarm) {
             var value = dev_alarm[key];
@@ -9848,7 +9465,7 @@
     function initSettings() {
         var sett = localStorage['chaos_dashboard_settings'];
         if (!sett || sett == "null") {
-            $.getJSON("dashboard-settings-def.json", function(json) {
+            $.getJSON("dashboard-settings-def.json", function (json) {
                 console.log("Default Settings: " + JSON.stringify(json));
                 localStorage['chaos_dashboard_settings'] = JSON.stringify(json);
                 dashboard_settings = json;
@@ -9856,7 +9473,7 @@
             dashboard_settings['current_page'] = 0;
         } else {
             dashboard_settings = JSON.parse(sett);
-            $.getJSON("dashboard-settings-def.json", function(json) {
+            $.getJSON("dashboard-settings-def.json", function (json) {
                 dashboard_settings = addNewKeys(dashboard_settings, json);
                 localStorage['chaos_dashboard_settings'] = JSON.stringify(dashboard_settings);
             });
@@ -9866,10 +9483,10 @@
 
     }
 
-    jqccs.initSettings = function() {
+    jqccs.initSettings = function () {
         initSettings();
     }
-    $.fn.chaosDashboard = function(opt) {
+    $.fn.chaosDashboard = function (opt) {
         main_dom = this;
         options = opt || {};
         // clear all intervals
@@ -9883,13 +9500,13 @@
         hostHeight = $(window).height();
         console.log("Window size:" + hostWidth + "x" + hostHeight);
 
-        $(window).resize(function() {
+        $(window).resize(function () {
             hostWidth = $(window).width();
             hostHeight = $(window).height();
             console.log("resized " + hostWidth + "x" + hostHeight);
         });
         /* jQuery chaining */
-        return this.each(function() {
+        return this.each(function () {
             var notupdate_dataset = 1;
             var templateObj = {
                 template: options.template,
@@ -9913,18 +9530,18 @@
                 index: 0,
                 data: null,
                 upd_chan: -1,
-                buildInterfaceFn: function() {},
+                buildInterfaceFn: function () { },
                 /* build the skeleton*/
-                setupInterfaceFn: function() {},
+                setupInterfaceFn: function () { },
                 /*create and setup table*/
-                generateTableFn: function() {},
+                generateTableFn: function () { },
                 /* update table */
-                generateCmdFn: function() {},
-                updateFn: function() {},
-                checkLiveFn: function() {},
-                menuItemFn: function() {},
+                generateCmdFn: function () { },
+                updateFn: function () { },
+                checkLiveFn: function () { },
+                menuItemFn: function () { },
                 /* menu on the table */
-                menuActionsFn: function() {},
+                menuActionsFn: function () { },
                 /*actions on the table */
                 htmlFn: { // functions to generate different htmls for different keys
                     'input': {},
@@ -9934,35 +9551,35 @@
             };
             initSettings();
 
-            $("#help-about").on("click", function() {
-                jchaos.basicPost("MDS", "cmd=buildInfo", function(ver) {
+            $("#help-about").on("click", function () {
+                jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
                     //alert("version:"+JSON.stringify(ver));
                     showJson(null, "VERSION", "version", ver);
-                }, function() {
+                }, function () {
                     alert("Cannot retrive version");
                 });
             });
 
-            $("#help-clients").on("click", function() {
-                jchaos.basicPost("clients", "", function(ver) {
+            $("#help-clients").on("click", function () {
+                jchaos.basicPost("clients", "", function (ver) {
                     //alert("version:"+JSON.stringify(ver));
-                    ver.forEach(function(ele, i) {
+                    ver.forEach(function (ele, i) {
                         var tt = ele.lastConnection / 1000;
                         ver[i]['updated'] = (new Date(Number(tt))).toLocaleString();
                     });
 
                     showJson(null, "CLIENTS", "Clients", ver);
-                }, function() {
+                }, function () {
                     alert("Cannot retrive Client List");
                 });
             });
-            $("#config-settings").on("click", function() {
+            $("#config-settings").on("click", function () {
                 var templ = {
                     $ref: "dashboard-settings.json",
                     format: "tabs"
                 }
                 var def = JSON.parse(localStorage['chaos_dashboard_settings']);
-                jsonEditWindow("Config", templ, def, function(d) {
+                jsonEditWindow("Config", templ, def, function (d) {
                     dashboard_settings = d;
                     localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
                     var e = jQuery.Event('keypress');
@@ -10035,7 +9652,16 @@
                  */
             $(this).html(templateObj.buildInterfaceFn(templateObj));
             templateObj.setupInterfaceFn(templateObj)
+            var htmlt, htmlc;
+            if (typeof templateObj.generateTableFn === "function") {
+                htmlt = templateObj.generateTableFn(templateObj);
+                $("#specific-table-" + templateObj.template).html(htmlt);
 
+            }
+            if (typeof templateObj.generateCmdFn === "function") {
+                htmlc = templateObj.generateCmdFn(templateObj);
+                $("#specific-control-" + templateObj.template).html(htmlc);
+            }
             $("#menu-dashboard").html(generateMenuBox());
             $("#query-page").val(dashboard_settings.defaultPage);
             $("#query-chunk").val(dashboard_settings.defaultChunk);
@@ -10043,7 +9669,11 @@
             //   initializeTimePicker();
 
             //jsonSetup($(this));
-            $(".savetofile").on("click", function(e) {
+            $(".btn-minimize").click(function (t) {
+                $(this).children().toggleClass('chevron-down');
+                $(this).parent().parent().parent().find("ul.dashboard-list").toggle();
+            });
+            $(".savetofile").on("click", function (e) {
                 var t = $(e.target);
                 if (save_obj instanceof Object) {
                     if (save_obj.fext == "json") {
@@ -10052,7 +9682,7 @@
                     }
                 }
             });
-            $(".savetofilecsv").on("click", function(e) {
+            $(".savetofilecsv").on("click", function (e) {
                 var t = $(e.target);
                 if (save_obj instanceof Object) {
                     if (save_obj.fext == "json") {

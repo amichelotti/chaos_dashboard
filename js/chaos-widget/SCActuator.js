@@ -38,7 +38,10 @@ function getWidget() {
       }
       },
       tableFn:function(tmpObj) {
-        var cu = tmpObj.elems;
+        var cu=[];
+        if(tmpObj['elems'] instanceof Array){
+             cu = tmpObj.elems;
+        }
         var template = tmpObj.type;
         var html = '<div class="row-fluid">';
         html += '<div class="box span12">';
