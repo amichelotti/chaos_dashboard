@@ -15,7 +15,7 @@ echo '<link href="' .$main_dir. '/js/jquery.terminal/css/jquery.terminal.min.css
 require_once('header.php');
 ?>
 
-	<div class="container-fluid-full">
+	<div class="container-fluid-full fill">
 		<div class="row-fluid">
 				
 			<!-- start: Main Menu -->
@@ -32,7 +32,7 @@ require_once('header.php');
 			
 			
 			<!-- start: Content -->
-			<div id="content" class="span10">
+			<div id="content" class="span10 fill">
 			
 				<ul class="breadcrumb">
 					<li>
@@ -45,7 +45,7 @@ require_once('header.php');
 				<div id="main-dashboard"></div>
 
 				
-								
+			</div>				
 	
 		</div><!--/fluid-row--> -->
 	</div>

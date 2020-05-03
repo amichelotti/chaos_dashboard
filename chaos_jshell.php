@@ -63,11 +63,11 @@ require_once('header.php');
 							<button type="button" id="load-script" class="icon-load">Upload</button>
 						</div>
 					</div>
+				</div>
 			</div>
-		</div><!--/fluid-row--> -->
+		</div><!--/fluid-row-->
 	</div>
 	
-	<div class="clearfix"></div>
 	
 	<footer><?php require_once('footer.php');?></footer>
 	

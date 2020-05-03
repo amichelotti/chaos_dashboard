@@ -184,7 +184,10 @@ function getWidget() {
         })
       },
       updateFn:function (tmpObj) {
-        var cu = tmpObj.elems;
+        var cu=[];
+        if(tmpObj['elems'] instanceof Array){
+             cu = tmpObj.elems;
+        }
     
         if (tmpObj.node_multi_selected instanceof Array) {
     

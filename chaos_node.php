@@ -15,24 +15,22 @@ echo '<link href="' .$main_dir. '/js/jquery.terminal/css/jquery.terminal.min.css
 require_once('header.php');
 ?>
 
-	<div class="container-fluid-full">
-		<div class="row-fluid">
-				
+	<div class="container-fluid-full fill">
+		<div class="row-fluid fill">		
 			<!-- start: Main Menu -->
-			<div id="sidebar-left" class="span2">
+			<div id="sidebar-left" class="span2 fill">
 				<div class="nav-collapse sidebar-nav">
 					<ul class="nav nav-tabs nav-stacked main-menu">						
 						<?php require_once('menu.php'); ?>
 
 					</ul>
 				</div>
-				save
 			</div>
 			<!-- end: Main Menu -->
 			
 			
 			<!-- start: Content -->
-			<div id="content" class="span10">
+			<div id="content" class="span10 fill">
 			
 				<ul class="breadcrumb">
 					<li>
@@ -42,16 +40,16 @@ require_once('header.php');
 					</li>
 				</ul>
 			
-				<div id="main-dashboard"></div>
-
+				<div id="main-dashboard" class="fill"></div>
+			</div>
 				
 								
 	
-		</div><!--/fluid-row--> -->
+		</div>
 	</div>
 	
 
-	<div class="clearfix"></div>
+	<!-- <div class="clearfix"></div> -->
 	
 	<footer><?php require_once('footer.php');?></footer>
 	
