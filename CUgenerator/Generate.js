@@ -1767,8 +1767,9 @@ function CreateDriverConnectionMakelist(){
         wr.WriteLine( "FILE(GLOB src *.h)");
         wr.WriteLine( "FILE(GLOB files \"*.h\")");
         wr.WriteLine( "INSTALL(FILES ${files} DESTINATION include/driver/" + relative + CU.getNameSpace() + "/models/" + CU.DriverName + "/)");
-        wr.WriteLine( "INSTALL_TARGETS(/lib ${PROJECT_NAME})");
-        
+        wr.WriteLine( "INSTALL(TARGETS ${PROJECT_NAME}");
+        wr.WriteLine( "DESTINATION \"lib\"");
+        wr.WriteLine( "PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)");
     }
     catch(e) {alert("EXC "+e);}
     var toRet=wr.getFileContent();
@@ -1859,10 +1860,6 @@ function createCommonDRVCMakeList() {
         wr.WriteLine( "INSTALL(TARGETS ${PROJECT_NAME}");
         wr.WriteLine( "DESTINATION \"lib\"");
         wr.WriteLine( "PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)");
-
-        //INSTALL(TARGETS ${PROJECT_NAME}
-        //DESTINATION "lib"
-        //PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
     }
     catch(e) {alert("EXC "+e);}
     var toRet=wr.getFileContent();
