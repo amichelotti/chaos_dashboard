@@ -2371,8 +2371,15 @@
                         if (match) {
                             server = match[1];
                         }
+                        if(server==""){
+                            var regx = /ChaosAgent_(.+)/;
+                            var match = regx.exec(ser.instance_name);
+                            if (match) {
+                                server = match[1];
+                            }
+                        }
                     }
-
+                    if(server!=""){
                     agent_obj[server] = {};
                     jchaos.rmtListProcess(server + ":8071", function(r) {
                         if (r.hasOwnProperty("info")) {
@@ -2414,6 +2421,7 @@
                             }
                         }
                     });
+                }
                 });
 
             }
