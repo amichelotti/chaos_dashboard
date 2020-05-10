@@ -1220,10 +1220,29 @@
 
                 return jchaos.mdsBase("log", opt, handleFunc, handlerr);
             }
+
+        jchaos.nodeTypeToHuman=function(name){
+            switch(name){
+                case "nt_agent":
+                    return "agent";
+                case "nt_unit_server":
+                    return "us";
+                case "nt_control_unit":
+                    return "cu";
+                case "nt_root":
+                    return "root";
+                case "nt_wan_proxy":
+                    return "webui";
+                case "nt_data_service":
+                    return "mds";
+                default:
+                    return "uknown";
+            }
+        }
             /**
 		 * 
 		 * @param {string} _name is the substring of what you want search
-		 * @param {("cu"|"us"|"agent"|"cds"|"webui"|"variable"|"snapshotsof"|"snapshots"|"script"|"zone"|"class")} _what operation type 
+		 * @param {("cu"|"us"|"agent"|"cds"|"webui"|"root"|"variable"|"snapshotsof"|"snapshots"|"script"|"zone"|"class")} _what operation type 
 		 * @param {boolean} _alive search among alive (true) or all(false)
 		 * @param  {okcb} [handleFunc] callback if ok, enable async mode
 		 * @param  {badcb} [handlerr] callback if error

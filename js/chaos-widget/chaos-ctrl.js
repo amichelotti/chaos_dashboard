@@ -3235,7 +3235,7 @@
             $radio.filter("[value=true]").prop('checked', true);
         }
 
-        element_sel('#classe', ["us", "agent", "cu", "webui", "mds"], 1);
+        element_sel('#classe', ["us", "agent", "cu", "webui", "mds","root"], 1);
         $("#classe").off('change');
         $("#classe").change(function (e) {
             dashboard_settings.current_page = 0;
@@ -4056,20 +4056,24 @@
 
 
                 return;
-            } else if (cmd == "shutdown-nt_control_unit") {
-                confirm("Do you want to IMMEDIATELY SHUTDOWN CU/EU:" + node_selected, "Pay attention ANY CU of the same US will be killed as well", "Kill",
+            } else if (cmd.includes("shutdown-")) {
+                var shuttype=cmd.split("-");
+    
+                var typ=jchaos.nodeTypeToHuman(shuttype[1]);
+
+                confirm("Do you want to IMMEDIATELY SHUTDOWN "+typ +" " + node_selected , "Pay attention all childrent will be killed as well", "Kill",
                     function () {
-                        jchaos.node(node_selected, "shutdown", "cu", function () {
-                            instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, true);
+                        jchaos.node(node_selected, "shutdown", typ, function () {
+                            instantMessage("SHUTDOWN NODE", "Killing " + node_selected + "", 1000, true);
                         }, function () {
-                            instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+                            instantMessage("SHUTDOWN NODE ", "Killing " + node_selected + "", 1000, false);
                         }, function () {
                             // handle error ok
                         })
                     }, "Joke",
                     function () { });
                 return;
-            } else if (cmd == "shutdown-nt_unit_server") {
+            } /* else if (cmd == "shutdown-nt_unit_server") {
                 confirm("Do you want to IMMEDIATELY SHUTDOWN US:" + node_selected, "Pay attention ANY CU will be killed as well", "Kill",
                     function () {
                         jchaos.node(node_selected, "shutdown", "us", function () {
@@ -4095,7 +4099,33 @@
                     }, "Joke",
                     function () { });
                 return;
-            } else if (cmd.includes("new-nt_control_unit")) {
+            } else if (cmd == "shutdown-nt_root") {
+                confirm("Do you want to IMMEDIATELY SHUTDOWN AGENT:" + node_selected, "Pay attention ANY US/CU will be killed as well", "Kill",
+                    function () {
+                        jchaos.node(node_selected, "shutdown", "root", function () {
+                            instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, true);
+                        }, function () {
+                            instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+                        }, function () {
+                            // handle error ok
+                        })
+                    }, "Joke",
+                    function () { });
+                return;
+            } else if (cmd == "shutdown-nt_wan_proxy") {
+                confirm("Do you want to IMMEDIATELY SHUTDOWN AGENT:" + node_selected, "Pay attention ANY US/CU will be killed as well", "Kill",
+                    function () {
+                        jchaos.node(node_selected, "shutdown", "webui", function () {
+                            instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, true);
+                        }, function () {
+                            instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+                        }, function () {
+                            // handle error ok
+                        })
+                    }, "Joke",
+                    function () { });
+                return;
+            }*/ else if (cmd.includes("new-nt_control_unit")) {
                 var regex = /new-nt_control_unit-(.*)-(.*)$/;
                 var match = regex.exec(cmd);
                 if (match != null) {
