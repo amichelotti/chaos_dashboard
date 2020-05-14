@@ -4770,7 +4770,7 @@
 
 
             }, function (bad) {
-                instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent", 1000, false);
+                instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent:"+bad.errmsg, 5000, false);
                 jchaos.setOptions({ "timeout": 5000 });
 
             });
