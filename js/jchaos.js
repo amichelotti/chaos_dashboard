@@ -2459,12 +2459,12 @@
             jchaos.activeAgentList(function(iagents) {
                 jchaos.getAllProcessInfo(iagents, function(ag) {
                     var server = "";
-                    var idle = 0;
+                    var cpu = 100000000;
                     var agents = ag['agents'];
                     for (var i in agents) {
-                        if (agents[i]['idle'] > idle) {
+                        if (agents[i]['cpu'] < cpu) {
                             server = i;
-                            idle = agents[i]['idle'];
+                            cpu = agents[i]['cpu'];
                         }
                     }
                     cb(server);
