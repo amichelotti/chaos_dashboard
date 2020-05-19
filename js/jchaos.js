@@ -2027,8 +2027,9 @@
 
         jchaos.agentSave = function(json, obj, ok, bad) {
             // remove all the associations
+            var node_selected=""
             if (obj != null) {
-                var node_selected = obj.node_selected;
+                node_selected = obj.node_selected;
                 var list_to_remove = [];
                 jchaos.node(node_selected, "info", "agent", function(data) {
                     if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
@@ -2055,6 +2056,8 @@
                         });
                     }
                 });
+            }else {
+                node_selected=json['instance_name'];
             }
 
             if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
@@ -2400,6 +2403,8 @@
                     }
                     if(server!=""){
                     agent_obj[server] = {};
+                    agent_obj[server]["ndk_uid"]=ser.instance_name;
+
                     jchaos.rmtListProcess(server + ":8071", function(r) {
                         if (r.hasOwnProperty("info")) {
                             agent_obj[server]['idle'] = r.info.hasOwnProperty("idletime") ? parseFloat(r.info.idletime) : parseFloat(r.info.idle);
@@ -2459,15 +2464,17 @@
             jchaos.activeAgentList(function(iagents) {
                 jchaos.getAllProcessInfo(iagents, function(ag) {
                     var server = "";
+                    var agentname="";
                     var idle = 0;
                     var agents = ag['agents'];
                     for (var i in agents) {
                         if ((agents[i]['idle'] > idle) || (agents[i]['idle'] ==0)) {
                             server = i;
+                            agentname=agents[i]['ndk_uid']
                             idle = agents[i]['idle'];
                         }
                     }
-                    cb(server);
+                    cb(server,agentname);
 
                 });
             })
@@ -2573,7 +2580,7 @@
              */
 
         jchaos.encodeName = function(str) {
-            var tt = str.replace(/[\/\:\.]/g, "_");
+            var tt = str.replace(/[\/\:\.\)\(,]/g, "_");
             var rr = tt.replace(/\+/g, "_p");
             var kk = rr.replace(/\-/g, "_m")
             return kk;

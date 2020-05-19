@@ -39,7 +39,19 @@
 	    "type": "boolean",
 		"description":"Node Keep Alive",
 		"default":false
-	}
+	},
+	"node_workdir": {
+		"type": "string",
+		"required": true,
+		"default":"",
+	    "description":"force the working directory"
+	},
+	"node_script_id": {
+		"type": "string",
+		"required": true,
+		"default":"",
+	    "description":"ID in case of association with a script"
+	},
 }
 	
     
