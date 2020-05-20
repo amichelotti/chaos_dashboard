@@ -5539,14 +5539,18 @@
                 format: "tabs"
             }
             jchaos.findBestServer(function (server,best_agent) {
+                jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (dscript) {
+
+                
+    
                 jchaos.node(best_agent, "info", "agent", function (data) {
                     if (data != null) {
 
                         if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
                             var tmp = {
-                                ndk_uid: tmpObj.node_selected,
+                                ndk_uid: tmpObj.node_selected+"_RENAME",
                                 association_uid: 0,
-                                node_launch_cmd_line: "",
+                                node_launch_cmd_line: "chaosRoot --rootopt \"-q " + tmpObj.node_selected + dscript['default_argument'] + "\"",
                                 node_script_id: tmpObj.node_selected,
                                 node_workdir: "",
                                 node_auto_start: true,
@@ -5561,6 +5565,7 @@
                         data['instance_name']=best_agent;
                         jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
                             instantMessage("Agent save ", " OK", 2000, true);
+                            
 
                         }, function (bad) {
                             instantMessage("Agent save failed", bad, 2000, false);
@@ -5570,6 +5575,7 @@
                     };
                 });
             });
+        });
 
         });// end associate
         $("#script-save").off('click');
