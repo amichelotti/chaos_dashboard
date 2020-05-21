@@ -17,6 +17,13 @@
             "description": "US owner"
 
         },
+        "ndk_type": {
+            "type": "string",
+            "format": "text",
+            "required": true,
+            "description": "Type of CU/EU"
+
+        },
 
         "control_unit_implementation": {
             "type": "string",

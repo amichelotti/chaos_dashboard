@@ -1005,7 +1005,7 @@
         /**
          * Perform and operation specified by '_what' onthe nodes of '_name' of type :'_type'
          * @param  {string|string[]} _name the name of the nodes where to perform the operation
-         * @param  {"init"|"deinit"|"start"|"stop"|"get"|"set"|"del"|"killcmd"|"shutdown"|"kill"|"restart"|"desc"|"getlog"|"health"|"info"} _what operation type
+         * @param  {"init"|"deinit"|"start"|"stop"|"get"|"set"|"del"|"killcmd"|"shutdown"|"kill"|"restart"|"desc"|"getlog"|"health"|"info"|"new"} _what operation type
          * @param  {"us"|"cu"|"agent"} _type target type of the command
          * @param  {string} [_parent] some commands needs a parent node to be specified
          * @param  {object} [value_] some commands needs a parameter
@@ -1059,14 +1059,16 @@
         jchaos.loadScript = function(_name, seqid, handleFunc, errFunc) {
                 var opt = {};
                 var value = {
-                    "seq": seqid,
+                   // "seq": seqid,
                     "script_name": _name
                 };
-                opt['name'] = "";
-                opt['what'] = "load";
+                opt['name'] = _name;
+              //  opt['what'] = "load";
+                opt['what'] = "fload";
                 opt['value'] = value;
                 return jchaos.mdsBase("script", opt, handleFunc, errFunc);
             }
+
             /**
              * @hide
              */
@@ -1977,6 +1979,15 @@
                 snap['dataset'] = dataset;
                 obj['snapshots'].push(snap);
             });
+            // scripts
+            var sc_list=jchaos.search("","script",false,null);
+            obj['scripts']=[];
+            if(sc_list.hasOwnProperty("found_script_list")&&(sc_list.found_script_list instanceof Array)){
+                sc_list.found_script_list.forEach(function(ele){
+                    var l=jchaos.loadScript(ele.script_name,"");
+                    obj['scripts'].push(l);
+                });
+        }
             // graphs
 
             obj['graphs'] = jchaos.variable("highcharts", "get", null, null);
@@ -2076,7 +2087,7 @@
 
                         if (assok == json.andk_node_associated.length) {
                             if (typeof ok === "function") {
-                                ok();
+                                ok(json);
                             }
                         }
                         return 0;

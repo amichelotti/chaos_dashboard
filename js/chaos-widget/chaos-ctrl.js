@@ -1364,8 +1364,8 @@
 
                     }
                     $("#" + cuname + "_rpcaddress").html(elem.desc.ndk_rpc_addr);
-                    if (elem.hasOwnProperty("parent")) {
-                        $("#" + cuname + "_parent").html(elem.parent);
+                    if (elem.desc.hasOwnProperty("ndk_parent")) {
+                        $("#" + cuname + "_parent").html(elem.desc.ndk_parent);
 
                     }
                 }
@@ -3850,13 +3850,22 @@
                 );
 
                 return;
-            } else if (cmd == "del-nt_unit_server" || (cmd == "del-nt_root")) {
+            } else if (cmd.includes("desc-")) {
+                var stype = cmd.split("-");
+
+                var typ = jchaos.nodeTypeToHuman(stype[1]);
+                jchaos.node(node_selected,"desc",typ,function(data){
+
+                    showJson(null, "Description " + node_selected, node_selected, data);
+            });
+
+            }else if (cmd == "del-nt_unit_server" || (cmd == "del-nt_root")) {
                 var stype = cmd.split("-");
 
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
 
                 confirm("Delete " + typ, "Your are deleting : " + node_selected, "Ok", function () {
-                    jchaos.node(node_selected, "del", typ, function () {
+                    jchaos.node(node_selected, "deletenode", typ, function () {
                         instantMessage("Node deleted ", " OK", 2000, true);
                         updateNodeEvent();
                     }, function (err) {
@@ -4220,7 +4229,7 @@
                 });
                 return;
             } else if (cmd == "console-node") {
-                var agentn = node_name_to_desc[node_selected].parent;
+                var agentn = node_name_to_desc[node_selected].ndk_parent;
                 var server = node_name_to_desc[node_selected].desc.ndk_host_name;
                 jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
                     console.log("->" + JSON.stringify(data));
@@ -4454,36 +4463,9 @@
             var cu_list = [];
             node_list.forEach(function (elem, index) {
                 var type = data[index].ndk_type;
-                tmpObj.node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
-                if ((type == "nt_control_unit")) {
-                    cu_list.push(elem);
-                } else if ((type == "nt_unit_server")) {
-                    us_list.push(elem);
-                }
+                tmpObj.node_name_to_desc[elem] = { desc: data[index]};
+           
             });
-            if (cu_list.length > 0) {
-                jchaos.getDesc(cu_list, function (data) {
-                    var cnt = 0;
-                    data.forEach(function (cu) {
-                        if (cu.hasOwnProperty("instance_description")) {
-                            tmpObj.node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
-                            tmpObj.node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
-                        }
-                        cnt++;
-                    });
-                });
-            }
-            if (us_list.length > 0) {
-                jchaos.node(us_list, "parent", "us", function (data) {
-                    var cnt = 0;
-                    data.forEach(function (us) {
-                        if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
-                            tmpObj.node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
-                        }
-                        cnt++;
-                    });
-                });
-            }
         });
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
@@ -5110,9 +5092,9 @@
 
             var hostname = tmpObj.data[p].hostname;
             var status = tmpObj.data[p].msg;
-            var parent = tmpObj.data[p].parent;
+            var ndk_parent = tmpObj.data[p].ndk_parent;
             var infoServer = tmpObj.agents[hostname];
-            var parent_str = parent;
+            var parent_str = ndk_parent;
             var encoden = jchaos.encodeName(p);
             $("#" + encoden + "_start_ts").html(started_timestamp);
             $("#" + encoden + "_end_ts").html(end_timestamp);
@@ -5422,7 +5404,7 @@
             var pmem = obj.pmem;
             var hostname = obj.hostname;
             var status = obj.msg;
-            var parent = obj.parent;
+            var parent = obj.ndk_parent;
             var encoden = jchaos.encodeName(obj.uid);
 
             $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
@@ -5544,33 +5526,59 @@
                 
     
                 jchaos.node(best_agent, "info", "agent", function (data) {
+                    var supported=false;
                     if (data != null) {
-
-                        if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
-                            var tmp = {
-                                ndk_uid: tmpObj.node_selected+"_RENAME",
-                                association_uid: 0,
-                                node_launch_cmd_line: "chaosRoot --rootopt \"-q " + tmpObj.node_selected + dscript['default_argument'] + "\"",
-                                node_script_id: tmpObj.node_selected,
-                                node_workdir: "",
-                                node_auto_start: true,
-                                node_keep_alive: false,
-                                node_log_at_launch: false
-                            };
-                            data.andk_node_associated.push(tmp);
-
+                        if (!(data.hasOwnProperty("andk_node_associated") || !(data.andk_node_associated instanceof Array))) {
+                            data['andk_node_associated']=[]
                         }
-                        //editorFn = agentSave;
-                        //jsonEdit(templ, data);
-                        data['instance_name']=best_agent;
-                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
-                            instantMessage("Agent save ", " OK", 2000, true);
+                        var tmp = {
+                            ndk_uid: tmpObj.node_selected+"_RENAME",
+                            association_uid: 0,
+                            node_launch_cmd_line: "",
+                            node_script_id: tmpObj.node_selected,
+                            node_workdir: "",
+                            node_auto_start: true,
+                            node_keep_alive: false,
+                            node_log_at_launch: false
+                        };
+                        var script_type="";
+                        if(dscript['eudk_script_language']=="CPP"){
+                            tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + dscript['default_argument'] + "\"";
+                            supported=true;
+                            data['instance_name']=best_agent;
+                            script_type="root";
+                        }
+
+                        if(supported){
+                            getEntryWindow("Specify Unique Identifier for "+dscript['eudk_script_language']+ " SCript", tmpObj.node_selected, "NONAME_" + tmpObj.node_selected, "Create", function (inst_name) {
+                                tmp['ndk_uid']= inst_name;
+
+                                data.andk_node_associated.push(tmp);
+
+                                jchaos.node(inst_name,"new",script_type,best_agent); //create the container
+
+                                jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
+                                    if(dscript['eudk_script_language']=="CPP"){
+            
+                                    }
+                                    instantMessage("Agent save ", " OK", 2000, true);
+    
+                                }, function (bad) {
+                                    instantMessage("Agent save failed", bad, 2000, false);
+    
+                                });
+                                              
+                
+                            }, "Cancel");
+                
                             
-
-                        }, function (bad) {
-                            instantMessage("Agent save failed", bad, 2000, false);
-
-                        });
+                            //editorFn = agentSave;
+                            //jsonEdit(templ, data);
+                            
+                           
+                    } else {
+                        alert ("association with "+dscript['eudk_script_language']+ " not supported yet");
+                    }
 
                     };
                 });
@@ -8998,7 +9006,22 @@
         }
 
         items['edit-' + node_type] = { name: "Edit ..." };
+        items['desc-'+node_type] = {name: "Desc"};
+        var associated = jchaos.node(node_selected, "parent", "us", null, null);
+        if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "" && (node_type == "nt_unit_server" || node_type == "nt_root")) {
+            items['sep5'] = "---------";
 
+            items['start-node'] = { name: "Start "+ jchaos.nodeTypeToHuman(node_type)+"..." };
+            items['stop-node'] = { name: "Stop "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
+            items['restart-node'] = { name: "Restart "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
+            items['kill-node'] = { name: "Kill "+ jchaos.nodeTypeToHuman(node_type)+" (via agent) ..." };
+
+            items['console-node'] = { name: "Console "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
+
+
+
+            items['sep6'] = "---------";
+        }
         if (node_type == "nt_unit_server") {
             items['del-' + node_type] = { name: "Del " + node_selected };
             items['copy-' + node_type] = { name: "Copy " + node_selected };
@@ -9011,21 +9034,7 @@
                 items['paste-nt_control_unit'] = { name: "Paste/Move \"" + cu_copied.ndk_uid };
             }
 
-            var associated = jchaos.node(node_selected, "parent", "us", null, null);
-            if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "") {
-                items['sep5'] = "---------";
-
-                items['start-node'] = { name: "Start US ..." };
-                items['stop-node'] = { name: "Stop US ..." };
-                items['restart-node'] = { name: "Restart US ..." };
-                items['kill-node'] = { name: "Kill US (via agent) ..." };
-
-                items['console-node'] = { name: "Console US ..." };
-
-
-
-                items['sep6'] = "---------";
-            }
+            
         } else if (node_type == "nt_root") {
             items['del-' + node_type] = { name: "Del " + node_selected };
             items['copy-' + node_type] = { name: "Copy " + node_selected };
