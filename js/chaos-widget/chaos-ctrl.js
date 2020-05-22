@@ -4229,8 +4229,10 @@
                 });
                 return;
             } else if (cmd == "console-node") {
-                var agentn = node_name_to_desc[node_selected].ndk_parent;
+                var agentn = node_name_to_desc[node_selected].desc.ndk_parent;
                 var server = node_name_to_desc[node_selected].desc.ndk_host_name;
+              //  getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
+
                 jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
                     console.log("->" + JSON.stringify(data));
                     getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
