@@ -3765,7 +3765,7 @@
                     };
                 });
                 return;
-            } else if (cmd == "edit-nt_control_unit") {
+            } else if ((cmd == "edit-nt_control_unit")||(cmd == "edit-nt_root")) {
                 var templ = {
                     $ref: "cu.json",
                     format: "tabs"
@@ -3785,7 +3785,7 @@
                     }
                 });
                 return;
-            } else if (cmd == "edit-nt_unit_server") {
+            } else if ((cmd == "edit-nt_unit_server")) {
                 var templ = {
                     $ref: "us.json",
                     format: "tabs"
@@ -3813,7 +3813,7 @@
                     }
                 });
                 return;
-            } else if ((cmd == "edit-nt_root")) {
+            } /*else if ((cmd == "edit-nt_root")) {
                 jchaos.loadScript(node_selected, 0, function (data) {
                     var templ = {
                         $ref: "algo.json",
@@ -3828,7 +3828,7 @@
                     jsonEditWindow(tmpObj.node_selected, templ, data, algoSave, tmpObj);
 
                 });
-            } else if (cmd == "new-nt_unit_server") {
+            }*/ else if (cmd == "new-nt_unit_server") {
                 var templ = {
                     $ref: "us.json",
                     format: "tabs"
@@ -5094,7 +5094,7 @@
 
             var hostname = tmpObj.data[p].hostname;
             var status = tmpObj.data[p].msg;
-            var ndk_parent = tmpObj.data[p].ndk_parent;
+            var ndk_parent = tmpObj.data[p].parent;
             var infoServer = tmpObj.agents[hostname];
             var parent_str = ndk_parent;
             var encoden = jchaos.encodeName(p);
@@ -5273,7 +5273,7 @@
         var hostHeight = $(window).height();
         $("#" + tablename).find("tr:gt(0)").remove();
 
-        if (typeof tmpObj['agents'] === "undefined") {
+      /*  if (typeof tmpObj['agents'] === "undefined") {
             var ag_list = {};
             var obj = {
                 idle: 100,
@@ -5283,14 +5283,16 @@
                 ts: 0,
                 user: 0
             }
-            var list = jchaos.search("", "agent", false, false);
+            var list = jchaos.search("", "agent", true, false);
             list.forEach(function (ele) {
                 ag_list[ele] = obj;
             })
             tmpObj['agents'] = ag_list;
 
-        }
-        if (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list']) || (typeof tmpObj['old_agent_list'] === "undefined")) {
+        }*/
+        if((typeof tmpObj['agents'] === "undefined"))
+            return;
+        if ((typeof tmpObj['agent_list'] === "undefined") || (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list']) || (typeof tmpObj['old_agent_list'] === "undefined"))) {
             tmpObj['old_agent_list'] = tmpObj['agent_list'];
 
             var chart_options = {
@@ -5627,7 +5629,7 @@
                 old_ele = t['old_elems'].sort();
             }
 
-            if ((JSON.stringify(new_ele) !== JSON.stringify(old_ele))) {
+            if ((JSON.stringify(new_ele) !== JSON.stringify(old_ele))&&((typeof t['agents'] !== "undefined"))) {
                 updateProcessInterface(t);
                 t['old_elems'] = t['elems'];
 

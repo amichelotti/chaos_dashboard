@@ -51,7 +51,7 @@
 		"required": true,
 		"default":"",
 	    "description":"ID in case of association with a script"
-	},
+	}
 }
 	
     

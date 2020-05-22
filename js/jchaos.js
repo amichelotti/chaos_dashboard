@@ -2268,7 +2268,7 @@
         jchaos.restoreFullConfig = function(config, configToRestore) {
                 var node_selected = "";
                 if ((typeof configToRestore === "undefined") || (configToRestore == null)) {
-                    configToRestore = ["us", "agents", "snapshots", "graphs", "custom_group", "cu_templates"];
+                    configToRestore = ["us", "agents", "snapshots", "graphs", "custom_group", "cu_templates", "scripts"];
                 }
                 console.log("configs to restore:" + JSON.stringify(configToRestore));
                 console.log("To restore:" + JSON.stringify(config));
@@ -2342,6 +2342,17 @@
                         jchaos.variable("cu_templates", "set", config["cu_templates"], function(s) {
                             console.log("restoring CU templates:" + JSON.stringify(config["cu_templates"]));
                         });
+
+                    }
+                    if ((sel == "scripts") && (config instanceof Object) && 
+                    (config.hasOwnProperty("scripts") && (config['scripts'] instanceof Array))) {
+                        config['scripts'].forEach(function(sc){
+                        jchaos.saveScript(sc, function (data) {
+                            console.log("restoring script " + sc['name']);
+
+                        });
+                    })
+
 
                     }
                 });
