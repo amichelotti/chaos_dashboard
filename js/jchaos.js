@@ -533,9 +533,7 @@
                 var request;
                 var now = (new Date()).getTime();
 
-                if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-                    XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-                }
+              
                 request = new XMLHttpRequest();
 
                 var srv = jchaos.options.uri;
@@ -2771,7 +2769,10 @@
     }
     if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 
+        XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+        XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
+        
         module.exports = createLibrary();
 
     } else {
