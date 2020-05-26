@@ -4799,6 +4799,13 @@
                 }, "Joke",
                 function () { });
             return;
+        } else if (cmd == "start-process") {
+            jchaos.node(tmpObj.data[node_selected].pname, "start", "us", function () {
+                instantMessage("START", "Starting " + tmpObj.data[node_selected].pname + " via agent", 1000, true);
+            }, function () {
+                instantMessage("ERROR START", "Starting " + tmpObj.data[node_selected].pname + " via agent", 3000, false);
+            });
+        return;
         } else if (cmd == "new-script") {
             var templ = {
                 $ref: "algo.json",
@@ -5056,6 +5063,9 @@
                 // items['open-process-errconsole'] = { name: "Open Error console" };
                 items['download-output'] = { name: "Download Files" };
                 items['kill-process'] = { name: "Kill " };
+                if(tmpObj.data[node_selected].msg != "RUNNING"){
+                  items['start-process'] = { name: "Start " };
+                }
 
             }
         }
