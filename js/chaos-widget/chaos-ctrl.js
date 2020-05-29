@@ -3859,7 +3859,32 @@
                     showJson(null, "Description " + node_selected, node_selected, data);
             });
 
-            }else if (cmd == "del-nt_unit_server" || (cmd == "del-nt_root")) {
+            } else if (cmd=="delete-histo-data") {
+
+                createQueryDialog(function (query) {
+                    // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
+                    //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
+                    //console.log("start:"+start_s + " end:"+end_s);
+                    // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
+                   // var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
+    
+                    var val={
+                        'start':query.start.toString(),
+                        'end':query.stop.toString()
+                    };
+                    var st=(new Date(query.start)).toDateString();
+                    var en=(new Date(query.start)).toDateString();
+
+                    jchaos.node(node_selected,"deletedata","all",null,val,function(data){
+                        instantMessage("Node Data deleted ", "from:"+st +"["+query.start+"] end:"+en+ "["+query.stop+"]", 4000, true);
+
+                    },function(data){
+                        instantMessage("Node Data deleting ", "from:"+st +"["+query.start+"] end:"+en+ "["+query.stop+"]", 4000, false);
+
+                    });
+                    })
+               
+            } else if (cmd == "del-nt_unit_server" || (cmd == "del-nt_root")) {
                 var stype = cmd.split("-");
 
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
@@ -9021,6 +9046,7 @@
 
         items['edit-' + node_type] = { name: "Edit ..." };
         items['desc-'+node_type] = {name: "Desc"};
+        items['delete-histo-data'] = {name:"Delete HISTO data"};
         var associated = jchaos.node(node_selected, "parent", "us", null, null);
         if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "" && (node_type == "nt_unit_server" || node_type == "nt_root")) {
             items['sep5'] = "---------";
