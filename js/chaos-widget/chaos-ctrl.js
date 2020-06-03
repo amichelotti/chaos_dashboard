@@ -1364,8 +1364,8 @@
 
                     }
                     $("#" + cuname + "_rpcaddress").html(elem.desc.ndk_rpc_addr);
-                    if (elem.hasOwnProperty("parent")) {
-                        $("#" + cuname + "_parent").html(elem.parent);
+                    if (elem.desc.hasOwnProperty("ndk_parent")) {
+                        $("#" + cuname + "_parent").html(elem.desc.ndk_parent);
 
                     }
                 }
@@ -3235,7 +3235,7 @@
             $radio.filter("[value=true]").prop('checked', true);
         }
 
-        element_sel('#classe', ["us", "agent", "cu", "webui", "mds"], 1);
+        element_sel('#classe', ["us", "agent", "cu", "webui", "mds", "root"], 1);
         $("#classe").off('change');
         $("#classe").change(function (e) {
             dashboard_settings.current_page = 0;
@@ -3765,7 +3765,7 @@
                     };
                 });
                 return;
-            } else if (cmd == "edit-nt_control_unit") {
+            } else if ((cmd == "edit-nt_control_unit")||(cmd == "edit-nt_root")) {
                 var templ = {
                     $ref: "cu.json",
                     format: "tabs"
@@ -3785,7 +3785,7 @@
                     }
                 });
                 return;
-            } else if (cmd == "edit-nt_unit_server") {
+            } else if ((cmd == "edit-nt_unit_server")) {
                 var templ = {
                     $ref: "us.json",
                     format: "tabs"
@@ -3794,7 +3794,11 @@
                     alert("not US selected!");
                     return;
                 }
-                jchaos.node(node_selected, "get", "us", function (data) {
+                var stype = cmd.split("-");
+
+                var typ = jchaos.nodeTypeToHuman(stype[1]);
+
+                jchaos.node(node_selected, "get", typ, function (data) {
                     if (data.hasOwnProperty("us_desc")) {
                         //    editorFn = unitServerSave;
                         //    jsonEdit(templ, data.us_desc);
@@ -3809,7 +3813,22 @@
                     }
                 });
                 return;
-            } else if (cmd == "new-nt_unit_server") {
+            } /*else if ((cmd == "edit-nt_root")) {
+                jchaos.loadScript(node_selected, 0, function (data) {
+                    var templ = {
+                        $ref: "algo.json",
+                        format: "tabs"
+                    }
+                    if (!data.hasOwnProperty('eudk_script_content')) {
+                        instantMessage("Load Script", tmpObj.node_selected + " has no content", 4000, false);
+                        return;
+                    }
+                    node_selected = null;
+                    data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
+                    jsonEditWindow(tmpObj.node_selected, templ, data, algoSave, tmpObj);
+
+                });
+            }*/ else if (cmd == "new-nt_unit_server") {
                 var templ = {
                     $ref: "us.json",
                     format: "tabs"
@@ -3831,14 +3850,51 @@
                 );
 
                 return;
-            } else if (cmd == "del-nt_unit_server") {
+            } else if (cmd.includes("desc-")) {
+                var stype = cmd.split("-");
 
-                confirm("Delete US", "Your are deleting US: " + node_selected, "Ok", function () {
-                    jchaos.node(node_selected, "del", "us", function () {
-                        instantMessage("Unit server deleted ", " OK", 2000, true);
+                var typ = jchaos.nodeTypeToHuman(stype[1]);
+                jchaos.node(node_selected,"desc",typ,function(data){
+
+                    showJson(null, "Description " + node_selected, node_selected, data);
+            });
+
+            } else if (cmd=="delete-histo-data") {
+
+                createQueryDialog(function (query) {
+                    // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
+                    //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
+                    //console.log("start:"+start_s + " end:"+end_s);
+                    // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
+                   // var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
+    
+                    var val={
+                        'start':query.start.toString(),
+                        'end':query.stop.toString()
+                    };
+                    var st=(new Date(query.start)).toDateString();
+                    var en=(new Date(query.start)).toDateString();
+
+                    jchaos.node(node_selected,"deletedata","all",null,val,function(data){
+                        instantMessage("Node Data deleted ", "from:"+st +"["+query.start+"] end:"+en+ "["+query.stop+"]", 4000, true);
+
+                    },function(data){
+                        instantMessage("Node Data deleting ", "from:"+st +"["+query.start+"] end:"+en+ "["+query.stop+"]", 4000, false);
+
+                    });
+                    })
+               
+            } else if (cmd == "del-nt_unit_server" || (cmd == "del-nt_root")) {
+                var stype = cmd.split("-");
+
+                var typ = jchaos.nodeTypeToHuman(stype[1]);
+
+                confirm("Delete " + typ, "Your are deleting : " + node_selected, "Ok", function () {
+                    jchaos.node(node_selected, "deletenode", typ, function () {
+                        instantMessage("Node deleted ", " OK", 2000, true);
                         updateNodeEvent();
                     }, function (err) {
-                        instantMessage("cannot delete server US:", err, 2000, false);
+                        instantMessage("cannot delete server:", err, 2000, false);
 
                     });
                 }, "Cancel");
@@ -3991,6 +4047,11 @@
                     }
                 });
                 return;
+            } else if (cmd == "copy-nt_root") {
+                jchaos.node(node_selected, "get", "root", function (data) {
+                    copyToClipboard(JSON.stringify(data));
+                });
+                return;
             } else if (cmd == "save-nt_unit_server") {
                 jchaos.node(node_selected, "get", "us", function (data) {
                     if (data.hasOwnProperty("us_desc")) {
@@ -4056,20 +4117,24 @@
 
 
                 return;
-            } else if (cmd == "shutdown-nt_control_unit") {
-                confirm("Do you want to IMMEDIATELY SHUTDOWN CU/EU:" + node_selected, "Pay attention ANY CU of the same US will be killed as well", "Kill",
+            } else if (cmd.includes("shutdown-")) {
+                var shuttype = cmd.split("-");
+
+                var typ = jchaos.nodeTypeToHuman(shuttype[1]);
+
+                confirm("Do you want to IMMEDIATELY SHUTDOWN " + typ + " " + node_selected, "Pay attention all childrent will be killed as well", "Kill",
                     function () {
-                        jchaos.node(node_selected, "shutdown", "cu", function () {
-                            instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, true);
+                        jchaos.node(node_selected, "shutdown", typ, function () {
+                            instantMessage("SHUTDOWN NODE", "Killing " + node_selected + "", 1000, true);
                         }, function () {
-                            instantMessage("CU SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+                            instantMessage("SHUTDOWN NODE ", "Killing " + node_selected + "", 1000, false);
                         }, function () {
                             // handle error ok
                         })
                     }, "Joke",
                     function () { });
                 return;
-            } else if (cmd == "shutdown-nt_unit_server") {
+            } /* else if (cmd == "shutdown-nt_unit_server") {
                 confirm("Do you want to IMMEDIATELY SHUTDOWN US:" + node_selected, "Pay attention ANY CU will be killed as well", "Kill",
                     function () {
                         jchaos.node(node_selected, "shutdown", "us", function () {
@@ -4095,7 +4160,33 @@
                     }, "Joke",
                     function () { });
                 return;
-            } else if (cmd.includes("new-nt_control_unit")) {
+            } else if (cmd == "shutdown-nt_root") {
+                confirm("Do you want to IMMEDIATELY SHUTDOWN AGENT:" + node_selected, "Pay attention ANY US/CU will be killed as well", "Kill",
+                    function () {
+                        jchaos.node(node_selected, "shutdown", "root", function () {
+                            instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, true);
+                        }, function () {
+                            instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+                        }, function () {
+                            // handle error ok
+                        })
+                    }, "Joke",
+                    function () { });
+                return;
+            } else if (cmd == "shutdown-nt_wan_proxy") {
+                confirm("Do you want to IMMEDIATELY SHUTDOWN AGENT:" + node_selected, "Pay attention ANY US/CU will be killed as well", "Kill",
+                    function () {
+                        jchaos.node(node_selected, "shutdown", "webui", function () {
+                            instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, true);
+                        }, function () {
+                            instantMessage("AGENT SHUTDOWN", "Killing " + node_selected + "", 1000, false);
+                        }, function () {
+                            // handle error ok
+                        })
+                    }, "Joke",
+                    function () { });
+                return;
+            }*/ else if (cmd.includes("new-nt_control_unit")) {
                 var regex = /new-nt_control_unit-(.*)-(.*)$/;
                 var match = regex.exec(cmd);
                 if (match != null) {
@@ -4163,8 +4254,10 @@
                 });
                 return;
             } else if (cmd == "console-node") {
-                var agentn = node_name_to_desc[node_selected].parent;
+                var agentn = node_name_to_desc[node_selected].desc.ndk_parent;
                 var server = node_name_to_desc[node_selected].desc.ndk_host_name;
+              //  getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
+
                 jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
                     console.log("->" + JSON.stringify(data));
                     getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
@@ -4397,36 +4490,9 @@
             var cu_list = [];
             node_list.forEach(function (elem, index) {
                 var type = data[index].ndk_type;
-                tmpObj.node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
-                if ((type == "nt_control_unit")) {
-                    cu_list.push(elem);
-                } else if ((type == "nt_unit_server")) {
-                    us_list.push(elem);
-                }
+                tmpObj.node_name_to_desc[elem] = { desc: data[index]};
+           
             });
-            if (cu_list.length > 0) {
-                jchaos.getDesc(cu_list, function (data) {
-                    var cnt = 0;
-                    data.forEach(function (cu) {
-                        if (cu.hasOwnProperty("instance_description")) {
-                            tmpObj.node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
-                            tmpObj.node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
-                        }
-                        cnt++;
-                    });
-                });
-            }
-            if (us_list.length > 0) {
-                jchaos.node(us_list, "parent", "us", function (data) {
-                    var cnt = 0;
-                    data.forEach(function (us) {
-                        if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
-                            tmpObj.node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
-                        }
-                        cnt++;
-                    });
-                });
-            }
         });
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
@@ -4740,7 +4806,7 @@
 
 
             }, function (bad) {
-                instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent", 1000, false);
+                instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent:" + bad.errmsg, 5000, false);
                 jchaos.setOptions({ "timeout": 5000 });
 
             });
@@ -4758,6 +4824,13 @@
                 }, "Joke",
                 function () { });
             return;
+        } else if (cmd == "start-process") {
+            jchaos.node(tmpObj.data[node_selected].pname, "start", "us", function () {
+                instantMessage("START", "Starting " + tmpObj.data[node_selected].pname + " via agent", 1000, true);
+            }, function () {
+                instantMessage("ERROR START", "Starting " + tmpObj.data[node_selected].pname + " via agent", 3000, false);
+            });
+        return;
         } else if (cmd == "new-script") {
             var templ = {
                 $ref: "algo.json",
@@ -5015,6 +5088,9 @@
                 // items['open-process-errconsole'] = { name: "Open Error console" };
                 items['download-output'] = { name: "Download Files" };
                 items['kill-process'] = { name: "Kill " };
+                if(tmpObj.data[node_selected].msg != "RUNNING"){
+                  items['start-process'] = { name: "Start " };
+                }
 
             }
         }
@@ -5053,9 +5129,9 @@
 
             var hostname = tmpObj.data[p].hostname;
             var status = tmpObj.data[p].msg;
-            var parent = tmpObj.data[p].parent;
+            var ndk_parent = tmpObj.data[p].parent;
             var infoServer = tmpObj.agents[hostname];
-            var parent_str = parent;
+            var parent_str = ndk_parent;
             var encoden = jchaos.encodeName(p);
             $("#" + encoden + "_start_ts").html(started_timestamp);
             $("#" + encoden + "_end_ts").html(end_timestamp);
@@ -5232,8 +5308,26 @@
         var hostHeight = $(window).height();
         $("#" + tablename).find("tr:gt(0)").remove();
 
+      /*  if (typeof tmpObj['agents'] === "undefined") {
+            var ag_list = {};
+            var obj = {
+                idle: 100,
+                io: 0,
+                pmem: 0,
+                sys: 0,
+                ts: 0,
+                user: 0
+            }
+            var list = jchaos.search("", "agent", true, false);
+            list.forEach(function (ele) {
+                ag_list[ele] = obj;
+            })
+            tmpObj['agents'] = ag_list;
 
-        if (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list'])) {
+        }*/
+        if((typeof tmpObj['agents'] === "undefined"))
+            return;
+        if ((typeof tmpObj['agent_list'] === "undefined") || (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list']) || (typeof tmpObj['old_agent_list'] === "undefined"))) {
             tmpObj['old_agent_list'] = tmpObj['agent_list'];
 
             var chart_options = {
@@ -5349,7 +5443,7 @@
             var pmem = obj.pmem;
             var hostname = obj.hostname;
             var status = obj.msg;
-            var parent = obj.parent;
+            var parent = obj.ndk_parent;
             var encoden = jchaos.encodeName(obj.uid);
 
             $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
@@ -5457,6 +5551,80 @@
                 }, "Cancel");
             });
         });
+        $("#script-associate").off('click');
+
+        $("#script-associate").on('click', function () {
+            $("#mdl-script").modal("hide");
+            var templ = {
+                $ref: "agent.json",
+                format: "tabs"
+            }
+            jchaos.findBestServer(function (server,best_agent) {
+                jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (dscript) {
+
+                
+    
+                jchaos.node(best_agent, "info", "agent", function (data) {
+                    var supported=false;
+                    if (data != null) {
+                        if (!(data.hasOwnProperty("andk_node_associated") || !(data.andk_node_associated instanceof Array))) {
+                            data['andk_node_associated']=[]
+                        }
+                        var tmp = {
+                            ndk_uid: tmpObj.node_selected+"_RENAME",
+                            association_uid: 0,
+                            node_launch_cmd_line: "",
+                            node_script_id: tmpObj.node_selected,
+                            node_workdir: "",
+                            node_auto_start: true,
+                            node_keep_alive: false,
+                            node_log_at_launch: false
+                        };
+                        var script_type="";
+                        if(dscript['eudk_script_language']=="CPP"){
+                            tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + dscript['default_argument'] + "\"";
+                            supported=true;
+                            data['instance_name']=best_agent;
+                            script_type="root";
+                        }
+
+                        if(supported){
+                            getEntryWindow("Specify Unique Identifier for "+dscript['eudk_script_language']+ " SCript", tmpObj.node_selected, "NONAME_" + tmpObj.node_selected, "Create", function (inst_name) {
+                                tmp['ndk_uid']= inst_name;
+
+                                data.andk_node_associated.push(tmp);
+
+                                jchaos.node(inst_name,"new",script_type,best_agent); //create the container
+
+                                jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
+                                    if(dscript['eudk_script_language']=="CPP"){
+            
+                                    }
+                                    instantMessage("Agent save ", " OK", 2000, true);
+    
+                                }, function (bad) {
+                                    instantMessage("Agent save failed", bad, 2000, false);
+    
+                                });
+                                              
+                
+                            }, "Cancel");
+                
+                            
+                            //editorFn = agentSave;
+                            //jsonEdit(templ, data);
+                            
+                           
+                    } else {
+                        alert ("association with "+dscript['eudk_script_language']+ " not supported yet");
+                    }
+
+                    };
+                });
+            });
+        });
+
+        });// end associate
         $("#script-save").off('click');
         $("#script-save").on('click', function () {
             jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
@@ -5486,13 +5654,17 @@
         updateProcessList(tmpObj, function (t) {
             var new_ele;
             var old_ele;
+            if (typeof t['elems'] === "undefined") {
+                t['elems'] = [];
+            }
             if (t['elems'] instanceof Array) {
                 new_ele = t['elems'].sort();
             }
             if (t['old_elems'] instanceof Array) {
                 old_ele = t['old_elems'].sort();
             }
-            if (JSON.stringify(new_ele) !== JSON.stringify(old_ele)) {
+
+            if ((JSON.stringify(new_ele) !== JSON.stringify(old_ele))&&((typeof t['agents'] !== "undefined"))) {
                 updateProcessInterface(t);
                 t['old_elems'] = t['elems'];
 
@@ -5515,6 +5687,8 @@
             tmpObj['agents'] = pl['agents'];
             handler(tmpObj);
         });
+        handler(tmpObj);
+
     }
 
     function searchEu(str, alive, list_zone, list_class, list_eu_name) {
@@ -7803,6 +7977,7 @@
         html += '<a href="#" class="btn" id="script-run">Run</a>';
         html += '<a href="#" class="btn" id="script-delete">Delete</a>';
         html += '<a href="#" class="btn" id="script-load">Upload</a>';
+        html += '<a href="#" class="btn" id="script-associate">Associate</a>';
 
         html += '<a href="#" class="btn" id="script-save">Download</a>';
         html += '<a href="#" class="btn" id="script-close">Close</a>';
@@ -8870,7 +9045,23 @@
         }
 
         items['edit-' + node_type] = { name: "Edit ..." };
+        items['desc-'+node_type] = {name: "Desc"};
+        items['delete-histo-data'] = {name:"Delete HISTO data"};
+        var associated = jchaos.node(node_selected, "parent", "us", null, null);
+        if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "" && (node_type == "nt_unit_server" || node_type == "nt_root")) {
+            items['sep5'] = "---------";
 
+            items['start-node'] = { name: "Start "+ jchaos.nodeTypeToHuman(node_type)+"..." };
+            items['stop-node'] = { name: "Stop "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
+            items['restart-node'] = { name: "Restart "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
+            items['kill-node'] = { name: "Kill "+ jchaos.nodeTypeToHuman(node_type)+" (via agent) ..." };
+
+            items['console-node'] = { name: "Console "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
+
+
+
+            items['sep6'] = "---------";
+        }
         if (node_type == "nt_unit_server") {
             items['del-' + node_type] = { name: "Del " + node_selected };
             items['copy-' + node_type] = { name: "Copy " + node_selected };
@@ -8883,21 +9074,12 @@
                 items['paste-nt_control_unit'] = { name: "Paste/Move \"" + cu_copied.ndk_uid };
             }
 
-            var associated = jchaos.node(node_selected, "parent", "us", null, null);
-            if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "") {
-                items['sep5'] = "---------";
+            
+        } else if (node_type == "nt_root") {
+            items['del-' + node_type] = { name: "Del " + node_selected };
+            items['copy-' + node_type] = { name: "Copy " + node_selected };
+            items['save-' + node_type] = { name: "Save To Disk " + node_selected };
 
-                items['start-node'] = { name: "Start US ..." };
-                items['stop-node'] = { name: "Stop US ..." };
-                items['restart-node'] = { name: "Restart US ..." };
-                items['kill-node'] = { name: "Kill US (via agent) ..." };
-
-                items['console-node'] = { name: "Console US ..." };
-
-
-
-                items['sep6'] = "---------";
-            }
         } else if (node_type == "nt_control_unit") {
             items['maketemplate-' + node_type] = { name: "Make Template " };
 
