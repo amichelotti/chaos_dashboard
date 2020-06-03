@@ -76,7 +76,7 @@
 			echo '<script src="'.$main_dir.'/js/counter.js"></script>';
 			echo '<script src="'.$main_dir.'/js/retina.js"></script>';
 			echo '<script src="'.$main_dir.'/js/custom.js"></script>';
-			echo '<script src="'.$main_dir.'/js/jchaos.js"></script>';
+			echo '<script src="'.$main_dir.'/js/jchaos/jchaos.js"></script>';
 			echo '<script src="'.$main_dir.'/js/highcharts.js"></script>';
 			echo '<script src="'.$main_dir.'/js/exporting.js"></script>';
 			echo '<script src="'.$main_dir.'/js/modules/annotations.js"></script>';
