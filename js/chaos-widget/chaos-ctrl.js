@@ -507,8 +507,12 @@
                             if (jchaos.isCollapsable(converted)) {
                                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                             }
-
-                            $("#dataset-" + name).html(jsonhtml);
+                            var html="";
+                            var lat=imdata[0].dpck_ts_diff;
+                            html="<label>CU-MDS Latency(ms):"+lat+"</label>";
+                            
+                            html+=jsonhtml;
+                            $("#dataset-" + name).html(html);
                             if (started == 0) {
                                 started = 1;
                                 stop_update = true;
@@ -6187,7 +6191,7 @@
         html += '<th colspan="2">Time sys/usr [%]</th>';
         html += '<th colspan="2">Command Current/Queue</th>';
         html += '<th colspan="2">Alarms dev/cu</th>';
-        html += '<th colspan="2">Rate Hz-KB/s</th>';
+        html += '<th colspan="3">Hz KB/s</th>';
         html += '</tr>';
 
 
@@ -6207,7 +6211,7 @@
             html += "<td id='" + cuname + "_system_command'></td>";
             html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
             html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-            html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></td></tr>";
+            html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></tr>";
 
 
         });
@@ -6468,6 +6472,17 @@
                         }
                     }
                 }
+                
+                /*if (el.hasOwnProperty("output")){
+                    var lat=el.output.dpck_mds_ats-el.output.dpck_ats;
+                    if(typeof lat === "number"){
+                        $("#" + name_id + "_latenza").html(lat);
+                    } else {
+                        $("#" + name_id + "_latenza").html("NA");
+
+                    }
+
+                }*/
                 for (var dstype of ["output", "input", "custom"]) {
                     if (el.hasOwnProperty(dstype) && (el[dstype].hasOwnProperty("ndk_uid"))) {
                         name_device_db = el[dstype].ndk_uid;
