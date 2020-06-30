@@ -508,7 +508,7 @@
                                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                             }
                             var html="";
-                            var lat=imdata[0].dpck_ts_diff;
+                            var lat=imdata[0].dpck_ts_diff/1000.0;
                             html="<label>CU-MDS Latency(ms):"+lat+"</label>";
                             
                             html+=jsonhtml;
