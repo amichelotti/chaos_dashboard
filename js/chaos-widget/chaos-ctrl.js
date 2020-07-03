@@ -9645,7 +9645,7 @@
         var html = "";
         for (var key in dev_alarm) {
             var value = dev_alarm[key];
-            if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
+            if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dsndk_storage_type" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
                 if (value > 0) {
                     if (value > 2) {
                         value = 2;
