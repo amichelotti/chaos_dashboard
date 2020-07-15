@@ -5092,7 +5092,7 @@
                 // items['open-process-errconsole'] = { name: "Open Error console" };
                 items['download-output'] = { name: "Download Files" };
                 items['kill-process'] = { name: "Kill " };
-                if(tmpObj.data[node_selected].msg != "RUNNING"){
+                if(tmpObj.data.hasOwnProperty(node_selected)&&tmpObj.data[node_selected].hasOwnProperty("msg")&&(tmpObj.data[node_selected].msg !== "RUNNING")){
                   items['start-process'] = { name: "Start " };
                 }
 
