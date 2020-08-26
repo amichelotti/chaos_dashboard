@@ -2493,6 +2493,10 @@
         if (descs instanceof Array) {
             descs.forEach(function (elem, id) {
                 var name = tmpObj['elems'][id];
+                if(!elem.hasOwnProperty("ndk_parent") && (elem.hasOwnProperty("instance_description")&&elem.instance_description.hasOwnProperty("ndk_parent"))){
+                    elem["ndk_parent"]=elem.instance_description.ndk_parent;
+                }
+
                 tmpObj.node_name_to_desc[name] = elem;
             });
         }
@@ -2938,6 +2942,17 @@
                 return 0;
             }, tmpObj);
 
+        } else if (cmd == "calibrate") {
+            
+            jchaos.command(tmpObj.node_multi_selected,{"act_name":"calibrateNodeUnit"}, function (data) {
+                instantMessage("Calibration of:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 1000, true);
+                //   $('.context-menu-list').trigger('contextmenu:hide')
+
+            }, function (data) {
+                instantMessage("ERROR Calibrating:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                //   $('.context-menu-list').trigger('contextmenu:hide')
+
+            });
         } else if (cmd == "load") {
 
             jchaos.loadUnload(tmpObj.node_multi_selected, true, function (data) {
@@ -4493,8 +4508,12 @@
             var us_list = [];
             var cu_list = [];
             node_list.forEach(function (elem, index) {
-                var type = data[index].ndk_type;
-                tmpObj.node_name_to_desc[elem] = { desc: data[index]};
+                var ds = data[index];
+
+                if(!ds.hasOwnProperty("ndk_parent") && (ds.hasOwnProperty("instance_description")&&ds.instance_description.hasOwnProperty("ndk_parent"))){
+                    ds["ndk_parent"]=ds.instance_description.ndk_parent;
+                }
+                tmpObj.node_name_to_desc[elem] = { desc: ds};
            
             });
         });
@@ -6336,11 +6355,12 @@
                     $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
 
 
-
                     if (status == 'Start') {
                         $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
                     } else if (status == 'Stop') {
                         $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
+                    } else if (status == 'Calibrating') {
+                        $("#" + name_id + "_health_status").html('<i class="material-icons verde">assessment</i>');
                     } else if (status == 'Init') {
                         $("#" + name_id + "_health_status").html('<i class="material-icons giallo">trending_up</i>');
 
@@ -9139,6 +9159,7 @@
                     items['sep1'] = "---------";
                     items['snapshot-cu'] = { name: "Take Snapshot", icon: "snapshot" };
                     items['tag-cu'] = { name: "Tag for...", icon: "tag" };
+                    items['calibrate'] = { name: "Calibrate", icon: "tag" };
                 } else if (status == 'Stop') {
                     items['start'] = { name: "Start", icon: "start" };
                     items['deinit'] = { name: "Deinit", icon: "deinit" };
@@ -9362,7 +9383,9 @@
             if (tmpObj.node_name_to_desc[name] == null) {
                 jchaos.getDesc(tmpObj.node_selected, function (desc) {
                     if (desc[0] != null) {
+                       
                         tmpObj.node_name_to_desc[name] = desc[0];
+
                     }
                 });
             }
