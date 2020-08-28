@@ -507,8 +507,12 @@
                             if (jchaos.isCollapsable(converted)) {
                                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                             }
-
-                            $("#dataset-" + name).html(jsonhtml);
+                            var html="";
+                            var lat=imdata[0].dpck_ts_diff/1000.0;
+                            html="<label>CU-MDS Latency(ms):"+lat+"</label>";
+                            
+                            html+=jsonhtml;
+                            $("#dataset-" + name).html(html);
                             if (started == 0) {
                                 started = 1;
                                 stop_update = true;
@@ -2489,6 +2493,10 @@
         if (descs instanceof Array) {
             descs.forEach(function (elem, id) {
                 var name = tmpObj['elems'][id];
+                if(!elem.hasOwnProperty("ndk_parent") && (elem.hasOwnProperty("instance_description")&&elem.instance_description.hasOwnProperty("ndk_parent"))){
+                    elem["ndk_parent"]=elem.instance_description.ndk_parent;
+                }
+
                 tmpObj.node_name_to_desc[name] = elem;
             });
         }
@@ -2934,6 +2942,17 @@
                 return 0;
             }, tmpObj);
 
+        } else if (cmd == "calibrate") {
+            
+            jchaos.command(tmpObj.node_multi_selected,{"act_name":"calibrateNodeUnit"}, function (data) {
+                instantMessage("Calibration of:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 1000, true);
+                //   $('.context-menu-list').trigger('contextmenu:hide')
+
+            }, function (data) {
+                instantMessage("ERROR Calibrating:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                //   $('.context-menu-list').trigger('contextmenu:hide')
+
+            });
         } else if (cmd == "load") {
 
             jchaos.loadUnload(tmpObj.node_multi_selected, true, function (data) {
@@ -4489,8 +4508,12 @@
             var us_list = [];
             var cu_list = [];
             node_list.forEach(function (elem, index) {
-                var type = data[index].ndk_type;
-                tmpObj.node_name_to_desc[elem] = { desc: data[index]};
+                var ds = data[index];
+
+                if(!ds.hasOwnProperty("ndk_parent") && (ds.hasOwnProperty("instance_description")&&ds.instance_description.hasOwnProperty("ndk_parent"))){
+                    ds["ndk_parent"]=ds.instance_description.ndk_parent;
+                }
+                tmpObj.node_name_to_desc[elem] = { desc: ds};
            
             });
         });
@@ -5088,7 +5111,7 @@
                 // items['open-process-errconsole'] = { name: "Open Error console" };
                 items['download-output'] = { name: "Download Files" };
                 items['kill-process'] = { name: "Kill " };
-                if(tmpObj.data[node_selected].msg != "RUNNING"){
+                if(tmpObj.data.hasOwnProperty(node_selected)&&tmpObj.data[node_selected].hasOwnProperty("msg")&&(tmpObj.data[node_selected].msg !== "RUNNING")){
                   items['start-process'] = { name: "Start " };
                 }
 
@@ -6187,7 +6210,7 @@
         html += '<th colspan="2">Time sys/usr [%]</th>';
         html += '<th colspan="2">Command Current/Queue</th>';
         html += '<th colspan="2">Alarms dev/cu</th>';
-        html += '<th colspan="2">Rate Hz-KB/s</th>';
+        html += '<th colspan="3">Hz KB/s</th>';
         html += '</tr>';
 
 
@@ -6207,7 +6230,7 @@
             html += "<td id='" + cuname + "_system_command'></td>";
             html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
             html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-            html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></td></tr>";
+            html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></tr>";
 
 
         });
@@ -6332,11 +6355,12 @@
                     $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
 
 
-
                     if (status == 'Start') {
                         $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
                     } else if (status == 'Stop') {
                         $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
+                    } else if (status == 'Calibrating') {
+                        $("#" + name_id + "_health_status").html('<i class="material-icons verde">assessment</i>');
                     } else if (status == 'Init') {
                         $("#" + name_id + "_health_status").html('<i class="material-icons giallo">trending_up</i>');
 
@@ -6468,6 +6492,17 @@
                         }
                     }
                 }
+                
+                /*if (el.hasOwnProperty("output")){
+                    var lat=el.output.dpck_mds_ats-el.output.dpck_ats;
+                    if(typeof lat === "number"){
+                        $("#" + name_id + "_latenza").html(lat);
+                    } else {
+                        $("#" + name_id + "_latenza").html("NA");
+
+                    }
+
+                }*/
                 for (var dstype of ["output", "input", "custom"]) {
                     if (el.hasOwnProperty(dstype) && (el[dstype].hasOwnProperty("ndk_uid"))) {
                         name_device_db = el[dstype].ndk_uid;
@@ -9124,6 +9159,7 @@
                     items['sep1'] = "---------";
                     items['snapshot-cu'] = { name: "Take Snapshot", icon: "snapshot" };
                     items['tag-cu'] = { name: "Tag for...", icon: "tag" };
+                    items['calibrate'] = { name: "Calibrate", icon: "tag" };
                 } else if (status == 'Stop') {
                     items['start'] = { name: "Start", icon: "start" };
                     items['deinit'] = { name: "Deinit", icon: "deinit" };
@@ -9347,7 +9383,9 @@
             if (tmpObj.node_name_to_desc[name] == null) {
                 jchaos.getDesc(tmpObj.node_selected, function (desc) {
                     if (desc[0] != null) {
+                       
                         tmpObj.node_name_to_desc[name] = desc[0];
+
                     }
                 });
             }
@@ -9630,7 +9668,7 @@
         var html = "";
         for (var key in dev_alarm) {
             var value = dev_alarm[key];
-            if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
+            if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dsndk_storage_type" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
                 if (value > 0) {
                     if (value > 2) {
                         value = 2;
