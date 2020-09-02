@@ -2871,16 +2871,22 @@
             var y = crop_opt.y.toFixed();
             var width = crop_opt.width.toFixed();
             var height = crop_opt.height.toFixed();
+            jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width),null);
+            jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height),null);
+            jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), null);
+            jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), null);
+            /*
+            jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
+                jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
+
             jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
                 jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
-                    jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
-                        jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
                             instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
 
                         });
                     });
                 });
-            });
+            });*/
         } else if (cmd == 'exit-crop') {
             var encoden = jchaos.encodeName(opt.items[cmd].cu);
             $("#cameraImage-" + encoden).cropper('destroy');
