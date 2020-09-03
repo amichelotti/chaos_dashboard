@@ -2871,22 +2871,33 @@
             var y = crop_opt.y.toFixed();
             var width = crop_opt.width.toFixed();
             var height = crop_opt.height.toFixed();
-            jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width),null);
+         /*   jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width),null);
             jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height),null);
-            jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), null);
-            jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), null);
-            /*
+            setTimeout(() => {
+                jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), null);
+            }, 1000);
+            setTimeout(() => {
+                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), null);
+            }, 1000);
+*/
+            console.log("setting WIDTH:"+width);
+
             jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
+                console.log("setting HEIGHT:"+height);
                 jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
+                setTimeout(() => {
+                    console.log("setting OFFSETX:"+x);
 
-            jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
-                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
-                            instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+                    jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
+                        setTimeout(() => {
+                            console.log("setting OFFSETY:"+y);
 
-                        });
-                    });
+                            jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
+                                instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+                            });},1000);
+                    });},1000);
                 });
-            });*/
+            });
         } else if (cmd == 'exit-crop') {
             var encoden = jchaos.encodeName(opt.items[cmd].cu);
             $("#cameraImage-" + encoden).cropper('destroy');
