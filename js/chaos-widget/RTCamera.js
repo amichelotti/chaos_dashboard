@@ -1,29 +1,32 @@
 
 
 function setRoi(cu,width,height,x,y,func){
-  if(x == 0 && y==0 ){
-    jchaos.setAttribute(cu, "OFFSETX", String(x), function(){
-      setTimeout(() => {jchaos.setAttribute(cu, "OFFSETY", String(y), null);},1000);
-     }
-    );
-  }
-  jchaos.setAttribute(cu, "WIDTH", String(width), function () {
-    jchaos.setAttribute(cu, "HEIGHT", String(height), function () {
+  jchaos.setAttribute(cu, "OFFSETX", "0", function(){
     setTimeout(() => {
-        console.log("setting OFFSETX:"+x);
-
-        jchaos.setAttribute(cu, "OFFSETX", String(x), function () {
+      jchaos.setAttribute(cu, "OFFSETY", "0", function(){
+        setTimeout(() => {
+          jchaos.setAttribute(cu, "WIDTH", String(width), function () {
+            jchaos.setAttribute(cu, "HEIGHT", String(height), function () {
             setTimeout(() => {
-                console.log("setting OFFSETY:"+y);
-
-                jchaos.setAttribute(cu, "OFFSETY", String(y), function () {
-                  jqccs.instantMessage("ROI " + cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
-                  func();
-
-                });},1000);
-        });},1000);
-    });
-});
+                console.log("setting OFFSETX:"+x);
+        
+                jchaos.setAttribute(cu, "OFFSETX", String(x), function () {
+                    setTimeout(() => {
+                        console.log("setting OFFSETY:"+y);
+        
+                        jchaos.setAttribute(cu, "OFFSETY", String(y), function () {
+                          jqccs.instantMessage("ROI " + cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+                          func();
+        
+                        });},200);
+                });},200);
+            });
+        });
+        },200);
+      });
+    },200);
+    }
+  );
 }
 function getWidget() {
     var chaos = 

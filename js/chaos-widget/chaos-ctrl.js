@@ -3061,6 +3061,26 @@
 
         } else if (cmd == "show-dataset") {
             showDataset(currsel, currsel, 1000, tmpObj);
+        } else if (cmd == "driver-prop") {
+            jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (data) {
+
+                showJson(tmpObj, "Driver Prop " + currsel, currsel, data[0]);
+
+            }, function (data) {
+                instantMessage("Getting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                //   $('.context-menu-list').trigger('contextmenu:hide')
+
+            });
+        } else if (cmd == "cu-prop") {
+            jchaos.command(tmpObj.node_multi_selected,{"act_name":"ndk_get_prop"}, function (data) {
+
+                showJson(tmpObj, "Node Prop " + currsel, currsel, data[0]);
+
+            }, function (data) {
+                instantMessage("Getting Node prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                //   $('.context-menu-list').trigger('contextmenu:hide')
+
+            });
         } else if (cmd == "show-desc") {
             jchaos.getDesc(currsel, function (data) {
                 tmpObj.node_name_to_desc[currsel] = data[0];
@@ -9257,6 +9277,8 @@
             items['show-dataset'] = { name: "Show/Set/Plot Dataset" };
             items['show-desc'] = { name: "Show Description" };
             items['show-tags'] = { name: "Show Tags info" };
+            items['driver-prop'] = {name: "Edit Driver properties"};
+            items['cu-prop'] = {name: "Edit Node properties"};
 
             items['show-picture'] = { name: "Show as Picture.." };
         }
