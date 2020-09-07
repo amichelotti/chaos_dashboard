@@ -3062,6 +3062,7 @@
         } else if (cmd == "show-dataset") {
             showDataset(currsel, currsel, 1000, tmpObj);
         } else if (cmd == "driver-prop") {
+            //jchaos.sendCUCmd(tmpObj.node_multi_selected,"cu_prop_drv_get",null, function (data) {
             jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (data) {
 
                 showJson(tmpObj, "Driver Prop " + currsel, currsel, data[0]);
