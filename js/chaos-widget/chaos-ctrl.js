@@ -419,7 +419,8 @@
 
                     // $(instant).dialog("close");
                 }
-            }, {
+            }, 
+            {
                 text: "Format",
                 id: 'dataset-radix-' + name,
                 click: function (e) {
@@ -534,7 +535,154 @@
             }
         });
     }
+    
+    
+    jqccs.editJSON=function(msghead, json,applyfunc) {
+        var last_dataset = {};
+        var showformat=0;
+        var name = jchaos.encodeName(msghead);
+        var instant = $('<div id=dataset-' + name + '></div>').dialog({
+            minWidth: hostWidth / 4,
+            minHeight: hostHeight / 4,
+            closeOnEscape: true,
+            title: msghead,
+            resizable: true,
+            buttons: [ 
+                {
+                    text: "Format",
+                    id: 'dataset-radix-' + name,
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                        showformat++;
+                        switch (showformat) {
+                            case 0:
+                                $(e.target).text("Dec(s)");
+                                break;
+                            case 1:
+                                $(e.target).text("Dec(u)");
+                                break;
+                            case 2:
+                                $(e.target).text("Hex");
+                                break;
+                            case 3:
+                                $(e.target).text("Bin");
+                                break;
+                            default:
+                                showformat = 0;
+                                $(e.target).text("Dec(s)");
+                        }
+                        if (showformat == 1) {
+                            options["format"] = 10 + 0x100;
+                        } else if (showformat == 2) {
+                            options["format"] = 16;
+                        } else if (showformat == 3) {
+                            options["format"] = 2;
+                        } else {
+                            options["format"] = 10;
+                        }
+                        var converted = convertBinaryToArrays(json);
+               
+                        var jsonhtml = json2html(converted, options, "");
+                        $("#dataset-" + name).html(jsonhtml);
 
+                        // $(instant).dialog("close");
+                    }
+                },
+                 {
+                text: "Save to Disk",
+                click: function (e) {
+                    var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
+                    saveAs(blob, name + ".json");
+                }
+            },
+            {
+                text: "Upload From Disk",
+                click: function (e) {
+                    getFile("Upload", "upload the json", function (obj) {
+                        json=obj;
+                        var converted = convertBinaryToArrays(json);
+                        var jsonhtml = json2html(converted, options, "");
+                        $("#dataset-" + name).html(jsonhtml);
+                    });
+
+                }
+            },{
+                text: "Apply",
+                id: 'apply-' + name,
+                click: function (e) {
+                   if(typeof applyfunc==="function"){
+                       applyfunc(json);
+                   }
+
+                }
+            },
+            {
+                text: "close",
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $("#dataset-" + name).dialog('close');
+                    $(this).remove();
+
+                }
+            }
+
+
+            ],
+            close: function (event, ui) {
+
+                $(this).remove();
+            },
+            open: function () {
+                var converted = {};
+                converted = convertBinaryToArrays(json);
+                if (showformat == 1) {
+                    options["format"] = 10 + 0x100;
+                } else if (showformat == 2) {
+                    options["format"] = 16;
+                } else if (showformat == 3) {
+                    options["format"] = 2;
+                } else {
+                    options["format"] = 10;
+                }
+                var jsonhtml = json2html(converted, options, "");
+                if (jchaos.isCollapsable(converted)) {
+                    jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                }
+                
+                $("#dataset-" + name).html(jsonhtml);
+                if(typeof applyfunc!=="function"){
+                    $( '#apply-' + name ).remove();
+                }
+
+                
+                
+                jqccs.jsonSetup($(this), function (e) {
+        
+                }, function (e) {
+                    if (e.keyCode == 13) {
+        
+                        var value = e.target.value;
+                        var attrname = e.target.name;
+                        var desc = jchaos.decodeCUPath(attrname);
+                        
+                        var obj=jchaos.changejsonfrompath(json,attrname,value);
+                        var converted = convertBinaryToArrays(json);
+
+                        var jsonhtml = json2html(converted, options, "");
+                         if (jchaos.isCollapsable(converted)) {
+                        jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                        }
+                
+                        $("#dataset-" + name).html(jsonhtml);
+                    } 
+                })
+        
+            
+                $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
+
+            }
+        });
+    }
 
     function getConsole(msghead, pid, server, lines, consolen, refresh, type) {
         var update;
@@ -1662,7 +1810,9 @@
                 var element = $("#edit-temp");
                 var jopt = {};
                 jopt['ajax'] = true;
-                jopt['schema'] = jsontemp;
+                if(typeof jsontemp==="object"){
+                    jopt['schema'] = jsontemp;
+                }
 
 
                 if (jsonin != null) {
@@ -3065,7 +3215,20 @@
             //jchaos.sendCUCmd(tmpObj.node_multi_selected,"cu_prop_drv_get",null, function (data) {
             jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (data) {
 
-                showJson(tmpObj, "Driver Prop " + currsel, currsel, data[0]);
+                jqccs.editJSON("Driver Prop " + currsel, data[0],(json)=>{
+                    var msg={
+                        "act_msg":json,
+                        "act_name":"cu_prop_drv_set"
+                    };
+                    jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
+                        instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+
+                    },(bad)=>{
+                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+bad, 5000, false);
+
+                    });
+
+                });
 
             }, function (data) {
                 instantMessage("Getting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
