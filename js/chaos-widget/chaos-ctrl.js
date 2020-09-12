@@ -3215,11 +3215,22 @@
             //jchaos.sendCUCmd(tmpObj.node_multi_selected,"cu_prop_drv_get",null, function (data) {
             jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (data) {
 
+                var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
                 jqccs.editJSON("Driver Prop " + currsel, data[0],(json)=>{
+                    
+                    var changed={};
+                    for(var key in json){
+                       
+                        if(JSON.stringify(json[key])!==JSON.stringify(origin_json[key])){
+                            changed[key]=json[key];
+                            
+                        }
+                    }
                     var msg={
-                        "act_msg":json,
+                        "act_msg":changed,
                         "act_name":"cu_prop_drv_set"
                     };
+                    console.log("sending changed:"+JSON.stringify(changed));
                     jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
                         instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
 
