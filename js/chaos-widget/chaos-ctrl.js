@@ -3235,7 +3235,7 @@
                         instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
 
                     },(bad)=>{
-                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+bad, 5000, false);
+                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
 
                     });
 
@@ -3248,9 +3248,31 @@
             });
         } else if (cmd == "cu-prop") {
             jchaos.command(tmpObj.node_multi_selected,{"act_name":"ndk_get_prop"}, function (data) {
+                var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
+                jqccs.editJSON("CU/EU Prop " + currsel, data[0],(json)=>{
+                    
+                    var changed={};
+                    for(var key in json){
+                       
+                        if(JSON.stringify(json[key])!==JSON.stringify(origin_json[key])){
+                            changed[key]=json[key];
+                            
+                        }
+                    }
+                    var msg={
+                        "act_msg":changed,
+                        "act_name":"ndk_set_prop"
+                    };
+                    console.log("sending changed:"+JSON.stringify(changed));
+                    jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
+                        instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
 
-                showJson(tmpObj, "Node Prop " + currsel, currsel, data[0]);
+                    },(bad)=>{
+                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
 
+                    });
+
+                });
             }, function (data) {
                 instantMessage("Getting Node prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')

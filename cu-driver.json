@@ -19,6 +19,11 @@
 			"type": "string",
 			"format":"textarea",
 			"description":"Initialization String can be JSON"
+		},
+		"cudk_driver_prop" :{
+			"type": "string",
+			"format":"textarea",
+			"description":"Driver properties initialization (JSON)"
 		}
 	}
 }
