@@ -6408,7 +6408,7 @@
             }
         } else if (e.ctrlKey) {
             var nrows = $(e.currentTarget).index();
-            node_multi_selected.push(node_list[nrows])
+            tmpObj.node_multi_selected.push(node_list[nrows])
         }
         tmpObj.last_index_selected = $(e.currentTarget).index();
 

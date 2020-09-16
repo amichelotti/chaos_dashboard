@@ -71,7 +71,12 @@ function getWidget() {
                 html += '<td class="td_element cameraMenu" id="camera-' + encoden + '" cuname="' + key + '" >'
                 //   html += '<div><b>'+key+'</b>';
                 html += '<div>';
-                html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 />';
+                if(camlist.length>1){
+                  html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 width="659" height="494"/>';
+                } else{
+                  html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000/>';
+
+                }
 //                html += '<div class="row-fluid">';
 
                 html += '<div>' + key + '</div>';
@@ -182,7 +187,7 @@ function getWidget() {
   
           });
           $("#triggerType").off();
-          $("#triggerType").on("change", function () {
+          $("#triggerType").on("click", function () {
             var node_selected = tmpObj.node_selected;
             var value = $("#triggerType option:selected").val();
             var attr = "TRIGGER_MODE";
