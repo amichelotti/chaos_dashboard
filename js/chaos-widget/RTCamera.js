@@ -1,7 +1,27 @@
 
 
 function setRoi(cu,width,height,x,y,func){
-  jchaos.setAttribute(cu, "OFFSETX", "0", function(){
+  var roi_obj={
+    "WIDTH":parseInt(width),
+    "HEIGHT":parseInt(height),
+    "OFFSETX":parseInt(x),
+    "OFFSETY":parseInt(y)
+  };
+  var msg={
+    "act_msg":roi_obj,
+    "act_name":"cu_prop_drv_set"
+};
+console.log("sending ROI:"+JSON.stringify(roi_obj));
+jchaos.command(cu,msg, function (data) {
+    jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
+    func();
+
+
+},(bad)=>{
+  jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
+
+});
+  /*jchaos.setAttribute(cu, "OFFSETX", "0", function(){
     setTimeout(() => {
       jchaos.setAttribute(cu, "OFFSETY", "0", function(){
         setTimeout(() => {
@@ -26,7 +46,7 @@ function setRoi(cu,width,height,x,y,func){
       });
     },200);
     }
-  );
+  );*/
 }
 function getWidget() {
     var chaos = 
@@ -42,7 +62,9 @@ function getWidget() {
               case 5:
                 return "No Acquire";
               case 3:
-                return "Trigger";
+                return "Trigger LOHI";
+              case 4:
+                  return "Trigger HILO";
               default:
                 return "--";
             }
@@ -335,7 +357,7 @@ function getWidget() {
           html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           
           html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
-          html += "<td id='" + cuname + "'><select class='select_camera_mode span6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>Triggered</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
+          html += "<td id='" + cuname + "'><select class='select_camera_mode span6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
           
           html += "<td id='" + cuname + "_output_SHUTTER'></td>";
           html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_SHUTTER' name='"+cu[i]+"/input/SHUTTER'></input></td>";

@@ -611,7 +611,13 @@
                 id: 'apply-' + name,
                 click: function (e) {
                    if(typeof applyfunc==="function"){
-                       applyfunc(json);
+                       applyfunc(json,function(newjson){
+                        if(typeof newjson==="object"){
+                            var converted = convertBinaryToArrays(newjson);
+                            var jsonhtml = json2html(converted, options, "");
+                            $("#dataset-" + name).html(jsonhtml);
+                        }
+                       });
                    }
 
                 }
@@ -3216,7 +3222,7 @@
             jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (data) {
 
                 var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
-                jqccs.editJSON("Driver Prop " + currsel, data[0],(json)=>{
+                jqccs.editJSON("Driver Prop " + currsel, data[0],(json,fupdate)=>{
                     
                     var changed={};
                     for(var key in json){
@@ -3233,6 +3239,10 @@
                     console.log("sending changed:"+JSON.stringify(changed));
                     jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
                         instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+                        jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (dd) {
+                            //read back
+                            fupdate(dd[0]);
+                        });
 
                     },(bad)=>{
                         instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
