@@ -5826,11 +5826,13 @@
                 $ref: "agent.json",
                 format: "tabs"
             }
+            var supported=false;
+            var script_type="";
+
+       
             jchaos.findBestServer(function (server,best_agent) {
                 jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (dscript) {
 
-                
-    
                 jchaos.node(best_agent, "info", "agent", function (data) {
                     var supported=false;
                     if (data != null) {
@@ -5845,11 +5847,13 @@
                             node_workdir: "",
                             node_auto_start: true,
                             node_keep_alive: false,
-                            node_log_at_launch: false
+                            node_log_on_console: true
                         };
                         var script_type="";
+                        getEntryWindow(tmpObj.node_selected +" arguments ", tmpObj.node_selected, "()","Continue", function (fargs) {
+
                         if(dscript['eudk_script_language']=="CPP"){
-                            tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + dscript['default_argument'] + "\"";
+                            tmp['node_launch_cmd_line']="chaosRoot --rootopt '-q " + tmpObj.node_selected + fargs + "'";
                             supported=true;
                             data['instance_name']=best_agent;
                             script_type="root";
@@ -5860,19 +5864,40 @@
                                 tmp['ndk_uid']= inst_name;
 
                                 data.andk_node_associated.push(tmp);
-
-                                jchaos.node(inst_name,"new",script_type,best_agent); //create the container
-
-                                jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
-                                    if(dscript['eudk_script_language']=="CPP"){
-            
-                                    }
-                                    instantMessage("Agent save ", " OK", 2000, true);
-    
+                                var template = {};
+                                var templ = {
+                                    $ref: "cu.json",
+                                    format: "tabs"
+                                }
+                                template['ndk_uid'] = inst_name;
+                                template["ndk_parent"] = best_agent;
+                                template['ndk_type']= script_type;
+                                template['control_unit_implementation']=tmp['node_launch_cmd_line'];
+                                //editorFn = jchaos.newCuSave;
+                                //jsonEdit(templ, template);
+                                jsonEditWindow("New EU ", templ, template, jchaos.newCuSave, tmpObj, function (ok) {
+                                    instantMessage("EU save ", " OK", 2000, true);
+        
                                 }, function (bad) {
-                                    instantMessage("Agent save failed", bad, 2000, false);
-    
+                                    instantMessage("EU save failed", bad, 2000, false);
+        
                                 });
+                               /* jchaos.node(inst_name,"new",script_type,best_agent,()=>{
+
+                                    jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
+                                        if(dscript['eudk_script_language']=="CPP"){
+                
+                                        }
+                                        instantMessage("Agent save ", " OK", 2000, true);
+        
+                                    }, function (bad) {
+                                        instantMessage("Agent save failed", bad, 2000, false);
+        
+                                    });
+                            },(bad)=>{
+                                instantMessage("Cannot create container", bad, 5000, false);
+
+                            });*/
                                               
                 
                             }, "Cancel");
@@ -5885,7 +5910,7 @@
                     } else {
                         alert ("association with "+dscript['eudk_script_language']+ " not supported yet");
                     }
-
+                }, "Cancel");
                     };
                 });
             });
