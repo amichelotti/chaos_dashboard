@@ -4028,7 +4028,7 @@
                     };
                 });
                 return;
-            } else if ((cmd == "edit-nt_control_unit")||(cmd == "edit-nt_root")) {
+            } else if ((cmd == "edit-nt_control_unit")) {
                 var templ = {
                     $ref: "cu.json",
                     format: "tabs"
@@ -4048,6 +4048,25 @@
                     }
                 });
                 return;
+            } else if(cmd == "edit-nt_root") {
+                var templ = {
+                    $ref: "cu.json",
+                    format: "tabs"
+                }
+                var stype = cmd.split("-");
+
+                var typ = jchaos.nodeTypeToHuman(stype[1]);
+                jchaos.node(node_selected,"desc",typ,function(desc){
+                jsonEditWindow("Edit EU ", templ, desc, (json, obj, ok, bad)=>{
+                    jchaos.node(node_selected,"nodeupdate",typ,json.ndk_parent,json,ok,bad);
+                
+                }, tmpObj, function (ok) {
+                    instantMessage("EU save ", " OK", 2000, true);
+
+                }, function (bad) {
+                    instantMessage("EU save failed", JSON.stringify(bad), 2000, false);
+
+                });});
             } else if ((cmd == "edit-nt_unit_server")) {
                 var templ = {
                     $ref: "us.json",
@@ -4154,6 +4173,19 @@
 
                 confirm("Delete " + typ, "Your are deleting : " + node_selected, "Ok", function () {
                     jchaos.node(node_selected, "deletenode", typ, function () {
+                        instantMessage("Node deleted ", " OK", 2000, true);
+                        updateNodeEvent();
+                    }, function (err) {
+                        instantMessage("cannot delete server:", err, 2000, false);
+
+                    });
+                }, "Cancel");
+                return;
+            } else if (cmd == "delete-node" ) {
+
+
+                confirm("Delete Node", "Your are deleting : " + node_selected, "Ok", function () {
+                    jchaos.node(node_selected, "deletenode", "", function () {
                         instantMessage("Node deleted ", " OK", 2000, true);
                         updateNodeEvent();
                     }, function (err) {
@@ -5856,7 +5888,7 @@
                             tmp['node_launch_cmd_line']="chaosRoot --rootopt '-q " + tmpObj.node_selected + fargs + "'";
                             supported=true;
                             data['instance_name']=best_agent;
-                            script_type="root";
+                            script_type="nt_root";
                         }
 
                         if(supported){
@@ -5872,10 +5904,19 @@
                                 template['ndk_uid'] = inst_name;
                                 template["ndk_parent"] = best_agent;
                                 template['ndk_type']= script_type;
+                                template['cudk_desc']= dscript['script_description'];
+                                template['auto_load']=true;
+                                template['auto_init']=true;
+                                template['auto_start']=true;
+                                template['cudk_thr_sch_delay']=1;
                                 template['control_unit_implementation']=tmp['node_launch_cmd_line'];
+                                template['seq_id']=0;
                                 //editorFn = jchaos.newCuSave;
                                 //jsonEdit(templ, template);
-                                jsonEditWindow("New EU ", templ, template, jchaos.newCuSave, tmpObj, function (ok) {
+                                jsonEditWindow("New EU ", templ, template, (json, obj, ok, bad)=>{
+                                    jchaos.node(inst_name,"new",script_type,best_agent,json,ok,bad);
+                                
+                                }, tmpObj, function (ok) {
                                     instantMessage("EU save ", " OK", 2000, true);
         
                                 }, function (bad) {
@@ -9406,6 +9447,9 @@
 
                 items['agent-act'] = "---------";
             }
+
+        } else {
+            items['delete-node'] = { name: "Delete Node " + node_selected };
 
         }
         if (node_selected != null && node_selected != "") {
