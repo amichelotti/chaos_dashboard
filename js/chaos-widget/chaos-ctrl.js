@@ -4176,7 +4176,7 @@
                         instantMessage("Node deleted ", " OK", 2000, true);
                         updateNodeEvent();
                     }, function (err) {
-                        instantMessage("cannot delete server:", err, 2000, false);
+                        instantMessage("cannot delete server:", JSON.stringify(err), 2000, false);
 
                     });
                 }, "Cancel");
@@ -4189,7 +4189,7 @@
                         instantMessage("Node deleted ", " OK", 2000, true);
                         updateNodeEvent();
                     }, function (err) {
-                        instantMessage("cannot delete server:", err, 2000, false);
+                        instantMessage("cannot delete server:", JSON.stringify(err), 2000, false);
 
                     });
                 }, "Cancel");
