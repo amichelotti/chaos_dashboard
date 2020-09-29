@@ -5885,7 +5885,7 @@
                         getEntryWindow(tmpObj.node_selected +" arguments ", tmpObj.node_selected, "()","Continue", function (fargs) {
 
                         if(dscript['eudk_script_language']=="CPP"){
-                            tmp['node_launch_cmd_line']="chaosRoot --rootopt '-q " + tmpObj.node_selected + fargs + "'";
+                            tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + fargs + "\"";
                             supported=true;
                             data['instance_name']=best_agent;
                             script_type="nt_root";
@@ -5917,7 +5917,13 @@
                                     jchaos.node(inst_name,"new",script_type,best_agent,json,ok,bad);
                                 
                                 }, tmpObj, function (ok) {
-                                    instantMessage("EU save ", " OK", 2000, true);
+                                    jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (k) {
+                                        instantMessage("Agent save ", " OK", 2000, true);
+        
+                                    }, function (bad) {
+                                        instantMessage("Agent save failed", JSON.stringify(bad), 4000, false);
+        
+                                    });
         
                                 }, function (bad) {
                                     instantMessage("EU save failed", bad, 2000, false);
@@ -9392,7 +9398,13 @@
         items['edit-' + node_type] = { name: "Edit ..." };
         items['desc-'+node_type] = {name: "Desc"};
         items['delete-histo-data'] = {name:"Delete HISTO data"};
-        var associated = jchaos.node(node_selected, "parent", "us", null, null);
+        var associated="";
+        if(node.hasOwnProperty('desc')&&node.desc.hasOwnProperty('ndk_parent')){
+            associated=node.desc;
+        } else {
+            associated = jchaos.node(node_selected, "parent", "us", null, null);
+
+        }
         if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "" && (node_type == "nt_unit_server" || node_type == "nt_root")) {
             items['sep5'] = "---------";
 
