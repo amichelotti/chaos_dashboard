@@ -19,6 +19,22 @@
         "enum": ["bash", "CPP", "nodejs", "LUA", "python"]
       }
     },
+	"group": {
+	    "type": "string",
+	    "required": true,
+	    "format":"text",
+	    "description":"Group name"
+	},
+	"target" :
+	{
+		"type": "array",
+  		"format": "select",
+  		"uniqueItems": true,
+  		"items": {
+    	"type": "string",
+		  "enum": ["local","remote"]
+		  }
+  },
     "eudk_script_content": {
       "type": "string",
       "format": "textarea",

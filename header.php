@@ -10,16 +10,63 @@
 <div class="navbar">
     <div class="navbar-inner">
 	<div class="container-fluid">
-	    <a class="btn btn-navbar" data-toggle="collapse" data-target=".top-nav.nav-collapse,.sidebar-nav.nav-collapse">
+	   <!--  <a class="btn btn-navbar" data-toggle="collapse" data-target=".top-nav.nav-collapse,.sidebar-nav.nav-collapse">
 		<span class="icon-bar"></span>
 		<span class="icon-bar"></span>
 		<span class="icon-bar"></span>
 	    </a>
-	    
-            <a class="brand" href="<?php echo $index; ?>"><span>!CHAOS Dashboard</span><?php echo file_get_contents("target.html");echo file_get_contents("version.html");?></a>
+	    --> 
 								
 		<!-- start: Header Menu -->
-		<div class="nav-no-collapse header-nav">
+		<div class="nav-no-collapse header-nav span2" style="float:left">
+		    <ul class="nav pull-right">
+						
+			<!-- start: User Dropdown -->
+			    <li class="dropdown">
+				<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+				    <i class="halflings-icon white user"></i> Chaos
+				    <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+				    <li class="dropdown-menu-title">
+ 					<span>Chaos</span>
+					</li>
+					<li><a href="./index.php"><i class="halflings-icon home"></i>CU/EU View</a></li>
+				    <li><a href="./chaos_jshell.php"><i class="halflings-icon modal-window"></i>Control Console</a></li>
+				    <li><a href="./process.php"><i class="halflings-icon cog"></i> Process View</a></li>
+					<li><a href="./chaos_node.php"><i class="halflings-icon pencil"></i>Node Management</a></li>
+					<li><a href="./configuration.php""><i class="halflings-icon cloud"></i>Configuration</a></li>
+				</ul>
+			    </li>
+			<!-- end: User Dropdown -->
+
+			</ul>
+		</div>
+		<div class="nav-no-collapse header-nav span2" style="float:left">
+		    <ul class="nav pull-right">
+						
+			<!-- start: User Dropdown -->
+			    <li class="dropdown">
+				<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+				    <i class="halflings-icon white cog"></i> Control Scripts
+				    <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+				    <li class="dropdown-menu-title">
+ 					<span> Control Scripts</span>
+					</li>
+					<li><a id="script-upload"><i class="halflings-icon upload"></i>Upload</a></li>
+				    <li><a id="script-run"><i class="halflings-icon refresh"></i>Run..</a></li>
+				    <li><a id="script-edit"><i class="halflings-icon edit"></i>Edit..</a></li>
+					<li><a href="sript-delete"><i class="halflings-icon remove"></i>Delete..</a></li>
+				</ul>
+			    </li>
+			<!-- end: User Dropdown -->
+
+			</ul>
+			<div id="script-context-menu"></div>
+		</div>
+		<div class="nav-no-collapse header-nav span2" style="float:left">
 		    <ul class="nav pull-right">
 						
 			<!-- start: User Dropdown -->
@@ -43,9 +90,11 @@
 			<!-- end: User Dropdown -->
 
 			</ul>
-		    </div>
+			</div>
+			
 		    <!-- end: Header Menu -->
-				
+            <div class="span10"  style="float:right"><a class="brand" href="<?php echo $index; ?>"><span>!CHAOS Dashboard</span><?php echo file_get_contents("target.html");echo file_get_contents("version.html");?></a></div>
+
 	</div>
     </div>
 </div>

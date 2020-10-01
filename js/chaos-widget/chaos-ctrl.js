@@ -326,6 +326,88 @@
         });
     }
 
+    function showScript(msghead, group,type, tmpObj) {
+        var name = "script-"+(new Date()).getTime();
+        var instant = $('<div id=dataset-' + name + '></div>').dialog({
+            minWidth: hostWidth / 4,
+            minHeight: hostHeight / 4,
+            closeOnEscape: true,
+            title: msghead,
+            resizable: true,
+            buttons: [ 
+            {
+                text: "save",
+                click: function (e) {
+                    var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
+                    saveAs(blob, name + ".json");
+                }
+            },
+            {
+                text: "close",
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $("#dataset-" + name).dialog('close');
+
+                }
+            }
+
+
+            ],
+            close: function (event, ui) {
+
+                $(this).remove();
+            },
+            open: function () {
+                jchaos.search("", "script", false, function (l) {
+                    var scripts={};
+                    if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
+                        var list_algo = l['found_script_list'];
+                        list_algo.forEach(function (p) {
+                            var encoden = jchaos.encodeName(p.script_name);
+                            delete p._id;
+                            if(p.seq>0){
+                                p['date']=(new Date(p.seq)).toDateString();
+                            }
+                            if((typeof group ==="string")&&(p.hasOwnProperty("group"))){
+                                if((group!="")){
+                                    if(p.group==group){
+                                        scripts[group][encoden]=p;
+                                    }
+                                } else {
+                                    scripts[p.group][encoden]=p;
+ 
+                                }
+                                
+                            } else {
+                                scripts[encoden]=p;
+                            }
+                            
+                        });
+                    }
+                    var jsonhtml = json2html(scripts, {collapsed:true}, "");
+                    $("#dataset-" + name).html(jsonhtml);
+
+                    jqccs.jsonSetup($("#dataset-" + name), function (e) {
+            
+                    }, function (e) {
+                        if (e.keyCode == 13) {
+            
+            
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+                    $(".json-toggle").trigger("click");
+                    jsonEnableScriptContext($("#dataset-" + name),scripts);
+
+                });
+
+                
+            }
+            
+        });
+    }
     function showDataset(msghead, cuname, refresh, tmpObj) {
         var update;
         var started = 0;
@@ -520,7 +602,7 @@
                                 //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
                                 //target.toggle();
                                 $(".json-toggle").trigger("click");
-                                jsonEnableContext(cuname);
+                                jsonEnableDSContext(cuname);
                             }
                         }, function (err) {
                             console.log(err);
@@ -689,7 +771,118 @@
             }
         });
     }
+     jqccs.execConsole=function(msghead, execHandler,okhandle,nokhandle) {
+        var pid=new Date();
+        var html = '<div id=console-' + pid + '></div>';
+        var opt = {
+            minWidth: hostWidth / 2,
+            minHeight: hostHeight / 4,
+            title: msghead,
+            resizable: true,
+            dialogClass: 'no-close',
+            buttons: [{
+                text: "download",
+                id: 'console-download-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    var blob = $('#console-' + pid).terminal().get_output();
+                    saveAs(blob, pid + ".log");
 
+                 
+                }
+            }, 
+            {
+                text: "pause",
+                id: 'console-pause-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $('#console-' + pid).terminal().pause();
+
+                }
+            },
+            {
+                text: "resume",
+                id: 'console-resume-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $('#console-' + pid).terminal().resume();
+
+                }
+            },
+                {
+                    text: "close",
+                    id: 'console-close-' + pid,
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                    //    $('#console-' + pid).terminal().exit();
+                    ('#console-' + pid).remove();
+                    }
+                
+            }],
+            close: function (event, ui) {
+            //    $('#console-' + pid).terminal().exit();
+            ('#console-' + pid).remove();
+            },
+
+            open: function (e) {
+                console.log(msghead + "opening terminal :" + pid);
+
+                //$(e.target).parent().css('background-color', 'black');
+                $('#console-' + pid).css('background-color', 'black');
+                $('#console-' + pid).terminal(function(command) {
+                    if (command !== '') {
+                        try {
+                            if(command == "help"){
+                                return;
+                            }
+                            var regxp=/^\s*console\.([a-z]{3,})\((.*)\)\s*;/;
+                            var match = regxp.exec(command);
+             
+                            if(match!=null){
+                                
+                                var result = window.eval(match[2]);
+                                if (result !== undefined) {
+                                    if(match[1]=="error"){
+                                        this.error(new String(result));
+            
+                                    } else{
+                                        this.echo(new String(result));
+                                    } 
+                                }
+                            }
+                            
+                            var result = window.eval(command);
+                            dump_script+=command;
+            
+                            if (result !== undefined) {
+                                this.echo(new String(result));
+                            }
+                        } catch(e) {
+                            this.error(new String(e));
+                        }
+                    } else {
+                       this.echo('');
+                    }
+                }, {
+                    greetings: 'JavaScript Chaos Interpreter',
+                    name: 'JChaos',
+                    height: 600,
+                    prompt: 'chaos-js> ',
+                    completion:methods_full
+                   
+                });
+                if(typeof execHandler === "string"){
+                    $('#console-' + pid).terminal().exec(execHandler,false);
+                } else if(typeof execHandler === "function"){
+                    $('#console-' + pid).terminal().exec(execHandler(),false);
+                }
+               
+            
+        }
+    };
+      
+        createCustomDialog(opt, html);
+    }
     function getConsole(msghead, pid, server, lines, consolen, refresh, type) {
         var update;
         var data;
@@ -1531,7 +1724,7 @@
         });
     }
 
-    function algoLoadFromFile(obj) {
+    function algoLoadFromFile(obj,target) {
         getFile("Script Loading", "select the Script to load", function (script) {
             var scriptTmp = {};
             var name = script['name'];
@@ -1542,21 +1735,27 @@
                 name = match[1];
             }
             if (name.includes(".sh") || name.includes(".bash")) {
-                language = "bash";
+                language = "BASH";
             }
             if (name.includes(".c") || name.includes(".C") || name.includes(".cpp") || name.includes(".CPP") || name.includes(".h")) {
                 language = "CPP";
             }
             if (name.includes(".js")) {
-                language = "nodejs";
+                language = "JS";
             }
             if (name.includes(".py")) {
-                language = "python";
+                language = "PYTHON";
             }
             if (name.includes(".lua")) {
                 language = "LUA";
             }
             scriptTmp['script_name'] = name;
+            scriptTmp['target'] = "remote";
+
+            if(typeof target !=="undefined"){
+                scriptTmp['target'] = target;
+            } 
+
             scriptTmp['eudk_script_content'] = script['data'];
             scriptTmp['eudk_script_language'] = language;
             scriptTmp['script_description'] = "Imported from " + script['name'];
@@ -2044,8 +2243,81 @@
         });
         */
     }
+    function jsonEnableScriptContext(dom,scripts) {
+       dom.contextMenu('destroy', '.json-key');
 
-    function jsonEnableContext(node_selected) {
+       dom.contextMenu({
+            selector: '.json-toggle',
+            build: function ($trigger, e) {
+                var cuitem = {};
+                //  var portdir = $(e.currentTarget).attr("portdir");
+                var name=e.currentTarget.text;
+                console.log("choosing "+name);
+                if(scripts.hasOwnProperty(name)&& scripts[name].hasOwnProperty("eudk_script_language")){
+                    var language=scripts[name].eudk_script_language.toUpperCase();
+                    if(language=="JS" ||  language=="NODEJS"){
+                        cuitem['run-script'] = { name: "Run Script "+name,script:scripts[name] };
+                    }
+                    cuitem['delete-script'] = { name: "Delete Script "+name,script:scripts[name]  };
+                    cuitem['save-script'] = { name: "Save Script "+name,script:scripts[name] };
+                }
+                cuitem['sep1'] = "---------";
+
+                cuitem['quit'] = {
+                    name: "Quit",
+                    icon: function () {
+                        return 'context-menu-icon context-menu-icon-quit';
+                    }
+                };
+
+                return {
+
+                    callback: function (cmd, options) {
+
+                        var fullname;
+                        var script=options.commands[cmd].script;
+                        if (cmd == "run-script") {
+                           console.log("Running script "+JSON.stringify(script));
+                           jchaos.loadScript(script.script_name, script.seq, function (data) {
+                            if(typeof data==="object" && data.hasOwnProperty('eudk_script_content')){
+                                var obj = atob(data['eudk_script_content']);
+                                jqccs.execConsole(script.script_name,obj);
+                            } else {
+                                instantMessage("Empty content ",  script.script_name, 5000,false);
+
+                            }
+                           },function(bad){
+                            instantMessage("Error retriving ",  script.script_name, 5000,false);
+
+                           });
+
+                        } else if (cmd == "delete-script") {
+                            console.log("Delete script ");
+                            confirm("Delete script", "Your are deleting Script: " + script.scriot_name, "Ok", function () {
+                                jchaos.rmScript(script.scriot_name, function (data) {
+                                    instantMessage("Remove Script", "removed:" + script.scriot_name, 2000);
+                
+                                });
+                
+                            }, "Cancel");
+
+                        } else if (cmd == "save-script") {
+                            jchaos.loadScript(script.scriot_name, script.seq, function (data) {
+
+                                var obj = atob(data['eudk_script_content']);
+                                var blob = new Blob([obj], { type: "json;charset=utf-8" });
+                                saveAs(blob, data['script_name']);
+                            });
+
+                        } 
+                        return;
+                    },
+                    items: cuitem
+                }
+            }
+        });
+    }
+    function jsonEnableDSContext(node_selected) {
         $.contextMenu('destroy', '.json-key');
 
         $.contextMenu({
@@ -2187,7 +2459,7 @@
 
                 }
             });
-            jsonEnableContext(node_selected);
+            jsonEnableDSContext(node_selected);
         });
 
         $("#dataset-close").on('click', function () {
@@ -3336,6 +3608,45 @@
                 console.log(err);
             });
 
+        } else if (cmd == "execute-jscript") {
+            showScript("Scripts", "","", tmpObj);
+
+        } else if (cmd == "load-jscript") {
+            getFile("Control Script Loading", "select the Script to load", function (script) {
+                var regex = /.*[/\\](.*)$/;
+                var scriptTmp = {};
+
+                var match = regex.exec(name);
+                if (match != null) {
+                    name = match[1];
+                }
+                if (name.includes(".js")) {
+                    language = "JS";
+                } else {
+                    instantMessage("cannot load"+name," You must load a .js extension:");
+                    return;
+                }
+                var zone_selected = $("#zones option:selected").val();
+                if(typeof zone_selected ==="string"){
+                    scriptTmp['group'] = zone_selected;
+                } else {
+                    scriptTmp['group'] = "SYSTEM";
+                }
+                scriptTmp['script_name'] = name;
+                scriptTmp['target'] = "local";
+                scriptTmp['eudk_script_content'] = script['data'];
+                scriptTmp['eudk_script_language'] = language;
+                scriptTmp['script_description'] = "Imported from " + script['name'];
+                scriptTmp['default_argument'] = "";
+                var templ = {
+                    $ref: "algo.json",
+                    format: "tabs"
+                }
+    
+                jsonEditWindow("Loaded", templ, scriptTmp, algoSave, obj);
+            });
+            
+
         } else if (cmd == "history-cu-root") {
             createQueryDialog(function (query) {
                 // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
@@ -3368,7 +3679,7 @@
                 // open CB 
                 var names = findTagsOf(tmpObj, currsel);
                 element_sel("#select-tag", names, 0);
-                $("#select-tag").on("change", function () {
+                $("#select-tag").on("click", function () {
                     var tagname = $("#select-tag option:selected").val();
                     $("#query-tag").val(tagname);
                     var tags = jchaos.variable("tags", "get", null, null);
@@ -3889,7 +4200,7 @@
 
             }
 
-            stateOutput('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Latency:' + jchaos['latency'] + '</p><p>LatencyAvg:' + jchaos['latency_avg'].toFixed(2) + '</p><p>OpsOk:' + jchaos['numok'] + '</p><p>Errors:' + jchaos['errors'] + '</p><p>Timeouts:' + jchaos['timeouts'] + '</p></font></b>', false);
+            stateOutput('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + ' Latency:' + jchaos['latency'] + ' LatencyAvg:' + jchaos['latency_avg'].toFixed(2) + ' OpsOk:' + jchaos['numok'] + ' Errors:' + jchaos['errors'] + 'Timeouts:' + jchaos['timeouts'] + '</p></font></b>', false);
 
             if ((now - tmpObj.last_check) > tmpObj.check_interval) {
                 if (tmpObj.data != null) {
@@ -5147,7 +5458,7 @@
         } else if (cmd == "manage-script") {
             updateScriptModal(tmpObj);
         } else if (cmd == "load-script") {
-            algoLoadFromFile(tmpObj);
+            algoLoadFromFile(tmpOb,"remote");
         } else if (cmd == "root-script") {
             runRemoteScript(tmpObj, "Chaos Root", "CPP");
         } else if (cmd == "new-process-template") {
@@ -5917,6 +6228,11 @@
                                     jchaos.node(inst_name,"new",script_type,best_agent,json,ok,bad);
                                 
                                 }, tmpObj, function (ok) {
+                                    var template = {};
+                                    var templ = {
+                                    $ref: "agent.json",
+                                    format: "tabs"
+                                }
                                     jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (k) {
                                         instantMessage("Agent save ", " OK", 2000, true);
         
@@ -9584,6 +9900,10 @@
                 items['histo-cu-enable'] = { name: "Enable History", icon: "live" };
             }
         }
+        items['sep4'] = "---------";
+        items['execute-jscript'] = { name: "Execute JS script.." };
+        items['load-jscript'] = { name: "Load JS script.." };
+
         return items;
     }
 

@@ -10,6 +10,22 @@
 	    "format":"text",
 	    "description":"Unique Identifier of the Script"
 	},
+	"group": {
+	    "type": "string",
+	    "required": true,
+	    "format":"text",
+	    "description":"Group name"
+	},
+	"target" :
+	{
+		"type": "array",
+  		"format": "select",
+  		"uniqueItems": true,
+  		"items": {
+    	"type": "string",
+		"enum": ["local","remote"]
+		  }
+  },
 	"eudk_script_language" :
 	{
 		"type": "array",

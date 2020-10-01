@@ -17,20 +17,11 @@ require_once('header.php');
 
 	<div class="container-fluid-full fill">
 		<div class="row-fluid fill">		
-			<!-- start: Main Menu -->
-			<div id="sidebar-left" class="span2 fill">
-				<div class="nav-collapse sidebar-nav">
-					<ul class="nav nav-tabs nav-stacked main-menu">						
-						<?php require_once('menu.php'); ?>
-
-					</ul>
-				</div>
-			</div>
-			<!-- end: Main Menu -->
+		
 			
 			
 			<!-- start: Content -->
-			<div id="content" class="span10 fill">
+			<div id="chaos_content" class="span12">
 			
 				<ul class="breadcrumb">
 					<li>
