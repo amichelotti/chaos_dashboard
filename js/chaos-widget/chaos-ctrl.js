@@ -4352,7 +4352,7 @@
                             instantMessage("CU saved " + node_selected, " OK", 2000, true);
 
                         }, function (bad) {
-                            instantMessage("Errro saving CU " + node_selected, bad, 2000, false);
+                            instantMessage("Error saving CU " + node_selected, JSON.stringify(bad), 2000, false);
 
                         });
 
@@ -4719,6 +4719,42 @@
                 //editorFn = jchaos.newCuSave;
                 //jsonEdit(templ, template);
                 jsonEditWindow("New MemCache import CU", templ, null, newMCCuSave, tmpObj);
+                var templ = {
+                    $ref: "cu.json",
+                    format: "tabs"
+                }
+                // editorFn = jchaos.newCuSave;
+                def_obj.ndk_parent = node_selected;
+                
+
+
+                return;
+            } else if (cmd.includes("new-nt_control_unit-custom")) {
+
+                // custom
+                var templ = {
+                    $ref: "cu.json",
+                    format: "tabs"
+                }
+                var def = {};
+
+                def['ndk_parent']=node_selected;
+                def['ndk_type']="nt_control_unit";
+                def['auto_load']=true;
+                def['auto_init']=true;
+                def['auto_start']=true;
+                def['cudk_thr_sch_delay']=1000000;
+                def["cudk_desc"]="<CU description>";
+                def["cudk_load_param"]="{}";
+                def["cudk_props"]="{}";
+
+                def['dsndk_storage_type']=2;
+
+
+
+                //editorFn = jchaos.newCuSave;
+                //jsonEdit(templ, template);
+                jsonEditWindow("New Custom CU", templ, def, jchaos.newCuSave, tmpObj);
 
 
 
