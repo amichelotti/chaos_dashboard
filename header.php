@@ -99,6 +99,13 @@
     </div>
 </div>
 <script>
+$("#script-run").on('click',function(){
+	jqccs.showScript("Run","","JS");
+});
+$("#script-edit").on('click',function(){
+});
+$("#script-delete").on('click',function(){
+});
 $("#script-upload").on('click',function(){
 
 	jqccs.getFile("Control Script Loading", "select the Script to load", function (script) {
@@ -117,12 +124,12 @@ $("#script-upload").on('click',function(){
                 }
                 var zone_selected = $("#zones option:selected").val();
                 if(typeof zone_selected ==="string"){
-                    scriptTmp['group'] = zone_selected;
+                    scriptTmp['script_group'] = zone_selected;
                 } else {
-                    scriptTmp['group'] = "SYSTEM";
+                    scriptTmp['script_group'] = "ALL";
                 }
                 scriptTmp['script_name'] = name;
-                scriptTmp['target'] = "local";
+                scriptTmp['script_target'] = "local";
                 scriptTmp['eudk_script_content'] = script['data'];
                 scriptTmp['eudk_script_language'] = language;
                 scriptTmp['script_description'] = "Imported from " + script['name'];
@@ -132,7 +139,7 @@ $("#script-upload").on('click',function(){
 					var templ=JSON.parse(d);
 					jchaos.search("","zone",true,function(zon){
 						var zone=["ALL"].concat(zon);
-						templ['properties']['group']['items']['enum']=zone;
+						templ['properties']['script_group']['items']['enum']=zone;
 							jqccs.jsonEditWindow("Loaded", templ, scriptTmp, jqccs.algoSave);
 					});
 				}, 'text');

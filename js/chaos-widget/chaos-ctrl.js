@@ -328,7 +328,9 @@
             }
         });
     }
-
+    jqccs.showScript=function(msghead, group,type){
+        return showScript(msghead, group,type);
+    }
     function showScript(msghead, group,type, tmpObj) {
         var name = "script-"+(new Date()).getTime();
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
@@ -366,14 +368,25 @@
                     if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
                         var list_algo = l['found_script_list'];
                         list_algo.forEach(function (p) {
+                            if((typeof type ==="string")&&(type !="")){
+                                if(p['eudk_script_language']!=type){
+                                    return;
+                                }
+                            }
+                            if((typeof group ==="string")&&(group!="")&&(p.hasOwnProperty("script_group"))){
+                                if(p["script_group"]!=group){
+                                    return;
+                                }
+                            }
+
                             var encoden = jchaos.encodeName(p.script_name);
                             delete p._id;
                             if(p.seq>0){
                                 p['date']=(new Date(p.seq)).toDateString();
                             }
-                            if((typeof group ==="string")&&(p.hasOwnProperty("group"))){
+                            if((typeof group ==="string")&&(p.hasOwnProperty("script_group"))){
                                 if((group!="")){
-                                    if(p.group==group){
+                                    if(p.script_group==group){
                                         scripts[group][encoden]=p;
                                     }
                                 } else {
