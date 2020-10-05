@@ -16,13 +16,17 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": ["bash", "CPP", "nodejs", "LUA", "python"]
+        "enum": ["BASH", "CPP", "NODEJS","JS", "LUA", "PYTHON"]
       }
     },
 	"group": {
-	    "type": "string",
-	    "required": true,
-	    "format":"text",
+    "type": "array",
+    "format": "select",
+    "uniqueItems": true,
+    "items": {
+      "type": "string",
+      "enum": []
+    },
 	    "description":"Group name"
 	},
 	"target" :

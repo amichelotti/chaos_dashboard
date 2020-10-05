@@ -1,3 +1,4 @@
+
 /**
  * jQuery chaos widget
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
@@ -186,7 +187,9 @@
             }
         });
     }
-
+    jqccs.getFile=function(msghead, msg, handler){
+        return getFile(msghead, msg, handler);
+    }
     function getFile(msghead, msg, handler) {
         var instant = $('<div></div>').html('<div><p>' + msg + '</p></div><div><input type="file" id="upload-file" class="span3" /></div>').dialog({
             width: 680,
@@ -199,7 +202,7 @@
                 $('#upload-file').on('change', function () {
                     var reader = new FileReader();
                     reader.onload = function (e) {
-                        try {
+                         try {
                             var json = JSON.parse(e.target.result);
                             handler(json);
                         } catch (err) {
@@ -207,7 +210,7 @@
                             obj['name'] = $('#upload-file').val();
                             obj['data'] = e.target.result;
                             handler(obj);
-                        }
+                          }
 
                         $(main).dialog("close").remove();
                     };
@@ -1775,6 +1778,9 @@
         });
     }
 
+    jqccs.algoSave=function(json){
+        return algoSave(json);
+    }
     function algoSave(json, obj) {
         console.log("newScript :" + JSON.stringify(json));
         var proc = {};
@@ -1925,7 +1931,9 @@
 
 
 
-
+jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok){
+    return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok);
+}
     /***
      * 
      */
@@ -3615,7 +3623,7 @@
             getFile("Control Script Loading", "select the Script to load", function (script) {
                 var regex = /.*[/\\](.*)$/;
                 var scriptTmp = {};
-
+                var name=script['name'];
                 var match = regex.exec(name);
                 if (match != null) {
                     name = match[1];

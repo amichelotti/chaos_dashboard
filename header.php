@@ -58,7 +58,7 @@
 					<li><a id="script-upload"><i class="halflings-icon upload"></i>Upload</a></li>
 				    <li><a id="script-run"><i class="halflings-icon refresh"></i>Run..</a></li>
 				    <li><a id="script-edit"><i class="halflings-icon edit"></i>Edit..</a></li>
-					<li><a href="sript-delete"><i class="halflings-icon remove"></i>Delete..</a></li>
+					<li><a id="sript-delete"><i class="halflings-icon remove"></i>Delete..</a></li>
 				</ul>
 			    </li>
 			<!-- end: User Dropdown -->
@@ -98,3 +98,50 @@
 	</div>
     </div>
 </div>
+<script>
+$("#script-upload").on('click',function(){
+
+	jqccs.getFile("Control Script Loading", "select the Script to load", function (script) {
+                var regex = /.*[/\\](.*)$/;
+                var scriptTmp = {};
+				var name=script['name'];
+                var match = regex.exec(name);
+                if (match != null) {
+                    name = match[1];
+                }
+                if (name.includes(".js")) {
+                    language = "JS";
+                } else {
+                    jqccs.instantMessage("cannot load:"+name," You must load a .js extension:",5000);
+                    return;
+                }
+                var zone_selected = $("#zones option:selected").val();
+                if(typeof zone_selected ==="string"){
+                    scriptTmp['group'] = zone_selected;
+                } else {
+                    scriptTmp['group'] = "SYSTEM";
+                }
+                scriptTmp['script_name'] = name;
+                scriptTmp['target'] = "local";
+                scriptTmp['eudk_script_content'] = script['data'];
+                scriptTmp['eudk_script_language'] = language;
+                scriptTmp['script_description'] = "Imported from " + script['name'];
+				scriptTmp['default_argument'] = "";
+				
+				$.get('algo.json', function(d) {
+					var templ=JSON.parse(d);
+					jchaos.search("","zone",true,function(zon){
+						var zone=["ALL"].concat(zon);
+						templ['properties']['group']['items']['enum']=zone;
+							jqccs.jsonEditWindow("Loaded", templ, scriptTmp, jqccs.algoSave);
+					});
+				}, 'text');
+
+               /* var templ = {
+                    $ref: "algo.json",
+                    format: "tabs"
+				}*/
+				
+	
+})});
+</script>
