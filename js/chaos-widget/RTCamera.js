@@ -1,4 +1,53 @@
 
+
+function setRoi(cu,width,height,x,y,func){
+  var roi_obj={
+    "WIDTH":parseInt(width),
+    "HEIGHT":parseInt(height),
+    "OFFSETX":parseInt(x),
+    "OFFSETY":parseInt(y)
+  };
+  var msg={
+    "act_msg":roi_obj,
+    "act_name":"cu_prop_drv_set"
+};
+console.log("sending ROI:"+JSON.stringify(roi_obj));
+jchaos.command(cu,msg, function (data) {
+    jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
+    func();
+
+
+},(bad)=>{
+  jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
+
+});
+  /*jchaos.setAttribute(cu, "OFFSETX", "0", function(){
+    setTimeout(() => {
+      jchaos.setAttribute(cu, "OFFSETY", "0", function(){
+        setTimeout(() => {
+          jchaos.setAttribute(cu, "WIDTH", String(width), function () {
+            jchaos.setAttribute(cu, "HEIGHT", String(height), function () {
+            setTimeout(() => {
+                console.log("setting OFFSETX:"+x);
+        
+                jchaos.setAttribute(cu, "OFFSETX", String(x), function () {
+                    setTimeout(() => {
+                        console.log("setting OFFSETY:"+y);
+        
+                        jchaos.setAttribute(cu, "OFFSETY", String(y), function () {
+                          jqccs.instantMessage("ROI " + cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+                          func();
+        
+                        });},200);
+                });},200);
+            });
+        });
+        },200);
+      });
+    },200);
+    }
+  );*/
+}
 function getWidget() {
     var chaos = 
      {
@@ -13,7 +62,9 @@ function getWidget() {
               case 5:
                 return "No Acquire";
               case 3:
-                return "Trigger";
+                return "Trigger LOHI";
+              case 4:
+                  return "Trigger HILO";
               default:
                 return "--";
             }
@@ -42,12 +93,19 @@ function getWidget() {
                 html += '<td class="td_element cameraMenu" id="camera-' + encoden + '" cuname="' + key + '" >'
                 //   html += '<div><b>'+key+'</b>';
                 html += '<div>';
-                html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 />';
-                html += '<div class="top-left">' + key + '</div>';
-  
-                html += '</div>';
-  
-                html += '</td>';
+                if(camlist.length>1){
+                  html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 width="659" height="494"/>';
+                } else{
+                  html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000/>';
+
+                }
+//                html += '<div class="row-fluid">';
+
+                html += '<div>' + key + '</div>';
+                html += '<div id="info-'+ encoden+'"></div>';
+
+ //               html += '</div></div></div>';
+                 html += '</div></div>';
   
                 cnt++;
               }
@@ -101,6 +159,8 @@ function getWidget() {
               
               }
               cuitem['exit-crop'] = { name: "Exit cropping", cu: name };
+              cuitem['reset-roi'] = { name: "Reset ROI", cu: name };
+
               cuitem['sep1'] = "---------";
               var ele=jchaos.getChannel(name,1,null);
               var el=ele[0];
@@ -149,7 +209,7 @@ function getWidget() {
   
           });
           $("#triggerType").off();
-          $("#triggerType").on("change", function () {
+          $("#triggerType").on("click", function () {
             var node_selected = tmpObj.node_selected;
             var value = $("#triggerType option:selected").val();
             var attr = "TRIGGER_MODE";
@@ -214,7 +274,8 @@ function getWidget() {
     
                   // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
                   $("#cameraImage-" + jchaos.encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
-                  
+                  $("#info-" + jchaos.encodeName(elem)).html(selected.output.WIDTH +"x"+selected.output.HEIGHT+ "("+selected.output.OFFSETX +","+selected.output.OFFSETY+") frame:"+selected.output.dpck_seq_id);
+
                   
                 }
               }
@@ -296,7 +357,7 @@ function getWidget() {
           html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           
           html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
-          html += "<td id='" + cuname + "'><select class='select_camera_mode span6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>Triggered</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
+          html += "<td id='" + cuname + "'><select class='select_camera_mode span6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
           
           html += "<td id='" + cuname + "_output_SHUTTER'></td>";
           html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_SHUTTER' name='"+cu[i]+"/input/SHUTTER'></input></td>";
@@ -348,25 +409,51 @@ function getWidget() {
       });
     } else if (cmd == 'set-roi') {
       var crop_opt=opt.items[cmd].crop_opt;
+      var encoden = jchaos.encodeName(crop_opt.cu);
 
       console.log("CROP_OBJ:" + JSON.stringify(crop_opt));
       var x=crop_opt.x.toFixed();
       var y=crop_opt.y.toFixed();
       var width=crop_opt.width.toFixed();
       var height=crop_opt.height.toFixed();
+      setRoi(crop_opt.cu,width,height,x,y,()=>{ $("#cameraImage-" + encoden).cropper('destroy');});
+      /*
+      jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
+        jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
+        setTimeout(() => {
+            console.log("setting OFFSETX:"+x);
+
+            jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
+                setTimeout(() => {
+                    console.log("setting OFFSETY:"+y);
+
+                    jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
+                      jqccs.instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+                      $("#cameraImage-" + encoden).cropper('destroy');
+
+                    });},1000);
+            });},1000);
+        });
+    });
+      
+      jchaos.setAttribute(crop_opt.cu, "WIDTH",String(width) , function () {
+        jchaos.setAttribute(crop_opt.cu, "HEIGHT",String(height), function () {
+
       jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
         jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
-          jchaos.setAttribute(crop_opt.cu, "WIDTH",String(width) , function () {
-            jchaos.setAttribute(crop_opt.cu, "HEIGHT",String(height), function () {
               jqccs.instantMessage("ROI "+crop_opt.cu, "("+x+","+y+") "+width+"x"+height, 3000, true);
 
             });
           });
         });
-      });
+      });*/
     } else if (cmd == 'exit-crop') {
       var encoden = jchaos.encodeName(opt.items[cmd].cu);
       $("#cameraImage-" + encoden).cropper('destroy');
+    } else if(cmd == "reset-roi"){
+      // big value means maximum.
+      setRoi(opt.items[cmd].cu,1000000,1000000,0,0,()=>{ $("#cameraImage-" + encoden).cropper('destroy');});
+
     }
   }
 

@@ -16,9 +16,29 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": ["bash", "CPP", "nodejs", "LUA", "python"]
+        "enum": ["BASH", "CPP", "NODEJS","JS", "LUA", "PYTHON"]
       }
     },
+	"script_group": {
+    "type": "array",
+    "format": "select",
+    "uniqueItems": true,
+    "items": {
+      "type": "string",
+      "enum": []
+    },
+	    "description":"Group name"
+	},
+	"script_target" :
+	{
+		"type": "array",
+  		"format": "select",
+  		"uniqueItems": true,
+  		"items": {
+    	"type": "string",
+		  "enum": ["local","remote"]
+		  }
+  },
     "eudk_script_content": {
       "type": "string",
       "format": "textarea",

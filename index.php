@@ -14,29 +14,14 @@ require_once('header.php');
 
 	<div class="container-fluid-full">
 		<div class="row-fluid">
-				
-			<!-- start: Main Menu -->
-			<div id="sidebar-left" class="span2">
-				<div class="nav-collapse sidebar-nav">
-					<ul class="nav nav-tabs nav-stacked main-menu">						
-						<?php require_once('menu.php'); ?>
-
-					</ul>
-				</div>
-				<div id="refresh_rate_update">
-				</div>
-			</div>
-			<!-- end: Main Menu -->
-			
-			
-			<!-- start: Content -->
-			<div id="content" class="span10">
+			<div id="chaos_content" class="span12">
 			
 				<ul class="breadcrumb">
 					<li>
 						<i class="icon-home"></i>
 						<a href="<?php echo $index; ?>"><?php echo $curr_page; ?></a> 
 						<i class="icon-angle-right"></i>
+						
 					</li>
 				</ul>
 			
