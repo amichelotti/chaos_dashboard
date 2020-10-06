@@ -36,6 +36,11 @@
             "format": "textarea",
             "description": "Parameters given in load (Constructor of the CU class)"
         },
+        "cudk_props": {
+            "type": "string",
+            "format": "textarea",
+            "description": "(JSON) Properties of the CU"
+        },
         "cudk_desc": {
             "type": "string",
             "format": "textarea",

@@ -1,3 +1,4 @@
+
 /**
  * jQuery chaos widget
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
@@ -186,7 +187,9 @@
             }
         });
     }
-
+    jqccs.getFile=function(msghead, msg, handler){
+        return getFile(msghead, msg, handler);
+    }
     function getFile(msghead, msg, handler) {
         var instant = $('<div></div>').html('<div><p>' + msg + '</p></div><div><input type="file" id="upload-file" class="span3" /></div>').dialog({
             width: 680,
@@ -199,7 +202,7 @@
                 $('#upload-file').on('change', function () {
                     var reader = new FileReader();
                     reader.onload = function (e) {
-                        try {
+                         try {
                             var json = JSON.parse(e.target.result);
                             handler(json);
                         } catch (err) {
@@ -207,7 +210,7 @@
                             obj['name'] = $('#upload-file').val();
                             obj['data'] = e.target.result;
                             handler(obj);
-                        }
+                          }
 
                         $(main).dialog("close").remove();
                     };
@@ -325,7 +328,102 @@
             }
         });
     }
+    jqccs.showScript=function(msghead, group,type){
+        return showScript(msghead, group,type);
+    }
+    function showScript(msghead, group,type, tmpObj) {
+        var name = "script-"+(new Date()).getTime();
+        var instant = $('<div id=dataset-' + name + '></div>').dialog({
+            minWidth: hostWidth / 4,
+            minHeight: hostHeight / 4,
+            closeOnEscape: true,
+            title: msghead,
+            resizable: true,
+            buttons: [ 
+            {
+                text: "save",
+                click: function (e) {
+                    var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
+                    saveAs(blob, name + ".json");
+                }
+            },
+            {
+                text: "close",
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $("#dataset-" + name).dialog('close');
 
+                }
+            }
+
+
+            ],
+            close: function (event, ui) {
+
+                $(this).remove();
+            },
+            open: function () {
+                jchaos.search("", "script", false, function (l) {
+                    var scripts={};
+                    if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
+                        var list_algo = l['found_script_list'];
+                        list_algo.forEach(function (p) {
+                            if((typeof type ==="string")&&(type !="")){
+                                if(p['eudk_script_language']!=type){
+                                    return;
+                                }
+                            }
+                            if((typeof group ==="string")&&(group!="")&&(p.hasOwnProperty("script_group"))){
+                                if(p["script_group"]!=group){
+                                    return;
+                                }
+                            }
+
+                            var encoden = jchaos.encodeName(p.script_name);
+                            delete p._id;
+                            if(p.seq>0){
+                                p['date']=(new Date(p.seq)).toDateString();
+                            }
+                            if((typeof group ==="string")&&(p.hasOwnProperty("script_group"))){
+                                if((group!="")){
+                                    if(p.script_group==group){
+                                        scripts[group][encoden]=p;
+                                    }
+                                } else {
+                                    scripts[p.group][encoden]=p;
+ 
+                                }
+                                
+                            } else {
+                                scripts[encoden]=p;
+                            }
+                            
+                        });
+                    }
+                    var jsonhtml = json2html(scripts, {collapsed:true}, "");
+                    $("#dataset-" + name).html(jsonhtml);
+
+                    jqccs.jsonSetup($("#dataset-" + name), function (e) {
+            
+                    }, function (e) {
+                        if (e.keyCode == 13) {
+            
+            
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+                    $(".json-toggle").trigger("click");
+                    jsonEnableScriptContext($("#dataset-" + name),scripts);
+
+                });
+
+                
+            }
+            
+        });
+    }
     function showDataset(msghead, cuname, refresh, tmpObj) {
         var update;
         var started = 0;
@@ -419,7 +517,8 @@
 
                     // $(instant).dialog("close");
                 }
-            }, {
+            }, 
+            {
                 text: "Format",
                 id: 'dataset-radix-' + name,
                 click: function (e) {
@@ -519,7 +618,7 @@
                                 //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
                                 //target.toggle();
                                 $(".json-toggle").trigger("click");
-                                jsonEnableContext(cuname);
+                                jsonEnableDSContext(cuname);
                             }
                         }, function (err) {
                             console.log(err);
@@ -534,8 +633,272 @@
             }
         });
     }
+    
+    
+    jqccs.editJSON=function(msghead, json,applyfunc) {
+        var last_dataset = {};
+        var showformat=0;
+        var name = jchaos.encodeName(msghead);
+        var instant = $('<div id=dataset-' + name + '></div>').dialog({
+            minWidth: hostWidth / 4,
+            minHeight: hostHeight / 4,
+            closeOnEscape: true,
+            title: msghead,
+            resizable: true,
+            buttons: [ 
+                {
+                    text: "Format",
+                    id: 'dataset-radix-' + name,
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                        showformat++;
+                        switch (showformat) {
+                            case 0:
+                                $(e.target).text("Dec(s)");
+                                break;
+                            case 1:
+                                $(e.target).text("Dec(u)");
+                                break;
+                            case 2:
+                                $(e.target).text("Hex");
+                                break;
+                            case 3:
+                                $(e.target).text("Bin");
+                                break;
+                            default:
+                                showformat = 0;
+                                $(e.target).text("Dec(s)");
+                        }
+                        if (showformat == 1) {
+                            options["format"] = 10 + 0x100;
+                        } else if (showformat == 2) {
+                            options["format"] = 16;
+                        } else if (showformat == 3) {
+                            options["format"] = 2;
+                        } else {
+                            options["format"] = 10;
+                        }
+                        var converted = convertBinaryToArrays(json);
+               
+                        var jsonhtml = json2html(converted, options, "");
+                        $("#dataset-" + name).html(jsonhtml);
+
+                        // $(instant).dialog("close");
+                    }
+                },
+                 {
+                text: "Save to Disk",
+                click: function (e) {
+                    var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
+                    saveAs(blob, name + ".json");
+                }
+            },
+            {
+                text: "Upload From Disk",
+                click: function (e) {
+                    getFile("Upload", "upload the json", function (obj) {
+                        json=obj;
+                        var converted = convertBinaryToArrays(json);
+                        var jsonhtml = json2html(converted, options, "");
+                        $("#dataset-" + name).html(jsonhtml);
+                    });
+
+                }
+            },{
+                text: "Apply",
+                id: 'apply-' + name,
+                click: function (e) {
+                   if(typeof applyfunc==="function"){
+                       applyfunc(json,function(newjson){
+                        if(typeof newjson==="object"){
+                            var converted = convertBinaryToArrays(newjson);
+                            var jsonhtml = json2html(converted, options, "");
+                            $("#dataset-" + name).html(jsonhtml);
+                        }
+                       });
+                   }
+
+                }
+            },
+            {
+                text: "close",
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $("#dataset-" + name).dialog('close');
+                    $(this).remove();
+
+                }
+            }
 
 
+            ],
+            close: function (event, ui) {
+
+                $(this).remove();
+            },
+            open: function () {
+                var converted = {};
+                converted = convertBinaryToArrays(json);
+                if (showformat == 1) {
+                    options["format"] = 10 + 0x100;
+                } else if (showformat == 2) {
+                    options["format"] = 16;
+                } else if (showformat == 3) {
+                    options["format"] = 2;
+                } else {
+                    options["format"] = 10;
+                }
+                var jsonhtml = json2html(converted, options, "");
+                if (jchaos.isCollapsable(converted)) {
+                    jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                }
+                
+                $("#dataset-" + name).html(jsonhtml);
+                if(typeof applyfunc!=="function"){
+                    $( '#apply-' + name ).remove();
+                }
+
+                
+                
+                jqccs.jsonSetup($(this), function (e) {
+        
+                }, function (e) {
+                    if (e.keyCode == 13) {
+        
+                        var value = e.target.value;
+                        var attrname = e.target.name;
+                        var desc = jchaos.decodeCUPath(attrname);
+                        
+                        var obj=jchaos.changejsonfrompath(json,attrname,value);
+                        var converted = convertBinaryToArrays(json);
+
+                        var jsonhtml = json2html(converted, options, "");
+                         if (jchaos.isCollapsable(converted)) {
+                        jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                        }
+                
+                        $("#dataset-" + name).html(jsonhtml);
+                    } 
+                })
+        
+            
+                $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
+
+            }
+        });
+    }
+     jqccs.execConsole=function(msghead, execHandler,okhandle,nokhandle) {
+        var pid=new Date();
+        var html = '<div id=console-' + pid + '></div>';
+        var opt = {
+            minWidth: hostWidth / 2,
+            minHeight: hostHeight / 4,
+            title: msghead,
+            resizable: true,
+            dialogClass: 'no-close',
+            buttons: [{
+                text: "download",
+                id: 'console-download-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    var blob = $('#console-' + pid).terminal().get_output();
+                    saveAs(blob, pid + ".log");
+
+                 
+                }
+            }, 
+            {
+                text: "pause",
+                id: 'console-pause-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $('#console-' + pid).terminal().pause();
+
+                }
+            },
+            {
+                text: "resume",
+                id: 'console-resume-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $('#console-' + pid).terminal().resume();
+
+                }
+            },
+                {
+                    text: "close",
+                    id: 'console-close-' + pid,
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                    //    $('#console-' + pid).terminal().exit();
+                    ('#console-' + pid).remove();
+                    }
+                
+            }],
+            close: function (event, ui) {
+            //    $('#console-' + pid).terminal().exit();
+            ('#console-' + pid).remove();
+            },
+
+            open: function (e) {
+                console.log(msghead + "opening terminal :" + pid);
+
+                //$(e.target).parent().css('background-color', 'black');
+                $('#console-' + pid).css('background-color', 'black');
+                $('#console-' + pid).terminal(function(command) {
+                    if (command !== '') {
+                        try {
+                            if(command == "help"){
+                                return;
+                            }
+                            var regxp=/^\s*console\.([a-z]{3,})\((.*)\)\s*;/;
+                            var match = regxp.exec(command);
+             
+                            if(match!=null){
+                                
+                                var result = window.eval(match[2]);
+                                if (result !== undefined) {
+                                    if(match[1]=="error"){
+                                        this.error(new String(result));
+            
+                                    } else{
+                                        this.echo(new String(result));
+                                    } 
+                                }
+                            }
+                            
+                            var result = window.eval(command);
+                            dump_script+=command;
+            
+                            if (result !== undefined) {
+                                this.echo(new String(result));
+                            }
+                        } catch(e) {
+                            this.error(new String(e));
+                        }
+                    } else {
+                       this.echo('');
+                    }
+                }, {
+                    greetings: 'JavaScript Chaos Interpreter',
+                    name: 'JChaos',
+                    height: 600,
+                    prompt: 'chaos-js> ',
+                    completion:methods_full
+                   
+                });
+                if(typeof execHandler === "string"){
+                    $('#console-' + pid).terminal().exec(execHandler,false);
+                } else if(typeof execHandler === "function"){
+                    $('#console-' + pid).terminal().exec(execHandler(),false);
+                }
+               
+            
+        }
+    };
+      
+        createCustomDialog(opt, html);
+    }
     function getConsole(msghead, pid, server, lines, consolen, refresh, type) {
         var update;
         var data;
@@ -1377,7 +1740,7 @@
         });
     }
 
-    function algoLoadFromFile(obj) {
+    function algoLoadFromFile(obj,target) {
         getFile("Script Loading", "select the Script to load", function (script) {
             var scriptTmp = {};
             var name = script['name'];
@@ -1388,21 +1751,27 @@
                 name = match[1];
             }
             if (name.includes(".sh") || name.includes(".bash")) {
-                language = "bash";
+                language = "BASH";
             }
             if (name.includes(".c") || name.includes(".C") || name.includes(".cpp") || name.includes(".CPP") || name.includes(".h")) {
                 language = "CPP";
             }
             if (name.includes(".js")) {
-                language = "nodejs";
+                language = "JS";
             }
             if (name.includes(".py")) {
-                language = "python";
+                language = "PYTHON";
             }
             if (name.includes(".lua")) {
                 language = "LUA";
             }
             scriptTmp['script_name'] = name;
+            scriptTmp['target'] = "remote";
+
+            if(typeof target !=="undefined"){
+                scriptTmp['target'] = target;
+            } 
+
             scriptTmp['eudk_script_content'] = script['data'];
             scriptTmp['eudk_script_language'] = language;
             scriptTmp['script_description'] = "Imported from " + script['name'];
@@ -1422,6 +1791,9 @@
         });
     }
 
+    jqccs.algoSave=function(json){
+        return algoSave(json);
+    }
     function algoSave(json, obj) {
         console.log("newScript :" + JSON.stringify(json));
         var proc = {};
@@ -1572,7 +1944,9 @@
 
 
 
-
+jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok){
+    return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok);
+}
     /***
      * 
      */
@@ -1662,7 +2036,9 @@
                 var element = $("#edit-temp");
                 var jopt = {};
                 jopt['ajax'] = true;
-                jopt['schema'] = jsontemp;
+                if(typeof jsontemp==="object"){
+                    jopt['schema'] = jsontemp;
+                }
 
 
                 if (jsonin != null) {
@@ -1888,8 +2264,81 @@
         });
         */
     }
+    function jsonEnableScriptContext(dom,scripts) {
+       dom.contextMenu('destroy', '.json-key');
 
-    function jsonEnableContext(node_selected) {
+       dom.contextMenu({
+            selector: '.json-toggle',
+            build: function ($trigger, e) {
+                var cuitem = {};
+                //  var portdir = $(e.currentTarget).attr("portdir");
+                var name=e.currentTarget.text;
+                console.log("choosing "+name);
+                if(scripts.hasOwnProperty(name)&& scripts[name].hasOwnProperty("eudk_script_language")){
+                    var language=scripts[name].eudk_script_language.toUpperCase();
+                    if(language=="JS" ||  language=="NODEJS"){
+                        cuitem['run-script'] = { name: "Run Script "+name,script:scripts[name] };
+                    }
+                    cuitem['delete-script'] = { name: "Delete Script "+name,script:scripts[name]  };
+                    cuitem['save-script'] = { name: "Save Script "+name,script:scripts[name] };
+                }
+                cuitem['sep1'] = "---------";
+
+                cuitem['quit'] = {
+                    name: "Quit",
+                    icon: function () {
+                        return 'context-menu-icon context-menu-icon-quit';
+                    }
+                };
+
+                return {
+
+                    callback: function (cmd, options) {
+
+                        var fullname;
+                        var script=options.commands[cmd].script;
+                        if (cmd == "run-script") {
+                           console.log("Running script "+JSON.stringify(script));
+                           jchaos.loadScript(script.script_name, script.seq, function (data) {
+                            if(typeof data==="object" && data.hasOwnProperty('eudk_script_content')){
+                                var obj = atob(data['eudk_script_content']);
+                                jqccs.execConsole(script.script_name,obj);
+                            } else {
+                                instantMessage("Empty content ",  script.script_name, 5000,false);
+
+                            }
+                           },function(bad){
+                            instantMessage("Error retriving ",  script.script_name, 5000,false);
+
+                           });
+
+                        } else if (cmd == "delete-script") {
+                            console.log("Delete script ");
+                            confirm("Delete script", "Your are deleting Script: " + script.scriot_name, "Ok", function () {
+                                jchaos.rmScript(script.scriot_name, function (data) {
+                                    instantMessage("Remove Script", "removed:" + script.scriot_name, 2000);
+                
+                                });
+                
+                            }, "Cancel");
+
+                        } else if (cmd == "save-script") {
+                            jchaos.loadScript(script.scriot_name, script.seq, function (data) {
+
+                                var obj = atob(data['eudk_script_content']);
+                                var blob = new Blob([obj], { type: "json;charset=utf-8" });
+                                saveAs(blob, data['script_name']);
+                            });
+
+                        } 
+                        return;
+                    },
+                    items: cuitem
+                }
+            }
+        });
+    }
+    function jsonEnableDSContext(node_selected) {
         $.contextMenu('destroy', '.json-key');
 
         $.contextMenu({
@@ -2031,7 +2480,7 @@
 
                 }
             });
-            jsonEnableContext(node_selected);
+            jsonEnableDSContext(node_selected);
         });
 
         $("#dataset-close").on('click', function () {
@@ -2871,14 +3320,31 @@
             var y = crop_opt.y.toFixed();
             var width = crop_opt.width.toFixed();
             var height = crop_opt.height.toFixed();
-            jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
-                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
-                    jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
-                        jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
-                            instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+         /*   jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width),null);
+            jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height),null);
+            setTimeout(() => {
+                jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), null);
+            }, 1000);
+            setTimeout(() => {
+                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), null);
+            }, 1000);
+*/
+            console.log("setting WIDTH:"+width);
 
-                        });
-                    });
+            jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
+                console.log("setting HEIGHT:"+height);
+                jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
+                setTimeout(() => {
+                    console.log("setting OFFSETX:"+x);
+
+                    jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
+                        setTimeout(() => {
+                            console.log("setting OFFSETY:"+y);
+
+                            jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
+                                instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+                            });},1000);
+                    });},1000);
                 });
             });
         } else if (cmd == 'exit-crop') {
@@ -3044,6 +3510,77 @@
 
         } else if (cmd == "show-dataset") {
             showDataset(currsel, currsel, 1000, tmpObj);
+        } else if (cmd == "driver-prop") {
+            //jchaos.sendCUCmd(tmpObj.node_multi_selected,"cu_prop_drv_get",null, function (data) {
+            jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (data) {
+
+                var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
+                jqccs.editJSON("Driver Prop " + currsel, data[0],(json,fupdate)=>{
+                    
+                    var changed={};
+                    for(var key in json){
+                       
+                        if(JSON.stringify(json[key])!==JSON.stringify(origin_json[key])){
+                            changed[key]=json[key];
+                            
+                        }
+                    }
+                    var msg={
+                        "act_msg":changed,
+                        "act_name":"cu_prop_drv_set"
+                    };
+                    console.log("sending changed:"+JSON.stringify(changed));
+                    jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
+                        instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+                        jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (dd) {
+                            //read back
+                            fupdate(dd[0]);
+                        });
+
+                    },(bad)=>{
+                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
+
+                    });
+
+                });
+
+            }, function (data) {
+                instantMessage("Getting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                //   $('.context-menu-list').trigger('contextmenu:hide')
+
+            });
+        } else if (cmd == "cu-prop") {
+            jchaos.command(tmpObj.node_multi_selected,{"act_name":"ndk_get_prop"}, function (data) {
+                var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
+                jqccs.editJSON("CU/EU Prop " + currsel, data[0],(json)=>{
+                    
+                    var changed={};
+                    for(var key in json){
+                       
+                        if(JSON.stringify(json[key])!==JSON.stringify(origin_json[key])){
+                            changed[key]=json[key];
+                            
+                        }
+                    }
+                    var msg={
+                        "act_msg":changed,
+                        "act_name":"ndk_set_prop"
+                    };
+                    console.log("sending changed:"+JSON.stringify(changed));
+                    jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
+                        instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+
+                    },(bad)=>{
+                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
+
+                    });
+
+                });
+            }, function (data) {
+                instantMessage("Getting Node prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                //   $('.context-menu-list').trigger('contextmenu:hide')
+
+            });
         } else if (cmd == "show-desc") {
             jchaos.getDesc(currsel, function (data) {
                 tmpObj.node_name_to_desc[currsel] = data[0];
@@ -3092,6 +3629,45 @@
                 console.log(err);
             });
 
+        } else if (cmd == "execute-jscript") {
+            showScript("Scripts", "","", tmpObj);
+
+        } else if (cmd == "load-jscript") {
+            getFile("Control Script Loading", "select the Script to load", function (script) {
+                var regex = /.*[/\\](.*)$/;
+                var scriptTmp = {};
+                var name=script['name'];
+                var match = regex.exec(name);
+                if (match != null) {
+                    name = match[1];
+                }
+                if (name.includes(".js")) {
+                    language = "JS";
+                } else {
+                    instantMessage("cannot load"+name," You must load a .js extension:");
+                    return;
+                }
+                var zone_selected = $("#zones option:selected").val();
+                if(typeof zone_selected ==="string"){
+                    scriptTmp['group'] = zone_selected;
+                } else {
+                    scriptTmp['group'] = "SYSTEM";
+                }
+                scriptTmp['script_name'] = name;
+                scriptTmp['target'] = "local";
+                scriptTmp['eudk_script_content'] = script['data'];
+                scriptTmp['eudk_script_language'] = language;
+                scriptTmp['script_description'] = "Imported from " + script['name'];
+                scriptTmp['default_argument'] = "";
+                var templ = {
+                    $ref: "algo.json",
+                    format: "tabs"
+                }
+    
+                jsonEditWindow("Loaded", templ, scriptTmp, algoSave, obj);
+            });
+            
+
         } else if (cmd == "history-cu-root") {
             createQueryDialog(function (query) {
                 // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
@@ -3124,7 +3700,7 @@
                 // open CB 
                 var names = findTagsOf(tmpObj, currsel);
                 element_sel("#select-tag", names, 0);
-                $("#select-tag").on("change", function () {
+                $("#select-tag").on("click", function () {
                     var tagname = $("#select-tag option:selected").val();
                     $("#query-tag").val(tagname);
                     var tags = jchaos.variable("tags", "get", null, null);
@@ -3645,7 +4221,7 @@
 
             }
 
-            stateOutput('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + '</p><p>Latency:' + jchaos['latency'] + '</p><p>LatencyAvg:' + jchaos['latency_avg'].toFixed(2) + '</p><p>OpsOk:' + jchaos['numok'] + '</p><p>Errors:' + jchaos['errors'] + '</p><p>Timeouts:' + jchaos['timeouts'] + '</p></font></b>', false);
+            stateOutput('<b><font color="white"><p>Update:' + tmpObj.updateRefresh + ' Latency:' + jchaos['latency'] + ' LatencyAvg:' + jchaos['latency_avg'].toFixed(2) + ' OpsOk:' + jchaos['numok'] + ' Errors:' + jchaos['errors'] + 'Timeouts:' + jchaos['timeouts'] + '</p></font></b>', false);
 
             if ((now - tmpObj.last_check) > tmpObj.check_interval) {
                 if (tmpObj.data != null) {
@@ -3784,7 +4360,7 @@
                     };
                 });
                 return;
-            } else if ((cmd == "edit-nt_control_unit")||(cmd == "edit-nt_root")) {
+            } else if ((cmd == "edit-nt_control_unit")) {
                 var templ = {
                     $ref: "cu.json",
                     format: "tabs"
@@ -3797,13 +4373,32 @@
                             instantMessage("CU saved " + node_selected, " OK", 2000, true);
 
                         }, function (bad) {
-                            instantMessage("Errro saving CU " + node_selected, bad, 2000, false);
+                            instantMessage("Error saving CU " + node_selected, JSON.stringify(bad), 2000, false);
 
                         });
 
                     }
                 });
                 return;
+            } else if(cmd == "edit-nt_root") {
+                var templ = {
+                    $ref: "cu.json",
+                    format: "tabs"
+                }
+                var stype = cmd.split("-");
+
+                var typ = jchaos.nodeTypeToHuman(stype[1]);
+                jchaos.node(node_selected,"desc",typ,function(desc){
+                jsonEditWindow("Edit EU ", templ, desc, (json, obj, ok, bad)=>{
+                    jchaos.node(node_selected,"nodeupdate",typ,json.ndk_parent,json,ok,bad);
+                
+                }, tmpObj, function (ok) {
+                    instantMessage("EU save ", " OK", 2000, true);
+
+                }, function (bad) {
+                    instantMessage("EU save failed", JSON.stringify(bad), 2000, false);
+
+                });});
             } else if ((cmd == "edit-nt_unit_server")) {
                 var templ = {
                     $ref: "us.json",
@@ -3913,7 +4508,20 @@
                         instantMessage("Node deleted ", " OK", 2000, true);
                         updateNodeEvent();
                     }, function (err) {
-                        instantMessage("cannot delete server:", err, 2000, false);
+                        instantMessage("cannot delete server:", JSON.stringify(err), 2000, false);
+
+                    });
+                }, "Cancel");
+                return;
+            } else if (cmd == "delete-node" ) {
+
+
+                confirm("Delete Node", "Your are deleting : " + node_selected, "Ok", function () {
+                    jchaos.node(node_selected, "deletenode", "", function () {
+                        instantMessage("Node deleted ", " OK", 2000, true);
+                        updateNodeEvent();
+                    }, function (err) {
+                        instantMessage("cannot delete server:", JSON.stringify(err), 2000, false);
 
                     });
                 }, "Cancel");
@@ -4132,6 +4740,42 @@
                 //editorFn = jchaos.newCuSave;
                 //jsonEdit(templ, template);
                 jsonEditWindow("New MemCache import CU", templ, null, newMCCuSave, tmpObj);
+                var templ = {
+                    $ref: "cu.json",
+                    format: "tabs"
+                }
+                // editorFn = jchaos.newCuSave;
+                def_obj.ndk_parent = node_selected;
+                
+
+
+                return;
+            } else if (cmd.includes("new-nt_control_unit-custom")) {
+
+                // custom
+                var templ = {
+                    $ref: "cu.json",
+                    format: "tabs"
+                }
+                var def = {};
+
+                def['ndk_parent']=node_selected;
+                def['ndk_type']="nt_control_unit";
+                def['auto_load']=true;
+                def['auto_init']=true;
+                def['auto_start']=true;
+                def['cudk_thr_sch_delay']=1000000;
+                def["cudk_desc"]="<CU description>";
+                def["cudk_load_param"]="{}";
+                def["cudk_props"]="{}";
+
+                def['dsndk_storage_type']=2;
+
+
+
+                //editorFn = jchaos.newCuSave;
+                //jsonEdit(templ, template);
+                jsonEditWindow("New Custom CU", templ, def, jchaos.newCuSave, tmpObj);
 
 
 
@@ -4871,7 +5515,7 @@
         } else if (cmd == "manage-script") {
             updateScriptModal(tmpObj);
         } else if (cmd == "load-script") {
-            algoLoadFromFile(tmpObj);
+            algoLoadFromFile(tmpOb,"remote");
         } else if (cmd == "root-script") {
             runRemoteScript(tmpObj, "Chaos Root", "CPP");
         } else if (cmd == "new-process-template") {
@@ -5582,11 +6226,13 @@
                 $ref: "agent.json",
                 format: "tabs"
             }
+            var supported=false;
+            var script_type="";
+
+       
             jchaos.findBestServer(function (server,best_agent) {
                 jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (dscript) {
 
-                
-    
                 jchaos.node(best_agent, "info", "agent", function (data) {
                     var supported=false;
                     if (data != null) {
@@ -5601,14 +6247,16 @@
                             node_workdir: "",
                             node_auto_start: true,
                             node_keep_alive: false,
-                            node_log_at_launch: false
+                            node_log_on_console: true
                         };
                         var script_type="";
+                        getEntryWindow(tmpObj.node_selected +" arguments ", tmpObj.node_selected, "()","Continue", function (fargs) {
+
                         if(dscript['eudk_script_language']=="CPP"){
-                            tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + dscript['default_argument'] + "\"";
+                            tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + fargs + "\"";
                             supported=true;
                             data['instance_name']=best_agent;
-                            script_type="root";
+                            script_type="nt_root";
                         }
 
                         if(supported){
@@ -5616,19 +6264,60 @@
                                 tmp['ndk_uid']= inst_name;
 
                                 data.andk_node_associated.push(tmp);
-
-                                jchaos.node(inst_name,"new",script_type,best_agent); //create the container
-
-                                jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
-                                    if(dscript['eudk_script_language']=="CPP"){
-            
-                                    }
-                                    instantMessage("Agent save ", " OK", 2000, true);
-    
+                                var template = {};
+                                var templ = {
+                                    $ref: "cu.json",
+                                    format: "tabs"
+                                }
+                                template['ndk_uid'] = inst_name;
+                                template["ndk_parent"] = best_agent;
+                                template['ndk_type']= script_type;
+                                template['cudk_desc']= dscript['script_description'];
+                                template['auto_load']=true;
+                                template['auto_init']=true;
+                                template['auto_start']=true;
+                                template['cudk_thr_sch_delay']=1;
+                                template['control_unit_implementation']=tmp['node_launch_cmd_line'];
+                                template['seq_id']=0;
+                                //editorFn = jchaos.newCuSave;
+                                //jsonEdit(templ, template);
+                                jsonEditWindow("New EU ", templ, template, (json, obj, ok, bad)=>{
+                                    jchaos.node(inst_name,"new",script_type,best_agent,json,ok,bad);
+                                
+                                }, tmpObj, function (ok) {
+                                    var template = {};
+                                    var templ = {
+                                    $ref: "agent.json",
+                                    format: "tabs"
+                                }
+                                    jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (k) {
+                                        instantMessage("Agent save ", " OK", 2000, true);
+        
+                                    }, function (bad) {
+                                        instantMessage("Agent save failed", JSON.stringify(bad), 4000, false);
+        
+                                    });
+        
                                 }, function (bad) {
-                                    instantMessage("Agent save failed", bad, 2000, false);
-    
+                                    instantMessage("EU save failed", bad, 2000, false);
+        
                                 });
+                               /* jchaos.node(inst_name,"new",script_type,best_agent,()=>{
+
+                                    jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
+                                        if(dscript['eudk_script_language']=="CPP"){
+                
+                                        }
+                                        instantMessage("Agent save ", " OK", 2000, true);
+        
+                                    }, function (bad) {
+                                        instantMessage("Agent save failed", bad, 2000, false);
+        
+                                    });
+                            },(bad)=>{
+                                instantMessage("Cannot create container", bad, 5000, false);
+
+                            });*/
                                               
                 
                             }, "Cancel");
@@ -5641,7 +6330,7 @@
                     } else {
                         alert ("association with "+dscript['eudk_script_language']+ " not supported yet");
                     }
-
+                }, "Cancel");
                     };
                 });
             });
@@ -6174,7 +6863,7 @@
             }
         } else if (e.ctrlKey) {
             var nrows = $(e.currentTarget).index();
-            node_multi_selected.push(node_list[nrows])
+            tmpObj.node_multi_selected.push(node_list[nrows])
         }
         tmpObj.last_index_selected = $(e.currentTarget).index();
 
@@ -9082,7 +9771,13 @@
         items['edit-' + node_type] = { name: "Edit ..." };
         items['desc-'+node_type] = {name: "Desc"};
         items['delete-histo-data'] = {name:"Delete HISTO data"};
-        var associated = jchaos.node(node_selected, "parent", "us", null, null);
+        var associated="";
+        if(node.hasOwnProperty('desc')&&node.desc.hasOwnProperty('ndk_parent')){
+            associated=node.desc;
+        } else {
+            associated = jchaos.node(node_selected, "parent", "us", null, null);
+
+        }
         if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "" && (node_type == "nt_unit_server" || node_type == "nt_root")) {
             items['sep5'] = "---------";
 
@@ -9137,6 +9832,9 @@
 
                 items['agent-act'] = "---------";
             }
+
+        } else {
+            items['delete-node'] = { name: "Delete Node " + node_selected };
 
         }
         if (node_selected != null && node_selected != "") {
@@ -9240,6 +9938,8 @@
             items['show-dataset'] = { name: "Show/Set/Plot Dataset" };
             items['show-desc'] = { name: "Show Description" };
             items['show-tags'] = { name: "Show Tags info" };
+            items['driver-prop'] = {name: "Edit Driver properties"};
+            items['cu-prop'] = {name: "Edit Node properties"};
 
             items['show-picture'] = { name: "Show as Picture.." };
         }
@@ -9257,6 +9957,10 @@
                 items['histo-cu-enable'] = { name: "Enable History", icon: "live" };
             }
         }
+        items['sep4'] = "---------";
+        items['execute-jscript'] = { name: "Execute JS script.." };
+        items['load-jscript'] = { name: "Load JS script.." };
+
         return items;
     }
 

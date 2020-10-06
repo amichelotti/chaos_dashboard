@@ -711,10 +711,17 @@ ul.messages li .message {
 	background: #ffffff;
 	filter: none;
 	min-height: 100%;
-	padding: 20px 20px;
+	padding: 10px 10px;
 	position: relative;
 }
 
+#chaos_content {
+	background: #ffffff;
+	filter: none;
+	min-height: 100%;
+	padding: 10px 10px;
+	position: relative;
+}
 .breadcrumb {
 	margin: -28px -28px 28px -28px;
 	line-height: 34px;

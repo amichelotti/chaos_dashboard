@@ -114,7 +114,7 @@
 	<![endif]-->
 		
 	<!-- start: Favicon -->
-	<link rel="shortcut icon" href="img/favicon.ico">
+	<link rel="shortcut icon" href="./img/logo_chaos_col_xMg_icon.ico">
 	<!-- end: Favicon -->
 	
 	
