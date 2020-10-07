@@ -5004,7 +5004,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                             instantMessage("Agent save ", " OK", 2000, true);
 
                         }, function (bad) {
-                            instantMessage("Agent save failed", bad, 2000, false);
+                            instantMessage("Agent save failed:", JSON.stringify(bad), 2000, false);
 
                         });
 
@@ -6881,7 +6881,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             tmpObj.node_multi_selected = [];
             tmpObj.node_selected = null;
             tmpObj.last_index_selected = -1;
-            chaos_dashboard_settings['selection']=[];
+            dashboard_settings['selection']=[];
             return;
         }
         tmpObj.node_selected = $(e.currentTarget).attr(tmpObj.type + "-name");
@@ -6920,7 +6920,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             tmpObj.node_multi_selected.push(node_list[nrows])
         }
         tmpObj.last_index_selected = $(e.currentTarget).index();
-        chaos_dashboard_settings['selection']=tmpObj.node_multi_selected;
+        dashboard_settings['selection']=tmpObj.node_multi_selected;
     }
 
 
