@@ -58,7 +58,9 @@
 					<li><a id="script-upload"><i class="halflings-icon upload"></i>Upload</a></li>
 				    <li><a id="script-run"><i class="halflings-icon refresh"></i>Run..</a></li>
 				    <li><a id="script-edit"><i class="halflings-icon edit"></i>Edit..</a></li>
-					<li><a id="sript-delete"><i class="halflings-icon remove"></i>Delete..</a></li>
+					<li><a id="script-download"><i class="halflings-icon download"></i>Download</a></li>
+
+					<li><a id="script-delete"><i class="halflings-icon remove"></i>Delete..</a></li>
 				</ul>
 			    </li>
 			<!-- end: User Dropdown -->
@@ -99,13 +101,135 @@
     </div>
 </div>
 <script>
+function selectScriptAndAction(msg,buttname,action){
+	var last_target;
+	var last_selected_script;
+	var idbutt=jchaos.encodeName(buttname);
+	jqccs.showScript(msg,"","JS", (dom,scripts)=>{
+				$(dom).on("click", "a.json-toggle", function (e) {
+					if(last_target!=null){
+						last_target.removeClass("row_snap_selected");
+					}
+					var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
+
+					target.toggle();
+					//var countul = $(e.currentTarget).filter('.json-dict').length;
+					var countul = $(e.currentTarget).parent().find("ul").length;
+					if(countul>1){
+						$("#"+idbutt).prop('disabled',true);
+
+					} else {
+							var selected=e.currentTarget.outerText;
+							$(e.currentTarget).addClass("row_snap_selected");
+							last_target=$(e.currentTarget);
+							last_selected_script=scripts[selected];
+							$("#"+idbutt).prop('disabled',false);
+
+					}
+					if (target.is(':visible')) {
+
+						target.siblings('.json-placeholder').remove();
+						
+
+					} else {
+						var count = target.children('li').length;
+						var placeholder = count + (count > 1 ? ' items' : ' item');
+						target.after('<a href class="json-placeholder">' + placeholder + '</a>');
+						//$("#run-script").prop('disabled',true);
+					}
+					return false;
+				});
+			
+                
+                $(".json-toggle").trigger("click");
+
+            },[
+                {
+					id:idbutt,
+                    text: buttname,
+                click: function (e) {
+					if(typeof action === "function"){
+						if(last_selected_script!=null){
+							action(last_selected_script);
+						}
+					}
+                    $(this).dialog("close");
+                    
+                }
+                }
+                 ]);
+
+}
+
 $("#script-run").on('click',function(){
-	jqccs.showScript("Run","","JS");
+	console.log("settings:"+JSON.stringify(jqccs.getSettings()));
+
+	selectScriptAndAction("Run Script","Run",(script)=>{
+		jchaos.loadScript(script.script_name, script.seq, function (data) {
+              
+			  if (!data.hasOwnProperty('eudk_script_content')) {
+				  jqccs.instantMessage("Load Script", script.script_name+ " has no content", 4000, false);
+				  return;
+			  }
+			  
+			  data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
+			   jqccs.execConsole("Running "+script.script_name, ()=>{
+					return data['eudk_script_content'];
+				},
+				()=>{jqccs.instantMessage("Execution ", script.script_name+ "OK", 4000, true);},
+				()=>{jqccs.instantMessage("Execution ", script.script_name+ "FAILED", 4000, false);});
+	});
+});
 });
 $("#script-edit").on('click',function(){
+	selectScriptAndAction("Edit Script","Edit..",(script)=>{
+
+		jchaos.loadScript(script.script_name, script.seq, function (data) {
+              
+                if (!data.hasOwnProperty('eudk_script_content')) {
+                    jqccs.instantMessage("Load Script", script.script_name + " has no content", 4000, false);
+                    return;
+				}
+				
+				data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
+				$.get('algo.json', function(d) {
+					var templ=JSON.parse(d);
+					jchaos.search("","zone",true,function(zon){
+						var zone=["ALL"].concat(zon);
+						templ['properties']['script_group']['items']['enum']=zone;
+							jqccs.jsonEditWindow("Loaded", templ, data, jqccs.algoSave);
+					});
+				}, 'text');
+	});
+
 });
+});
+
 $("#script-delete").on('click',function(){
+	selectScriptAndAction("Delete Script","Delete",(script)=>{
+		console.log("delete " + script.script_name);
+            jchaos.rmScript(script, function (data) {
+                jqccs.instantMessage("Remove Script", "removed:" +script.script_name, 2000, true);
+
+            });
+	});
+
 });
+$("#script-download").on('click',function(){
+	selectScriptAndAction("Download Script","Download",(script)=>{
+		jchaos.loadScript(script.script_name, script.seq, function (data) {
+			if (!data.hasOwnProperty('eudk_script_content')) {
+                    jqccs.instantMessage("Load Script", tmpObj.node_selected + " has no content", 4000, false);
+                    return;
+        	}
+
+			var obj = atob(data['eudk_script_content']);
+			var blob = new Blob([obj], { type: "json;charset=utf-8" });
+			saveAs(blob, data['script_name']);
+		});
+});
+});
+
 $("#script-upload").on('click',function(){
 
 	jqccs.getFile("Control Script Loading", "select the Script to load", function (script) {

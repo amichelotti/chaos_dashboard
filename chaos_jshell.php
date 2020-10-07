@@ -8,9 +8,6 @@ $curr_page = "Home";
 			
 //link script
 echo '<script type="text/javascript" src="https://root.cern/js/latest/scripts/JSRootCore.js?2d"></script>';
-echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.terminal.min.js"></script>';
-echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.mousewheel-min.js"></script>';
-echo '<link href="' .$main_dir. '/js/jquery.terminal/css/jquery.terminal.min.css" type="text/css" rel="stylesheet" />';;
 
 ?>
 <body>
