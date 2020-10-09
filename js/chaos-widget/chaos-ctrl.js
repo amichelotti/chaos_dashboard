@@ -382,7 +382,6 @@
                             if(p.seq>0){
                                 p['date']=(new Date(p.seq)).toUTCString();
                             }
-<<<<<<< HEAD
                             var sgroup=""
                             if((typeof group ==="string")&&(p.hasOwnProperty("script_group"))){
                                 if((group!="")){
@@ -403,13 +402,9 @@
                                     scripts[sgroup][encoden]=p;
 
                                 }
-=======
-                            if(!scripts.hasOwnProperty(group_name)){
-                                scripts[group_name]={};
->>>>>>> development
+                                scripts_flat[encoden]=p;
+
                             }
-                            scripts[group_name][encoden]=p;
-                            scripts_flat[encoden]=p;
                             
                         });
                     }
