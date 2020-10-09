@@ -382,14 +382,14 @@
                             if(p.seq>0){
                                 p['date']=(new Date(p.seq)).toUTCString();
                             }
-                            var sgroup=""
+                            var sgroup="";
                             if((typeof group ==="string")&&(p.hasOwnProperty("script_group"))){
                                 if((group!="")){
                                     if(p.script_group==group){
                                         sgroup=group;
                                     }
                                 } else {
-                                    sgroup=p.group;
+                                    sgroup=p.script_group;
  
                                 }   
                             } 
