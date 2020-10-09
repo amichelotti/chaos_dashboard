@@ -37,7 +37,9 @@
   		"items": {
     	"type": "string",
 		  "enum": ["local","remote"]
-		  }
+      },
+      "description":"Run locally (i.e browser) or Remote (i.e cloud)"
+
   },
     "eudk_script_content": {
       "type": "string",
@@ -51,11 +53,6 @@
     },
 
     "eudk_script_cmdline": {
-      "type": "string",
-      "format": "text",
-      "description": "Command Line (if any)"
-    },
-    "eudk_script_state": {
       "type": "string",
       "format": "text",
       "description": "Command Line (if any)"
@@ -81,7 +78,7 @@
     },
     "seq": {
       "type": "integer",
-      "description": "identifier id"
+      "description": "identifier id/creation epoch, (assigned the EPOC(ms))"
     }
   }
 }

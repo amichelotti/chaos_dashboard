@@ -44,7 +44,9 @@
             }
         }
     }
-
+    jqccs.getSettings=function(){
+        return dashboard_settings;
+    }
     function getInterfaceFromClass(impl_class) {
         for (var key in implementation_map) {
             if (impl_class.includes(implementation_map[key])) {
@@ -328,12 +330,83 @@
             }
         });
     }
-    jqccs.showScript=function(msghead, group,type){
-        return showScript(msghead, group,type);
+    jqccs.showScript=function(msghead, group,type,handler,actions){
+        return showScript(msghead, group,type,handler,actions);
     }
-    function showScript(msghead, group,type, tmpObj) {
+    function showScript(msghead, group,type, handler,actions) {
         var name = "script-"+(new Date()).getTime();
-        var instant = $('<div id=dataset-' + name + '></div>').dialog({
+        var opt = {
+            _name_: name,
+            minWidth: hostWidth / 2,
+            minHeight: hostHeight / 2,
+            title: msghead,
+            resizable: true,
+            dialogClass: 'no-close',
+            buttons: [
+                {
+                    text: "close",
+                click: function (e) {
+                    $(this).dialog("close");
+                    
+                }
+                }
+                 ],
+
+            open: function () {
+                jchaos.search("", "script", false, function (l) {
+                    var scripts={};
+                    var scripts_flat={}
+                    if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
+                        var list_algo = l['found_script_list'];
+                        list_algo.forEach(function (p) {
+                            if((typeof type ==="string")&&(type !="")){
+                                if(p['eudk_script_language']!=type){
+                                    return;
+                                }
+                            }
+                            if((typeof group ==="string")&&(group!="")){
+                                if(p.hasOwnProperty("script_group")){
+                                    if((p["script_group"]!="ALL")&&(p["script_group"]!=group)){
+                                        return;
+                                    }
+                                } else {
+                                    return;
+                                }
+                            }
+                            var group_name="ALL";
+                            if(p["script_group"]!=""){
+                                group_name=p["script_group"];
+                            }
+                            var encoden = jchaos.encodeName(p.script_name);
+                            delete p._id;
+                            if(p.seq>0){
+                                p['date']=(new Date(p.seq)).toUTCString();
+                            }
+                            if(!scripts.hasOwnProperty(group_name)){
+                                scripts[group_name]={};
+                            }
+                            scripts[group_name][encoden]=p;
+                            scripts_flat[encoden]=p;
+                            
+                        });
+                    }
+                    var jsonhtml = json2html(scripts, {collapsed:true}, "");
+                    $("#" + name).html(jsonhtml);
+                    if(typeof handler === "function"){
+                        handler($("#" + name),scripts_flat);
+                    }
+                    
+                });
+            }
+    }
+    if((typeof actions !== "undefined")&&(actions instanceof Array )){
+        opt.buttons=actions.concat(opt.buttons);
+
+    }
+    createCustomDialog(opt);
+
+}
+     /*   var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
             closeOnEscape: true,
@@ -362,68 +435,10 @@
 
                 $(this).remove();
             },
-            open: function () {
-                jchaos.search("", "script", false, function (l) {
-                    var scripts={};
-                    if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
-                        var list_algo = l['found_script_list'];
-                        list_algo.forEach(function (p) {
-                            if((typeof type ==="string")&&(type !="")){
-                                if(p['eudk_script_language']!=type){
-                                    return;
-                                }
-                            }
-                            if((typeof group ==="string")&&(group!="")&&(p.hasOwnProperty("script_group"))){
-                                if(p["script_group"]!=group){
-                                    return;
-                                }
-                            }
-
-                            var encoden = jchaos.encodeName(p.script_name);
-                            delete p._id;
-                            if(p.seq>0){
-                                p['date']=(new Date(p.seq)).toDateString();
-                            }
-                            if((typeof group ==="string")&&(p.hasOwnProperty("script_group"))){
-                                if((group!="")){
-                                    if(p.script_group==group){
-                                        scripts[group][encoden]=p;
-                                    }
-                                } else {
-                                    scripts[p.group][encoden]=p;
- 
-                                }
-                                
-                            } else {
-                                scripts[encoden]=p;
-                            }
-                            
-                        });
-                    }
-                    var jsonhtml = json2html(scripts, {collapsed:true}, "");
-                    $("#dataset-" + name).html(jsonhtml);
-
-                    jqccs.jsonSetup($("#dataset-" + name), function (e) {
-            
-                    }, function (e) {
-                        if (e.keyCode == 13) {
-            
-            
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
-                    $(".json-toggle").trigger("click");
-                    jsonEnableScriptContext($("#dataset-" + name),scripts);
-
-                });
-
-                
-            }
+          
             
         });
-    }
+    }*/
     function showDataset(msghead, cuname, refresh, tmpObj) {
         var update;
         var started = 0;
@@ -788,7 +803,7 @@
         });
     }
      jqccs.execConsole=function(msghead, execHandler,okhandle,nokhandle) {
-        var pid=new Date();
+        var pid=(new Date()).getTime();
         var html = '<div id=console-' + pid + '></div>';
         var opt = {
             minWidth: hostWidth / 2,
@@ -801,7 +816,8 @@
                 id: 'console-download-' + pid,
                 click: function (e) {
                     // var interval=$(this).attr("refresh_time");
-                    var blob = $('#console-' + pid).terminal().get_output();
+                    var output = $('#console-' + pid).terminal().get_output();
+                    var blob = new Blob([output], { type: "json;charset=utf-8" });
                     saveAs(blob, pid + ".log");
 
                  
@@ -831,13 +847,13 @@
                     click: function (e) {
                         // var interval=$(this).attr("refresh_time");
                     //    $('#console-' + pid).terminal().exit();
-                    ('#console-' + pid).remove();
+                    $(this).dialog("close");
                     }
                 
             }],
             close: function (event, ui) {
             //    $('#console-' + pid).terminal().exit();
-            ('#console-' + pid).remove();
+            $(this).dialog("close");
             },
 
             open: function (e) {
@@ -868,7 +884,6 @@
                             }
                             
                             var result = window.eval(command);
-                            dump_script+=command;
             
                             if (result !== undefined) {
                                 this.echo(new String(result));
@@ -883,10 +898,10 @@
                     greetings: 'JavaScript Chaos Interpreter',
                     name: 'JChaos',
                     height: 600,
-                    prompt: 'chaos-js> ',
-                    completion:methods_full
+                    prompt: 'chaos-js> '
                    
                 });
+                jchaos.setOptions({"console_log":$('#console-' + pid).terminal().echo,"console_err":$('#console-' + pid).terminal().error});
                 if(typeof execHandler === "string"){
                     $('#console-' + pid).terminal().exec(execHandler,false);
                 } else if(typeof execHandler === "function"){
@@ -1794,7 +1809,7 @@
     jqccs.algoSave=function(json){
         return algoSave(json);
     }
-    function algoSave(json, obj) {
+    function algoSave(json) {
         console.log("newScript :" + JSON.stringify(json));
         var proc = {};
         if (json.script_name == null || json.script_name == "") {
@@ -1815,11 +1830,16 @@
         });*/
         json.eudk_script_content = btoa(unescape(encodeURIComponent(json.eudk_script_content)));
         json['eudk_script_language'] = json.eudk_script_language[0];
+        json['script_target'] = json.script_target[0];
+        json['script_group'] = json.script_group[0];
         proc[json.script_name] = json;
         //    jchaos.variable("script", "set", proc, null);
+       
         jchaos.search(json.script_name, "script", false, function (l) {
             var script_inst = l['found_script_list'];
             if (!(script_inst instanceof Array) || (script_inst.length == 0)) {
+           //     json['seq'] = 0;
+                delete json['_id'];
                 jchaos.saveScript(json, function (data) {
                     console.log("saving script:" + JSON.stringify(json));
                     instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
@@ -1829,18 +1849,30 @@
                 confirm("Script Already Exist", "Do you want to replace:" + json.script_name, "Ok", function () {
                     var cnt = 0;
                     script_inst.forEach(function (elem) {
-                        jchaos.rmScript(elem, function (data) {
+                        if(elem.seq==json.seq){
+                            console.log(cnt + "] updatinf script:" + json.script_name + " with seq:"+json.seq);
+                            jchaos.saveScript(json, function (data) {
+                                instantMessage("Updataing Script " + json.script_name, "Saved", 2000, null, null, true)
+
+                            });
                             cnt++;
-                            console.log(cnt + "] removing script:" + json.script_name);
+                        } else {
+                            jchaos.rmScript(elem, function (data) {
+                                cnt++;
+                                console.log(cnt + "] removing script:" + json.script_name);
 
-                            if (cnt == script_inst.length) {
-                                jchaos.saveScript(json, function (data) {
-                                    console.log("Replacing script:" + json.script_name);
-                                    instantMessage("Replacing Script " + json.script_name, "Saved", 1000, null, null, true)
+                                if (cnt == script_inst.length) {
+                        //        json['seq'] = 0;
+                                   delete json['_id'];
 
-                                });
-                            }
-                        });
+                                    jchaos.saveScript(json, function (data) {
+                                        console.log("Replacing script:" + json.script_name);
+                                        instantMessage("Replacing Script " + json.script_name, "Saved", 1000, null, null, true)
+
+                                    });
+                                }
+                            });
+                    }
                     });
 
                 }, "Cancel");
@@ -3630,7 +3662,21 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             });
 
         } else if (cmd == "execute-jscript") {
-            showScript("Scripts", "","", tmpObj);
+            showScript("Scripts", "","", (dom,scripts)=>{
+                jqccs.jsonSetup(dom, function (e) {
+            
+                }, function (e) {
+                    if (e.keyCode == 13) {
+        
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
+                $(".json-toggle").trigger("click");
+                jsonEnableScriptContext(dom,scripts);
+
+            });
 
         } else if (cmd == "load-jscript") {
             getFile("Control Script Loading", "select the Script to load", function (script) {
@@ -3837,7 +3883,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             interface2NodeList(tempObj, function (list_cu) {
                 tempObj['elems'] = list_cu;
-
+                
                 updateInterface(tempObj);
 
             });
@@ -3865,35 +3911,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             });
 
         });
-        $(".previous_page").click(function (e) {
-            if (!dashboard_settings.hasOwnProperty('current_page')) {
-                dashboard_settings['current_page'] = 0;
-            }
-            if (dashboard_settings.current_page > 0) {
-                dashboard_settings.current_page--;
-                interface2NodeList(tempObj, function (list_cu) {
-                    tempObj['elems'] = list_cu;
-                    updateInterface(tempObj);
-                });
-            }
-
-        });
-        $(".next_page").click(function (e) {
-            if (!dashboard_settings.hasOwnProperty('current_page')) {
-                dashboard_settings['current_page'] = 0;
-            }
-            if (!dashboard_settings.hasOwnProperty('pages')) {
-                dashboard_settings['pages'] = 1;
-            }
-            if (dashboard_settings.current_page < dashboard_settings.pages) {
-                dashboard_settings.current_page++;
-                interface2NodeList(tempObj, function (list_cu) {
-                    tempObj['elems'] = list_cu;
-                    updateInterface(tempObj);
-                });
-
-            }
-        });
+   
 
     }
 
@@ -4348,15 +4366,14 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     if (data != null) {
                         // editorFn = agentSave;
                         //jsonEdit(templ, data);
-                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj);
-                        /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
-                           //rimuovi tutte le associazioni precedenti.
-                           data.andk_node_associated.forEach(function (item) {
-                             if (item.hasOwnProperty("ndk_uid")) {
-                               jchaos.node(node_selected, "del", "agent", item.ndk_uid, function (daa) { });
-                             }
-                           });
-                         }*/
+                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj, function (ok) {
+                            instantMessage("Agent save ", " OK", 2000, true);
+
+                        }, function (bad) {
+                            instantMessage("Agent save failed:", JSON.stringify(bad), 4000, false);
+
+                        });
+                        
                     };
                 });
                 return;
@@ -4986,7 +5003,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                             instantMessage("Agent save ", " OK", 2000, true);
 
                         }, function (bad) {
-                            instantMessage("Agent save failed", bad, 2000, false);
+                            instantMessage("Agent save failed:", JSON.stringify(bad), 2000, false);
 
                         });
 
@@ -6479,7 +6496,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         if (interface != "--Select--" && interface != "ALL") {
             sopt['impl'] = implementation_map[interface];
         }
-
+        dashboard_settings['search']=search_string;
         jchaos.search(search_string, what, (alive == "true"), sopt, function (list_cu) {
             var search_query = {
                 search: search_string,
@@ -6491,9 +6508,40 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             tmpObj['search_query'] = search_query;
             $(".pageindex").css("visibility", "visible");
             $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
-
+           
             buildCUPage(tmpObj, list_cu.list, implementation_map[interface]);
 
+        });
+        $(".previous_page").off('click');
+        $(".previous_page").click(function (e) {
+            if (!dashboard_settings.hasOwnProperty('current_page')) {
+                dashboard_settings['current_page'] = 0;
+            }
+            if (dashboard_settings.current_page > 0) {
+                dashboard_settings.current_page--;
+                if (tmpObj.hasOwnProperty('search_query')) {
+                    var query = tmpObj['search_query'];
+                    buildInterfaceFromPagedSearch(tmpObj, query.what);
+
+                }
+            }
+
+        });
+        $(".next_page").off('click');
+
+        $(".next_page").click(function (e) {
+            if (!dashboard_settings.hasOwnProperty('current_page')) {
+                dashboard_settings['current_page'] = 0;
+            }
+            if (!dashboard_settings.hasOwnProperty('pages')) {
+                dashboard_settings['pages'] = 1;
+            }
+            if (dashboard_settings.current_page < dashboard_settings.pages) {
+                dashboard_settings.current_page++;
+                var query = tmpObj['search_query'];
+                buildInterfaceFromPagedSearch(tmpObj, query.what);
+
+            }
         });
 
     }
@@ -6546,34 +6594,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
 
             //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-            $(".previous_page").click(function (e) {
-                if (!dashboard_settings.hasOwnProperty('current_page')) {
-                    dashboard_settings['current_page'] = 0;
-                }
-                if (dashboard_settings.current_page > 0) {
-                    dashboard_settings.current_page--;
-                    if (tmpObj.hasOwnProperty('search_query')) {
-                        var query = tmpObj['search_query'];
-                        buildInterfaceFromPagedSearch(tmpObj, query.what);
-
-                    }
-                }
-
-            });
-            $(".next_page").click(function (e) {
-                if (!dashboard_settings.hasOwnProperty('current_page')) {
-                    dashboard_settings['current_page'] = 0;
-                }
-                if (!dashboard_settings.hasOwnProperty('pages')) {
-                    dashboard_settings['pages'] = 1;
-                }
-                if (dashboard_settings.current_page < dashboard_settings.pages) {
-                    dashboard_settings.current_page++;
-                    var query = tmpObj['search_query'];
-                    buildInterfaceFromPagedSearch(tmpObj, query.what);
-
-                }
-            });
+            
         });
 
         $("#elements").change(function () {
@@ -6693,7 +6714,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 tempObj.type = "ALL";
                 $(".pageindex").css("visibility", "visible");
                 $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
-                handler(node.list);
+                handler(node.list.filter((val)=>{return (val!="");}));
 
             });
 
@@ -6706,10 +6727,41 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     $(".pageindex").css("visibility", "visible");
                     $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
 
-                    handler(list.list);
+                    handler(list.list.filter((val)=>{return (val!="")}));
                 });
 
         }
+        $(".previous_page").off('click');
+        $(".previous_page").click(function (e) {
+            if (!dashboard_settings.hasOwnProperty('current_page')) {
+                dashboard_settings['current_page'] = 0;
+            }
+            if (dashboard_settings.current_page > 0) {
+                dashboard_settings.current_page--;
+                interface2NodeList(tempObj, function (list_cu) {
+                    tempObj['elems'] = list_cu;
+                    updateInterface(tempObj);
+                });
+            }
+
+        });
+        $(".next_page").off('click');
+        $(".next_page").click(function (e) {
+            if (!dashboard_settings.hasOwnProperty('current_page')) {
+                dashboard_settings['current_page'] = 0;
+            }
+            if (!dashboard_settings.hasOwnProperty('pages')) {
+                dashboard_settings['pages'] = 1;
+            }
+            if (dashboard_settings.current_page < dashboard_settings.pages) {
+                dashboard_settings.current_page++;
+                interface2NodeList(tempObj, function (list_cu) {
+                    tempObj['elems'] = list_cu;
+                    updateInterface(tempObj);
+                });
+
+            }
+        });
         if (inter == "eu") {
             jchaos.variable("eu", "get", function (eu_process) {
                 ;
@@ -6828,6 +6880,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             tmpObj.node_multi_selected = [];
             tmpObj.node_selected = null;
             tmpObj.last_index_selected = -1;
+            dashboard_settings['selection']=[];
             return;
         }
         tmpObj.node_selected = $(e.currentTarget).attr(tmpObj.type + "-name");
@@ -6866,7 +6919,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             tmpObj.node_multi_selected.push(node_list[nrows])
         }
         tmpObj.last_index_selected = $(e.currentTarget).index();
-
+        dashboard_settings['selection']=tmpObj.node_multi_selected;
     }
 
 
@@ -9546,6 +9599,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     function createCustomDialog(opt, html, butyes, yeshandle, cancelText, nohandle, open_handle, close_handle) {
 
         var dlg_opt = {};
+        var id="customdlg-"+(new Date()).getTime();
+        if(opt.hasOwnProperty('_name_')){
+            id=opt['_name_'];
+            delete opt['_name_'];
+        }
         dlg_opt['buttons'] = [];
         dlg_opt['close'] = function (event, ui) {
             if (typeof close_handle === "function") {
@@ -9589,9 +9647,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 }
             });
         }
-
         for (var i in opt) {
             dlg_opt[i] = opt[i];
+        }
+        if(typeof html ==="undefined"){
+            html='<div id='+id+'></div>';
         }
         $('<div></div>').appendTo('body')
             .html(html)
@@ -9772,7 +9832,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         items['desc-'+node_type] = {name: "Desc"};
         items['delete-histo-data'] = {name:"Delete HISTO data"};
         var associated="";
-        if(node.hasOwnProperty('desc')&&node.desc.hasOwnProperty('ndk_parent')){
+        if((typeof node ==="object")&&node.hasOwnProperty('desc')&&node.desc.hasOwnProperty('ndk_parent')){
             associated=node.desc;
         } else {
             associated = jchaos.node(node_selected, "parent", "us", null, null);

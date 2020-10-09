@@ -97,7 +97,10 @@
 			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-ctrl.js"></script>';
 			echo '<link href="'.$main_dir.'/js/cropper.min.css" media="screen" rel="stylesheet" type="text/css" />';
 			echo '<script src="'.$main_dir.'/js/cropper.min.js"></script>';			
-
+			echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.terminal.min.js"></script>';
+			echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.mousewheel-min.js"></script>';
+			echo '<link href="' .$main_dir. '/js/jquery.terminal/css/jquery.terminal.min.css" type="text/css" rel="stylesheet" />';;
+			
 			//<script src="js/plotly-latest.min.js"></script>
 			//<link href="js/json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
 				   
