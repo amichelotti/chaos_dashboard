@@ -394,7 +394,7 @@
                                 }   
                             } 
                             if(sgroup!=""){
-                                if(scripts.hasOwnProperty[sgroup]){
+                                if(scripts.hasOwnProperty(sgroup)){
                                     scripts[sgroup][encoden]=p;
 
                                 } else {
