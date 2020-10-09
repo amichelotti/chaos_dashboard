@@ -384,18 +384,26 @@
                             if(p.seq>0){
                                 p['date']=(new Date(p.seq)).toDateString();
                             }
+                            var sgroup=""
                             if((typeof group ==="string")&&(p.hasOwnProperty("script_group"))){
                                 if((group!="")){
                                     if(p.script_group==group){
-                                        scripts[group][encoden]=p;
+                                        sgroup=group;
                                     }
                                 } else {
-                                    scripts[p.group][encoden]=p;
+                                    sgroup=p.group;
  
+                                }   
+                            } 
+                            if(sgroup!=""){
+                                if(scripts.hasOwnProperty[sgroup]){
+                                    scripts[sgroup][encoden]=p;
+
+                                } else {
+                                    scripts[sgroup]={};
+                                    scripts[sgroup][encoden]=p;
+
                                 }
-                                
-                            } else {
-                                scripts[encoden]=p;
                             }
                             
                         });
@@ -4348,7 +4356,15 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     if (data != null) {
                         // editorFn = agentSave;
                         //jsonEdit(templ, data);
-                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj);
+                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj,
+                        ()=>{
+                            instantMessage("Agent saved " + node_selected, " OK", 2000, true);
+
+                        },(bad)=>{
+                            instantMessage("Agent  " + node_selected, "Save Error:"+JSON.stringify(bad), 4000, false);
+
+                        }
+                        );
                         /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
                            //rimuovi tutte le associazioni precedenti.
                            data.andk_node_associated.forEach(function (item) {
