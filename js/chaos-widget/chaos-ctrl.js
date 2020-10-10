@@ -906,6 +906,8 @@
                             if (result !== undefined) {
                                 this.echo(new String(result));
                             }
+
+
                         } catch(e) {
                             this.error(new String(e));
                         }
@@ -917,18 +919,21 @@
                     name: 'JChaos',
                     height: 600,
                     prompt: 'chaos-js> '
+                  
                    
                 });
+                setTimeout(()=>{
+                    if(typeof execHandler === "string"){
+                        $('#console-' + pid).terminal().exec(execHandler,false);
+                    } else if(typeof execHandler === "function"){
+                        $('#console-' + pid).terminal().exec(execHandler(),false);
+                    }
+                },500);
                 jchaos.setOptions({"console_log":$('#console-' + pid).terminal().echo,"console_err":$('#console-' + pid).terminal().error});
-                if(typeof execHandler === "string"){
-                    $('#console-' + pid).terminal().exec(execHandler,false);
-                } else if(typeof execHandler === "function"){
-                    $('#console-' + pid).terminal().exec(execHandler(),false);
-                }
-               
+            }          
             
         }
-    };
+    
       
         createCustomDialog(opt, html);
     }

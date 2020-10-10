@@ -100,7 +100,11 @@
 			echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.terminal.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.mousewheel-min.js"></script>';
 			echo '<link href="' .$main_dir. '/js/jquery.terminal/css/jquery.terminal.min.css" type="text/css" rel="stylesheet" />';;
-			
+			echo '<link rel="stylesheet" href="/js/jstree/dist/themes/default/style.min.css" />';
+
+			echo '<script src="'.$main_dir.'/js/jstree/dist/jstree.min.js"></script>';
+
+
 			//<script src="js/plotly-latest.min.js"></script>
 			//<link href="js/json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
 				   

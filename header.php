@@ -34,7 +34,9 @@
 					<li><a href="./index.php"><i class="halflings-icon home"></i>CU/EU View</a></li>
 				    <li><a href="./chaos_jshell.php"><i class="halflings-icon modal-window"></i>Control Console</a></li>
 				    <li><a href="./process.php"><i class="halflings-icon cog"></i> Process View</a></li>
-					<li><a href="./chaos_node.php"><i class="halflings-icon pencil"></i>Node Management</a></li>
+					<li><a href="./chaos_node.php"><i class="halflings-icon pencil"></i>Node Management(Experimental)</a></li>
+					<li><a href="./chaos_node_table.php"><i class="halflings-icon pencil"></i>Node Management</a></li>
+
 					<li><a href="./configuration.php""><i class="halflings-icon cloud"></i>Configuration</a></li>
 				</ul>
 			    </li>
