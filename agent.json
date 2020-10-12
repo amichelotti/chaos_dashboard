@@ -4,6 +4,11 @@
 	"id":"editor-agent",
 	"format":"tab",
     "properties": {
+	"ndk_desc": {
+		"type": "string",
+		"format": "textarea",
+		"description": "Agent description"
+	},
 		"andk_node_associated":{
 			"type":"array",
 			"format": "tab",

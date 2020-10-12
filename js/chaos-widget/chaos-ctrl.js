@@ -9970,6 +9970,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
                     items['sep1'] = "---------";
                 } else if (status == 'Fatal Error') {
+                    items['load'] = { name: "Load", icon: "load" };
                     items['deinit'] = { name: "Deinit", icon: "deinit" };
                     items['init'] = { name: "Init", icon: "init" };
                     items['unload'] = { name: "Unload", icon: "unload" };
