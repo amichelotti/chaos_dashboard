@@ -177,6 +177,9 @@ body.loading .wait_modal {
   display: block;
 }
 
+/*.vakata-context { 
+  z-index:10052 !important; 
+} */
 #chaos_content {
 	background: #ffffff;
 	filter: none;

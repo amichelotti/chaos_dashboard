@@ -6462,7 +6462,9 @@
 					data = $(reference).data('vakata_contextmenu');
 				}
 				if($.vakata.context._parse(data)) {
-					vakata_context.element.html(vakata_context.html);
+					if(vakata_context.element.hasOwnProperty('html')){
+						vakata_context.element.html=(vakata_context.html);
+					}
 				}
 				if(vakata_context.items.length) {
 					vakata_context.element.appendTo(document.body);
