@@ -715,13 +715,13 @@ ul.messages li .message {
 	position: relative;
 }
 
-#chaos_content {
-	background: #ffffff;
-	filter: none;
-	min-height: 100%;
-	padding: 10px 10px;
-	position: relative;
-}
+/* Start by setting display:none to make this hidden.
+   Then we position it in relation to the viewport window
+   with position:fixed. Width, height, top and left speak
+   for themselves. Background we set to 80% white with
+   our animation centered, and no-repeating */
+   
+
 .breadcrumb {
 	margin: -28px -28px 28px -28px;
 	line-height: 34px;

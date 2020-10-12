@@ -56,14 +56,23 @@ require_once('header.php');
 							value="">
 					</div>
 				</div>
+				<div class="box-content">
 
-				<div id="hier_view"></div>
+					<div class="row-fluid">
+						<div class="box span12">
+							<div id="hier_view" class="span6"></div>
+							<div id="desc_view" class="span6"></div>
+						</div>
+					</div>
+				</div>
+
 			</div>
 
 
 
 		</div>
 	</div>
+	<!-- <div id="hier_view"></div> -->
 
 
 	<!-- <div class="clearfix"></div> -->
@@ -76,49 +85,206 @@ require_once('header.php');
 
 
 	<script>
-		$.jstree.defaults.core.themes.variant = "large";
-		$('#hier_view').jstree({ 'plugins': ["wholerow", "checkbox"] });
+		function addListeners() {
 
+
+			$('#hier_view').on('select_node.jstree', function (e, data) {
+				var i, j, r = [];
+				if (data.selected.length == 1) {
+					var node_data = data.instance.get_node(data.selected[0]).data;
+					if ((node_data != null) && node_data.hasOwnProperty("ndk_uid")) {
+						var ndk_uid = node_data.ndk_uid;
+						jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
+							//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
+							node_data = Object.assign(bi, node_data);
+							$('#desc_view').html(jqccs.json2html(node_data));
+							jqccs.jsonSetup($('#desc_view'), function (e) {
+							});
+
+						});
+
+					}
+				}
+				/*
+				for (i = 0, j = data.selected.length; i < j; i++) {
+					var node_data=data.instance.get_node(data.selected[i]).data;
+					if(node_data.hasOwnProperty("ndk_uid")){
+						var ndk_uid=node_data.ndk_uid;
+						jchaos.command(ndk_uid,{"act_name":"getBuildInfo","act_domain":"system","direct":true}, function (bi) {
+							console.log(ndk_uid+" Build:"+JSON.stringify(bi));
+							node_data['build']=bi;
+							r.push(node_data);
+
+						});
+
+					}
+				}
+				$('#desc_view').html(jqccs.json2html(r));*/
+			});
+			$("body").removeClass("loading");
+		}
+		//$('#hier_view').jstree({ 'plugins': ["contextmenu"] });
+		$('#hier_view').jstree({
+			"core": {
+				"animation": 0,
+				"check_callback": true,
+				"themes": { "stripes": true },
+				'data': [
+					{ "id": "ajson1", "parent": "#", "text": "Simple root node" },
+					{ "id": "ajson2", "parent": "#", "text": "Root node 2" },
+					{ "id": "ajson3", "parent": "ajson2", "text": "Child 1" },
+					{ "id": "ajson4", "parent": "ajson2", "text": "Child 2" },
+				]
+			},
+			"plugins": [
+				"wholerow","contextmenu", "dnd", "search",
+				"state", "types", "wholerow"
+			],
+			"contextmenu":{
+				"items":{
+					"rename": {
+						// The item label
+						"label": "Rename",
+						// The function to execute upon a click
+						"action": function (obj) { this.rename(obj); },
+						// All below are optional 
+						"_disabled": true,		// clicking the item won't do a thing
+						"_class": "class",	// class is applied to the item LI node
+						"separator_before": false,	// Insert a separator before the item
+						"separator_after": true,		// Insert a separator after the item
+						// false or string - if does not contain `/` - used as classname
+						"icon": false,
+						"submenu": {
+							/* Collection of objects (the same structure) */
+						}
+					}
+				}
+			}
+
+		});
+	/*	$.jstree.defaults.core.plugins = ["contextmenu"];
+		$.jstree.defaults.contextmenu.items = {
+			// Some key
+			"rename": {
+				// The item label
+				"label": "Rename",
+				// The function to execute upon a click
+				"action": function (obj) { this.rename(obj); },
+				// All below are optional 
+				"_disabled": true,		// clicking the item won't do a thing
+				"_class": "class",	// class is applied to the item LI node
+				"separator_before": false,	// Insert a separator before the item
+				"separator_after": true,		// Insert a separator after the item
+				// false or string - if does not contain `/` - used as classname
+				"icon": false,
+				"submenu": {
+				}
+			}
+		}
+*/
 		function updateJST(what, search, alive) {
+			var mitems = {
+				// Some key
+				"rename": {
+					// The item label
+					"label": "Rename",
+					// The function to execute upon a click
+					"action": function (obj) { this.rename(obj); },
+					// All below are optional 
+					"_disabled": true,		// clicking the item won't do a thing
+					"_class": "class",	// class is applied to the item LI node
+					"separator_before": false,	// Insert a separator before the item
+					"separator_after": true,		// Insert a separator after the item
+					// false or string - if does not contain `/` - used as classname
+					"icon": false,
+					"submenu": {
+						/* Collection of objects (the same structure) */
+					}
+				}
+				/* MORE ENTRIES ... */
+			}
+			$("body").addClass("loading");
+			$('#hier_view').jstree("destroy");
 
 			if (what == "byzone") {
-				return createJSTreeByZone(search, (alive == "true"), (ds) => {
-					$('#hier_view').jstree("destroy");
+				createJSTreeByZone(search, (alive == "true"), (ds) => {
 					$('#hier_view').jstree({
+						"plugins": ["dnd", "contextmenu"],
+						"contextmenu": {
+							'items': (node) => {
+								// The default set of all items
+								var items = {
+									renameItem: {
+										"separator_before": false,
+										"separator_after": true,
+										// The "rename" menu item
+										label: "Rename",
+										action: function () { }
+									},
+									deleteItem: { // The "delete" menu item
+										"separator_before": false,
+										"separator_after": true,
+										label: "Delete",
+										action: function () { }
+									}
+								};
+
+								/*if ($(node).hasClass("folder")) {
+									// Delete the "delete" menu item
+									delete items.deleteItem;
+								}*/
+
+								return items;
+							}, "select_node": true, "show_at_node": false
+						},
+
 						'core': {
 							'data': ds, "multiple": true,
-							"animation": 0
-						}, 'plugins': ["wholerow", "checkbox"]
+							"animation": 0,
+							"check_callback": true,
+
+
+						}
 					});
 					//$('#hier_view').jstree('load_node',ds);
-
+					addListeners();
 
 				});
 			} else if (what == "byserver") {
-				return createJSTreeByServer(search, (alive == "true"), (ds) => {
-					$('#hier_view').jstree("destroy");
+				createJSTreeByServer(search, (alive == "true"), (ds) => {
 					$('#hier_view').jstree({
 						'core': {
 							'data': ds, "multiple": true,
 							"animation": 0
-						}, 'plugins': ["wholerow", "checkbox"]
+						}, 'plugins': ["contextmenu"],
+
+						'contextmenu': {
+							'items': mitems,
+							"select_node": true
+
+						}
 					});
 					//$('#hier_view').jstree('load_node',ds);
 
+					addListeners();
 
 				});
+
 			} else if (what == "bydevice") {
-				return createJSTreeByDevice(search, (alive == "true"), (ds) => {
-					$('#hier_view').jstree("destroy");
+				createJSTreeByDevice(search, (alive == "true"), (ds) => {
 					$('#hier_view').jstree({
 						'core': {
 							'data': ds, "multiple": true,
 							"animation": 0
-						}, 'plugins': ["wholerow", "checkbox"]
+						}, 'plugins': ["contextmenu"],
+						'contextmenu': {
+							'items': mitems, "select_node": true
+
+						}
 					});
 					//$('#hier_view').jstree('load_node',ds);
 
-
+					addListeners();
 				});
 			}
 
@@ -163,12 +329,12 @@ require_once('header.php');
 								"parent": jchaos.encodeName(parent),
 								"icon": icon_name,
 								"text": elem,
-								"desc": desc[index]
+								"data": desc[index]
 							};
 							if (!node_created.hasOwnProperty(idname)) {
 								jsree_data.push(node);
 								node_created[idname] = true;
-							//	console.log("Adding :" + JSON.stringify(node));
+								//	console.log("Adding :" + JSON.stringify(node));
 
 							}
 							var parentid = jchaos.encodeName(parent);
@@ -176,27 +342,30 @@ require_once('header.php');
 							if (!node_created.hasOwnProperty(parentid)) {
 								var icon_name_parent = "";
 
-								var next_next_par=jchaos.node(parent, "desc","all");
-								if(next_next_par.hasOwnProperty("ndk_type")){
-										icon_name_parent="/img/devices/" + next_next_par.ndk_type + ".png";
+								var next_next_par = jchaos.node(parent, "desc", "all");
+								if (next_next_par.hasOwnProperty("ndk_type")) {
+									icon_name_parent = "/img/devices/" + next_next_par.ndk_type + ".png";
 								}
 								if (next_next_par.hasOwnProperty("ndk_parent") && (next_next_par.ndk_parent != "")) {
 									var idname = jchaos.encodeName(next_next_par.ndk_parent);
 
-									var icon_par_parent="";
-									
-									var par=jchaos.node(next_next_par.ndk_parent, "desc","all");
-									if((par!= null) && par.hasOwnProperty("ndk_type")){
-										icon_par_parent = "/img/devices/" + par.ndk_type + ".png";
-									}
-
+									var icon_par_parent = "";
 									var node = {
 										"id": idname,
 										"parent": "#",
-										"icon":icon_par_parent,
+										"icon": icon_par_parent,
 										"text": next_next_par.ndk_parent,
-										"desc": ""
+										"data": next_next_par
 									};
+									var par = jchaos.node(next_next_par.ndk_parent, "desc", "all");
+									if ((par != null)) {
+										node['data'] = par;
+										if (par.hasOwnProperty("ndk_type")) {
+											icon_par_parent = "/img/devices/" + par.ndk_type + ".png";
+										}
+									}
+
+
 									if (!node_created.hasOwnProperty(idname)) {
 										jsree_data.push(node);
 										node_created[idname] = true;
@@ -206,7 +375,7 @@ require_once('header.php');
 										"parent": idname,
 										"icon": icon_name_parent,
 										"text": parent,
-										"desc": next_next_par
+										"data": next_next_par
 									};
 
 									jsree_data.push(node);
@@ -220,7 +389,7 @@ require_once('header.php');
 										"parent": "#",
 										"icon": icon_name_parent,
 										"text": parent,
-										"desc": next_next_par
+										"data": next_next_par
 									};
 									jsree_data.push(node);
 									node_created[parentid] = true;
@@ -250,7 +419,7 @@ require_once('header.php');
 					culist = culist.concat(roots);
 				}
 				culist.forEach((elem) => {
-				//	var desc = jchaos.getDesc(elem, null);
+					//	var desc = jchaos.getDesc(elem, null);
 
 					var regex = /(.*)\/(.*)\/(.*)$/;
 					var match = regex.exec(elem);
@@ -261,12 +430,19 @@ require_once('header.php');
 						if (filename.length > 0) {
 							next_parent = filename[filename.length - 1];
 						}
+						var desc = "";
+						desc = jchaos.node(elem, "desc", "all");
+
 						filename.forEach((p, index) => {
 							var node = {};
+
 							if (index == 0) {
 								node = { "id": p, "icon": "", "parent": "#", "text": p };
 							} else {
 								node = { "id": p, "icon": "", "parent": filename[index - 1], "text": p };
+							}
+							if (desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("ndk_parent") && (desc.ndk_parent == next_parent)) {
+								node['data'] = jchaos.node(next_parent, "desc", "all");
 							}
 							if (!node_created.hasOwnProperty(p)) {
 								jsree_data.push(node);
@@ -284,12 +460,13 @@ require_once('header.php');
 						}
 						//var desc = jchaos.getDesc(elem, null);
 						var icon_name = "/img/devices/" + match[2] + ".png";
+
 						var node = {
 							"id": jchaos.encodeName(elem),
 							"parent": next_parent,
 							"icon": icon_name,
 							"text": node_name,
-							"desc": null
+							"data": desc
 						};
 						jsree_data.push(node);
 					}
@@ -321,12 +498,12 @@ require_once('header.php');
 							"parent": "#",
 							"icon": icon_name,
 							"text": device,
-							"desc": null
+							"data": null
 						};
 						if (!node_created.hasOwnProperty(device)) {
 
-										jsree_data.push(node);
-										node_created[device] = true;
+							jsree_data.push(node);
+							node_created[device] = true;
 						}
 						//var desc = jchaos.getDesc(elem, null);
 						var node = {
@@ -334,7 +511,7 @@ require_once('header.php');
 							"parent": device,
 							"icon": "",
 							"text": elem,
-							"desc": null
+							"data": null
 						};
 						jsree_data.push(node);
 					}
