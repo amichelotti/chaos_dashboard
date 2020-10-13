@@ -1080,11 +1080,14 @@
         createCustomDialog(opt, html);
     }
 
-    function showPicture(msghead, fmt, cuname, refresh) {
+    function showPicture(msghead, fmt, cuname, refresh,channel) {
         var update;
         var data;
         var stop_update = false;
-        var name = jchaos.encodeName(cuname);
+        var name = jchaos.encodeName(cuname) + (new Date()).getTime();
+        if(typeof channel==="undefined"){
+            channel =0;
+        }
         var instant = $('<div><img id=pict-' + name + ' src=""></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -1146,7 +1149,7 @@
                         $('#pict-update-' + name).text("Not Update");
                     }
                     if (!stop_update) {
-                        jchaos.getChannel(cuname, 0, function (imdata) {
+                        jchaos.getChannel(cuname, channel, function (imdata) {
                             data = imdata[0];
                             if (data.hasOwnProperty("FRAMEBUFFER") && data.FRAMEBUFFER.hasOwnProperty("$binary") && data.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
                                 var bin = data.FRAMEBUFFER.$binary.base64;
@@ -3470,7 +3473,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             }, function (data) {
-                instantMessage("ERROR Calibrating:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                instantMessage("ERROR Calibrating:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :"+JSON.stringify(data), 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
@@ -3600,7 +3603,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 });
 
             }, function (data) {
-                instantMessage("Getting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                instantMessage("Getting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :"+JSON.stringify(data), 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
@@ -3676,10 +3679,22 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
                     // $("#mdl-dataset").modal("hide");
 
-                    showPicture(currsel, "png", currsel, refresh);
+                    showPicture(currsel + " output", "png", currsel, refresh);
+                    
                 } else {
                     alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
                 }
+                if (cu && cu.hasOwnProperty("custom") &&
+                cu.custom.hasOwnProperty("FRAMEBUFFER") &&
+                cu.custom.FRAMEBUFFER.hasOwnProperty("$binary") &&
+                cu.custom.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
+                // $("#mdl-dataset").modal("hide");
+
+                showPicture(currsel + " custom", "png", currsel, 0,2);
+                
+            } else {
+                alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
+            }
             }, function (err) {
                 console.log(err);
             });

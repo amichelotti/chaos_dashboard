@@ -1,6 +1,12 @@
 
 
 function setRoi(cu,width,height,x,y,func){
+  width=width-(width&0x1);
+  height=height-(height&0x1);
+  x=x-(x&0x1)
+  y=y-(y&0x1)
+
+
   var roi_obj={
     "WIDTH":parseInt(width),
     "HEIGHT":parseInt(height),
@@ -11,7 +17,7 @@ function setRoi(cu,width,height,x,y,func){
     "act_msg":roi_obj,
     "act_name":"cu_prop_drv_set"
 };
-console.log("sending ROI:"+JSON.stringify(roi_obj));
+/*console.log("sending ROI:"+JSON.stringify(roi_obj));
 jchaos.command(cu,msg, function (data) {
     jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
     func();
@@ -20,8 +26,8 @@ jchaos.command(cu,msg, function (data) {
 },(bad)=>{
   jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
 
-});
-  /*jchaos.setAttribute(cu, "OFFSETX", "0", function(){
+});*/
+  jchaos.setAttribute(cu, "OFFSETX", "0", function(){
     setTimeout(() => {
       jchaos.setAttribute(cu, "OFFSETY", "0", function(){
         setTimeout(() => {
@@ -46,7 +52,7 @@ jchaos.command(cu,msg, function (data) {
       });
     },200);
     }
-  );*/
+  );
 }
 function getWidget() {
     var chaos = 
