@@ -100,9 +100,9 @@ function getWidget() {
                 //   html += '<div><b>'+key+'</b>';
                 html += '<div>';
                 if(camlist.length>1){
-                  html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000 width="659" height="494"/>';
+                  html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" width="659" height="494"/>';
                 } else{
-                  html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="" z-index=10000/>';
+                  html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
 
                 }
 //                html += '<div class="row-fluid">';
@@ -129,7 +129,11 @@ function getWidget() {
   
             $("#cameraImage-" + encoden).on('click', function () {
               $("#cameraImage-" + encoden).cropper({
-                aspectRatio: 16 / 9,
+                aspectRatio:1,
+                viewMode:1,
+                dragMode:'none',
+                initialAspectRatio:1,
+                zoomable:false,
                 crop: function (event) {
                   tmpObj['crop'] = {};
                   tmpObj['crop'][key] = event.detail;

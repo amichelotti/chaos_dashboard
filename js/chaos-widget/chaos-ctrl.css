@@ -177,6 +177,12 @@ body.loading .wait_modal {
   display: block;
 }
 
+.chaos_img {
+  display: block;
+
+  /* This rule is very important, please don't ignore this */
+  max-width: 100%;
+}
 /*.vakata-context { 
   z-index:10052 !important; 
 } */
