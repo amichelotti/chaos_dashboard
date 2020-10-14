@@ -49,7 +49,7 @@ require_once('header.php');
 						<div class="span6">
 							<label for="search-alive">Search Alive</label><input class="input-xlarge"
 								id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio"
-								value=true>
+								value=true checked>
 						</div>
 
 						<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text"

@@ -196,7 +196,7 @@ $("#script-edit").on('click',function(){
 				data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
 				$.get('algo.json', function(d) {
 					var templ=JSON.parse(d);
-					jchaos.search("","zone",true,function(zon){
+					jchaos.search("","zone",false,function(zon){
 						var zone=["ALL"].concat(zon);
 						templ['properties']['script_group']['items']['enum']=zone;
 							jqccs.jsonEditWindow("Loaded", templ, data, jqccs.algoSave);
@@ -245,7 +245,7 @@ $("#script-upload").on('click',function(){
                 if (name.includes(".js")) {
                     language = "JS";
                 } else {
-                    jqccs.instantMessage("cannot load:"+name," You must load a .js extension:",5000);
+                    jqccs.instantMessage("cannot load:"+name," You must load a .js extension:",5000,false);
                     return;
                 }
                 var zone_selected = $("#zones option:selected").val();
@@ -263,10 +263,13 @@ $("#script-upload").on('click',function(){
 				
 				$.get('algo.json', function(d) {
 					var templ=JSON.parse(d);
-					jchaos.search("","zone",true,function(zon){
+					jchaos.search("","zone",false,function(zon){
 						var zone=["ALL"].concat(zon);
 						templ['properties']['script_group']['items']['enum']=zone;
 							jqccs.jsonEditWindow("Loaded", templ, scriptTmp, jqccs.algoSave);
+					},(bad)=>{
+						jqccs.instantMessage("cannot identify zones","error:"+JSON.stringify(bad),5000,false);
+
 					});
 				}, 'text');
 

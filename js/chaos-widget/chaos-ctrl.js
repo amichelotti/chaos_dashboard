@@ -822,6 +822,7 @@
     }
      jqccs.execConsole=function(msghead, execHandler,okhandle,nokhandle) {
         var pid=(new Date()).getTime();
+        
         var html = '<div id=console-' + pid + '></div>';
         var opt = {
             minWidth: hostWidth / 2,
@@ -833,10 +834,11 @@
                 text: "download",
                 id: 'console-download-' + pid,
                 click: function (e) {
+                    var name=jchaos.encodeName(msghead)+pid;
                     // var interval=$(this).attr("refresh_time");
                     var output = $('#console-' + pid).terminal().get_output();
                     var blob = new Blob([output], { type: "json;charset=utf-8" });
-                    saveAs(blob, pid + ".log");
+                    saveAs(blob, name + ".log");
 
                  
                 }
@@ -872,6 +874,9 @@
             close: function (event, ui) {
             //    $('#console-' + pid).terminal().exit();
             $(this).dialog("close");
+            jchaos.exit=function(str){
+               alert(str);
+            }
             },
 
             open: function (e) {
@@ -929,6 +934,12 @@
                         $('#console-' + pid).terminal().exec(execHandler(),false);
                     }
                 },500);
+                jchaos.exit=function(str){
+                    console.log("pausing: "+str);
+                    $('#console-' + pid).terminal().logout();
+
+                    $('#console-' + pid).terminal().disable();
+                }
                 jchaos.setOptions({"console_log":$('#console-' + pid).terminal().echo,"console_err":$('#console-' + pid).terminal().error});
             }          
             
@@ -1855,20 +1866,24 @@
         return '&#' + c.charCodeAt(0) + ';';
         });*/
         json.eudk_script_content = btoa(unescape(encodeURIComponent(json.eudk_script_content)));
-        json['eudk_script_language'] = json.eudk_script_language[0];
-        json['script_target'] = json.script_target[0];
-        json['script_group'] = json.script_group[0];
+
+        json['eudk_script_language'] = ((json.eudk_script_language instanceof Array)?json.eudk_script_language[0]:json.eudk_script_language);
+        json['script_target'] = ((json.script_target instanceof Array)?json.script_target[0]:json.script_target);
+        json['script_group'] = ((json.script_group instanceof Array)?json.script_group[0]:json.script_group);
         proc[json.script_name] = json;
         //    jchaos.variable("script", "set", proc, null);
-       
+        delete json['_id'];
+
         jchaos.search(json.script_name, "script", false, function (l) {
             var script_inst = l['found_script_list'];
             if (!(script_inst instanceof Array) || (script_inst.length == 0)) {
            //     json['seq'] = 0;
-                delete json['_id'];
                 jchaos.saveScript(json, function (data) {
-                    console.log("saving script:" + JSON.stringify(json));
-                    instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
+                    console.log("Saving script:" + JSON.stringify(json));
+                    instantMessage("Script " + json.script_name, " Saved", 1000, null, null, true)
+
+                },(bad)=>{
+                    instantMessage("Error Saving Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
                 });
             } else {
@@ -1876,9 +1891,12 @@
                     var cnt = 0;
                     script_inst.forEach(function (elem) {
                         if(elem.seq==json.seq){
-                            console.log(cnt + "] updatinf script:" + json.script_name + " with seq:"+json.seq);
+                            console.log(cnt + "] Updating script:" + json.script_name + " with seq:"+json.seq," content:"+JSON.stringify(json));
                             jchaos.saveScript(json, function (data) {
-                                instantMessage("Updataing Script " + json.script_name, "Saved", 2000, null, null, true)
+                                instantMessage("Updated Script " + json.script_name, "Saved", 2000, null, null, true)
+
+                            },(bad)=>{
+                                instantMessage("Error updating Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
                             });
                             cnt++;
@@ -1897,6 +1915,9 @@
 
                                     });
                                 }
+                            },(bad)=>{
+                                instantMessage("Error removing Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
+
                             });
                     }
                     });
@@ -3876,7 +3897,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
         html += '<div class="span6">'
-        html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
+        html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true checked>';
         html += '</div>'
 
         // html += '<h3 class="span3">Search</h3>';
@@ -4967,16 +4988,16 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             } else if (cmd == "start-node") {
                 jchaos.node(node_multi_selected, "start", "us", function () {
                     instantMessage("US START", "Starting " + node_selected + " via agent", 1000, true);
-                }, function () {
-                    instantMessage("ERROR US START", "Starting " + node_selected + " via agent", 1000, false);
+                }, function (bad) {
+                    instantMessage("ERROR US START", "Starting " + node_selected + " via agent:"+JSON.stringify(bad), 1000, false);
                 });
                 return;
             } else if (cmd == "stop-node") {
                 jchaos.node(node_multi_selected, "stop", "us", function () {
                     instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000, true);
 
-                }, function () {
-                    instantMessage("ERROR US STOP", "Stopping " + node_selected + " via agent", 1000, false);
+                }, function (bad) {
+                    instantMessage("ERROR US STOP", "Stopping " + node_selected + " via agent:"+JSON.stringify(bad), 1000, false);
 
                 });
                 return;
@@ -5007,8 +5028,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     function () {
                         jchaos.node(node_selected, "restart", "us", function () {
                             instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000, true);
-                        }, function () {
-                            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000, false);
+                        }, function (bad) {
+                            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent:"+JSON.stringify(bad), 1000, false);
                         })
                     }, "Joke",
                     function () { });
@@ -6600,18 +6621,22 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         if ($radio.is(":checked") === false) {
             $radio.filter("[value=true]").prop('checked', true);
         }
-        var zones = jchaos.search("", "zone", true);
+        var alive = ($("[name=search-alive]:checked").val()=="true");
+
+        var zones = jchaos.search("", "zone", alive);
         element_sel('#zones', zones, 1);
 
 
         $("#zones").click(function () {
-            if ($("#zones option").length == 0) {
-                jchaos.search("", "zone", true, function (zones) {
+            var zone_selected = $("#zones option:selected").val();
+            if(zone_selected=="ALL"){
+                var alive = ($("[name=search-alive]:checked").val()=="true");
+                jchaos.search("", "zone", alive, function (zones) {
                     element_sel('#zones', zones, 1);
                 }, function (error) {
                     stateOutput(error, true);
                 });
-            }
+        }
         });
         element_sel('#classe', classe, 1);
 
@@ -6626,14 +6651,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 $("#elements").removeAttr('disabled');
             }
             if (zone_selected == "ALL") {
-                var alive = $("[input=search-alive]:checked").val()
-                jchaos.search(search_string, "class", (alive == "true"), function (ll) {
+                jchaos.search(search_string, "class", alive, function (ll) {
                     element_sel('#elements', ll, 1);
                 });
 
             } else {
 
-                jchaos.search(zone_selected, "class", true, function (ll) {
+                jchaos.search(zone_selected, "class", alive, function (ll) {
                     element_sel('#elements', ll, 1);
                 });
             }
@@ -6681,7 +6705,15 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         $("input[type=radio][name=search-alive]").change(function (e) {
             dashboard_settings.current_page = 0;
-
+            var alive = ($("[name=search-alive]:checked").val()=="true");
+            jchaos.search("", "zone", alive, function (zones) {
+                element_sel('#zones', zones, 1);
+            }, function (error) {
+                stateOutput(error, true);
+            });
+            jchaos.search(search_string, "class", alive, function (ll) {
+                element_sel('#elements', ll, 1);
+            });
             buildInterfaceFromPagedSearch(tmpObj, "cu");
 
         });
