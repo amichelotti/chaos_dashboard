@@ -1090,8 +1090,10 @@
         }
         createCustomDialog(opt, html);
     }
-
-    function showPicture(msghead, fmt, cuname, refresh,channel) {
+    jqccs.showPicture=function(msghead, cuname, refresh,channel){
+        return showPicture(msghead, cuname, refresh,channel);
+    }
+    function showPicture(msghead, cuname, refresh,channel) {
         var update;
         var data;
         var stop_update = false;
@@ -1099,7 +1101,7 @@
         if(typeof channel==="undefined"){
             channel =0;
         }
-        var instant = $('<div><img id=pict-' + name + ' src=""></div>').dialog({
+        var instant = $('<div><img id="pict-' + name + '" src=""><div id="info-'+name+'"></div></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
             title: msghead,
@@ -1151,9 +1153,12 @@
                 $(this).remove();
             },
             open: function () {
-                console.log(msghead + " refresh:" + refresh, " fmt:" + fmt);
+                console.log(msghead + " refresh:" + refresh);
 
                 update = setInterval(function () {
+                    if(refresh==0){
+                        clearInterval(update);
+                    }
                     if (stop_update) {
                         $('#pict-update-' + name).text("Update");
                     } else {
@@ -1166,6 +1171,11 @@
                                 var bin = data.FRAMEBUFFER.$binary.base64;
                                 //  $("#pict-"+name).attr("src", "data:image/" + fmt + ";base64," + bin);
                                 $("#pict-" + name).attr("src", "data:;base64," + bin);
+                                var info_size="";
+                                if(data.hasOwnProperty("WIDTH")){
+                                   info_size=data.WIDTH +"x"+data.HEIGHT+ "("+data.OFFSETX +","+data.OFFSETY+") "; 
+                                }
+                                $("#info-" + name).html(info_size+"frame:"+data.dpck_seq_id);
                             } else {
                                 alert("NO 'FRAMEBUFFER.$binary.base64' key EXISTS");
                                 clearInterval(update);
@@ -1173,7 +1183,6 @@
 
                             }
                         }, function (err) {
-                            console.log(err);
                         });
                     }
                     //$(this).attr("refresh_time",update);
@@ -3700,7 +3709,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
                     // $("#mdl-dataset").modal("hide");
 
-                    showPicture(currsel + " output", "png", currsel, refresh);
+                    showPicture(currsel + " output", currsel, refresh);
                     
                 } else {
                     alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
@@ -3711,7 +3720,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 cu.custom.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
                 // $("#mdl-dataset").modal("hide");
 
-                showPicture(currsel + " custom", "png", currsel, 0,2);
+                showPicture(currsel + " custom", currsel, 0,2);
                 
             } else {
                 alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
@@ -4589,6 +4598,47 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
 
                 confirm("Delete " + typ, "Your are deleting : " + node_selected, "Ok", function () {
+                    if(cmd == "del-nt_unit_server"){
+
+                        jchaos.node(node_selected,"desc","all",(info)=>{
+                            if(info.hasOwnProperty("ndk_parent")&&info.ndk_parent!=""){
+                                jchaos.node(info.ndk_parent, "del", "agent", node_selected, function(daa) {
+                                    instantMessage("Removed association "+info.ndk_parent, " OK", 1000, true);
+
+                                });
+
+                            }
+                        });
+                        jchaos.node(node_selected, "get", typ, function (data) {
+                            
+                            if(data.hasOwnProperty('us_desc')&&data.us_desc.hasOwnProperty('cu_desc')){
+                                var culist=data.us_desc.cu_desc;
+                                if(culist instanceof Array){
+                                    confirm("US  " + node_selected, "Contains : " + culist.length+ " CUs do you want to proceed?", "Proceed", function () {
+                                        culist.forEach((elem)=>{
+                                            jchaos.node(elem.ndk_uid, "deletenode", "cu", function () {
+                                                instantMessage("Node deleted "+elem.ndk_uid, " OK", 1000, true);
+                                            }, function (err) {
+                                                instantMessage("cannot delete cu:", JSON.stringify(err), 2000, false);
+                        
+                                            });
+                                        });
+                                        
+                                        updateNodeEvent();
+
+                                    },"Cancel");
+
+                                }
+                            }
+                            jchaos.node(node_selected, "deletenode", typ, function () {
+                                instantMessage("Node deleted "+node_selected, " OK", 1000, true);
+                            }, function (err) {
+                                instantMessage("cannot delete:", JSON.stringify(err), 2000, false);
+        
+                            });
+                        })
+
+                    }
                     jchaos.node(node_selected, "deletenode", typ, function () {
                         instantMessage("Node deleted ", " OK", 2000, true);
                         updateNodeEvent();
@@ -7161,7 +7211,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                         var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
                         $("#" + name_id + "_health_pband").html(band.toFixed(3));
                     }
-                    if (status != "Unload") {
+                    if ((status != "Unload") && (status !="Fatal Error")) {
                         switch (tmpObj.off_line[name_device_db]) {
                             case 1:
                                 status = "Dead";
@@ -9789,7 +9839,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         }, cancelText);
 
     }
-
+    jqccs.confirm=function(hmsg, msg, butyes, yeshandle, butno, nohandle) {
+        return confirm(hmsg, msg, butyes, yeshandle, butno, nohandle);
+    }
     function confirm(hmsg, msg, butyes, yeshandle, butno, nohandle) {
         var ret = true;
         var html = '<div><h6>' + msg + '</h6></div>';
@@ -10124,7 +10176,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             $("#cmd-recover-error").children().remove();
             $("#cmd-bypass-on-off").children().remove();
             */
-            if (status != "Unload") {
+            if ((status != "Unload") && (status !="Fatal Error")) {
                 switch (tmpObj.off_line[encoden]) {
                     case 1:
                         status = "Dead";

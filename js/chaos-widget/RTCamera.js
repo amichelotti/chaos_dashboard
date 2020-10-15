@@ -281,10 +281,10 @@ function getWidget() {
                    
                   }
                   //$('#triggerType').val(selected.output.TRIGGER_MODE)
-    
+                  var id=jchaos.encodeName(elem);
                   // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-                  $("#cameraImage-" + jchaos.encodeName(elem)).attr("src", "data:image/" + fmt + ";base64," + bin);
-                  $("#info-" + jchaos.encodeName(elem)).html(selected.output.WIDTH +"x"+selected.output.HEIGHT+ "("+selected.output.OFFSETX +","+selected.output.OFFSETY+") frame:"+selected.output.dpck_seq_id);
+                  $("#cameraImage-" + id).attr("src", "data:image/" + fmt + ";base64," + bin);
+                  $("#info-" + id).html(selected.output.WIDTH +"x"+selected.output.HEIGHT+ "("+selected.output.OFFSETX +","+selected.output.OFFSETY+") frame:"+selected.output.dpck_seq_id);
 
                   
                 }

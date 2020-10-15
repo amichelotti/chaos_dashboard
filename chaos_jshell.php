@@ -114,6 +114,13 @@ function newWindow(id, name,sizex,sizey) {
 	methods.forEach(function(elem){
 		methods_full.push("jqccs."+elem);
 	 });
+	/* var cn=jchaos.chaosNodeCreate();
+	methods=Object.getOwnPropertyNames(cn).filter(function(property) {
+        return typeof cn[property] == 'function';
+	});
+	methods.forEach(function(elem){
+		methods_full.push("ChaosNode."+elem);
+	 });*/
 	 jqccs.initSettings();
 
 	  $('#terminal').terminal(function(command) {
