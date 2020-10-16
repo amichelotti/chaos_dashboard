@@ -6320,7 +6320,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             });
         });
-        $("#script-edit").off('click');
+       // $("#script-edit").off('click');
         $("#script-edit").on('click', function () {
             console.log("show " + tmpObj.node_selected);
 
@@ -6388,6 +6388,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                         getEntryWindow(tmpObj.node_selected +" arguments ", tmpObj.node_selected, "()","Continue", function (fargs) {
 
                         if(dscript['eudk_script_language']=="CPP"){
+                            fargs.replace("\"", "\\\"");
+
                             tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + fargs + "\"";
                             supported=true;
                             data['instance_name']=best_agent;
@@ -6855,8 +6857,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     tempObj['search_query'] = search_query;
                     $(".pageindex").css("visibility", "visible");
                     $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
+                    var filt_list=[];
+                    if(list.list instanceof Array){
+                        filt_list=list.list.filter((val)=>{return (val!="")});
 
-                    handler(list.list.filter((val)=>{return (val!="")}));
+                    }
+                    handler(filt_list);
                 });
 
         }

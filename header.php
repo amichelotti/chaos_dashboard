@@ -57,12 +57,12 @@
 				    <li class="dropdown-menu-title">
  					<span> Control Scripts</span>
 					</li>
-					<li><a id="script-upload"><i class="halflings-icon upload"></i>Upload</a></li>
-				    <li><a id="script-run"><i class="halflings-icon refresh"></i>Run..</a></li>
-				    <li><a id="script-edit"><i class="halflings-icon edit"></i>Edit..</a></li>
-					<li><a id="script-download"><i class="halflings-icon download"></i>Download</a></li>
+					<li><a id="hscript-upload"><i class="halflings-icon upload"></i>Upload</a></li>
+				    <li><a id="hscript-run"><i class="halflings-icon refresh"></i>Run..</a></li>
+				    <li><a id="hscript-edit"><i class="halflings-icon edit"></i>Edit..</a></li>
+					<li><a id="hscript-download"><i class="halflings-icon download"></i>Download</a></li>
 
-					<li><a id="script-delete"><i class="halflings-icon remove"></i>Delete..</a></li>
+					<li><a id="hscript-delete"><i class="halflings-icon remove"></i>Delete..</a></li>
 				</ul>
 			    </li>
 			<!-- end: User Dropdown -->
@@ -163,7 +163,7 @@ function selectScriptAndAction(msg,buttname,action){
 
 }
 
-$("#script-run").on('click',function(){
+$("#hscript-run").on('click',function(){
 	console.log("settings:"+JSON.stringify(jqccs.getSettings()));
 
 	selectScriptAndAction("Run Script","Run",(script)=>{
@@ -183,7 +183,7 @@ $("#script-run").on('click',function(){
 	});
 });
 });
-$("#script-edit").on('click',function(){
+$("#hscript-edit").on('click',function(){
 	selectScriptAndAction("Edit Script","Edit..",(script)=>{
 
 		jchaos.loadScript(script.script_name, script.seq, function (data) {
@@ -207,7 +207,7 @@ $("#script-edit").on('click',function(){
 });
 });
 
-$("#script-delete").on('click',function(){
+$("#hscript-delete").on('click',function(){
 	selectScriptAndAction("Delete Script","Delete",(script)=>{
 		console.log("delete " + script.script_name);
             jchaos.rmScript(script, function (data) {
@@ -217,7 +217,7 @@ $("#script-delete").on('click',function(){
 	});
 
 });
-$("#script-download").on('click',function(){
+$("#hscript-download").on('click',function(){
 	selectScriptAndAction("Download Script","Download",(script)=>{
 		jchaos.loadScript(script.script_name, script.seq, function (data) {
 			if (!data.hasOwnProperty('eudk_script_content')) {
@@ -232,7 +232,7 @@ $("#script-download").on('click',function(){
 });
 });
 
-$("#script-upload").on('click',function(){
+$("#hscript-upload").on('click',function(){
 
 	jqccs.getFile("Control Script Loading", "select the Script to load", function (script) {
                 var regex = /.*[/\\](.*)$/;
