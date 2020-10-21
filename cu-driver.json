@@ -5,26 +5,49 @@
 	"format":"tab",
 
     "properties": {
-		"cudk_driver_description_name" :{
-			"type": "string",
-			"format":"text",
-			"description":"Driver Class Name that Abstract the driver"
-		},
+    "cudk_driver_description_name": {
+        "type": "string",
+        "enum": [
+        ],
+        "description":"Driver Class Name that Abstract the driver"
+
+    },
+	
 		"cudk_driver_description_version" :{
 			"type": "string",
 			"format":"text",
+			"default":"1.0.0",
 			"description":"Version of the driver"
 		},
 		"cudk_driver_description_init_parameter" :{
 			"type": "string",
 			"format":"textarea",
-			"description":"Initialization String can be JSON"
-		},
-		"cudk_driver_prop" :{
+			"description":"Initialization String JSON"
+    },
+    "cudk_driver_desc" :{
 			"type": "string",
 			"format":"textarea",
-			"description":"Driver properties initialization (JSON)"
-		}
+			"description":"a description of the driver"
+    },
+		"cudk_driver_prop": {
+            "type": "array",
+            "format": "table",
+            "title": "Driver properties",
+            "description":"Initialization of existing attributes of the Driver, does not belong to a dataset",
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "title": "Property",
+              "properties": {
+                "name": {
+                    "type": "string"
+                  },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
 	}
 }
     

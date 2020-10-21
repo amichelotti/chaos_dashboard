@@ -19,25 +19,19 @@
         "enum": ["BASH", "CPP", "NODEJS","JS", "LUA", "PYTHON"]
       }
     },
-	"script_group": {
-    "type": "array",
-    "format": "select",
-    "uniqueItems": true,
-    "items": {
+    "script_group": {
       "type": "string",
-      "enum": []
-    },
+      "enum": [
+        "ALL"
+      ],
 	    "description":"Group name"
-	},
+    },
+	
 	"script_target" :
 	{
-		"type": "array",
-  		"format": "select",
-  		"uniqueItems": true,
-  		"items": {
-    	"type": "string",
-		  "enum": ["local","remote"]
-      },
+		"type": "string",
+		"enum": ["local","remote"]
+      ,
       "description":"Run locally (i.e browser) or Remote (i.e cloud)"
 
   },

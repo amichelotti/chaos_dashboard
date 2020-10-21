@@ -60,8 +60,14 @@ require_once('header.php');
 
 					<div class="row-fluid">
 						<div class="box span12">
-							<div id="hier_view" class="span6"></div>
-							<div id="desc_view" class="span6"></div>
+							<div id="hier_view" class="span3"></div>
+							<div id="desc_view" class="span3"></div>
+							<div class="span6">
+								<div class="chaos_synoptic_container">
+									<img id="zone_image" src="" />
+									<svg id="svg_img" viewBox="0 0 640 480"></svg>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -85,26 +91,421 @@ require_once('header.php');
 
 
 	<script>
-		function addListeners() {
+		var cu_copied = null;
+		var synoptic = {};
+		jchaos.variable("synoptic", "get", (ok) => {
+			synoptic = ok;
+		});
 
 
-			$('#hier_view').on('select_node.jstree', function (e, data) {
-				var i, j, r = [];
-				if (data.selected.length == 1) {
-					var node_data = data.instance.get_node(data.selected[0]).data;
-					if ((node_data != null) && node_data.hasOwnProperty("ndk_uid")) {
-						var ndk_uid = node_data.ndk_uid;
-						jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
-							//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
-							node_data = Object.assign(bi, node_data);
+		function cu2editor(ob, func) {
+			var obj = Object.assign({}, ob);
+			$.get('cu_write_mask.json', function (templ) {
+				try{
+				jchaos.search("", "us", false, function (uslist) {
+					jchaos.variable("cu_catalog", "get", (cudb) => {
+						var list_us = [];
+						var par = "";
+						if (obj.ndk_parent !== undefined) {
+							par = obj.ndk_parent;
+
+						}
+						if (par != "") {
+							list_us.push(par);
+						}
+						uslist.forEach((us) => {
+							if (us != par) {
+								list_us.push(us);
+							}
+						});
+						templ['properties']['ndk_parent'].enum=list_us;
+						var list_impl = [];
+
+						var impl = "";
+						if (obj.control_unit_implementation !== undefined) {
+							impl = obj.control_unit_implementation;
+						}
+						if (impl != "") {
+							list_impl.push(impl);
+
+						}
+						for (var k in cudb) {
+							if (k != impl) {
+								list_impl.push(k);
+							}
+						}
+
+						list_impl.push("CUSTOM");
+						templ['properties']['control_unit_implementation'].enum=list_impl;
+						var drv_impl=obj.cudk_driver_description;
+						var list_drivers=[];
+
+						if((drv_impl !== undefined )&& (drv_impl.length)){
+							drv_impl.forEach((d)=>{
+								list_drivers.push(d.cudk_driver_description_name);
+							});
+							// return just the drivers that are supported
+
+	
+						} 
+						if((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined )){
+							var dlist=cudb[impl].drivers;
+							// drivers for the implementation
+							for(d in dlist){
+								// push drivers available for implementation
+								var exist = list_drivers.filter((elem) => { return (elem == d); });
+								if ((exist instanceof Array) && exist.length == 0) {
+									list_drivers.push(d);
+								}
+								
+							}
+
+						} 
+						templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum=list_drivers;
+
+					/*	if((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined )&& (drv !== undefined)){
+							templ['properties']['cudk_driver_description']['properties'].cudk_driver_description_name=cudb[impl].drivers;
+						} else {
+							var all_driver=[]
+							for(var k in cudb){
+								var dlist=cudb[k].drivers;
+								for(d in dlist){
+									all_driver.push(d);
+								}
+							}
+						}*/
+					//	templ['properties']['control_unit_implementation'].cudk_driver_description
+						var list_storage = [];
+
+						if (obj.dsndk_storage_type !== undefined) {
+							if (obj.dsndk_storage_type & 0x1) {
+								list_storage.push("History");
+							}
+							if (obj.dsndk_storage_type & 0x2) {
+								list_storage.push("Live");
+							}
+							if (obj.dsndk_storage_type & 0x10) {
+								list_storage.push("Log");
+							}
+						} else {
+							list_storage.push("Live");
+						}
+						obj.dsndk_storage_type = list_storage;
+
+						var list_prop = [];
+						if (obj.cudk_prop !== undefined) {
+							try {
+								var par = JSON.parse(list_prop);
+								for (var k in par) {
+									list_prop.push({ k: par(k) });
+								}
+							} catch (e) {
+
+							}
+
+						}
+						obj['cudk_prop'] = list_prop;
+						if (obj.cudk_driver_description !== undefined) {
+							obj.cudk_driver_description.forEach((ele, index) => {
+								var list_prop = [];
+								if (ele.cudk_driver_prop !== undefined) {
+									try {
+										var par = JSON.parse(ele.cudk_driver_prop);
+										for (var k in par) {
+											list_prop.push({ k: par(k) });
+										}
+									} catch (e) {
+
+									}
+								}
+
+								obj.cudk_driver_description[index]['cudk_driver_prop'] = list_prop;
+							});
+
+						}
+						func(templ,obj);
+					});
+				});
+			} catch(e){
+				alert("Error parsing:"+JSON.stringify(e));
+			}
+			});
+			
+		}
+
+		function copyToClipboard(txt) {
+			var $temp = $("<input>");
+			$("body").append($temp);
+			$temp.val(txt).select();
+			document.execCommand("copy");
+			$temp.remove();
+		}
+		function addMenuItems(node) {
+			var items = {};
+			var tree = $('#hier_view').jstree(true);
+			var ID = $(node).attr('id');
+			if (node.hasOwnProperty("data")) {
+				if (node.data.hasOwnProperty("ndk_type") && node.data.hasOwnProperty("ndk_uid")) {
+					var selected_node = node.data.ndk_uid;
+					var type = node.data.ndk_type;
+					if ((type == "nt_control_unit") || (type == "nt_root")) {
+						var uid
+						items['edit'] = {
+							"separator_before": true,
+							"separator_after": false,
+							label: "Edit",
+							action: function () {
+
+								jchaos.node(selected_node, "get", "cu", function (data) {
+									if (data != null) {
+										//editorFn = cuSave;
+										//jsonEdit(templ, data);
+										cu2editor(data, (edit_templ, editobj) => {
+											jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (ok) {
+												instantMessage("CU/EU saved " + selected_node, " OK", 2000, true);
+
+											}, function (bad) {
+												jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
+
+											});
+										});
+
+									}
+								});
+								return;
+							}
+						};
+						items['copy'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Copy",
+							action: function () {
+								jchaos.node(selected_node, "get", "cu", function (data) {
+									if (data != null) {
+										cu_copied = data;
+										jqccs.instantMessage("CU/EU copied " + selected_node, " OK", 2000, true);
+
+										copyToClipboard(JSON.stringify(data));
+									}
+								});
+							}
+						};
+
+						items['save'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Save locally",
+							action: function () {
+								jchaos.node(selected_node, "get", "cu", function (data) {
+									if (data != null) {
+										if (data instanceof Object) {
+											var tmp = { cu_desc: data };
+											var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
+											saveAs(blob, selected_node + ".json");
+										}
+									}
+								});
+							}
+						};
+						items['updateSynPos'] = {
+							"separator_before": true,
+							"separator_after": false,
+							label: "Update Synoptic position",
+							action: function () {
+
+							}
+						};
+
+
+					}
+					items['delete'] = {
+						"separator_before": true,
+						"separator_after": false,
+						label: "Delete Node",
+						action: function (obj) {
+							jqccs.confirm("Delete Node", "Your are deleting : " + selected_node, "Ok", function () {
+								jchaos.node(selected_node, "deletenode", "all", function () {
+									jqccs.instantMessage("Node deleted " + selected_node, " OK", 2000, true);
+									tree.delete_node(node);
+
+								}, function (err) {
+									jqccs.instantMessage("cannot delete " + selected_node, JSON.stringify(err), 2000, false);
+
+								});
+							}, "Cancel");
+
+						}
+					};
+					items['updateView'] = {
+						"separator_before": true,
+						"separator_after": false,
+						label: "Update State",
+						action: function () { updateDescView(node.data); }
+					};
+					items['shutdown'] = {
+						"separator_before": true,
+						"separator_after": false,
+						label: "Shutdown Node and all siblings",
+						action: function () {
+							var typ = jchaos.nodeTypeToHuman(type);
+
+							jqccs.confirm("Do you want to IMMEDIATELY SHUTDOWN " + typ + " " + selected_node, "Pay attention all children and siblings will be killed as well", "Kill",
+								function () {
+									jchaos.node(selected_node, "shutdown", typ, function () {
+										jqccs.instantMessage("SHUTDOWN NODE", "Killing " + selected_node + "", 1000, true);
+									}, function () {
+										jqccs.instantMessage("SHUTDOWN NODE ", "Killing " + selected_node + "", 4000, false);
+									}, function () {
+										// handle error ok
+									})
+								}, "Joke",
+								function () { });
+						}
+					}
+
+
+				} else if (node.data.hasOwnProperty('zone')) {
+					if (typeof cu_copied === "object") {
+						items['paste'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Paste",
+							action: function () {
+								
+								var cu = cu_copied;
+								var decoded=jchaos.pathToZoneGroupId(cu.ndk_uid);
+								if(decoded){
+									cu["ndk_uid"] = node.data["zone"] + "/"+decoded["group"]+"/NewName" + (new Date()).getTime();
+									
+									cu2editor(cu, (edit_templ, editobj) => {
+
+									jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
+										jqccs.instantMessage("CU/EU saved " + selected_node, " OK", 2000, true);
+										decoded=jchaos.pathToZoneGroupId(json.ndk_uid);
+										var icon_name = "/img/devices/" + decoded["group"] + ".png";
+
+										if(decoded){
+											json['group']=decoded["group"];
+											var newnode = {
+												"id": jchaos.encodeName(json.ndk_uid),
+												"parent": node.id,
+												"icon": icon_name,
+												"text": decoded["id"],
+												"data": json
+											};
+
+											tree.create_node(node,newnode);
+
+									}
+									}, function (bad) {
+										jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
+
+									});
+							});
+						} else {
+							alert("Not a valid uid:'"+cu.ndk_uid+"' must contain at least zone/group/id")
+						}
+							}
+						};
+					}
+				}
+			}
+			return items;
+		}
+		function updateDescView(node_data) {
+			if ((node_data != null)) {
+				if (node_data.hasOwnProperty("ndk_uid")) {
+					var ndk_uid = node_data.ndk_uid;
+
+
+
+					jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
+						//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
+						jchaos.getChannel(ndk_uid, 255, function (bruninfo) {
+							//node_data = Object.assign(bi, node_data);
+							node_data = Object.assign({}, { build: bi }, { state: bruninfo[0] }, { info: node_data });
+							if (node_data.hasOwnProperty("zone") && synoptic.hasOwnProperty(node_data.zone) && synoptic[node_data.zone].hasOwnProperty(ndk_uid)) {
+								var x = 0, y = 0, r = 0;
+								var obj = synoptic[node_data.zone].ndk_uid;
+								if (obj.hasOwnProperty("x")) {
+									x = obj['x'];
+								}
+								if (obj.hasOwnProperty("y")) {
+									y = obj['y'];
+								}
+								if (obj.hasOwnProperty("r")) {
+									r = obj['r'];
+								}
+								$("#svg_img").html('<circle cx="' + x + '" cy="' + y + '" r="' + r + '" stroke="black" stroke-width="3" fill="green"/>');
+
+							}
+
 							$('#desc_view').html(jqccs.json2html(node_data));
 							jqccs.jsonSetup($('#desc_view'), function (e) {
 							});
+							$('#desc_view').find('a.json-toggle').click();
+
+						});
+
+
+					}, bad => {
+						// no build info
+						jchaos.getChannel(ndk_uid, 255, function (bruninfo) {
+							//node_data = Object.assign(bi, node_data);
+							node_data = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
+							$('#desc_view').html(jqccs.json2html(node_data));
+							jqccs.jsonSetup($('#desc_view'), function (e) {
+							});
+							$('#desc_view').find('a.json-toggle').click();
+
+						});
+					});
+
+				} else if (node_data.hasOwnProperty("zone")) {
+
+					$('#desc_view').html(node_data.zone);
+					var name = jchaos.encodeName(node_data.zone);
+					$('#zone_image').attr('src', '/img/zone/' + name + ".png");
+
+					/*	$.ajax({
+							type: "GET",
+							url: '/img/zone/' + name+".png",
+							dataType: "image/jpg",
+							success: function (data) {
+								$('#zone_image').attr('src', data);
+							}
+						});*/
+				}
+
+			}
+		}
+		function addListeners() {
+
+			$('#hier_view').on('move_node.jstree', function (e, data) {
+				var i, j, r = [];
+				var node_data = data.instance.get_node(data.selected[0]).data;
+				console("Moving " + JSON.stringify(e));
+				/*
+				for (i = 0, j = data.selected.length; i < j; i++) {
+					var node_data=data.instance.get_node(data.selected[i]).data;
+					if(node_data.hasOwnProperty("ndk_uid")){
+						var ndk_uid=node_data.ndk_uid;
+						jchaos.command(ndk_uid,{"act_name":"getBuildInfo","act_domain":"system","direct":true}, function (bi) {
+							console.log(ndk_uid+" Build:"+JSON.stringify(bi));
+							node_data['build']=bi;
+							r.push(node_data);
 
 						});
 
 					}
 				}
+				$('#desc_view').html(jqccs.json2html(r));*/
+			});
+			$('#hier_view').on('select_node.jstree', function (e, data) {
+				var i, j, r = [];
+				var node_data = data.instance.get_node(data.selected[0]).data;
+
+				updateDescView(node_data);
 				/*
 				for (i = 0, j = data.selected.length; i < j; i++) {
 					var node_data=data.instance.get_node(data.selected[i]).data;
@@ -124,64 +525,79 @@ require_once('header.php');
 			$("body").removeClass("loading");
 		}
 		//$('#hier_view').jstree({ 'plugins': ["contextmenu"] });
-		$('#hier_view').jstree({
-			"core": {
-				"animation": 0,
-				"check_callback": true,
-				"themes": { "stripes": true },
-				'data': [
-					{ "id": "ajson1", "parent": "#", "text": "Simple root node" },
-					{ "id": "ajson2", "parent": "#", "text": "Root node 2" },
-					{ "id": "ajson3", "parent": "ajson2", "text": "Child 1" },
-					{ "id": "ajson4", "parent": "ajson2", "text": "Child 2" },
-				]
-			},
-			"plugins": [
-				"wholerow","contextmenu", "dnd", "search",
-				"state", "types", "wholerow"
-			],
-			"contextmenu":{
-				"items":{
-					"rename": {
-						// The item label
-						"label": "Rename",
-						// The function to execute upon a click
-						"action": function (obj) { this.rename(obj); },
-						// All below are optional 
-						"_disabled": true,		// clicking the item won't do a thing
-						"_class": "class",	// class is applied to the item LI node
-						"separator_before": false,	// Insert a separator before the item
-						"separator_after": true,		// Insert a separator after the item
-						// false or string - if does not contain `/` - used as classname
-						"icon": false,
-						"submenu": {
-							/* Collection of objects (the same structure) */
+		/*	$('#hier_view').jstree({
+				"core": {
+					"animation": 0,
+					"check_callback": true,
+					"themes": { "stripes": true },
+					'data': [
+						{ "id": "ajson1", "parent": "#", "text": "Simple root node" },
+						{ "id": "ajson2", "parent": "#", "text": "Root node 2" },
+						{ "id": "ajson3", "parent": "ajson2", "text": "Child 1" },
+						{ "id": "ajson4", "parent": "ajson2", "text": "Child 2" },
+					]
+				},
+				"plugins": [
+					"contextmenu", "dnd", "search"
+				],
+				"contextmenu":{
+					"items":{
+						"rename": {
+							// The item label
+							"label": "Rename",
+							// The function to execute upon a click
+							"action": function (obj) { this.rename(obj); },
+							// All below are optional 
+							"_disabled": true,		// clicking the item won't do a thing
+							"_class": "class",	// class is applied to the item LI node
+							"separator_before": false,	// Insert a separator before the item
+							"separator_after": true,		// Insert a separator after the item
+							// false or string - if does not contain `/` - used as classname
+							"icon": false,
+							"submenu": {
+							}
+						},
+						"pippolo": {
+							// The item label
+							"label": "Pippolone",
+							// The function to execute upon a click
+							"action": function (obj) { this.rename(obj); },
+							// All below are optional 
+							"_disabled": true,		// clicking the item won't do a thing
+							"_class": "class",	// class is applied to the item LI node
+							"separator_before": false,	// Insert a separator before the item
+							"separator_after": true,		// Insert a separator after the item
+							// false or string - if does not contain `/` - used as classname
+							"icon": false,
+							"submenu": {
+							}
 						}
+					
+					}
+				}
+	
+			});*/
+
+		/*	$.jstree.defaults.core.plugins = ["contextmenu"];
+			$.jstree.defaults.contextmenu.items = {
+				// Some key
+				"rename": {
+					// The item label
+					"label": "Rename",
+					// The function to execute upon a click
+					"action": function (obj) { this.rename(obj); },
+					// All below are optional 
+					"_disabled": true,		// clicking the item won't do a thing
+					"_class": "class",	// class is applied to the item LI node
+					"separator_before": false,	// Insert a separator before the item
+					"separator_after": true,		// Insert a separator after the item
+					// false or string - if does not contain `/` - used as classname
+					"icon": false,
+					"submenu": {
 					}
 				}
 			}
-
-		});
-	/*	$.jstree.defaults.core.plugins = ["contextmenu"];
-		$.jstree.defaults.contextmenu.items = {
-			// Some key
-			"rename": {
-				// The item label
-				"label": "Rename",
-				// The function to execute upon a click
-				"action": function (obj) { this.rename(obj); },
-				// All below are optional 
-				"_disabled": true,		// clicking the item won't do a thing
-				"_class": "class",	// class is applied to the item LI node
-				"separator_before": false,	// Insert a separator before the item
-				"separator_after": true,		// Insert a separator after the item
-				// false or string - if does not contain `/` - used as classname
-				"icon": false,
-				"submenu": {
-				}
-			}
-		}
-*/
+	*/
 		function updateJST(what, search, alive) {
 			var mitems = {
 				// Some key
@@ -212,29 +628,8 @@ require_once('header.php');
 						"plugins": ["dnd", "contextmenu"],
 						"contextmenu": {
 							'items': (node) => {
-								// The default set of all items
-								var items = {
-									renameItem: {
-										"separator_before": false,
-										"separator_after": true,
-										// The "rename" menu item
-										label: "Rename",
-										action: function () { }
-									},
-									deleteItem: { // The "delete" menu item
-										"separator_before": false,
-										"separator_after": true,
-										label: "Delete",
-										action: function () { }
-									}
-								};
+								return addMenuItems(node);
 
-								/*if ($(node).hasClass("folder")) {
-									// Delete the "delete" menu item
-									delete items.deleteItem;
-								}*/
-
-								return items;
 							}, "select_node": true, "show_at_node": false
 						},
 
@@ -420,11 +815,10 @@ require_once('header.php');
 				}
 				culist.forEach((elem) => {
 					//	var desc = jchaos.getDesc(elem, null);
-
-					var regex = /(.*)\/(.*)\/(.*)$/;
-					var match = regex.exec(elem);
-					if (match != null) {
-						var zone = match[1];
+					var decoded=jchaos.pathToZoneGroupId(elem);
+					if (decoded != null) {
+						var zone = decoded.zone;
+						var group= decoded.group;
 						var filename = zone.split("/");
 						var next_parent = "";
 						if (filename.length > 0) {
@@ -432,17 +826,29 @@ require_once('header.php');
 						}
 						var desc = "";
 						desc = jchaos.node(elem, "desc", "all");
-
+						var zone = "";
+						var implementation="";
+						if(desc.instance_description !== undefined && desc.instance_description.control_unit_implementation!== undefined){
+							implementation=desc.instance_description.control_unit_implementation;
+						}
 						filename.forEach((p, index) => {
 							var node = {};
-
 							if (index == 0) {
 								node = { "id": p, "icon": "", "parent": "#", "text": p };
+								zone = p;
 							} else {
+								zone = zone + "/" + p;
 								node = { "id": p, "icon": "", "parent": filename[index - 1], "text": p };
 							}
 							if (desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("ndk_parent") && (desc.ndk_parent == next_parent)) {
-								node['data'] = jchaos.node(next_parent, "desc", "all");
+								var parent_desc = jchaos.node(next_parent, "desc", "all");
+								node['data'] = parent_desc;
+								if (parent_desc.hasOwnProperty("ndk_type")) {
+									node['icon'] = "/img/devices/" + parent_desc.ndk_type + ".png";
+								}
+							} else {
+
+								node['data'] = { "zone": zone}
 							}
 							if (!node_created.hasOwnProperty(p)) {
 								jsree_data.push(node);
@@ -451,15 +857,13 @@ require_once('header.php');
 
 
 						});
-						var node_name = "";
-						if (typeof match[3] === "string") {
-							node_name = match[3];
-						} else {
-							node_name = match[2];
+						var node_name = decoded.id;
+						desc['zone'] = decoded.zone;
+						desc['group'] = decoded.group;
 
-						}
+						
 						//var desc = jchaos.getDesc(elem, null);
-						var icon_name = "/img/devices/" + match[2] + ".png";
+						var icon_name = "/img/devices/" + desc['group'] + ".png";
 
 						var node = {
 							"id": jchaos.encodeName(elem),
@@ -548,7 +952,7 @@ require_once('header.php');
 			updateJST($("#View").val(), search, alive);
 
 		});
-
+		$("input[type=radio][name=search-alive]").trigger("change");
 
 	</script>
 

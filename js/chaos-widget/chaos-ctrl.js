@@ -2040,8 +2040,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
      */
     function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok) {
         var instant = $('<div id=edit-temp></div>').dialog({
-            minWidth: hostWidth / 4,
-            minHeight: hostHeight / 4,
+            minWidth: $(window).width() / 4,
+            minHeight: $(window).height() / 4,
             title: name,
             position: "center",
             resizable: true,

@@ -183,9 +183,34 @@ body.loading .wait_modal {
   /* This rule is very important, please don't ignore this */
   max-width: 100%;
 }
-/*.vakata-context { 
+.vakata-context { 
   z-index:10052 !important; 
-} */
+} 
+
+.chaos_synoptic_container{
+  position: relative;
+  display: inline-block; /* <= shrinks container to image size */
+  
+  
+}
+.chaos_synoptic_container img{
+  display: block;
+  max-width:640px;
+  max-height:480px;
+
+}
+.chaos_synoptic_container svg{
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/*
+.chaos_synoptic_image {
+  position:relative;
+  max-width:640px;
+  max-height:480px;
+}*/
 #chaos_content {
 	background: #ffffff;
 	filter: none;
