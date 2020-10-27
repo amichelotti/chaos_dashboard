@@ -21,9 +21,8 @@
     },
     "script_group": {
       "type": "string",
-      "enum": [
-        "ALL"
-      ],
+      "required": true,
+      "format": "text",
 	    "description":"Group name"
     },
 	

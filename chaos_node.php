@@ -14,24 +14,24 @@ require_once('header.php');
 ?>
 
 	<div class="container-fluid-full fill">
-		<div class="row-fluid fill">
+		<div class="row fill">
 
 
 
 			<!-- start: Content -->
-			<div id="chaos_content" class="span12">
+			<div id="chaos_content" class="col-md-12">
 
 				<ul class="breadcrumb">
 					<li>
-						<i class="icon-home"></i>
+						<i class="glyphicon glyphicon-home"></i>
 						<a href="<?php echo $index; ?>"><?php echo $curr_page; ?></a>
 						<i class="icon-angle-right"></i>
 					</li>
 				</ul>
 
 
-				<div class="row-fluid">
-					<div class="statbox purple span3">
+				<div class="row">
+					<div class="statbox purple col-md-3">
 						<h3>Node Type</h3>
 						<select id="View" size="auto">
 							<option value="byzone" selected="selected">By Zone</option>
@@ -40,34 +40,33 @@ require_once('header.php');
 						</select>
 					</div>
 
-					<div class="statbox purple row-fluid span3">
-						<div class="span6">
+					<div class="statbox purple row col-md-3">
+						<div class="col-md-3">
 							<label for="search-alive">Search All</label><input class="input-xlarge"
 								id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive"
 								type="radio" value=false>
 						</div>
-						<div class="span6">
+						<div class="col-md-3">
 							<label for="search-alive">Search Alive</label><input class="input-xlarge"
 								id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio"
 								value=true checked>
 						</div>
+						<div class="col-md-6">
+							<label for="search-chaos">Search</label>
+							<input class="input-xlarge focused" id="search-chaos" title="Free form Search" type="text"
+								value="">
+						</div>
 
-						<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text"
-							value="">
 					</div>
 				</div>
 				<div class="box-content">
 
-					<div class="row-fluid">
-						<div class="box span12">
-							<div id="hier_view" class="span3"></div>
-							<div id="desc_view" class="span3"></div>
-							<div class="span6">
-								<div class="chaos_synoptic_container">
-									<img id="zone_image" src="" />
-									<svg id="svg_img" viewBox="0 0 640 480"></svg>
-								</div>
-							</div>
+					<div class="box row">
+						<div id="hier_view" class="col-md-3"></div>
+						<div id="desc_view" class="col-md-3"></div>
+						<div class="chaos_synoptic_container">
+							<img id="zone_image" src="" />
+							<svg id="svg_img" viewBox="0 0 640 480"></svg>
 						</div>
 					</div>
 				</div>
@@ -101,136 +100,157 @@ require_once('header.php');
 		function cu2editor(ob, func) {
 			var obj = Object.assign({}, ob);
 			$.get('cu_write_mask.json', function (templ) {
-				try{
-				jchaos.search("", "us", false, function (uslist) {
-					jchaos.variable("cu_catalog", "get", (cudb) => {
-						var list_us = [];
-						var par = "";
-						if (obj.ndk_parent !== undefined) {
-							par = obj.ndk_parent;
+				try {
+					jchaos.search("", "us", false, function (uslist) {
+						jchaos.variable("cu_catalog", "get", (cudb) => {
+							var list_us = [];
+							var par = "";
+							if (obj.ndk_parent !== undefined) {
+								par = obj.ndk_parent;
 
-						}
-						if (par != "") {
-							list_us.push(par);
-						}
-						uslist.forEach((us) => {
-							if (us != par) {
-								list_us.push(us);
 							}
-						});
-						templ['properties']['ndk_parent'].enum=list_us;
-						var list_impl = [];
-
-						var impl = "";
-						if (obj.control_unit_implementation !== undefined) {
-							impl = obj.control_unit_implementation;
-						}
-						if (impl != "") {
-							list_impl.push(impl);
-
-						}
-						for (var k in cudb) {
-							if (k != impl) {
-								list_impl.push(k);
+							if (par != "") {
+								list_us.push(par);
 							}
-						}
-
-						list_impl.push("CUSTOM");
-						templ['properties']['control_unit_implementation'].enum=list_impl;
-						var drv_impl=obj.cudk_driver_description;
-						var list_drivers=[];
-
-						if((drv_impl !== undefined )&& (drv_impl.length)){
-							drv_impl.forEach((d)=>{
-								list_drivers.push(d.cudk_driver_description_name);
+							uslist.forEach((us) => {
+								if (us != par) {
+									list_us.push(us);
+								}
 							});
-							// return just the drivers that are supported
+							templ['properties']['ndk_parent'].enum = list_us;
+							var list_impl = [];
 
-	
-						} 
-						if((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined )){
-							var dlist=cudb[impl].drivers;
-							// drivers for the implementation
-							for(d in dlist){
-								// push drivers available for implementation
-								var exist = list_drivers.filter((elem) => { return (elem == d); });
-								if ((exist instanceof Array) && exist.length == 0) {
-									list_drivers.push(d);
+							var impl = "";
+							if (obj.control_unit_implementation !== undefined) {
+								impl = obj.control_unit_implementation;
+							}
+							if (impl != "") {
+								list_impl.push(impl);
+								if (cudb[impl].info !== undefined) {
+									templ['properties']['group'].enum = cudb[impl].group;
 								}
-								
-							}
-
-						} 
-						templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum=list_drivers;
-
-					/*	if((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined )&& (drv !== undefined)){
-							templ['properties']['cudk_driver_description']['properties'].cudk_driver_description_name=cudb[impl].drivers;
-						} else {
-							var all_driver=[]
-							for(var k in cudb){
-								var dlist=cudb[k].drivers;
-								for(d in dlist){
-									all_driver.push(d);
-								}
-							}
-						}*/
-					//	templ['properties']['control_unit_implementation'].cudk_driver_description
-						var list_storage = [];
-
-						if (obj.dsndk_storage_type !== undefined) {
-							if (obj.dsndk_storage_type & 0x1) {
-								list_storage.push("History");
-							}
-							if (obj.dsndk_storage_type & 0x2) {
-								list_storage.push("Live");
-							}
-							if (obj.dsndk_storage_type & 0x10) {
-								list_storage.push("Log");
-							}
-						} else {
-							list_storage.push("Live");
-						}
-						obj.dsndk_storage_type = list_storage;
-
-						var list_prop = [];
-						if (obj.cudk_prop !== undefined) {
-							try {
-								var par = JSON.parse(list_prop);
-								for (var k in par) {
-									list_prop.push({ k: par(k) });
-								}
-							} catch (e) {
-
-							}
-
-						}
-						obj['cudk_prop'] = list_prop;
-						if (obj.cudk_driver_description !== undefined) {
-							obj.cudk_driver_description.forEach((ele, index) => {
-								var list_prop = [];
-								if (ele.cudk_driver_prop !== undefined) {
-									try {
-										var par = JSON.parse(ele.cudk_driver_prop);
-										for (var k in par) {
-											list_prop.push({ k: par(k) });
+							} else {
+								var glist = [];
+								for (var k in cudb) {
+									if (cudb[k].info !== undefined) {
+										if (cudb[k].info.group !== undefined) {
+											glist = glist.concat(cudb[k].info.group);
 										}
-									} catch (e) {
+									}
 
+								}
+								templ['properties']['group'].enum = glist;
+
+							}
+							for (var k in cudb) {
+								if (k != impl) {
+									list_impl.push(k);
+								}
+							}
+
+							list_impl.push("CUSTOM");
+							templ['properties']['control_unit_implementation'].enum = list_impl;
+							var drv_impl = obj.cudk_driver_description;
+							var list_drivers = [];
+
+							if ((drv_impl !== undefined) && (drv_impl.length)) {
+								drv_impl.forEach((d) => {
+									list_drivers.push(d.cudk_driver_description_name);
+								});
+								// return just the drivers that are supported
+
+
+							}
+							if ((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined)) {
+								var dlist = cudb[impl].drivers;
+								// drivers for the implementation
+								for (d in dlist) {
+									// push drivers available for implementation
+									var exist = list_drivers.filter((elem) => { return (elem == d); });
+									if ((exist instanceof Array) && exist.length == 0) {
+										list_drivers.push(d);
+									}
+
+								}
+
+							} else {
+								for (var k in cudb) {
+									var dlist = cudb[k].drivers;
+									for (d in dlist) {
+										list_drivers.push(d);
 									}
 								}
+							}
+							templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum = list_drivers;
 
-								obj.cudk_driver_description[index]['cudk_driver_prop'] = list_prop;
-							});
+							/*	if((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined )&& (drv !== undefined)){
+									templ['properties']['cudk_driver_description']['properties'].cudk_driver_description_name=cudb[impl].drivers;
+								} else {
+									var all_driver=[]
+									for(var k in cudb){
+										var dlist=cudb[k].drivers;
+										for(d in dlist){
+											all_driver.push(d);
+										}
+									}
+								}*/
+							//	templ['properties']['control_unit_implementation'].cudk_driver_description
+							var list_storage = [];
 
-						}
-						func(templ,obj);
+							if (obj.dsndk_storage_type !== undefined) {
+								if (obj.dsndk_storage_type & 0x1) {
+									list_storage.push("History");
+								}
+								if (obj.dsndk_storage_type & 0x2) {
+									list_storage.push("Live");
+								}
+								if (obj.dsndk_storage_type & 0x10) {
+									list_storage.push("Log");
+								}
+							} else {
+								list_storage.push("Live");
+							}
+							obj.dsndk_storage_type = list_storage;
+
+							var list_prop = [];
+							if (obj.cudk_prop !== undefined) {
+								try {
+									var par = JSON.parse(list_prop);
+									for (var k in par) {
+										list_prop.push({ k: par(k) });
+									}
+								} catch (e) {
+
+								}
+
+							}
+							obj['cudk_prop'] = list_prop;
+							if (obj.cudk_driver_description !== undefined) {
+								obj.cudk_driver_description.forEach((ele, index) => {
+									var list_prop = [];
+									if (ele.cudk_driver_prop !== undefined) {
+										try {
+											var par = JSON.parse(ele.cudk_driver_prop);
+											for (var k in par) {
+												list_prop.push({ k: par(k) });
+											}
+										} catch (e) {
+
+										}
+									}
+
+									obj.cudk_driver_description[index]['cudk_driver_prop'] = list_prop;
+								});
+
+							}
+							func(templ, obj, cudb);
+						});
 					});
-				});
-			} catch(e){
-				alert("Error parsing:"+JSON.stringify(e));
-			}
+				} catch (e) {
+					alert("Error parsing:" + JSON.stringify(e));
+				}
 			});
-			
+
 		}
 
 		function copyToClipboard(txt) {
@@ -245,6 +265,98 @@ require_once('header.php');
 			var tree = $('#hier_view').jstree(true);
 			var ID = $(node).attr('id');
 			if (node.hasOwnProperty("data")) {
+				if (node.data.hasOwnProperty('zone')) {
+					items['new-cu'] = {
+						"separator_before": false,
+						"separator_after": false,
+						label: "New CU",
+						action: function () {
+							var cu = {};
+							cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
+							cu2editor(cu, (edit_templ, editobj, cudb) => {
+
+								jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
+									jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
+									decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
+									var icon_name = "/img/devices/" + decoded["group"] + ".png";
+
+									if (decoded) {
+										json['group'] = decoded["group"];
+										var newnode = {
+											"id": jchaos.encodeName(json.ndk_uid),
+											"parent": node.id,
+											"icon": icon_name,
+											"text": decoded["id"],
+											"data": json
+										};
+
+										tree.create_node(node, newnode);
+
+									}
+								}, function (bad) {
+									jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
+
+								}, function (e) {
+									var cu = e.getValue();
+									if (cudb.hasOwnProperty(cu.control_unit_implementation)) {
+										if (cudb[cu.control_unit_implementation].info !== undefined) {
+											e.schema.properties.group.enum = cudb[cu.control_unit_implementation].info.group;
+											//		e.refresh();
+										}
+
+										console.log("Editor change :" + cu.control_unit_implementation);
+
+									}
+								});
+							});
+						}
+					};
+
+					if ((cu_copied != null) && (typeof cu_copied === "object")) {
+						items['paste'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Paste",
+							action: function () {
+
+								var cu = cu_copied;
+								var decoded = jchaos.pathToZoneGroupId(cu.ndk_uid);
+								if (decoded) {
+									cu["ndk_uid"] = node.data["zone"] + "/" + decoded["group"] + "/NewName" + (new Date()).getTime();
+
+									cu2editor(cu, (edit_templ, editobj) => {
+
+										jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
+											jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
+											decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
+											var icon_name = "/img/devices/" + decoded["group"] + ".png";
+
+											if (decoded) {
+												json['group'] = decoded["group"];
+												var newnode = {
+													"id": jchaos.encodeName(json.ndk_uid),
+													"parent": node.id,
+													"icon": icon_name,
+													"text": decoded["id"],
+													"data": json
+												};
+
+												tree.create_node(node, newnode);
+
+											}
+										}, function (bad) {
+											jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
+
+										});
+									});
+								} else {
+									alert("Not a valid uid:'" + cu.ndk_uid + "' must contain at least zone/group/id")
+								}
+							}
+						};
+					}
+				}
+
 				if (node.data.hasOwnProperty("ndk_type") && node.data.hasOwnProperty("ndk_uid")) {
 					var selected_node = node.data.ndk_uid;
 					var type = node.data.ndk_type;
@@ -364,50 +476,6 @@ require_once('header.php');
 					}
 
 
-				} else if (node.data.hasOwnProperty('zone')) {
-					if (typeof cu_copied === "object") {
-						items['paste'] = {
-							"separator_before": false,
-							"separator_after": false,
-							label: "Paste",
-							action: function () {
-								
-								var cu = cu_copied;
-								var decoded=jchaos.pathToZoneGroupId(cu.ndk_uid);
-								if(decoded){
-									cu["ndk_uid"] = node.data["zone"] + "/"+decoded["group"]+"/NewName" + (new Date()).getTime();
-									
-									cu2editor(cu, (edit_templ, editobj) => {
-
-									jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
-										jqccs.instantMessage("CU/EU saved " + selected_node, " OK", 2000, true);
-										decoded=jchaos.pathToZoneGroupId(json.ndk_uid);
-										var icon_name = "/img/devices/" + decoded["group"] + ".png";
-
-										if(decoded){
-											json['group']=decoded["group"];
-											var newnode = {
-												"id": jchaos.encodeName(json.ndk_uid),
-												"parent": node.id,
-												"icon": icon_name,
-												"text": decoded["id"],
-												"data": json
-											};
-
-											tree.create_node(node,newnode);
-
-									}
-									}, function (bad) {
-										jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
-
-									});
-							});
-						} else {
-							alert("Not a valid uid:'"+cu.ndk_uid+"' must contain at least zone/group/id")
-						}
-							}
-						};
-					}
 				}
 			}
 			return items;
@@ -599,26 +667,7 @@ require_once('header.php');
 			}
 	*/
 		function updateJST(what, search, alive) {
-			var mitems = {
-				// Some key
-				"rename": {
-					// The item label
-					"label": "Rename",
-					// The function to execute upon a click
-					"action": function (obj) { this.rename(obj); },
-					// All below are optional 
-					"_disabled": true,		// clicking the item won't do a thing
-					"_class": "class",	// class is applied to the item LI node
-					"separator_before": false,	// Insert a separator before the item
-					"separator_after": true,		// Insert a separator after the item
-					// false or string - if does not contain `/` - used as classname
-					"icon": false,
-					"submenu": {
-						/* Collection of objects (the same structure) */
-					}
-				}
-				/* MORE ENTRIES ... */
-			}
+			cu_copied = null;
 			$("body").addClass("loading");
 			$('#hier_view').jstree("destroy");
 
@@ -654,7 +703,6 @@ require_once('header.php');
 						}, 'plugins': ["contextmenu"],
 
 						'contextmenu': {
-							'items': mitems,
 							"select_node": true
 
 						}
@@ -673,7 +721,7 @@ require_once('header.php');
 							"animation": 0
 						}, 'plugins': ["contextmenu"],
 						'contextmenu': {
-							'items': mitems, "select_node": true
+							"select_node": true
 
 						}
 					});
@@ -815,10 +863,10 @@ require_once('header.php');
 				}
 				culist.forEach((elem) => {
 					//	var desc = jchaos.getDesc(elem, null);
-					var decoded=jchaos.pathToZoneGroupId(elem);
+					var decoded = jchaos.pathToZoneGroupId(elem);
 					if (decoded != null) {
 						var zone = decoded.zone;
-						var group= decoded.group;
+						var group = decoded.group;
 						var filename = zone.split("/");
 						var next_parent = "";
 						if (filename.length > 0) {
@@ -827,9 +875,9 @@ require_once('header.php');
 						var desc = "";
 						desc = jchaos.node(elem, "desc", "all");
 						var zone = "";
-						var implementation="";
-						if(desc.instance_description !== undefined && desc.instance_description.control_unit_implementation!== undefined){
-							implementation=desc.instance_description.control_unit_implementation;
+						var implementation = "";
+						if (desc.instance_description !== undefined && desc.instance_description.control_unit_implementation !== undefined) {
+							implementation = desc.instance_description.control_unit_implementation;
 						}
 						filename.forEach((p, index) => {
 							var node = {};
@@ -848,7 +896,7 @@ require_once('header.php');
 								}
 							} else {
 
-								node['data'] = { "zone": zone}
+								node['data'] = { "zone": zone }
 							}
 							if (!node_created.hasOwnProperty(p)) {
 								jsree_data.push(node);
@@ -861,7 +909,7 @@ require_once('header.php');
 						desc['zone'] = decoded.zone;
 						desc['group'] = decoded.group;
 
-						
+
 						//var desc = jchaos.getDesc(elem, null);
 						var icon_name = "/img/devices/" + desc['group'] + ".png";
 

@@ -47,11 +47,11 @@
 		<!-- start: Header -->
 	<div class="navbar">
 		<div class="navbar-inner">
-			<div class="container-fluid">
-				<a class="btn btn-navbar" data-toggle="collapse" data-target=".top-nav.nav-collapse,.sidebar-nav.nav-collapse">
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
+			<div class="container">
+				<a class="btn navbar-btn" data-toggle="collapse" data-target=".top-nav.nav-collapse,.sidebar-nav.navbar-collapse">
+					<span class="glyphicon glyphicon-bar"></span>
+					<span class="glyphicon glyphicon-bar"></span>
+					<span class="glyphicon glyphicon-bar"></span>
 				</a>
 				<a class="brand" href="index.html"><span>Dashboard BTF</span></a>
 								
@@ -84,30 +84,30 @@
 	<!-- start: Header -->
 	
 	<div class="container-fluid-full">
-		<div class="row-fluid">
+		<div class="row">
 				
 			<!-- start: Main Menu -->
-			<div id="sidebar-left" class="span2">
-				<div class="nav-collapse sidebar-nav">
+			<div id="sidebar-left" class="col-md-2">
+				<div class="navbar-collapse sidebar-nav">
 					<ul class="nav nav-tabs nav-stacked main-menu">
-						<li><a href="index.html"><i class="icon-home"></i><span class="hidden-tablet"> Home</span></a></li>	
-						<!--li><a href="messages.html"><i class="icon-envelope"></i><span class="hidden-tablet"> Accumulator</span></a></li-->
+						<li><a href="index.html"><i class="glyphicon glyphicon-home"></i><span class="hidden-md"> Home</span></a></li>	
+						<!--li><a href="messages.html"><i class="glyphicon glyphicon-envelope"></i><span class="hidden-md"> Accumulator</span></a></li-->
 						<li>
-							<a href="/chaos_dashboard/magnets.html"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> MAGNETS</span><!--span class="label label-important dropmenu"> 4 </span--></a>
+							<a href="/chaos_dashboard/magnets.html"><i class="icon-folder-close-alt"></i><span class="hidden-md"> MAGNETS</span><!--span class="label label-important dropmenu"> 4 </span--></a>
 							<!--ul>
-								<li><a class="submenu" href="#mdl-save" role="button" data-toggle="modal"><i class="icon-save"></i><span class="hidden-tablet"> Save</span></a></li>
-								<li><a class="submenu" href="#mdl-load" role="button" data-toggle="modal"><i class="icon-file"></i><span class="hidden-tablet"> Load</span></a></li>
-								<li><a class="submenu" href="submenu3.html"><i class="icon-repeat"></i><span class="hidden-tablet"> Restore</span></a></li>
-								<li><a class="submenu" href="submenu4.html"><i class="icon-print"></i><span class="hidden-tablet"> Print</span></a></li>
+								<li><a class="submenu" href="#mdl-save" role="button" data-toggle="modal"><i class="glyphicon glyphicon-save"></i><span class="hidden-md"> Save</span></a></li>
+								<li><a class="submenu" href="#mdl-load" role="button" data-toggle="modal"><i class="glyphicon glyphicon-file"></i><span class="hidden-md"> Load</span></a></li>
+								<li><a class="submenu" href="submenu3.html"><i class="glyphicon glyphicon-repeat"></i><span class="hidden-md"> Restore</span></a></li>
+								<li><a class="submenu" href="submenu4.html"><i class="glyphicon glyphicon-print"></i><span class="hidden-md"> Print</span></a></li>
 							</ul-->	
 						</li>
 
 						<li>
-							<a href="/chaos_dashboard/scrapers.html"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> SCRAPERS</span><!--span class="label label-important dropmenu"> 4 </span--></a>
+							<a href="/chaos_dashboard/scrapers.html"><i class="icon-folder-close-alt"></i><span class="hidden-md"> SCRAPERS</span><!--span class="label label-important dropmenu"> 4 </span--></a>
 						</li>
 
 						<li>
-							<a href="#"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> RESTORE</span><!--span class="label label-important dropmenu"> 4 </span--></a>
+							<a href="#"><i class="icon-folder-close-alt"></i><span class="hidden-md"> RESTORE</span><!--span class="label label-important dropmenu"> 4 </span--></a>
 						</li>
 	
 					</ul>
@@ -117,20 +117,20 @@
 			
 			
 			<!-- start: Content -->
-			<div id="content" class="span10">
+			<div id="content" class="col-md-10">
 			
 			
 				<ul class="breadcrumb">
 					<li>
-						<i class="icon-home"></i>
+						<i class="glyphicon glyphicon-home"></i>
 						<a href="index.html">Home</a> 
 						<i class="icon-angle-right"></i>
 					</li>
 					<li><a href="#">Restore</a></li>
 				</ul>
 			
-			<div class="row-fluid sortable">		
-				<div class="box span12">
+			<div class="row sortable">		
+				<div class="box col-md-12">
 					<div class="box-header" data-original-title>
 						<h2><i class="halflings-icon white align-justify"></i><span class="break"></span>List Dataset</h2>
 						<!--div class="box-icon">
@@ -213,8 +213,8 @@
 			<h3>DATASET of <span id="name_dataset"></span></h3>
 		</div>
 		<div class="modal-body">
-			<div class="row-fluid">		
-				<div class="box span12">
+			<div class="row">		
+				<div class="box col-md-12">
 					<div class="box-content">
 						<table class="table table-bordered" id="table_into_dataset_magnets">
 							<thead class="box-header">
@@ -243,8 +243,8 @@
 			<h3>DATASET of <span id="name_dataset"></span></h3>
 		</div>
 		<div class="modal-body">
-			<div class="row-fluid">		
-				<div class="box span12">
+			<div class="row">		
+				<div class="box col-md-12">
 					<div class="box-content">
 						<table class="table table-bordered" id="table_into_dataset_scraper">
 							<thead class="box-header">

@@ -3,20 +3,51 @@
     "type": "object",
     "id": "editor-cu",
     "format": "tab",
+    "options": {
+        "remove_empty_properties": false
+      },
     "properties": {
+        "zone": {
+            "type": "string",
+            "required": true,
+            "format": "text",
+            "description": "ZONE expressed ZONE1/SUBZONE1... "
+        },
+        "group": {
+            "type": "string",
+            "required": true,
+            "enum": [
+                "GENERIC"
+            ],
+            "description": "Choose an appropriate group/family for the CU"
+        },
+        "id": {
+            "type": "string",
+            "required": true,
+            "format": "text",
+            "description": "CU Identifier"
+        },
         "ndk_uid": {
             "type": "string",
             "required": true,
             "format": "text",
-            "description": "CU Unique Identifier ZONE/TYPE/ID"
+            "template": "{{wzone}}/{{wgroup}}/{{wid}}",
+            "description": "CU Unique Identifier ZONE/TYPE/ID",
+            "watch": {
+                "wzone": "zone",
+                "wgroup": "group",
+                "wid": "id"
+              }
         },
         "cudk_desc": {
             "type": "string",
             "format": "textarea",
+            "required": true,
             "description": "Control unit description"
         },
         "ndk_parent": {
             "type": "string",
+            "required": true,
             "enum": [
                 "none"
             ],
@@ -24,12 +55,14 @@
         },
         "control_unit_implementation": {
             "type": "string",
+            "required": true,
             "enum": [],
             "description": "Choose an existing C++ implementation"
         },
         "dsndk_storage_type": {
             "type": "array",
             "format": "checkbox",
+            "required": true,
             "uniqueItems": true,
             "items": {
                 "type": "string",
@@ -43,6 +76,7 @@
         "cudk_load_param": {
             "type": "string",
             "format": "textarea",
+            "required": true,
             "description": "Parameters given in load (Constructor of the CU class)"
         },
         "cudk_prop": {
@@ -51,6 +85,8 @@
             "title": "CU properties",
             "description": "Initialization of existing attributes of the CU, does not belong to a dataset",
             "uniqueItems": true,
+            "headerTemplate": "{{ i1 }} - {{ self.name }} (value {{ self.value }})",
+
             "items": {
                 "type": "object",
                 "title": "Property",
@@ -67,37 +103,46 @@
         "auto_load": {
             "type": "boolean",
             "default": true,
+            "required": true,
             "description": "Load automatically on registration"
         },
         "auto_init": {
             "type": "boolean",
             "default": true,
+            "required": true,
             "description": "Initialize automatically on registration"
         },
         "auto_start": {
             "type": "boolean",
             "default": true,
+            "required": true,
             "description": "start automatically on registration"
         },
         "cudk_thr_sch_delay": {
             "type": "integer",
             "default": 1000000,
+            "required": true,
             "description": "Default schedule of a CU"
         },
         "dsndk_storage_history_ageing": {
             "type": "integer",
             "default": 36000,
+            "required": true,
             "description": "Time in Seconds before the data will be wiped out (0=disabled)"
         },
         "dsndk_storage_live_time": {
             "type": "integer",
             "default": 0,
+            "required": true,
             "description": "the time in us that need to pass before store another datapack into the live system"
         },
         "cudk_driver_description": {
             "type": "array",
             "format": "tab",
+            "required": true,
             "title": "Driver Description",
+            "headerTemplate": "{{ i1 }} - {{ self.cudk_driver_description_name }} (value {{ self.cudk_driver_description_version }})",
+
             "items": {
                 "title": "driver",
                 "type": "object",
@@ -149,6 +194,7 @@
         "attribute_value_descriptions": {
             "type": "array",
             "format": "tab",
+            "required": true,
             "title": "Attribute Description",
             "items": {
                 "$ref": "cu-attribute.json",
