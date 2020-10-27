@@ -4,7 +4,7 @@
  *
  */
 
-// first an inline dependency, jquery.colorhelpers.js, we inline it here
+// first an list-inline dependency, jquery.colorhelpers.js, we list-inline it here
 // for convenience
 
 /* Plugin for jQuery for working with colors.
@@ -2137,7 +2137,7 @@
             if (lineWidth > 0 && (drawLeft || drawRight || drawTop || drawBottom)) {
                 c.beginPath();
 
-                // FIXME: inline moveTo is buggy with excanvas
+                // FIXME: list-inline moveTo is buggy with excanvas
                 c.moveTo(left, bottom + offset);
                 if (drawLeft)
                     c.lineTo(left, top + offset);

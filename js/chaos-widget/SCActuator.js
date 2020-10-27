@@ -43,8 +43,8 @@ function getWidget() {
              cu = tmpObj.elems;
         }
         var template = tmpObj.type;
-        var html = '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        var html = '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<table class="table table-bordered" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
@@ -93,53 +93,53 @@ function getWidget() {
         return html;
       },
       cmdFn:function(tmpObj) {
-        var html = '<div class="row-fluid">';
-    html += '<div class="box span12 box-cmd">';
+        var html = '<div class="row">';
+    html += '<div class="box col-md-12 box-cmd">';
     html += '<div>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
+    html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
     html += '<i class="material-icons rosso">error</i>';
     html += '<p class="name-cmd">Reset</p>';
     html += '</a>';
-    html += '<div class="span2" id="input-value">';
+    html += '<div class="col-md-2" id="input-value">';
     html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="1">';
     html += '</div>';
-    html += '<div class="span2" id="input-value">';
+    html += '<div class="col-md-2" id="input-value">';
     html += '<select class="input" id="mov_abs_poi"></select>';
     html += '</div>';
-    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
+    html += '<a class="quick-button-small col-md-1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
     html += '<p>Set Absolute</p>';
     html += '</a>';
 
-    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
+    html += '<a class="quick-button-small col-md-1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
     html += '<i class="material-icons green">trending_down</i>';
     html += '<p class="name-cmd">ON</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
+    html += '<a class="quick-button-small col-md-1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
     html += '<i class="material-icons rosso">cancel</i>';
     html += '<p class="name-cmd">STOP</p>';
     html += '</a>';
 
     html += '</div>';
-    html += '<div class="span12 statbox" style="margin-left:0">';
-    html += '<a class="quick-button-small span1 btn-cmd offset0 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
+    html += '<div class="col-md-12 statbox" style="margin-left:0">';
+    html += '<a class="quick-button-small col-md-1 btn-cmd col-md-offset-0 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
     html += '<i class="icon-angle-left"></i>';
     html += '<p class="name-cmd">In</p>';
     html += '</a>';
     // in case of cucmdvalue = null, a item named 'cucmd'_<commandparam>
-    html += '<div class="span3" id="input-value-due">';
+    html += '<div class="col-md-3" id="input-value-due">';
     html += '<input class="input focused" id="mov_rel_offset_mm" value=1>';
     html += '</div>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
+    html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
     html += '<i class="icon-angle-right"></i>';
     html += '<p class="name-cmd">Out</p>';
     html += '</a>';
 
-    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweroff" cucmdid="poweron" cucmdvalue={\"on\":0}>';
+    html += '<a class="quick-button-small col-md-1 btn-value cucmd" id="scraper_setPoweroff" cucmdid="poweron" cucmdvalue={\"on\":0}>';
     html += '<i class="material-icons red">pause</i>';
     html += '<p class="name-cmd">OFF</p>';
     html += '</a>';
-    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd cucmd" cucmdid="homing" cucmdvalue=1>';
-    html += '<i class="icon-home"></i>';
+    html += '<a href="#mdl-homing" role="button" class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="homing" cucmdvalue=1>';
+    html += '<i class="glyphicon glyphicon-home"></i>';
     html += '<p class="name-cmd">Homing</p>';
     html += '</a>';
 

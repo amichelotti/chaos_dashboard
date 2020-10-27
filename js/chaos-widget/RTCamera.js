@@ -105,7 +105,7 @@ function getWidget() {
                   html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
 
                 }
-//                html += '<div class="row-fluid">';
+//                html += '<div class="row">';
 
                 html += '<div>' + key + '</div>';
                 html += '<div id="info-'+ encoden+'"></div>';
@@ -332,9 +332,9 @@ function getWidget() {
     
         var cu = tmpObj.elems;
         var template = tmpObj.type;
-        html+= '<div class="row-fluid" z-index=-1 id="table-space">';
-        html += '<div class="box span12">';
-        html += '<div class="box-content span12">';
+        html+= '<div class="row" z-index=-1 id="table-space">';
+        html += '<div class="box col-md-12">';
+        html += '<div class="box-content col-md-12">';
         if (cu.length == 0) {
           html += '<p id="no-result-monitoring">No results match</p>';
     
@@ -367,16 +367,16 @@ function getWidget() {
           html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           
           html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
-          html += "<td id='" + cuname + "'><select class='select_camera_mode span6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
+          html += "<td id='" + cuname + "'><select class='select_camera_mode col-md-6' id='" + cuname + "_select_camera_mode' name='"+cu[i]+"'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
           
           html += "<td id='" + cuname + "_output_SHUTTER'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_SHUTTER' name='"+cu[i]+"/input/SHUTTER'></input></td>";
+          html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_SHUTTER' name='"+cu[i]+"/input/SHUTTER'></input></td>";
           
           html += "<td id='" + cuname + "_output_GAIN'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_GAIN' name='"+cu[i]+"/input/GAIN'></input></td>";
+          html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_GAIN' name='"+cu[i]+"/input/GAIN'></input></td>";
           
           html += "<td id='" + cuname + "_output_BRIGHTNESS'></td>";
-          html += "<td id='" + cuname + "'><input class='span6 cucmdattr' id='" + cuname + "_BRIGHTNESS' name='"+cu[i]+"/input/BRIGHTNESS'></input></td>";
+          html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_BRIGHTNESS' name='"+cu[i]+"/input/BRIGHTNESS'></input></td>";
     
           html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
           html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";

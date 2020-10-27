@@ -193,7 +193,7 @@
         return getFile(msghead, msg, handler);
     }
     function getFile(msghead, msg, handler) {
-        var instant = $('<div></div>').html('<div><p>' + msg + '</p></div><div><input type="file" id="upload-file" class="span3" /></div>').dialog({
+        var instant = $('<div></div>').html('<div><p>' + msg + '</p></div><div><input type="file" id="upload-file" class="col-md-3" /></div>').dialog({
             width: 680,
             height: 400,
             title: msghead,
@@ -820,6 +820,78 @@
             }
         });
     }
+    /**
+     * 
+     * @param {string} msgHead Title of the window
+     * @param {function} nodeFn function that creates node, menu and handlers 
+     */
+    jqccs.createBrowserWindow=function(msgHead,opt,nodeFn){
+        var width=hostWidth / 2;
+        var height=hostHeight / 2;
+        if(typeof opt === "function"){
+            nodeFn=opt;
+        } else if(opt !== undefined ){
+            if(opt['width'] !== undefined){
+                width=opt['width'];
+            }
+            if(opt['height'] !== undefined){
+                height=opt['height'];
+            }
+        }
+
+        var pid=(new Date()).getTime();
+        var hier="hier-"+pid;
+        var desc="desc-"+pid;
+        var html = '<div class="row"><div id="'+hier+'" class="col-md-6"></div><div id="'+desc+'" class="col-md-6"></div></div>';
+        
+        if(typeof nodeFn !== "function"){
+            throw "must provide a mode creation handler";
+        }
+        var opt = {
+            minWidth: width,
+            minHeight: height,
+            title: msgHead,
+            resizable: true,
+            dialogClass: 'no-close',
+            buttons: [
+                {
+                    text: "refresh",
+                    id: 'refresh-' + pid,
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                    //    $('#console-' + pid).terminal().exit();
+                    nodeFn( pid);
+                }
+                
+            },
+                {
+                    text: "close",
+                    id: 'console-close-' + pid,
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                    //    $('#console-' + pid).terminal().exit();
+                    $(this).dialog("close");
+                    }
+                
+            }
+        ],
+            close: function (event, ui) {
+            //    $('#console-' + pid).terminal().exit();
+            $(this).dialog("close");
+         
+            },
+
+            open: function (e) {
+                console.log(msgHead + " opening browser :" + name);
+                nodeFn( pid);
+              
+        
+            } 
+        }
+    
+      
+        createCustomDialog(opt, html);
+    }
      jqccs.execConsole=function(msghead, execHandler,okhandle,nokhandle) {
         var pid=(new Date()).getTime();
         
@@ -880,7 +952,7 @@
             },
 
             open: function (e) {
-                console.log(msghead + "opening terminal :" + pid);
+                console.log(msghead + " opening terminal :" + pid);
 
                 //$(e.target).parent().css('background-color', 'black');
                 $('#console-' + pid).css('background-color', 'black');
@@ -954,7 +1026,7 @@
         var stop_update = false;
         var html = '<div id=console-' + pid + '></div>';
 
-        html += '<div class="row-fluid"><label class="span4">Console buffering:</label><input class="span4" id="buffer-update" type="text" title="Remote flush Update(bytes)" value=1 /></div>';
+        html += '<div class="row"><label class="col-md-4">Console buffering:</label><input class="col-md-4" id="buffer-update" type="text" title="Remote flush Update(bytes)" value=1 /></div>';
 
         var opt = {
             minWidth: hostWidth / 2,
@@ -1500,22 +1572,22 @@
 
 
     function buildAlgoBody() {
-        var html = '<div class="row-fluid">';
-        /*html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
+        var html = '<div class="row">';
+        /*html += '<div class="statbox purple" onTablet="col-md-4" onDesktop="col-md-3">'
     html += '<h3>Algorithm Type</h3>';
     html += '<select id="classe" size="auto"></select>';
     html += '</div>';
 */
-        html += '<div class="statbox purple row-fluid" onTablet="span8" onDesktop="span6">'
-        html += '<div class="span6">'
+        html += '<div class="statbox purple row" onTablet="col-md-8" onDesktop="col-md-6">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-algo">Search Algorithms</label><input class="input-xlarge" id="search-algo" title="Search Algorithms" name="search-algo" type="radio" value=true>';
         html += '</div>'
-        html += '<div class="span6">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-algo">Search Instanced</label><input class="input-xlarge" id="search-instance" title="Search Instanced Algorithms" name="search-algo" type="radio" value=false>';
         html += '</div>'
-        // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="col-md-3">Search</h3>';
 
-        html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
         html += '</div>';
 
@@ -1542,27 +1614,27 @@
     }
     /*
       function buildAlgoBody() {
-        var html = '<div class="row-fluid">';
+        var html = '<div class="row">';
   
-        html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span8">'
-        html += '<div class="span6">'
+        html += '<div class="statbox purple row" onTablet="col-md-4" onDesktop="col-md-8">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-alive">Search All Alghoritm</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
-        html += '<div class="span6">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
         html += '</div>'
-        // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="col-md-3">Search</h3>';
   
-        html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
         html += '</div>';
         return html;
       }*/
     function generateAlgoTable(cu, interface, template) {
-        var html = '<div class="row-fluid" id="table-space">';
+        var html = '<div class="row" id="table-space">';
 
-        html += '<div class="box span12" id="container-main-table">';
-        html += '<div class="box-content span12">';
+        html += '<div class="box col-md-12" id="container-main-table">';
+        html += '<div class="box-content col-md-12">';
 
         html += '<table class="table table-bordered" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
@@ -1612,8 +1684,8 @@
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12 hide" id="container-table-helper">';
-        html += '<div class="box-content-helper span12">';
+        html += '<div class="box col-md-12 hide" id="container-table-helper">';
+        html += '<div class="box-content-helper col-md-12">';
         html += '</div>';
         html += '</div>';
 
@@ -1629,12 +1701,12 @@
         var html = "";
         html += '<table class="table table-bordered" id="graph_table-' + template + '">';
         html += '</table>';
-        html += '<div class="row-fluid" id="table-space">';
+        html += '<div class="row" id="table-space">';
 
 
-        html += '<div class="box span12" id="container-main-table">';
-        html += '<div class="box-content span12">';
-        html += '<div class="row-fluid"><label class="span1">Search:</label><input class="input-xlarge focused" id="process_search" class="span5" type="text" title="Search a Process" value=""></div>';
+        html += '<div class="box col-md-12" id="container-main-table">';
+        html += '<div class="box-content col-md-12">';
+        html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
 
         html += '<table class="table table-bordered" id="main_table-' + template + '">';
         html += '<thead class="box-header processMenu">';
@@ -1665,8 +1737,8 @@
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12 hide" id="container-table-helper">';
-        html += '<div class="box-content-helper span12">';
+        html += '<div class="box col-md-12 hide" id="container-table-helper">';
+        html += '<div class="box-content-helper col-md-12">';
         html += '</div>';
         html += '</div>';
 
@@ -1679,10 +1751,10 @@
     function generateNodeTable(tmpObj) {
         var cu = tmpObj.elems;
         var template = tmpObj.type;
-        var html = '<div class="row-fluid" id="table-space">';
+        var html = '<div class="row" id="table-space">';
 
-        html += '<div class="box span12" id="container-main-table">';
-        html += '<div class="box-content span12">';
+        html += '<div class="box col-md-12" id="container-main-table">';
+        html += '<div class="box-content col-md-12">';
 
         html += '<table class="table table-bordered" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
@@ -1725,8 +1797,8 @@
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12 hide" id="container-table-helper">';
-        html += '<div class="box-content-helper span12">';
+        html += '<div class="box col-md-12 hide" id="container-table-helper">';
+        html += '<div class="box-content-helper col-md-12">';
         html += '</div>';
         html += '</div>';
 
@@ -2032,13 +2104,13 @@
 
 
 
-jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok){
-    return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok);
+jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,eventFn){
+    return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,eventFn);
 }
     /***
      * 
      */
-    function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok) {
+    function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,eventFn) {
         var instant = $('<div id=edit-temp></div>').dialog({
             minWidth: $(window).width() / 4,
             minHeight: $(window).height() / 4,
@@ -2136,11 +2208,17 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 if (json_editor != null) {
                     delete json_editor;
                 }
-                JSONEditor.defaults.options.theme = 'bootstrap2';
-                JSONEditor.defaults.options.iconlib = "bootstrap2";
+           // JSONEditor.defaults.options.theme = 'bootstrap2';
+             //  JSONEditor.defaults.options.iconlib = "bootstrap2";
 
-                //    JSONEditor.defaults.iconlib = 'fontawesome4';
+             JSONEditor.defaults.options.theme = 'bootstrap4';
+           //  JSONEditor.defaults.options.theme = 'jqueryui';
+               // JSONEditor.defaults.iconlib = 'bootstrap3';
                 json_editor = new JSONEditor(element.get(0), jopt);
+                if(typeof eventFn === "function"){
+                    // jopt['onEvent']=eventFn;
+                     json_editor.on('change',()=>{eventFn(json_editor);});
+                 }  
                 $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
             }
@@ -3043,13 +3121,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 tmpObj.tableClickFn(tmpObj);
             }
         });
-        n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+   /*     n = $('#main_table-' + template + ' tr').size();
+        if (n > 22) { 
             $("#table-scroll").css('height', '280px');
         } else {
             $("#table-scroll").css('height', '');
         }
-
+*/
 
         $(".setSchedule").off('keypress');
         $(".setSchedule").on('keypress', function (event) {
@@ -3851,35 +3929,35 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
      */
     function buildCUInterface(tempObj) {
 
-        var html = '<div class="row-fluid">';
+        var html = '<div class="row">';
 
-        html += '<div class="statbox purple span2" >';
+        html += '<div class="statbox purple col-sm-2" >';
         html += '<h3>Zones</h3>';
-        html += '<select id="zones" size="auto"></select>';
+        html += '<select id="zones"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple span2">';
+        html += '<div class="statbox purple col-sm-2">';
         html += '<h3>Group</h3>';
-        html += '<select id="elements" size="auto"></select>';
+        html += '<select id="elements"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple span2">'
+        html += '<div class="statbox purple col-sm-2">'
         html += '<h3>Class</h3>';
-        html += '<select id="classe" size="auto"></select>';
+        html += '<select id="classe"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row-fluid span3">'
-        html += '<div class="span3">'
-        html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
+        html += '<div class="statbox purple row col-sm-3 align-items-center">'
+        html += '<div class="col-sm-3">'
+        html += '<label for="search-alive">Search: All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
-        html += '<div class="span3">'
-        html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
+        html += '<div class="col-sm-3">'
+        html += '<label for="search-alive">Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
         html += '</div>'
-        // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="col-md-3">Search</h3>';
 
-        html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<input class="input-xlarge focused col-sm-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
-        html += generateActionBox();
+       // html += generateActionBox();
         html += '</div>';
         html += generateModalActions();
 
@@ -3889,29 +3967,29 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<a href="#" class="chaositem next_page round">&#8250;</a>';
         html += '</div>';
 
-        html += '<div id="specific-table-' + tempObj.template + '"></div>';
-        html += '<div id="specific-control-' + tempObj.template + '"></div>';
+        html += '<div class="box container-fluid" id="specific-table-' + tempObj.template + '"></div>';
+        html += '<div class="box container-fluid" id="specific-control-' + tempObj.template + '"></div>';
         return html;
     }
 
     function buildNodeInterface(tempObj) {
-        var html = '<div class="row-fluid">';
-        html += '<div class="statbox purple span3">'
+        var html = '<div class="row">';
+        html += '<div class="statbox purple col-md-3">'
         html += '<h3>Node Type</h3>';
         html += '<select id="classe" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row-fluid span3">'
-        html += '<div class="span6">'
+        html += '<div class="statbox purple row col-md-3">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
-        html += '<div class="span6">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true checked>';
         html += '</div>'
 
-        // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="col-md-3">Search</h3>';
 
-        html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
         html += '</div>';
         html += '<div class="chaosrow pageindex">';
@@ -3926,11 +4004,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     }
 
     function setupCU(tempObj) {
-        graphSetup(tempObj);
-        snapSetup(tempObj);
+    //    graphSetup(tempObj);
+    //    snapSetup(tempObj);
         datasetSetup(tempObj);
         descriptionSetup(tempObj);
-        logSetup(tempObj);
+   //     logSetup(tempObj);
         mainCU(tempObj);
     }
 
@@ -3985,33 +4063,33 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
     function buildProcessInterface(tempObj) {
         var html = "";
-        /*var html = '<div class="row-fluid">';
+        /*var html = '<div class="row">';
  
-     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+     html += '<div class="statbox purple" onTablet="col-md-6" onDesktop="col-md-2">';
      html += '<h3>Zones</h3>';
      html += '<select id="zones" size="auto"></select>';
      html += '</div>';
  
-     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+     html += '<div class="statbox purple" onTablet="col-md-6" onDesktop="col-md-2">';
      html += '<h3>Instances</h3>';
      html += '<select id="elements" size="auto"></select>';
      html += '</div>';
  
-     html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
+     html += '<div class="statbox purple" onTablet="col-md-4" onDesktop="col-md-2">'
      html += '<h3>Class Algorithm</h3>';
      html += '<select id="classe" size="auto"></select>';
      html += '</div>';
  
-     html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
-     html += '<div class="span3">'
+     html += '<div class="statbox purple row" onTablet="col-md-4" onDesktop="col-md-3">'
+     html += '<div class="col-md-3">'
      html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
      html += '</div>'
-     html += '<div class="span3">'
+     html += '<div class="col-md-3">'
      html += '<label for="search-alive">Search Running</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
      html += '</div>'
-     // html += '<h3 class="span3">Search</h3>';
+     // html += '<h3 class="col-md-3">Search</h3>';
  
-     html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+     html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
      html += '</div>';
      //    html += generateActionBox();
      html += '</div>';
@@ -5299,13 +5377,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-        n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+    /*    n = $('#main_table-' + template + ' tr').size();
+        if (n > 22) { 
             $("#table-scroll").css('height', '280px');
         } else {
             $("#table-scroll").css('height', '');
         }
-
+*/
 
         $("#cuname").draggable({
 
@@ -5504,13 +5582,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-        n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+   /*     n = $('#main_table-' + template + ' tr').size();
+        if (n > 22) { 
             $("#table-scroll").css('height', '280px');
         } else {
             $("#table-scroll").css('height', '');
         }
-
+*/
 
         $.contextMenu('destroy', '.algoMenu');
 
@@ -7066,9 +7144,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             cu = tmpObj.elems;
         }
         var template = tmpObj.type;
-        var html = '<div class="row-fluid" z-index=-1 id="table-space">';
-        html += '<div class="box span12">';
-        html += '<div class="box-content span12">';
+        var html = '<div class="row" z-index=-1 id="table-space">';
+        html += '<div class="col-md-12">';
+        html += '<div class="box-content col-md-12">';
         if (cu.length == 0) {
             html += '<p id="no-result-monitoring">No results match</p>';
 
@@ -7462,13 +7540,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<button type="button" class="close" data-dismiss="modal">×</button>';
         html += '<h3 id="list_graphs">List Graphs</h3>';
 
-        html += '<div class="row-fluid"><label class="span2">Search:</label><input class="input-xlarge focused" id="graph_search" class="span5" type="text" title="Search a graph" value=""></div>';
+        html += '<div class="row"><label class="col-md-2">Search:</label><input class="input-xlarge focused" id="graph_search" class="col-md-5" type="text" title="Search a graph" value=""></div>';
 
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
         html += '<table class="table table-bordered" id="table_graph">';
@@ -7522,31 +7600,31 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
+        html += '<div class="row">';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Query options</h3>';
 
-        html += '<div id="reportrange-" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
+        html += '<div id="reportrange-" class="col-md-12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
         html += '<i class="fa fa-calendar"></i>&nbsp';
         html += '<span></span> <i class="fa fa-caret-down"></i>';
         html += '</div>';
 
-        html += '<label class="label span3">Start </label>';
-        html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value="">';
-        html += '<label class="label span3">Stop </label>';
-        html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value="NOW">';
+        html += '<label class="label col-md-3">Start </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value="">';
+        html += '<label class="label col-md-3">Stop </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-stop" title="End of the query (empty means: now)" type="text" value="NOW">';
 
-        html += '<label class="label span3">Available Tag</label>';
-        html += '<select class="span9" id="select-tag" title="Existing tags"></select>';
-        html += '<label class="label span3">Tag Name </label>';
-        html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value="">';
+        html += '<label class="label col-md-3">Available Tag</label>';
+        html += '<select class="col-md-9" id="select-tag" title="Existing tags"></select>';
+        html += '<label class="label col-md-3">Tag Name </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-tag" title="Tag Name" type="text" value="">';
 
-        html += '<label class="label span3">Page </label>';
-        html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=30>';
-        html += '<label class="label span3">Query chunk </label>';
-        html += '<input class="input-xlarge focused span9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
+        html += '<label class="label col-md-3">Page </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-page" title="page length" type="number" value=30>';
+        html += '<label class="label col-md-3">Query chunk </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
 
         html += '</div>';
         html += '</div>';
@@ -7575,39 +7653,39 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<h3>Graph options</h3>';
         html += '</div>';
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
+        html += '<div class="row">';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Graph options</h3>';
-        html += '<label class="label span3">Width </label>';
-        html += '<input class="input-xlarge focused span9" id="graph-width" title="Width px" type="number" value="640">';
-        html += '<label class="label span3">High </label>';
-        html += '<input class="input-xlarge focused span9" id="graph-high" title="High px" type="number" value="480">';
+        html += '<label class="label col-md-3">Width </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="graph-width" title="Width px" type="number" value="640">';
+        html += '<label class="label col-md-3">High </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="graph-high" title="High px" type="number" value="480">';
 
-        html += '<label class="label span3" >Graph Type </label>';
-        html += '<select id="graphtype" class="span9">';
+        html += '<label class="label col-md-3" >Graph Type </label>';
+        html += '<select id="graphtype" class="col-md-9">';
         html += '<option value="line" selected="selected">Line</option>';
         html += '<option value="scatter">Scatter</option>';
         html += '<option value="column">Column</option>';
         html += '<option value="histogram">Histogram</option>';
         html += '</select>';
-        html += '<label class="label span3">Graph update (ms) </label>';
-        html += '<input class="input-xlarge span9" id="graph-update" type="number" value="1000">';
+        html += '<label class="label col-md-3">Graph update (ms) </label>';
+        html += '<input class="input-xlarge col-md-9" id="graph-update" type="number" value="1000">';
 
-        html += '<label class="label span3">Graph Scroll </label>';
-        html += '<div class="span3">'
+        html += '<label class="label col-md-3">Graph Scroll </label>';
+        html += '<div class="col-md-3">'
         html += '<label for="graph-shift">enable scroll</label><input class="input-xlarge" id="shift-true" title="ENABLE scroll graph whenever keep seconds are reached" name="graph-shift" type="radio" value="true">';
         html += '</div>'
-        html += '<div class="span3">'
+        html += '<div class="col-md-3">'
         html += '<label for="graph-shift">disable scroll</label><input class="input-xlarge" id="shift-false" title="DISABLE scroll graph whenever keep seconds are reached" name="graph-shift" type="radio" value="false">';
         html += '</div>'
 
-        html += '<label class="label span3">Graph keep seconds (s) </label>';
-        html += '<input class="input-xlarge span9" id="graph-keepseconds" type="number" value="3600">';
+        html += '<label class="label col-md-3">Graph keep seconds (s) </label>';
+        html += '<input class="input-xlarge col-md-9" id="graph-keepseconds" type="number" value="3600">';
 
-        html += '<label class="label span3" >Trace Type </label>';
-        html += '<select id="trace-type" class="span9">';
+        html += '<label class="label col-md-3" >Trace Type </label>';
+        html += '<select id="trace-type" class="col-md-9">';
         html += '<option value="multi" selected="multi">Multiple Independent Traces</option>';
         html += '<option value="single">Single Trace</option>';
         html += '</select>';
@@ -7615,18 +7693,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header" id="X-axis">X-axis Options</h3>';
 
-        html += '<label class="label span3">Name </label>';
-        html += '<input class="input-xlarge focused span9" id="xname" type="text" value="X">';
-        html += '<label class="label span3">Max </label>';
-        html += '<input class="input-xlarge focused span9" id="xmax" title="Max X Scale" type="text" value="Auto">';
-        html += '<label class="label span3">Min </label>';
-        html += '<input class="input-xlarge focused span9" id="xmin" title="Min X Scale" type="text" value="Auto">';
-        html += '<label class="label span3" >Scale </label>';
-        html += '<select id="xtype" class="span9">';
+        html += '<label class="label col-md-3">Name </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="xname" type="text" value="X">';
+        html += '<label class="label col-md-3">Max </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="xmax" title="Max X Scale" type="text" value="Auto">';
+        html += '<label class="label col-md-3">Min </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="xmin" title="Min X Scale" type="text" value="Auto">';
+        html += '<label class="label col-md-3" >Scale </label>';
+        html += '<select id="xtype" class="col-md-9">';
         html += '<option value="linear">Linear scale</option>';
         html += '<option value="logarithmic">Logarithmic</option>';
         html += '<option value="datetime" selected="selected">DateTime</option>';
@@ -7637,18 +7715,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Y-axis Options</h3>';
 
-        html += '<label class="label span3">Name </label>';
-        html += '<input class="input-xlarge span9" id="yname" type="text" value="Y">';
-        html += '<label class="label span3">Max </label>';
-        html += '<input class="input-xlarge span9" id="ymax" type="text" title="Max Y Scale" value="Auto">';
-        html += '<label class="label span3">Min </label>';
-        html += '<input class="input-xlarge span9" id="ymin" type="text" title="Min Y Scale" value="Auto">';
-        html += '<label class="label span3" >Scale </label>';
-        html += '<select id="ytype" class="span9">';
+        html += '<label class="label col-md-3">Name </label>';
+        html += '<input class="input-xlarge col-md-9" id="yname" type="text" value="Y">';
+        html += '<label class="label col-md-3">Max </label>';
+        html += '<input class="input-xlarge col-md-9" id="ymax" type="text" title="Max Y Scale" value="Auto">';
+        html += '<label class="label col-md-3">Min </label>';
+        html += '<input class="input-xlarge col-md-9" id="ymin" type="text" title="Min Y Scale" value="Auto">';
+        html += '<label class="label col-md-3" >Scale </label>';
+        html += '<select id="ytype" class="col-md-9">';
         html += '<option value="linear" selected="selected">Linear scale</option>';
         html += '<option value="logarithmic">Logarithmic</option>';
         html += '<option value="datetime">DateTime</option>';
@@ -7659,33 +7737,33 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Trace Options</h3>';
 
-        html += '<label class="label span2">Name </label>';
-        html += '<input class="input-xlarge span10" id="trace-name" title="Name of the trace" type="text" value="">';
+        html += '<label class="label col-md-2">Name </label>';
+        html += '<input class="input-xlarge col-md-10" id="trace-name" title="Name of the trace" type="text" value="">';
 
-        html += '<label class="label span1">X:</label>';
-        html += '<input class="input-xlarge span11" type="text" title="port path to plot on X (timestamp,sequence,fullpath,[-1] all array components)" id="xvar" value="timestamp">';
-        html += '<label class="label span1">Y:</label>';
-        html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y (timestamp,sequence,fullpath,[-1] all array components)" value="">';
-        html += '<label class="label span1">Color:</label>';
-        html += '<input class="input-xlarge span11" type="text" id="trace-color" title="Trace Color (empty = auto)" value="">';
+        html += '<label class="label col-md-1">X:</label>';
+        html += '<input class="input-xlarge col-md-11" type="text" title="port path to plot on X (timestamp,sequence,fullpath,[-1] all array components)" id="xvar" value="timestamp">';
+        html += '<label class="label col-md-1">Y:</label>';
+        html += '<input class="input-xlarge col-md-11" type="text" id="yvar" title="port path to plot on Y (timestamp,sequence,fullpath,[-1] all array components)" value="">';
+        html += '<label class="label col-md-1">Color:</label>';
+        html += '<input class="input-xlarge col-md-11" type="text" id="trace-color" title="Trace Color (empty = auto)" value="">';
 
-        html += '<a href="#" class="btn span2" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
-        html += '<a href="#" class="btn span2" id="trace-replace" title="Replace the following trace to the Graph" >Replace Trace</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-replace" title="Replace the following trace to the Graph" >Replace Trace</a>';
 
-        html += '<a href="#" class="btn span2" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
-        html += '<a href="#" class="btn span2" id="trace-up" title="Move Trace up" >Trace UP</a>';
-        html += '<a href="#" class="btn span2" id="trace-down" title="Move Trace down" >Trace Down</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-up" title="Move Trace up" >Trace UP</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-down" title="Move Trace down" >Trace Down</a>';
 
 
         html += '</div>';
         html += '</div>';
 
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<table class="table table-bordered" id="table_graph_items">';
         html += '<thead class="box-header">';
@@ -8161,33 +8239,33 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<div class="modal-body">';
         */
         var html = "";
-        html += '<div class="row-fluid">';
+        html += '<div class="row">';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Query options</h3>';
 
-        html += '<div id="reportrange-query" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+        html += '<div id="reportrange-query" class="col-md-10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
         html += '<i class="fa fa-calendar"></i>&nbsp';
         html += '<span></span> <i class="fa fa-caret-down"></i>';
         html += '</div>';
 
-        html += '<label class="label span3">Start </label>';
-        html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
-        html += '<label class="label span3">Stop </label>';
-        html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
+        html += '<label class="label col-md-3">Start </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
+        html += '<label class="label col-md-3">Stop </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
 
-        html += '<label class="label span3">Available Tag</label>';
-        html += '<select class="span9" id="select-tag" title="Existing tags"></select>';
-        html += '<label class="label span3">Tag Name </label>';
-        html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value=' + query_params.tag + '>';
+        html += '<label class="label col-md-3">Available Tag</label>';
+        html += '<select class="col-md-9" id="select-tag" title="Existing tags"></select>';
+        html += '<label class="label col-md-3">Tag Name </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-tag" title="Tag Name" type="text" value=' + query_params.tag + '>';
 
-        html += '<label class="label span3">Page </label>';
-        html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
-        html += '<label class="label span3">Query chunk </label>';
-        html += '<input class="input-xlarge focused span9" id="query-chunk" title="Cut the query in chunk of the given seconds" type="number" value=3600>';
-        html += '<label class="label span3">Data Factor reduction</label>';
-        html += '<input class="input-xlarge focused span9" type="number" id="query-reduction" title="Reduction Factor" value=1>';
+        html += '<label class="label col-md-3">Page </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
+        html += '<label class="label col-md-3">Query chunk </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-chunk" title="Cut the query in chunk of the given seconds" type="number" value=3600>';
+        html += '<label class="label col-md-3">Data Factor reduction</label>';
+        html += '<input class="input-xlarge focused col-md-9" type="number" id="query-reduction" title="Reduction Factor" value=1>';
         html += '</div>';
         html += '</div>';
         html += '</div>';
@@ -8275,20 +8353,20 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         var idname = gname;
         var html_target = "<div></div>";
         //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
-        html += '<div class="row-fluid" style="height: 100%; width: 100%">';
+        html += '<div class="row" style="height: 100%; width: 100%">';
         //html += '<div id="createGraphDialog-' + id + '" style="height: 100%; width: 100%">';
         if (typeof id === "string") {
             idname = id;
             html_target = "#" + id;
         }
-        html += '<div id="reportrange-' + idname + '" class="span8" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+        html += '<div id="reportrange-' + idname + '" class="col-md-8" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
         html += '<i class="fa fa-calendar"></i>&nbsp';
         html += '<span></span> <i class="fa fa-caret-down"></i>';
         html += '</div>';
-        html += '<div class="span2">count:</div>'
-        html += '<div id="info-download-' + gname + '" class="span2" />'
+        html += '<div class="col-md-2">count:</div>'
+        html += '<div id="info-download-' + gname + '" class="col-md-2" />'
 
-        html += '<div id="createGraphDialog-' + idname + '" class="span10" style="height: 100%; width: 100%">';
+        html += '<div id="createGraphDialog-' + idname + '" class="col-md-10" style="height: 100%; width: 100%">';
         html += '</div>';
 
         html += '</div>';
@@ -8863,8 +8941,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
         html += '<table class="table table-bordered" id="table_script">';
@@ -8907,8 +8985,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
         html += '<table class="table table-bordered" id="table_snap_nodes">';
@@ -8931,8 +9009,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '</div>';
 
-        html += '<label class="label span3" for="snap_save_name">Snapshot name</label>';
-        html += '<input class="input-xlarge focused span9" id="snap_save_name" type="text" value="name">';
+        html += '<label class="label col-md-3" for="snap_save_name">Snapshot name</label>';
+        html += '<input class="input-xlarge focused col-md-9" id="snap_save_name" type="text" value="name">';
 
         html += '</div>';
         html += '</div>';
@@ -9029,7 +9107,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '<div class="modal-footer">';
         // html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
-        html += '<a href="#" class="btn btn-primary savetofile icon-save" filename="description" extension="json">Save To File</a>';
+        html += '<a href="#" class="btn btn-primary savetofile glyphicon glyphicon-save" filename="description" extension="json">Save To File</a>';
         html += '<a href="#" class="btn btn-primary" id="description-close">Close</a>';
         html += '</div>';
         html += '</div>';
@@ -9043,8 +9121,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<h3 id="list_logs">List logs</h3>';
         html += '</div>';
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
         html += '<table class="table table-bordered table-fixed" id="table_logs">';
@@ -9195,7 +9273,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<h3>Error of <span id="name-FE-device"></span></h3>';
         html += '</div>';
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
+        html += '<div class="row">';
         html += '<p><b>Health Status:</b><span id="status_message"></span></p>';
         html += '<p><b>Message:</b><span id="error_message"></span></p>';
         html += '<p><b>Domain:</b><span id="error_domain"></span></p>';
@@ -9211,8 +9289,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<h3>TABLE ALARM of <span id="name-device-alarm"></span></h3>';
         html += '</div>';
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12 red">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12 red">';
         html += '<div class="box-content">';
         html += '<table class="table table-bordered" id="table_device_alarm">';
         html += '<thead class="box-header red">';
@@ -9244,7 +9322,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             html += '<div id="graph-' + cnt + '" style="height: 380px; width: 580px;z-index: 1000;">';
             html += '</div>';
       
-            html +='<div id="reportrange-'+cnt+'" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
+            html +='<div id="reportrange-'+cnt+'" class="col-md-12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
             html +='<i class="fa fa-calendar"></i>&nbsp';
             html +='<span></span> <i class="fa fa-caret-down"></i>';
             html +='</div>';
@@ -9252,13 +9330,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             */
         }
 
-        html += generateDataSet();
-        html += generateDescription();
-        html += generateSnapshotTable();
+      //  html += generateDataSet();
+       // html += generateDescription();
+       // html += generateSnapshotTable();
         html += generateAlarms();
-        html += generateLog();
+     //   html += generateLog();
         html += generateGraphTable();
-        html += generateGraphList();
+     //   html += generateGraphList();
         //  html += generateQueryTable();
 
 
@@ -9278,30 +9356,30 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         html += '<li class="black">';
         html += '<a href="./configuration.php" role="button" class="show_agent" data-toggle="modal">';
-        html += '<i class="icon-key red"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+        html += '<i class="glyphicon glyphicon-key red"></i><span class="opt-menu hidden-md">Configuration</span>';
         html += '</a>';
         html += '</li>';
 
         html += '<li class="black">';
         html += '<a href="./index.php" role="button" class="show_agent" data-toggle="modal">';
-        html += '<i class="icon-search green"></i><span class="opt-menu hidden-tablet">CU</span>';
+        html += '<i class="glyphicon glyphicon-search green"></i><span class="opt-menu hidden-md">CU</span>';
         html += '</a>';
         html += '</li>';
         html += '<li class="black">';
         html += '<a href="./process.php" role="button" class="show_agent" data-toggle="modal">';
-        html += '<i class="icon-search red"></i><span class="opt-menu hidden-tablet">Process</span>';
+        html += '<i class="glyphicon glyphicon-search red"></i><span class="opt-menu hidden-md">Process</span>';
         html += '</a>';
         html += '</li>';
         /*
             html += '<li class="black">';
             html += '<a href="#">';
-            html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+            html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Configuration</span>';
             html += '</a>'
     
             html += '<ul class="dashboard-list metro">';
             html += '<li class="black">';
             html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
-            html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Node</span>';
+            html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Node</span>';
             html += '</a>';
             html += '</li>';
             html += '</ul>';
@@ -9309,19 +9387,19 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         html += '<li class="black">';
         html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
-        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Management</span>';
+        html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Management</span>';
         html += '</a>';
         html += '</li>';
 
         html += '<li class="black">';
         html += '<a href="./chaos_jshell.php" role="button" class="show_alog" data-toggle="modal">';
-        html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">ChaosShell</span>';
+        html += '<i class="glyphicon glyphicon-file red"></i><span class="opt-menu hidden-md">ChaosShell</span>';
         html += '</a>';
         html += '</li>';
 
         html += '<li class="black">';
         html += '<a href="./CUgenerator/index.html" role="button" class="show_alog" data-toggle="modal">';
-        html += '<i class="icon-file green"></i><span class="opt-menu hidden-tablet">CUGenerator</span>';
+        html += '<i class="glyphicon glyphicon-file green"></i><span class="opt-menu hidden-md">CUGenerator</span>';
         html += '</a>';
         html += '</li>';
 
@@ -9336,7 +9414,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
 
     function generateActionBox() {
-        var html = '<div class="box black span2">';
+        var html = '<div class="box black col-md-2">';
         html += '<div class="box-header">';
         html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Actions</h2>';
         html += '<div class="box-icon">';
@@ -9347,49 +9425,49 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<ul class="dashboard-list metro">';
         /*    html += '<li class="green">';
            html += '<a href="#mdl-save" role="button" data-toggle="modal">';
-           html += '<i class="icon-save green"></i><span class="opt-menu hidden-tablet">Save</span>';
+           html += '<i class="glyphicon glyphicon-save green"></i><span class="opt-menu hidden-md">Save</span>';
            html += '</a>';
            html += '</li>';
            html += '<li class="blue">';
            html += '<a href="#" role="button" onclick="reLoad()">';
-           html += '<i class="icon-repeat blue"></i><span class="opt-menu hidden-tablet">Reload</span>';
+           html += '<i class="glyphicon glyphicon-repeat blue"></i><span class="opt-menu hidden-md">Reload</span>';
            html += '</a>';
            html += '</li>';
            html += '<li class="yellow">';
            html += '<a href="#">';
-           html += '<i class="icon-print yellow"></i><span class="opt-menu hidden-tablet">Print</span>';
+           html += '<i class="glyphicon glyphicon-print yellow"></i><span class="opt-menu hidden-md">Print</span>';
            html += '</a>';
            html += '</li>';
            
            */
         html += '<li class="red">';
         html += '<a href="#mdl-snap" role="button" class="show_snapshot" data-toggle="modal">';
-        html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Snapshot</span>';
+        html += '<i class="glyphicon glyphicon-file red"></i><span class="opt-menu hidden-md">Snapshot</span>';
         html += '</a>';
         html += '</li>';
 
         /*
             html += '<li class="green">';
             html += '<a href="#mdl-dataset" role="button" class="show_dataset" data-toggle="modal">';
-            html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Dataset</span>';
+            html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Dataset</span>';
             html += '</a>';
             html += '</li>';
     
             html += '<li class="green">';
             html += '<a href="#mdl-description" role="button" class="show_description" data-toggle="modal">';
-            html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
+            html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Description</span>';
             html += '</a>';
             html += '</li>';
         */
         html += '<li class="green">';
         html += '<a href="#mdl-log" role="button" class="show_log" data-toggle="modal">';
-        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Logging</span>';
+        html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Logging</span>';
         html += '</a>';
         html += '</li>';
 
         html += '<li class="red">';
         html += '<a href="#mdl-graph-list" role="button" class="show_graph" data-toggle="modal">';
-        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Graphs</span>';
+        html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Graphs</span>';
         html += '</a>';
         html += '</li>';
 
@@ -9599,96 +9677,88 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     function generateGenericControl(tmpObj) {
         var template = tmpObj.type;
         var html = "";
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12 box-cmd">';
+        // first row
+        html += '<div class="row green">';
 
-        html += '<div class="box-header green">';
-        html += '<h3 id="h3-generic-cmd">Generic Commands</h3>';
+        html += '<h1 class="col-sm-12">Generic Control</h1>';
         html += '</div>';
-        html += '<div class="box-content">';
 
-        html += '<div class="row-fluid">';
+        // second raw
+        html += '<div class="row box-content">';
 
-        html += "<div class='span3 statbox'>";
-        html += "<h3 id='scheduling_title'>Scheduling(us)</h3>";
+
+        html += "<div class='col-sm'>";
+        html += "<div class='row' >";
+       
+        html += "<div class='col-sm'>";
+        html += "<p class='lead'>Set scheduling(us)</p>";
         html += "<input type='text' class='setSchedule'>";
         html += "</div>";
 
-        // html += "<div class='span3'>";
-        // html += "</div>";
-
-        html += "<div class='span4 statbox'>";
-        html += "<h3>Available Commands</h3>";
-        html += "<div class='row-fluid' >";
-        html += "<a class='quick-button-small span2 btn-cmd' id='cu_full_commands_send'  title='Send selected command'><i class='material-icons verde'>send</i></a>";
-        html += '<select id="cu_full_commands" class="span8" data-toggle="modal"></select>';
-        html += "</div>";
-
-        html += "<div class='row-fluid' >";
-        html += "<a class='quick-button-small span2 btn-cmd' id='cu_clear_current_cmd' title='Clear current command'><i class='material-icons verde'>clear</i></a>";
-        html += "<a class='quick-button-small span2 btn-cmd' id='cu_clear_queue' title='Clear ALL command queue'><i class='material-icons verde'>layers_clear</i></a>";
-        html += "</div>";
-
-        html += "</div>";
-
-
-        html += "<div class='span4'>";
-        html += '<div class="span2">'
-        html += '<label for="live-enable">enable live</label><input class="input-xlarge" id="live-true" title="Enable Live" name="live-enable" type="radio" value="true">';
-        html += '<label for="live-enable">disable live</label><input class="input-xlarge" id="live-false" title="Disable Live" name="live-enable" type="radio" value="false">';
+        html += '<div class="col-sm">';
+        html += '<p class="row lead">Live</p>';
+        html += '<div class="row"><label for="live-enable">enable</label><input class="input-xlarge" id="live-true" title="Enable Live" name="live-enable" type="radio" value="true"></div>';
+        html += '<div class="row"><label for="live-enable">disable</label><input class="input-xlarge" id="live-false" title="Disable Live" name="live-enable" type="radio" value="false"></div>';
         html += '</div>'
 
-        html += '<div class="span2">'
-        html += '<label for="log-enable">enable log</label><input class="input-xlarge" id="log-true" title="Enable Logging on Grafana " name="log-enable" type="radio" value="true">';
-        html += '<label for="log-enable">disable log</label><input class="input-xlarge" id="log-false" title="Disable Logging on Grafana" name="log-enable" type="radio" value="false">';
+        html += '<div class="col-sm">'
+        html += '<p class="row lead">Log</p>';
+
+        html += '<div class="row"><label for="log-enable">enable</label><input class="input-xlarge" id="log-true" title="Enable Logging on Grafana " name="log-enable" type="radio" value="true"></div>';
+        html += '<div class="row"><label for="log-enable">disable</label><input class="input-xlarge" id="log-false" title="Disable Logging on Grafana" name="log-enable" type="radio" value="false"></div>';
         html += '</div>'
 
-        html += '<div class="span2">'
-        html += '<label for="histo-enable">enable history</label><input class="input-xlarge" id="histo-true" title="Enable History" name="histo-enable" type="radio" value="true">';
-        html += '<label for="histo-enable">disable history</label><input class="input-xlarge" id="histo-false" title="Disable History" name="histo-enable" type="radio" value="false">';
+        html += '<div class="col-sm">'
+        html += '<p class="row lead">History</p>';
+
+        html += '<div class="row"><label for="histo-enable">enable</label><input class="input-xlarge" id="histo-true" title="Enable History" name="histo-enable" type="radio" value="true"></div>';
+        html += '<div class="row"><label for="histo-enable">disable</label><input class="input-xlarge" id="histo-false" title="Disable History" name="histo-enable" type="radio" value="false"></div>';
         html += '</div>'
 
-        html += '<div class="span2">'
-        html += '<label for="restore-enable">restore on init</label><input class="input-xlarge" id="restore-true" title="Enable Restore on init" name="restore-enable" type="radio" value="true">';
-        html += '<label for="restore-enable">disable restore</label><input class="input-xlarge" id="restore-false" title="Disable Restore on init" name="restore-enable" type="radio" value="false">';
-        html += '</div>'
-        html += '<div class="span2">';
-        html += '<label for="restore-type">Restore Type/tagname</label>';
+        html += '<div class="col-sm">'
+        html += '<div class="row">';
+        html += '<p class="lead row">Restore</p>';
         html += '<input id="restore-type" type="text" title="Restore Type/tagname">';
-        html += '</div>';
+        html += '</div>'
+
+        html += '<div class="row"><label for="restore-enable">on init</label><input class="input-xlarge" id="restore-true" title="Enable Restore on init" name="restore-enable" type="radio" value="true"></div>';
+        html += '<div class="row"><label for="restore-enable">disable</label><input class="input-xlarge" id="restore-false" title="Disable Restore on init" name="restore-enable" type="radio" value="false"></div>';
+        html += '</div>'
+       
         html += '</div>'
         html += '</div>';
 
+        //first col
+       
+        // html += "<div class='col-md-3'>";
+        // html += "</div>";
+        //second col/row
+        html += "<div class='col-sm box'>";
 
+        html += "<p class='row lead justify-content-center'>Commands</p>";
+        html += "<div class='row' >";
+        html += '<select id="cu_full_commands" class="col-sm" data-toggle="modal"></select>';
+        html += "<a class='quick-button-small col-sm btn-cmd' id='cu_full_commands_send'  title='Send selected command'><i class='material-icons verde'>send</i></a>";
+        html += "</div>";
+        html += "<div class='row' >";
+        html += "<a class='quick-button-small col-sm btn-cmd' id='cu_clear_current_cmd' title='Clear current command'><i class='material-icons verde'>clear</i></a>";
+        html += "<a class='quick-button-small col-sm btn-cmd' id='cu_clear_queue' title='Clear ALL command queue'><i class='material-icons verde'>layers_clear</i></a>";
+        html += "</div>";
+        html += '<div class="row">';
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-stop-start'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-init-deinit'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
+
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-recover-error'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-load-unload'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-bypass-on-off'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
+        html += "</div>";
 
         html += "</div>";
 
 
+       
 
 
-        html += '<div class="row-fluid">';
-        html += "<div class='span12'>";
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-stop-start'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-init-deinit'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
-
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-recover-error'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-load-unload'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-bypass-on-off'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
-
-        // html += "<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-" + ctrlid + "'' onclick='jchaos.setBypass(\"" + cuid + "\",true,null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";
-        //   html += '<div class="statbox purple" onTablet="span2" onDesktop="span3">';
-        //  html += '<h3>Available Commands</h3>';
-        //  html += '<select id="cu_full_commands" data-toggle="modal"> </select>';
-        //   html += '</div>';
-
-
-
-        html += "</div>";
-        html += "</div>";
-        html += "</div>";
-
-
-        html += "</div>";
         html += "</div>";
 
         return html;
