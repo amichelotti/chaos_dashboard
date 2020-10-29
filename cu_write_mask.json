@@ -85,7 +85,6 @@
             "title": "CU properties",
             "description": "Initialization of existing attributes of the CU, does not belong to a dataset",
             "uniqueItems": true,
-            "headerTemplate": "{{ i1 }} - {{ self.name }} (value {{ self.value }})",
 
             "items": {
                 "type": "object",
@@ -97,7 +96,10 @@
                     "value": {
                         "type": "string"
                     }
-                }
+                },
+                "headerTemplate": "{{ i1 }} - {{ self.name }} (value {{ self.value }})"
+
+
             }
         },
         "auto_load": {
@@ -141,12 +143,13 @@
             "format": "tab",
             "required": true,
             "title": "Driver Description",
-            "headerTemplate": "{{ i1 }} - {{ self.cudk_driver_description_name }} (value {{ self.cudk_driver_description_version }})",
 
             "items": {
                 "title": "driver",
                 "type": "object",
                 "format": "tab",
+                "headerTemplate": "{{ i1 }} - {{ self.cudk_driver_description_name }}",
+
                 "properties": {
                     "cudk_driver_description_name": {
                         "type": "string",

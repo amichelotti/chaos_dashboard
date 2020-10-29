@@ -3,7 +3,7 @@
 <?php
 require_once('head.php');
 
-$curr_page = "Home";
+$curr_page = "NODE";
 
 ?>
 
@@ -21,14 +21,6 @@ require_once('header.php');
 			<!-- start: Content -->
 			<div id="chaos_content" class="col-md-12">
 
-				<ul class="breadcrumb">
-					<li>
-						<i class="glyphicon glyphicon-home"></i>
-						<a href="<?php echo $index; ?>"><?php echo $curr_page; ?></a>
-						<i class="icon-angle-right"></i>
-					</li>
-				</ul>
-
 
 				<div class="row">
 					<div class="statbox purple col-md-3">
@@ -40,22 +32,26 @@ require_once('header.php');
 						</select>
 					</div>
 
-					<div class="statbox purple row col-md-3">
-						<div class="col-md-3">
-							<label for="search-alive">Search All</label><input class="input-xlarge"
-								id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive"
-								type="radio" value=false>
+					<div class="statbox purple col-md-3">
+
+						<div class="row align-items-center">
+							<div class="col-sm">
+								<label for="search-alive">All</label><input class="input-xlarge" id="search-alive-false"
+									title="Search Alive and not Alive nodes" name="search-alive" type="radio"
+									value=false>
+							</div>
+							<div class="col-sm">
+								<label for="search-alive">Alive</label><input class="input-xlarge"
+									id="search-alive-true" title="Search just alive nodes" name="search-alive"
+									type="radio" value=true checked>
+							</div>
+							<div class="col-sm">
+								<label for="search-chaos">Search</label>
+								<input class="input-xlarge focused" id="search-chaos" title="Free form Search"
+									type="text" value="">
+							</div>
 						</div>
-						<div class="col-md-3">
-							<label for="search-alive">Search Alive</label><input class="input-xlarge"
-								id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio"
-								value=true checked>
-						</div>
-						<div class="col-md-6">
-							<label for="search-chaos">Search</label>
-							<input class="input-xlarge focused" id="search-chaos" title="Free form Search" type="text"
-								value="">
-						</div>
+
 
 					</div>
 				</div>
@@ -101,6 +97,7 @@ require_once('header.php');
 			var obj = Object.assign({}, ob);
 			$.get('cu_write_mask.json', function (templ) {
 				try {
+
 					jchaos.search("", "us", false, function (uslist) {
 						jchaos.variable("cu_catalog", "get", (cudb) => {
 							var list_us = [];
@@ -109,6 +106,7 @@ require_once('header.php');
 								par = obj.ndk_parent;
 
 							}
+
 							if (par != "") {
 								list_us.push(par);
 							}
@@ -126,7 +124,7 @@ require_once('header.php');
 							}
 							if (impl != "") {
 								list_impl.push(impl);
-								if (cudb[impl].info !== undefined) {
+								if ((cudb[impl] !== undefined) && (cudb[impl].info !== undefined)) {
 									templ['properties']['group'].enum = cudb[impl].group;
 								}
 							} else {
@@ -147,8 +145,25 @@ require_once('header.php');
 									list_impl.push(k);
 								}
 							}
+							if (ob.ndk_uid !== "undefined") {
+								if (jchaos.pathToZoneGroupId(ob.ndk_uid) != null) {
+									//valid path change 
+									templ['properties']['ndk_uid'] = {
+										"type": "string",
+										"required": true,
+										"format": "text"
+									};
+									delete templ['properties']['group'];
+									delete templ['properties']['id'];
+									delete templ['properties']['zone'];
 
+								}
+							}
 							list_impl.push("CUSTOM");
+							if ((obj.ndk_type !== undefined) && (obj.ndk_type == "nt_root")) {
+								list_impl = jchaos.findScriptByType("", "CPP");
+							}
+
 							templ['properties']['control_unit_implementation'].enum = list_impl;
 							var drv_impl = obj.cudk_driver_description;
 							var list_drivers = [];
@@ -260,7 +275,7 @@ require_once('header.php');
 			document.execCommand("copy");
 			$temp.remove();
 		}
-		function addMenuItems(node) {
+		function addMenuItems(node, what) {
 			var items = {};
 			var tree = $('#hier_view').jstree(true);
 			var ID = $(node).attr('id');
@@ -272,7 +287,8 @@ require_once('header.php');
 						label: "New CU",
 						action: function () {
 							var cu = {};
-							cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
+							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
+							cu['id'] = "<MY ID>";
 							cu2editor(cu, (edit_templ, editobj, cudb) => {
 
 								jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
@@ -374,7 +390,7 @@ require_once('header.php');
 										//jsonEdit(templ, data);
 										cu2editor(data, (edit_templ, editobj) => {
 											jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (ok) {
-												instantMessage("CU/EU saved " + selected_node, " OK", 2000, true);
+												jqccs.instantMessage("CU/EU saved " + selected_node, " OK", 2000, true);
 
 											}, function (bad) {
 												jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
@@ -419,16 +435,76 @@ require_once('header.php');
 								});
 							}
 						};
-						items['updateSynPos'] = {
+						if (what == "byzone") {
+							items['updateSynPos'] = {
+								"separator_before": true,
+								"separator_after": false,
+								label: "Update Synoptic position",
+								action: function () {
+
+								}
+							};
+						}
+
+
+					} else if (type == "nt_agent") {
+						items['edit'] = {
 							"separator_before": true,
 							"separator_after": false,
-							label: "Update Synoptic position",
+							label: "Edit Agent",
 							action: function () {
+								var templ = {
+									$ref: "agent.json",
+									format: "tabs"
+								}
 
+								jchaos.node(selected_node, "info", "agent", function (data) {
+									if (data != null) {
+										// editorFn = agentSave;
+										//jsonEdit(templ, data);
+										var opt={'node_selected':selected_node};
+										jqccs.jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, opt,
+											() => {
+												jqccs.instantMessage("Agent saved " + selected_node, " OK", 2000, true);
+
+											}, (bad) => {
+												jqccs.instantMessage("Agent  " + selected_node, "Save Error:" + JSON.stringify(bad), 4000, false);
+
+											}
+										);
+
+									}
+								});
 							}
 						};
 
+					} else if (type == "nt_unit_server") {
+						items['edit'] = {
+							"separator_before": true,
+							"separator_after": false,
+							label: "Edit US",
+							action: function () {
+								var templ = {
+									$ref: "us.json",
+									format: "tabs"
+								}
 
+								jchaos.node(selected_node, "get", "us", function (data) {
+									if (data.hasOwnProperty("us_desc")) {
+										//    editorFn = unitServerSave;
+										//    jsonEdit(templ, data.us_desc);
+										jqccs.jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, null, function (ok) {
+											jqccs.instantMessage("Unit server save ", " OK", 2000, true);
+
+										}, function (bad) {
+											jqccs.instantMessage("Unit server failed", "Error:" + JSON.stringify(bad), 4000, false);
+
+										});
+
+									}
+								});
+							}
+						}
 					}
 					items['delete'] = {
 						"separator_before": true,
@@ -454,6 +530,59 @@ require_once('header.php');
 						label: "Update State",
 						action: function () { updateDescView(node.data); }
 					};
+					if (node.data.ndk_parent !== undefined && (node.data.ndk_parent != "")) {
+						items['start'] = {
+							"separator_before": true,
+							"separator_after": false,
+							label: "Start",
+							action: function () {
+								jchaos.node(node.data.ndk_uid, "start", "us", function () {
+
+									jqccs.instantMessage(node.data.ndk_uid, "Starting on  " + node.data.ndk_parent, 2000, true);
+
+									jchaos.node(node.data.ndk_parent, "desc", "agent", function (data) {
+										console.log("->" + JSON.stringify(data));
+										var server = "";
+										if (data.ndk_host_name !== undefined) {
+											server = data.ndk_host_name;
+										} else if (data.ndk_rpc_addr !== undefined) {
+											server = data.ndk_rpc_addr;
+											server.replace(/:\d+/g, '');
+										}
+										var uid = "";
+										data.andk_node_associated.forEach(ele => {
+											if (ele.ndk_uid == node.data.ndk_uid) {
+												uid = ele.association_uid;
+											}
+										});
+										if (uid != "") {
+											jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
+										} else {
+											jqccs.instantMessage(node.data.ndk_uid, "Cannot open console, uid not found for " + node.data.ndk_uid, 4000, false);
+
+										}
+									});
+
+
+								}, function (bad) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error Starting on " + node.data.ndk_parent + " error: " + JSON.stringify(bad), 4000, false);
+								});
+
+							}
+						};
+						items['stop'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Stop",
+							action: function () {
+								jchaos.node(node.data.ndk_uid, "stop", "us", function () {
+									jqccs.instantMessage(node.data.ndk_uid, "Stopping on  " + node.data.ndk_parent, 2000, true);
+								}, function (bad) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error Stopping on " + node.data.ndk_parent + " error: " + JSON.stringify(bad), 4000, false);
+								});
+							}
+						};
+					}
 					items['shutdown'] = {
 						"separator_before": true,
 						"separator_after": false,
@@ -484,49 +613,55 @@ require_once('header.php');
 			if ((node_data != null)) {
 				if (node_data.hasOwnProperty("ndk_uid")) {
 					var ndk_uid = node_data.ndk_uid;
+					if (node_data.hasOwnProperty("zone") && synoptic.hasOwnProperty(node_data.zone) && synoptic[node_data.zone].hasOwnProperty(ndk_uid)) {
+						var x = 0, y = 0, r = 0;
+						var obj = synoptic[node_data.zone].ndk_uid;
+						if (obj.hasOwnProperty("x")) {
+							x = obj['x'];
+						}
+						if (obj.hasOwnProperty("y")) {
+							y = obj['y'];
+						}
+						if (obj.hasOwnProperty("r")) {
+							r = obj['r'];
+						}
+						$("#svg_img").html('<circle cx="' + x + '" cy="' + y + '" r="' + r + '" stroke="black" stroke-width="3" fill="green"/>');
+
+					}
+					jchaos.getChannel(ndk_uid, 255, function (bruninfo) {
+						var healt = bruninfo[0].health;
+						if (healt.dpck_ats !== undefined) {
+							jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
+								//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
+								//node_data = Object.assign(bi, node_data);
+								node_data = Object.assign({}, { build: bi }, { state: bruninfo[0] }, { info: node_data });
+
+
+								$('#desc_view').html(jqccs.json2html(node_data));
+								jqccs.jsonSetup($('#desc_view'), function (e) {
+								});
+								$('#desc_view').find('a.json-toggle').click();
 
 
 
-					jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
-						//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
-						jchaos.getChannel(ndk_uid, 255, function (bruninfo) {
-							//node_data = Object.assign(bi, node_data);
-							node_data = Object.assign({}, { build: bi }, { state: bruninfo[0] }, { info: node_data });
-							if (node_data.hasOwnProperty("zone") && synoptic.hasOwnProperty(node_data.zone) && synoptic[node_data.zone].hasOwnProperty(ndk_uid)) {
-								var x = 0, y = 0, r = 0;
-								var obj = synoptic[node_data.zone].ndk_uid;
-								if (obj.hasOwnProperty("x")) {
-									x = obj['x'];
-								}
-								if (obj.hasOwnProperty("y")) {
-									y = obj['y'];
-								}
-								if (obj.hasOwnProperty("r")) {
-									r = obj['r'];
-								}
-								$("#svg_img").html('<circle cx="' + x + '" cy="' + y + '" r="' + r + '" stroke="black" stroke-width="3" fill="green"/>');
 
-							}
+							}, bad => {
+								// no build info
+								//node_data = Object.assign(bi, node_data);
+								node_data = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
+								$('#desc_view').html(jqccs.json2html(node_data));
+								jqccs.jsonSetup($('#desc_view'), function (e) {
+								});
+								$('#desc_view').find('a.json-toggle').click();
 
-							$('#desc_view').html(jqccs.json2html(node_data));
-							jqccs.jsonSetup($('#desc_view'), function (e) {
-							});
-							$('#desc_view').find('a.json-toggle').click();
-
-						});
-
-
-					}, bad => {
-						// no build info
-						jchaos.getChannel(ndk_uid, 255, function (bruninfo) {
-							//node_data = Object.assign(bi, node_data);
+							})
+						} else {
 							node_data = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
 							$('#desc_view').html(jqccs.json2html(node_data));
 							jqccs.jsonSetup($('#desc_view'), function (e) {
 							});
 							$('#desc_view').find('a.json-toggle').click();
-
-						});
+						}
 					});
 
 				} else if (node_data.hasOwnProperty("zone")) {
@@ -677,7 +812,7 @@ require_once('header.php');
 						"plugins": ["dnd", "contextmenu"],
 						"contextmenu": {
 							'items': (node) => {
-								return addMenuItems(node);
+								return addMenuItems(node, what);
 
 							}, "select_node": true, "show_at_node": false
 						},
@@ -701,11 +836,12 @@ require_once('header.php');
 							'data': ds, "multiple": true,
 							"animation": 0
 						}, 'plugins': ["contextmenu"],
+						"contextmenu": {
+							'items': (node) => {
+								return addMenuItems(node, what);
 
-						'contextmenu': {
-							"select_node": true
-
-						}
+							}, "select_node": true, "show_at_node": false
+						},
 					});
 					//$('#hier_view').jstree('load_node',ds);
 
@@ -720,10 +856,12 @@ require_once('header.php');
 							'data': ds, "multiple": true,
 							"animation": 0
 						}, 'plugins': ["contextmenu"],
-						'contextmenu': {
-							"select_node": true
+						"contextmenu": {
+							'items': (node) => {
+								return addMenuItems(node, what);
 
-						}
+							}, "select_node": true, "show_at_node": false
+						},
 					});
 					//$('#hier_view').jstree('load_node',ds);
 
@@ -747,15 +885,21 @@ require_once('header.php');
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
 				}
-				jchaos.getDesc(culist, (desc) => {
+				jchaos.node(culist, "desc", "all", (desc) => {
 					culist.forEach((elem, index) => {
 						var regex = /(.*)\/(.*)\/(.*)$/;
 						var match = regex.exec(elem);
 						var icon_name = "";
+
 						if ((match != null) && (typeof match[2] !== "undefined")) {
 							icon_name = "/img/devices/" + match[2] + ".png";
 						}
+						//	console.log(desc[index].ndk_uid + " =>"+desc[index].ndk_type);
 
+						if (desc[index].ndk_type !== undefined && desc[index].ndk_type == "nt_root") {
+							icon_name = "/img/devices/nt_root.png";
+
+						}
 						var next_parent = "#";
 						var parent = "";
 						if (desc[index].hasOwnProperty("ndk_parent")) {
@@ -786,57 +930,60 @@ require_once('header.php');
 								var icon_name_parent = "";
 
 								var next_next_par = jchaos.node(parent, "desc", "all");
-								if (next_next_par.hasOwnProperty("ndk_type")) {
-									icon_name_parent = "/img/devices/" + next_next_par.ndk_type + ".png";
-								}
-								if (next_next_par.hasOwnProperty("ndk_parent") && (next_next_par.ndk_parent != "")) {
-									var idname = jchaos.encodeName(next_next_par.ndk_parent);
+								if (next_next_par != null) {
+									if (next_next_par.hasOwnProperty("ndk_type")) {
+										icon_name_parent = "/img/devices/" + next_next_par.ndk_type + ".png";
+									}
+									if (next_next_par.hasOwnProperty("ndk_parent") && (next_next_par.ndk_parent != "")) {
+										var idname = jchaos.encodeName(next_next_par.ndk_parent);
 
-									var icon_par_parent = "";
-									var node = {
-										"id": idname,
-										"parent": "#",
-										"icon": icon_par_parent,
-										"text": next_next_par.ndk_parent,
-										"data": next_next_par
-									};
-									var par = jchaos.node(next_next_par.ndk_parent, "desc", "all");
-									if ((par != null)) {
-										node['data'] = par;
-										if (par.hasOwnProperty("ndk_type")) {
-											icon_par_parent = "/img/devices/" + par.ndk_type + ".png";
+										var icon_par_parent = "";
+										var node = {
+											"id": idname,
+											"parent": "#",
+											"icon": icon_par_parent,
+											"text": next_next_par.ndk_parent,
+											"data": next_next_par
+										};
+										var par = jchaos.node(next_next_par.ndk_parent, "desc", "all");
+										if ((par != null)) {
+											node['data'] = par;
+											if (par.hasOwnProperty("ndk_type")) {
+												icon_par_parent = "/img/devices/" + par.ndk_type + ".png";
+												node['icon'] = icon_par_parent;
+											}
 										}
-									}
 
 
-									if (!node_created.hasOwnProperty(idname)) {
+										if (!node_created.hasOwnProperty(idname)) {
+											jsree_data.push(node);
+											node_created[idname] = true;
+										}
+										node = {
+											"id": parentid,
+											"parent": idname,
+											"icon": icon_name_parent,
+											"text": parent,
+											"data": next_next_par
+										};
+
 										jsree_data.push(node);
-										node_created[idname] = true;
+										node_created[parentid] = true;
+
+
+									} else {
+
+										var node = {
+											"id": parentid,
+											"parent": "#",
+											"icon": icon_name_parent,
+											"text": parent,
+											"data": next_next_par
+										};
+										jsree_data.push(node);
+										node_created[parentid] = true;
+
 									}
-									node = {
-										"id": parentid,
-										"parent": idname,
-										"icon": icon_name_parent,
-										"text": parent,
-										"data": next_next_par
-									};
-
-									jsree_data.push(node);
-									node_created[parentid] = true;
-
-
-								} else {
-
-									var node = {
-										"id": parentid,
-										"parent": "#",
-										"icon": icon_name_parent,
-										"text": parent,
-										"data": next_next_par
-									};
-									jsree_data.push(node);
-									node_created[parentid] = true;
-
 								}
 
 							}
@@ -874,6 +1021,10 @@ require_once('header.php');
 						}
 						var desc = "";
 						desc = jchaos.node(elem, "desc", "all");
+						var uname = jchaos.encodeName(elem);
+						if (desc.seq !== undefined) {
+							uname = uname + "_" + desc.seq;
+						}
 						var zone = "";
 						var implementation = "";
 						if (desc.instance_description !== undefined && desc.instance_description.control_unit_implementation !== undefined) {
@@ -914,7 +1065,7 @@ require_once('header.php');
 						var icon_name = "/img/devices/" + desc['group'] + ".png";
 
 						var node = {
-							"id": jchaos.encodeName(elem),
+							"id": uname,
 							"parent": next_parent,
 							"icon": icon_name,
 							"text": node_name,
@@ -937,41 +1088,50 @@ require_once('header.php');
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
 				}
-				culist.forEach((elem) => {
+				jchaos.node(culist, "desc", "all", (desc) => {
 
-					var regex = /(.*)\/(.*)\/(.*)$/;
-					var match = regex.exec(elem);
-					if (match != null) {
-						var device = match[2];
-						var icon_name = "/img/devices/" + device + ".png";
 
-						var node = {
-							"id": device,
-							"parent": "#",
-							"icon": icon_name,
-							"text": device,
-							"data": null
-						};
-						if (!node_created.hasOwnProperty(device)) {
+					culist.forEach((elem, index) => {
 
+						var regex = /(.*)\/(.*)\/(.*)$/;
+						var match = regex.exec(elem);
+						if (match != null) {
+							var device = match[2];
+							var icon_name;
+							if ((desc[index].ndk_type !== undefined) && (desc[index].ndk_type == "nt_root")) {
+								icon_name = "/img/devices/nt_root.png";
+
+							} else {
+								icon_name = "/img/devices/" + device + ".png";
+							}
+							var node = {
+								"id": device,
+								"parent": "#",
+								"icon": icon_name,
+								"text": device,
+								"data": null
+							};
+							if (!node_created.hasOwnProperty(device)) {
+
+								jsree_data.push(node);
+								node_created[device] = true;
+							}
+							//var desc = jchaos.getDesc(elem, null);
+							var node = {
+								"id": jchaos.encodeName(elem),
+								"parent": device,
+								"icon": icon_name,
+								"text": elem,
+								"data": desc[index]
+							};
 							jsree_data.push(node);
-							node_created[device] = true;
 						}
-						//var desc = jchaos.getDesc(elem, null);
-						var node = {
-							"id": jchaos.encodeName(elem),
-							"parent": device,
-							"icon": "",
-							"text": elem,
-							"data": null
-						};
-						jsree_data.push(node);
-					}
 
+					});
+					if (typeof handler === "function") {
+						handler(jsree_data);
+					}
 				});
-				if (typeof handler === "function") {
-					handler(jsree_data);
-				}
 			});
 		}
 

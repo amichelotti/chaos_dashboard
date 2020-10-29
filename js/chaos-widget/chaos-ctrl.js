@@ -235,6 +235,8 @@
         var html = '<div><div id="specific-table-ctrl"></div>';
         html += '<div id="specific-control-ctrl"></div></div>';
         newObj.template = "ctrl";
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         changeView(newObj, cutype, function (newObj) {
             var nintervals = 0;
             var orginal_list = [];
@@ -288,7 +290,8 @@
 
     function showJson(tmpObj, msg, cuname, json) {
         var name = jchaos.encodeName(cuname);
-
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var instant = $('<div id=desc-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -466,6 +469,8 @@
         var vardir = "";
         var last_dataset = {};
         var name = jchaos.encodeName(cuname);
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -672,6 +677,8 @@
         var last_dataset = {};
         var showformat=0;
         var name = jchaos.encodeName(msghead);
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -826,8 +833,8 @@
      * @param {function} nodeFn function that creates node, menu and handlers 
      */
     jqccs.createBrowserWindow=function(msgHead,opt,nodeFn){
-        var width=hostWidth / 2;
-        var height=hostHeight / 2;
+        var width=$(window).width() / 2;
+        var height=$(window).height() / 2;
         if(typeof opt === "function"){
             nodeFn=opt;
         } else if(opt !== undefined ){
@@ -882,7 +889,7 @@
             },
 
             open: function (e) {
-                console.log(msgHead + " opening browser :" + name);
+                console.log(msgHead + " opening browser :" + pid+ " "+width+"x"+height);
                 nodeFn( pid);
               
         
@@ -896,6 +903,8 @@
         var pid=(new Date()).getTime();
         
         var html = '<div id=console-' + pid + '></div>';
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var opt = {
             minWidth: hostWidth / 2,
             minHeight: hostHeight / 4,
@@ -1020,6 +1029,9 @@
       
         createCustomDialog(opt, html);
     }
+    jqccs.getConsole=function(msghead, pid, server, lines, consolen, refresh, type) {
+        return getConsole(msghead, pid, server, lines, consolen, refresh, type);
+    }
     function getConsole(msghead, pid, server, lines, consolen, refresh, type) {
         var update;
         var data;
@@ -1027,7 +1039,8 @@
         var html = '<div id=console-' + pid + '></div>';
 
         html += '<div class="row"><label class="col-md-4">Console buffering:</label><input class="col-md-4" id="buffer-update" type="text" title="Remote flush Update(bytes)" value=1 /></div>';
-
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var opt = {
             minWidth: hostWidth / 2,
             minHeight: hostHeight / 4,
@@ -1130,14 +1143,19 @@
                     if (!stop_update) {
 
                         jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function (r) {
-                            if (r.data.process.last_log_time != last_log_time) {
-                                //  var str = decodeURIComponent(escape(atob(r.data.console)));
-                                var str = atob(r.data.console);
-                                $('#console-' + pid).terminal().echo(str);
-                                consoleParam.fromline = Number(r.data.process.output_line) - 1;
-                            }
-                            last_log_time = r.data.process.last_log_time;
+                            if(r.data !== undefined){
+                                if (r.data.process.last_log_time != last_log_time) {
+                                    //  var str = decodeURIComponent(escape(atob(r.data.console)));
+                                    var str = atob(r.data.console);
+                                    $('#console-' + pid).terminal().echo(str);
+                                    consoleParam.fromline = Number(r.data.process.output_line) - 1;
+                                }
+                                last_log_time = r.data.process.last_log_time;
+                        } else {
+                            var str="["+(new Date()).toString()+"] Cannot retrieve process on "+server;
+                            $('#console-' + pid).terminal().error(str);
 
+                        }
                         }, function (bad) {
                             console.log("Some error getting console occur:" + JSON.stringify(bad));
                         });
@@ -1701,11 +1719,9 @@
         var html = "";
         html += '<table class="table table-bordered" id="graph_table-' + template + '">';
         html += '</table>';
-        html += '<div class="row" id="table-space">';
 
 
         html += '<div class="box col-md-12" id="container-main-table">';
-        html += '<div class="box-content col-md-12">';
         html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
 
         html += '<table class="table table-bordered" id="main_table-' + template + '">';
@@ -1737,12 +1753,6 @@
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box col-md-12 hide" id="container-table-helper">';
-        html += '<div class="box-content-helper col-md-12">';
-        html += '</div>';
-        html += '</div>';
-
-        html += '</div>';
         html += generateScriptAdminModal();
         return html;
 
@@ -2208,11 +2218,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 if (json_editor != null) {
                     delete json_editor;
                 }
-           // JSONEditor.defaults.options.theme = 'bootstrap2';
-             //  JSONEditor.defaults.options.iconlib = "bootstrap2";
-
-             JSONEditor.defaults.options.theme = 'bootstrap4';
-           //  JSONEditor.defaults.options.theme = 'jqueryui';
+            JSONEditor.defaults.options.theme = 'bootstrap4';
+            //JSONEditor.defaults.options.iconlib = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css";
+            JSONEditor.defaults.options.iconlib ='fontawesome3';
+           // JSONEditor.defaults.options.iconlib ='fundation3';
+             //JSONEditor.defaults.options.theme = 'bootstrap3';
+             //JSONEditor.defaults.options.theme = 'jqueryui';
                // JSONEditor.defaults.iconlib = 'bootstrap3';
                 json_editor = new JSONEditor(element.get(0), jopt);
                 if(typeof eventFn === "function"){
@@ -3932,17 +3943,17 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         var html = '<div class="row">';
 
         html += '<div class="statbox purple col-sm-2" >';
-        html += '<h3>Zones</h3>';
+        html += '<h3>Zone</h3>';
         html += '<select id="zones"></select>';
         html += '</div>';
 
         html += '<div class="statbox purple col-sm-2">';
-        html += '<h3>Group</h3>';
+        html += '<h3>Family</h3>';
         html += '<select id="elements"></select>';
         html += '</div>';
 
         html += '<div class="statbox purple col-sm-2">'
-        html += '<h3>Class</h3>';
+        html += '<h3>Interface</h3>';
         html += '<select id="classe"></select>';
         html += '</div>';
 
@@ -3967,7 +3978,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '<a href="#" class="chaositem next_page round">&#8250;</a>';
         html += '</div>';
 
-        html += '<div class="box container-fluid" id="specific-table-' + tempObj.template + '"></div>';
+        html += '<div class="container-fluid" id="specific-table-' + tempObj.template + '"></div>';
         html += '<div class="box container-fluid" id="specific-control-' + tempObj.template + '"></div>';
         return html;
     }
@@ -6351,12 +6362,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-        n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+     /*   n = $('#main_table-' + template + ' tr').size();
+        if (n > 22) { 
             $("#table-scroll").css('height', '280px');
         } else {
             $("#table-scroll").css('height', '');
-        }
+        }*/
         $.contextMenu('destroy', '.processMenu');
 
         $.contextMenu({

@@ -1,90 +1,98 @@
-<?php
-/**
- * Created by komodo.
- * User: eliana
- * Date: 30/06/17
- */
+		<div class="navbar">
+			<div class="navbar-inner w-100">
+				<div class="container-fluid-full">
+					<nav class="navbar navbar-expand-md navbar-dark bg-black">
 
-?>
 
-<div class="navbar">
-	<div class="navbar-inner">
-		<div class="container">
-			<!--  <a class="btn navbar-btn" data-toggle="collapse" data-target=".top-nav.nav-collapse,.sidebar-nav.navbar-collapse">
-		<span class="glyphicon glyphicon-bar"></span>
-		<span class="glyphicon glyphicon-bar"></span>
-		<span class="glyphicon glyphicon-bar"></span>
-	    </a>
-	    -->
-			<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-				<a class="navbar-brand" href="#"><span>!CHAOS
-						Dashboard</span><?php echo file_get_contents("target.html");echo file_get_contents("version.html");?></a>
-				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
-					aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
+						<div class="collapse navbar-collapse" id="navbarsExampleDefault">
+							<ul class="navbar-nav mr-auto">
+								<li class="nav-item dropdown">
+									<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
+										data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Chaos</a>
+									<div class="dropdown-menu" aria-labelledby="dropdown01">
+										<a class="dropdown-item" href="./index.php"><i class="halflings-icon home"></i>
+											CU/EU</a>
+										<a class="dropdown-item" href="./chaos_jshell.php"><i
+												class="halflings-icon edit"></i> Control Shell</a>
+										<a class="dropdown-item" href="./process.php"><i class="halflings-icon cog"></i>
+											Process
+											View</a>
+										<a class="dropdown-item" href="./chaos_node.php"><i
+												class="halflings-icon wrench"></i>
+											Node Management(Experimental)</a>
+										<a class="dropdown-item" href="./chaos_node_table.php"><i
+												class="halflings-icon pencil"></i> Node Management</a>
+										<a class="dropdown-item" href="./configuration.php"><i
+												class=" halflings-icon cloud"></i> Configuration</a>
+									</div>
+								</li>
+								<li class="nav-item dropdown">
+									<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
+										data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tools</a>
+									<div class="dropdown-menu" aria-labelledby="dropdown01">
+										<a class="dropdown-item" href="javascript:handle_script()"
+											id="hscript-management"><i class="halflings-icon cog"></i> Scripts</a>
+										<a class="dropdown-item" href="javascript:handle_graph()" id="hgraph"><i
+												class="halflings-icon stats-bar"></i> Graph</a>
+										<a class="dropdown-item" href="javascript:handle_snap()"
+											id="hsnap-management"><i class="halflings-icon tag"></i> Snapshot</a>
+										<a class="dropdown-item" href="javascript:handle_log()" id="hlog"><i
+												class="halflings-icon list"></i>Log</a>
 
-				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
-					<ul class="navbar-nav mr-auto">
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Chaos</a>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="./index.php"><i class="halflings-icon home"></i> CU/EU
-									View</a>
-								<a class="dropdown-item" href="./process.php"><i class="halflings-icon cog"></i> Process
-									View</a>
-								<a class="dropdown-item" href="./chaos_node.php"><i class="halflings-icon pencil"></i>
-									Node Management(Experimental)</a>
-								<a class="dropdown-item" href="./chaos_node_table.php"><i
-										class="halflings-icon pencil"></i> Node Management</a>
-								<a class="dropdown-item" href="./configuration.php"><i
-										class=" halflings-icon cloud"></i> Configuration</a>
-							</div>
-						</li>
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tools</a>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="javascript:handle_script()" id="hscript-management"><i
-										class="halflings-icon cog"></i> Scripts</a>
-								<a class="dropdown-item" href="javascript:handle_graph()" id="hgraph"><i class="halflings-icon stats-bar"></i> Graph</a>
-								<a class="dropdown-item" href="javascript:handle_snap()" id="hsnap-management"><i
-										class="halflings-icon tag"></i> Snapshot</a>
-								<a class="dropdown-item" href="javascript:handle_log()" id="hlog"><i
-										class="halflings-icon list"></i>Log</a>
+									</div>
+								</li>
+								<li class="nav-item dropdown">
+									<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
+										data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</a>
+									<div class="dropdown-menu" aria-labelledby="dropdown01">
+										<a class="dropdown-item" href="login.html"><i class="halflings-icon off"></i>
+											Login</a>
+										<a class="dropdown-item" id="config-settings"><i class="halflings-icon off"></i>
+											Config..</a>
+										<a class="dropdown-item" id="help-clients"><i class="halflings-icon off"></i>
+											Client
+											List..</a>
+										<a class="dropdown-item" id="help-about"><i class="halflings-icon off"></i>
+											About..</a>
 
-							</div>
-						</li>
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</a>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="login.html"><i class="halflings-icon off"></i> Login</a>
-								<a class="dropdown-item" id="config-settings"><i class="halflings-icon off"></i>
-									Config..</a>
-								<a class="dropdown-item" id="help-clients"><i class="halflings-icon off"></i> Client
-									List..</a>
-								<a class="dropdown-item" id="help-about"><i class="halflings-icon off"></i> About..</a>
-
-							</div>
-						</li>
-					</ul>
-					<form class="form-inline my-2 my-lg-0">
+									</div>
+								</li>
+							</ul>
+							<!-- <form class="form-inline my-2 my-lg-0">
 						<input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
 						<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-					</form>
+					</form> -->
+						</div>
+						<a class="navbar-brand col-sm" href="#">
+							<div class="row">
+								<h2 class="display2 col-sm">!CHAOS
+									Dashboard</h2>
+								<div class="col-sm">
+									<?php echo file_get_contents("target.html");echo file_get_contents("version.html");?>
+								</div>
+							</div>
+						</a>
+
+					</nav>
+
+					<!-- start: Header Menu -->
+
+
 				</div>
-			</nav>
-
-			<!-- start: Header Menu -->
-
+			</div>
+		</div>
+		<div class="btn-group btn-breadcrumb">
+			<a href="./index.php" class="btn btn-default"><i class="glyphicon glyphicon-home"></i></a>
+			<a href="./index.php" id="CUEU" class="btn btn-default">CU/EU</a>
+			<a href="./chaos_jshell.php" id="SHELL" class="btn btn-default">Control Shell</a>
+			<a href="./process.php" id="PROCESS" class="btn btn-default">Process</a>
+			<a href="./chaos_node.php" id="NODE" class="btn btn-default">Node Management</a>
+			<a href="./configuration.php" id="CONFIG" class="btn btn-default">Configuration</a>
 
 		</div>
-	</div>
 </div>
 <script>
-
+	$( <?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
 	function addMenuScriptItems(pid, node) {
 		var items = {};
 		var tree = $('#hier-' + pid).jstree(true);
@@ -201,11 +209,53 @@
 					items['run-cppeu'] = {
 						"separator_before": false,
 						"separator_after": false,
-						label: "Run Root/C++ EU",
+						label: "Create Root/C++ EU",
 						action: function () {
+							$.get('eu_write_mask.json', function (templ) {
+								jchaos.findBestServer(function (server, best_agent, ordered_list) {
+									if (ordered_list.length == 0) {
+										alert("cannot find an available server to run");
+										return;
+									}
+									var eu = node.data;
+									var glist = [];
+									if (eu['script_group'] !== undefined) {
+										glist.push(jchaos.encodeName(eu['script_group']));
+									}
+									var regexp = /(\w+)\./;
+									var match = regexp.exec(eu['script_name']);
+									if ((match != null) && (match.length > 0)) {
+										var str = match[1];
+										glist.push(str.toUpperCase());
+									}
 
+									templ['properties']['ndk_parent'].enum = ordered_list;
+
+									templ['properties']['group'].enum = glist;
+									var obj = {};
+									if (eu['script_description'] !== undefined) {
+										obj['cudk_desc'] = eu['script_description'];
+									}
+									obj['ndk_type'] = "nt_root";
+									obj['dsndk_storage_type'] = ["Live"];
+									if (eu['default_argument'] !== undefined) {
+										obj['cudk_load_param'] = eu['default_argument'];
+
+									}
+									obj['control_unit_implementation'] = eu['script_name'];
+									jqccs.jsonEditWindow("EU Editor", templ, obj, jchaos.cuSave, null, (ok) => {
+										jqccs.instantMessage("Created ", "OK", 2000, true);
+
+									}, (bad) => {
+										alert(" Cannot create node err:" + JSON.stringify(bad));
+									});
+
+								});
+
+
+							});
 						}
-					};
+					}
 				}
 
 				items['edit-script'] = {
@@ -622,7 +672,7 @@
 		var items = {};
 		var tree = $('#hier-' + pid).jstree(true);
 		var ID = $(node).attr('id');
-		
+
 		if (node.hasOwnProperty("data")) {
 		}
 		return items;
@@ -637,10 +687,10 @@
 			jchaos.log("", "search", "all", 0, 10000000000000, function (data) {
 				if (data.hasOwnProperty("result_list")) {
 					data.result_list.forEach(function (item) {
-						
-						var dat = new Date(item.mdsndk_nl_lts).toLocaleString('it-IT',{  year: 'numeric', month: 'numeric', day: 'numeric',hour:'numeric',minute:'numeric',second:'numeric' });
 
-						item.mdsndk_nl_lts=new Date(item.mdsndk_nl_lts).toLocaleString('it-IT');
+						var dat = new Date(item.mdsndk_nl_lts).toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+
+						item.mdsndk_nl_lts = new Date(item.mdsndk_nl_lts).toLocaleString('it-IT');
 						var name = item.mdsndk_nl_sid;
 						var msg = item.mdsndk_nl_e_em;
 						var type = item.mdsndk_nl_ld;
@@ -651,11 +701,11 @@
 							"parent": "#",
 							"text": type,
 						};
-						var icon="";
-						if(type=="error"){
-							icon="/img/log-error.png";
+						var icon = "";
+						if (type == "error") {
+							icon = "/img/log-error.png";
 						} else {
-							icon="/img/log-file.png";
+							icon = "/img/log-file.png";
 
 						}
 						if (!node_created.hasOwnProperty(type)) {
@@ -688,13 +738,13 @@
 								node_created[group] = true;
 								jsree_data.push(node_group);
 							}
-							
+
 						});
 						var node = {
 							"id": nodef,
 							"parent": jchaos.encodeName(group),
 							"text": dat,
-							"icon":icon,
+							"icon": icon,
 							"data": item
 						};
 						node['data']['group'] = group;
@@ -732,7 +782,7 @@
 					jqccs.jsonSetup($('#desc-' + pid), function (e) {
 					});
 					$('#desc-' + pid).find('a.json-toggle').click();
-				
+
 
 				});
 				$("body").removeClass("loading");
@@ -745,7 +795,7 @@
 		var items = {};
 		var tree = $('#hier-' + pid).jstree(true);
 		var ID = $(node).attr('id');
-		
+
 		if (node.hasOwnProperty("data")) {
 		}
 		return items;
@@ -757,76 +807,76 @@
 		jqccs.createBrowserWindow("Log browser", (pid) => {
 			var jsree_data = [];
 			var node_created = {};
-			jchaos.variable("highcharts", "get", (high_graphs)=>{
+			jchaos.variable("highcharts", "get", (high_graphs) => {
 
-					for(var g in high_graphs){
-						
-						var dat = new Date(high_graphs[g].time).toLocaleString('it-IT',{  year: 'numeric', month: 'numeric', day: 'numeric',hour:'numeric',minute:'numeric',second:'numeric' });
+				for (var g in high_graphs) {
 
-						var name = g;
-						var type = high_graphs[g].highchart_opt.chart.type;
-						var nodef = jchaos.encodeName(name) + "_" + high_graphs[g].time;
+					var dat = new Date(high_graphs[g].time).toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
 
-						var dirs = name.split("/");
-						var group = "";
-						dirs.forEach((ele, index) => {
-							var node_group;
-							if (index == 0) {
-								group = ele;
-								node_group = {
-									"id": jchaos.encodeName(group),
-									"parent": "#",
-									"text": ele,
-								};
-							} else {
-								var parent = group;
-								group = group + "/" + ele;
-								node_group = {
-									"id": jchaos.encodeName(group),
-									"parent": jchaos.encodeName(parent),
-									"text": ele
-								};
-							}
-							node_group['data'] = { "group": group }
+					var name = g;
+					var type = high_graphs[g].highchart_opt.chart.type;
+					var nodef = jchaos.encodeName(name) + "_" + high_graphs[g].time;
 
-							if (!node_created.hasOwnProperty(group)) {
-								node_created[group] = true;
-								jsree_data.push(node_group);
-							}
-							
-						});
-						var idgroup=jchaos.encodeName(name)+"_"+type;
-						var node_group = {
-							"id": idgroup,
-							"parent": jchaos.encodeName(group),
-							"text": type,
-						};
-						var icon="/img/sine-wave.png";
-						/*if(type=="error"){
-							icon="/img/log-error.png";
+					var dirs = name.split("/");
+					var group = "";
+					dirs.forEach((ele, index) => {
+						var node_group;
+						if (index == 0) {
+							group = ele;
+							node_group = {
+								"id": jchaos.encodeName(group),
+								"parent": "#",
+								"text": ele,
+							};
 						} else {
-							icon="/img/log-file.png";
+							var parent = group;
+							group = group + "/" + ele;
+							node_group = {
+								"id": jchaos.encodeName(group),
+								"parent": jchaos.encodeName(parent),
+								"text": ele
+							};
+						}
+						node_group['data'] = { "group": group }
 
-						}*/
-						if (!node_created.hasOwnProperty(idgroup)) {
+						if (!node_created.hasOwnProperty(group)) {
+							node_created[group] = true;
 							jsree_data.push(node_group);
-							node_created[idgroup] = true;
 						}
-						
-						var node = {
-							"id": nodef,
-							"parent": jchaos.encodeName(idgroup),
-							"text": dat,
-							"icon":icon,
-							"data": high_graphs[g]
-						};
-						node['data']['group'] = group;
-						if (!node_created.hasOwnProperty(nodef)) {
-							node_created[nodef] = true;
-							jsree_data.push(node);
-						}
+
+					});
+					var idgroup = jchaos.encodeName(name) + "_" + type;
+					var node_group = {
+						"id": idgroup,
+						"parent": jchaos.encodeName(group),
+						"text": type,
+					};
+					var icon = "/img/sine-wave.png";
+					/*if(type=="error"){
+						icon="/img/log-error.png";
+					} else {
+						icon="/img/log-file.png";
+
+					}*/
+					if (!node_created.hasOwnProperty(idgroup)) {
+						jsree_data.push(node_group);
+						node_created[idgroup] = true;
 					}
-				
+
+					var node = {
+						"id": nodef,
+						"parent": jchaos.encodeName(idgroup),
+						"text": dat,
+						"icon": icon,
+						"data": high_graphs[g]
+					};
+					node['data']['group'] = group;
+					if (!node_created.hasOwnProperty(nodef)) {
+						node_created[nodef] = true;
+						jsree_data.push(node);
+					}
+				}
+
 
 
 				$("#hier-" + pid).jstree("destroy");

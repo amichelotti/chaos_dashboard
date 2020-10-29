@@ -3,7 +3,7 @@
 <?php
 require_once('head.php');
 
-$curr_page = "Home";
+$curr_page = "CONFIG";
 
 ?>
 <body>
@@ -13,19 +13,7 @@ require_once('header.php');
 ?>
 
 	<div class="container-fluid-full fill">
-		<div class="row-fluid ">
 	
-			
-			<!-- start: Content -->
-			<div id="chaos_content" class="span10 fill">
-			
-				<ul class="breadcrumb">
-					<li>
-						<i class="icon-home"></i>
-						<a href="<?php echo $index; ?>"><?php echo $curr_page; ?></a> 
-						<i class="icon-angle-right"></i>
-					</li>
-				</ul>
 			
     	<div class="row-fluid fill">
 
