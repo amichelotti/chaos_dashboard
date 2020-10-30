@@ -83,7 +83,7 @@ function getWidget() {
           var cnt = 0;
           var tablename = "main_table-" + tmpObj.template;
 
-          var html = '<table class="table table-bordered" id="' + tablename + '">';
+          var html = '<table class="table table-striped" id="' + tablename + '">';
           var camlist = tmpObj.node_multi_selected;
           if (camlist instanceof Array) {
   
@@ -343,7 +343,7 @@ function getWidget() {
     
         }
     
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name CU</th>';

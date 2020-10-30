@@ -288,8 +288,8 @@
         });
     }
 
-    function showJson(tmpObj, msg, cuname, json) {
-        var name = jchaos.encodeName(cuname);
+    function showJson(msg, json ,tmpObj) {
+        var name = jchaos.encodeName(msg);
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
         var instant = $('<div id=desc-' + name + '></div>').dialog({
@@ -318,10 +318,10 @@
                 $(this).remove();
             },
             open: function () {
-                console.log(cuname + " description");
+                console.log(msg + " description");
                 //   $("#desc-"+name).width(hostWidth/4);
                 //  $("#desc-"+name).height(hostHeight/4);
-                var jsonhtml = json2html(json, options, cuname);
+                var jsonhtml = json2html(json, options, null);
                 if (jchaos.isCollapsable(json)) {
                     jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                 }
@@ -1558,8 +1558,7 @@
      */
 
 
-
-
+   
     function show_dev_alarm(id) {
         var dataset = node_live_selected[node_name_to_index[jchaos.encodeName(id)]];
         if ((dataset != null) && (dataset.hasOwnProperty("device_alarms"))) {
@@ -1575,8 +1574,9 @@
     }
 
     function decodeDeviceAlarm(dev_alarm) {
-        $("#name-device-alarm").html(dev_alarm.ndk_uid);
-        $("#table_device_alarm").html(jqccs.generateAlarmTable(dev_alarm));
+        showJson("Alarm "+dev_alarm.ndk_uid,jchaos.filterAlarmObject(dev_alarm));
+        //$("#name-device-alarm").html(dev_alarm.ndk_uid);
+        //$("#table_device_alarm").html(jqccs.generateAlarmTable(dev_alarm));
     }
     /**
      * Check if a string represents a valid url
@@ -1654,7 +1654,7 @@
         html += '<div class="box col-md-12" id="container-main-table">';
         html += '<div class="box-content col-md-12">';
 
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         if (interface == "algo-instance") {
             html += '<tr class="algoInstanceMenu">';
@@ -1717,14 +1717,14 @@
         var cu = tmpObj.elems;
         var template = tmpObj.type;
         var html = "";
-        html += '<table class="table table-bordered" id="graph_table-' + template + '">';
+        html += '<table class="table table-striped" id="graph_table-' + template + '">';
         html += '</table>';
 
 
         html += '<div class="box col-md-12" id="container-main-table">';
         html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
 
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header processMenu">';
         html += '<tr class="processMenu">';
         html += '<th>Instance</th>';
@@ -1766,7 +1766,7 @@
         html += '<div class="box col-md-12" id="container-main-table">';
         html += '<div class="box-content col-md-12">';
 
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr class="nodeMenu">';
         html += '<th>Node</th>';
@@ -2390,7 +2390,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             if (snap_selected != "") {
                 jchaos.snapshot(snap_selected, "load", null, "", function (dataset) {
-                    showJson(null, "Snapshot " + snap_selected, snap_selected, dataset);
+                    showJson("Snapshot " + snap_selected, dataset);
                 });
             }
         });
@@ -2813,9 +2813,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
         });
         $(main_dom).on("click", "#table_graph_items tbody tr", function (e) {
-            $(".row_element").removeClass("row_snap_selected");
+            $(".row_element").removeClass("bg-warning");
             var tname = $(this).attr("tracename");
-            $(this).addClass("row_snap_selected");
+            $(this).addClass("bg-warning");
             $("#trace-name").val(tname);
             var tlist = getElementByName(tname, trace_list);
             $("#xvar").val(encodeCUPath(tlist.x));
@@ -3762,7 +3762,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             jchaos.getDesc(currsel, function (data) {
                 tmpObj.node_name_to_desc[currsel] = data[0];
 
-                showJson(tmpObj, "Description " + currsel, currsel, data[0]);
+                showJson("Description " + currsel, data[0]);
             });
 
         } else if (cmd == "show-tags") {
@@ -3777,7 +3777,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     });
                 }
                 if (names.length) {
-                    showJson(null, "Tags of " + currsel, currsel, names);
+                    showJson("Tags of " + currsel, names);
                 } else {
                     alert("No tag associated to " + currsel);
                 }
@@ -4653,7 +4653,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
                 jchaos.node(node_selected,"desc",typ,function(data){
 
-                    showJson(null, "Description " + node_selected, node_selected, data);
+                    showJson("Description " + node_selected, data);
             });
 
             } else if (cmd=="delete-histo-data") {
@@ -7100,7 +7100,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         var node_list = tmpObj['elems'];
         $("#mdl-commands").modal("hide");
         if (tmpObj.node_selected == $(e.currentTarget).attr(tmpObj.type + "-name")) {
-            $(".row_element").removeClass("row_snap_selected");
+            $(".row_element").removeClass("bg-warning");
             tmpObj.node_multi_selected = [];
             tmpObj.node_selected = null;
             tmpObj.last_index_selected = -1;
@@ -7112,7 +7112,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         var name = jchaos.encodeName(tmpObj.node_selected);
 
         if (!e.ctrlKey) {
-            $(".row_element").removeClass("row_snap_selected");
+            $(".row_element").removeClass("bg-warning");
             tmpObj.node_multi_selected = [];
             tmpObj.node_multi_selected.push(tmpObj.node_selected);
         } else {
@@ -7121,7 +7121,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             }
 
         }
-        $(e.currentTarget).addClass("row_snap_selected");
+        $(e.currentTarget).addClass("bg-warning");
 
         if (e.shiftKey) {
             var nrows = $(e.currentTarget).index();
@@ -7129,8 +7129,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 tmpObj.node_multi_selected = [];
                 //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
                 if (nrows > tmpObj.last_index_selected) {
-                    //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
-                    $("#" + id + " tr").slice(tmpObj.last_index_selected + 1, nrows + 1).addClass("row_snap_selected");
+                    //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("bg-warning");
+                    $("#" + id + " tr").slice(tmpObj.last_index_selected + 1, nrows + 1).addClass("bg-warning");
                     for (var cnt = tmpObj.last_index_selected; cnt <= nrows; cnt++) {
                         tmpObj.node_multi_selected.push(node_list[cnt]);
 
@@ -7166,7 +7166,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
         }
 
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name CU</th>';
@@ -7322,20 +7322,20 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
 
                     if (status == 'Start') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">play_arrow</i>');
                     } else if (status == 'Stop') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:orange">stop</i>');
                     } else if (status == 'Calibrating') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons verde">assessment</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">assessment</i>');
                     } else if (status == 'Init') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons giallo">trending_up</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:yellow">trending_up</i>');
 
                     } else if (status == 'Deinit') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons rosso">trending_down</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">trending_down</i>');
 
                     } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
-                        //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
-                        $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
+                        //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons" style="color:red">error</i></a>');
+                        $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons" style="color:red">cancel</i></a>');
                         $("#Error-" + name_id).off('click');
                         $("#Error-" + name_id).on("click", function () {
                             $("#name-FE-device").html(el.health.ndk_uid);
@@ -7345,11 +7345,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                             $("#error_domain").html(el.health.nh_led);
                         });
                     } else if (status == "Unload") {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons rosso">power</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">power</i>');
 
 
                     } else if (status == "Load") {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons verde">power</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons verde" style="color:green">power</i>');
 
                     } else if (tmpObj.off_line[name_device_db] == 2) {
                         $("#" + name_id + "_health_status").html('<i class="material-icons">update</i>');
@@ -7365,10 +7365,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     var cu_alarm = Number(el.system.cudk_calrm_lvl);
                     if (dev_alarm == 1) {
                         $("#" + name_id + "_system_device_alarm").attr('title', "Device Warning");
-                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
+                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
                     } else if (dev_alarm == 2) {
                         $("#" + name_id + "_system_device_alarm").attr('title', "Device Error");
-                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
+                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
                     } else {
                         $("#" + name_id + "_system_device_alarm").html('');
                     }
@@ -7376,11 +7376,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     if (cu_alarm == 1) {
                         $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
 
-                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
+                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" ><i class="material-icons" style="color:yellow">error_outline</i></a>');
                     } else if (cu_alarm == 2) {
                         $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
 
-                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
+                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button"><i  class="material-icons" style="color:red">error_outline</i></a>');
                     } else {
                         $("#" + name_id + "_system_cu_alarm").html('');
                     }
@@ -7418,10 +7418,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     if (status == 'Start') {
                         if (updateGenericTableDataset.count & 1) {
                             if (el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
-                                $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
+                                $("#" + name_id + "_health_status").html('<i class="material-icons verde" style="color:green">videocam</i>');
                                 $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
                             } else if (el.system.hasOwnProperty("dsndk_storage_type") && (el.system.dsndk_storage_type & 0x1)) {
-                                $("#" + name_id + "_health_status").html('<i class="material-icons verde">save</i>');
+                                $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">save</i>');
                             }
                         }
                     }
@@ -7431,20 +7431,20 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     if (busy == 'true') {
                         $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:" + el.system.running_cmd_alias);
                         if (updateGenericTableDataset.count & 1) {
-                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
+                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons" style="color:green">hourglass_empty</i>');
                         } else {
-                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
+                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons" style="color:green">hourglass_full</i>');
                         }
                     } else {
                         $("#" + name_id + "_system_busy").html('');
                     }
                     if (el.system.hasOwnProperty("dp_sys_unit_type") && (el.system.dp_sys_unit_type == "nt_script_eu")) {
                         $("#" + name_id + "_system_bypass").attr('title', "Script EU")
-                        $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">settings</i>');
+                        $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">settings</i>');
                     } else {
                         if (el.system.hasOwnProperty("cudk_bypass_state")) {
                             if (el.system.cudk_bypass_state == false) {
-                                $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
+                                $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">usb</i>');
                                 $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
 
                             } else {
@@ -7454,7 +7454,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                             }
                         } else if (!el.system.hasOwnProperty("dp_sys_unit_type") || (el.system.dp_sys_unit_type != "nt_rt_cu")) {
                             $("#" + name_id + "_system_bypass").attr('title', "Rest CU")
-                            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">http</i>');
+                            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">http</i>');
                         }
                     }
                 }
@@ -7560,7 +7560,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
-        html += '<table class="table table-bordered" id="table_graph">';
+        html += '<table class="table table-striped" id="table_graph">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name</th>';
@@ -7571,7 +7571,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '</thead>';
         html += '</table>';
 
-        html += '<table class="table table-bordered" id="table_trace">';
+        html += '<table class="table table-striped" id="table_trace">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name</th>';
@@ -7776,7 +7776,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
         html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="table_graph_items">';
+        html += '<table class="table table-striped" id="table_graph_items">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Trace Name</th>';
@@ -8956,7 +8956,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
-        html += '<table class="table table-bordered" id="table_script">';
+        html += '<table class="table table-striped" id="table_script">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name</th>';
@@ -9000,7 +9000,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
-        html += '<table class="table table-bordered" id="table_snap_nodes">';
+        html += '<table class="table table-striped" id="table_snap_nodes">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Element</th>';
@@ -9009,7 +9009,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '</thead>';
         html += '</table>';
 
-        html += '<table class="table table-bordered" id="table_snap">';
+        html += '<table class="table table-striped" id="table_snap">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Date</th>';
@@ -9136,7 +9136,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
-        html += '<table class="table table-bordered table-fixed" id="table_logs">';
+        html += '<table class="table table-striped table-fixed" id="table_logs">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Date</th>';
@@ -9196,7 +9196,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<table class="table table-bordered" id="commands_argument_table">';
+        html += '<table class="table table-striped" id="commands_argument_table">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Argument Name</th>';
@@ -9303,7 +9303,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '<div class="row">';
         html += '<div class="box col-md-12 red">';
         html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="table_device_alarm">';
+        html += '<table class="table table-striped" id="table_device_alarm">';
         html += '<thead class="box-header red">';
         html += '<tr>';
         html += '<th>Description</th>';
@@ -9702,11 +9702,15 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += "<div class='row' >";
        
         html += "<div class='col-sm'>";
-        html += "<p class='lead'>Set scheduling(us)</p>";
-        html += "<input type='text' class='setSchedule'>";
-        html += "</div>";
+        html += '<p class="row lead">Scheduling(us)</p>';
 
-        html += '<div class="col-sm">';
+        html += "<div class='row'>";
+        html += "<p class='col-sm' id='actual_scheduling'></p>";
+        html += "<input type='text' class='setSchedule col-sm'>";
+
+        html += "</div></div>";
+
+        html += '<div class="col-sm offset-md-1">';
         html += '<p class="row lead">Live</p>';
         html += '<div class="row"><label for="live-enable">enable</label><input class="input-xlarge" id="live-true" title="Enable Live" name="live-enable" type="radio" value="true"></div>';
         html += '<div class="row"><label for="live-enable">disable</label><input class="input-xlarge" id="live-false" title="Disable Live" name="live-enable" type="radio" value="false"></div>';
@@ -9744,7 +9748,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         // html += "<div class='col-md-3'>";
         // html += "</div>";
         //second col/row
-        html += "<div class='col-sm box'>";
+        html += "<div class='col-sm box offset-md-1'>";
 
         html += "<p class='row lead justify-content-center'>Commands</p>";
         html += "<div class='row' >";
@@ -10327,7 +10331,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             }
         }
         if (cu.hasOwnProperty('system') /*&& (tmpObj.off_line[encoden] == 0)*/) { //if el system
-            $("#scheduling_title").html("Actual scheduling (us):" + cu.system.cudk_thr_sch_delay);
+            $("#actual_scheduling").html(cu.system.cudk_thr_sch_delay);
 
             if (cu.system.cudk_bypass_state == false) {
                 $("#cmd-bypass-on-off").html("<i class='material-icons verde'>cached</i><p class='name-cmd'>Bypass</p>");
@@ -10392,10 +10396,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
             });
             $("#table_snap tbody tr").click(function (e) {
-                $(".row_element").removeClass("row_snap_selected");
+                $(".row_element").removeClass("bg-warning");
                 $("#table_snap_nodes").find("tr:gt(0)").remove();
 
-                $(this).addClass("row_snap_selected");
+                $(this).addClass("bg-warning");
                 snap_selected = $(this).attr("id");
                 var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
                 dataset.forEach(function (elem) {
@@ -10483,10 +10487,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         }
 
         $("#table_graph tbody tr").click(function (e) {
-            $(".row_element").removeClass("row_snap_selected");
+            $(".row_element").removeClass("bg-warning");
             $("#table_trace").find("tr:gt(0)").remove();
 
-            $(this).addClass("row_snap_selected");
+            $(this).addClass("bg-warning");
             graph_selected = $(this).attr("id");
             var html = 'Graph Selected:<a href=/chaos_graph.php?' + graph_selected + '={\"width\":' + high_graphs[graph_selected].width + ',\"height\":' + high_graphs[graph_selected].height + '} target="_blank"><strong>' + graph_selected + '</strong></a>';
             //$(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
@@ -10511,8 +10515,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             }
             /*$("#table_trace tbody tr").click(function (e) {
-              $(".row_element").removeClass("row_snap_selected");
-              $(this).addClass("row_snap_selected");
+              $(".row_element").removeClass("bg-warning");
+              $(this).addClass("bg-warning");
               trace_selected = $(this).attr("id");
             });*/
         });
@@ -10647,23 +10651,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
     jqccs.generateScraperTable = function (tmpObj) {
         return generateScraperTable(tmpObj);
     }
-    jqccs.generateAlarmTable = function (dev_alarm) {
-        var html = "";
-        for (var key in dev_alarm) {
-            var value = dev_alarm[key];
-            if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dsndk_storage_type" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
-                if (value > 0) {
-                    if (value > 2) {
-                        value = 2;
-                    }
-                    html += '<tr class="errorItem-' + value + '"><td>' + key + '</td></tr>';
-                }
-
-            }
-        }
-
-        return html;
-    }
+    
 
     function initSettings() {
         var sett = localStorage['chaos_dashboard_settings'];
@@ -10757,7 +10745,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             $("#help-about").on("click", function () {
                 jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
                     //alert("version:"+JSON.stringify(ver));
-                    showJson(null, "VERSION", "version", ver);
+                    showJson("VERSION", ver);
                 }, function () {
                     alert("Cannot retrive version");
                 });
@@ -10771,7 +10759,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                         ver[i]['updated'] = (new Date(Number(tt))).toLocaleString();
                     });
 
-                    showJson(null, "CLIENTS", "Clients", ver);
+                    showJson("CLIENTS", ver);
                 }, function () {
                     alert("Cannot retrive Client List");
                 });

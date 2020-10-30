@@ -6,9 +6,9 @@ function getWidget() {
           polarity:function(pol){
               switch (pol) {
                 case 1:
-                  return '<i class="material-icons rosso">add_circle</i>';
+                  return '<i class="material-icons" style="color:red">add_circle</i>';
                 case -1:
-                  return '<i class="material-icons blu">remove_circle</i>';
+                  return '<i class="material-icons" style="color:blue">remove_circle</i>';
                 case 0:
                   return '<i class="material-icons">radio_button_unchecked</i>';
                   break;
@@ -18,14 +18,14 @@ function getWidget() {
             },
             stby:function(val){
               if(val==false){
-                return '<i class="material-icons verde">trending_down</i>';
+                return '<i class="material-icons" style="color:green">trending_down</i>';
               } else {
-                return '<i class="material-icons rosso">pause_circle_outline</i>';
+                return '<i class="material-icons" style="color:red">pause_circle_outline</i>';
               }
             },
             local:function(val){
             if (val == true) {
-              return '<i class="material-icons rosso">vpn_key</i>';
+              return '<i class="material-icons" style="color:red">vpn_key</i>';
             } else {
               return '';
             }
@@ -43,7 +43,7 @@ function getWidget() {
         var html = '<div class="row">';
         html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Element</th>';
@@ -90,15 +90,15 @@ function getWidget() {
         html += '<div class="box-content">';
         html += '<div class="row">';
         html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSbuttON" cucmdid="mode" title="Powersupply Operational" cucmdvalue=1>';
-        html += '<i class="material-icons verde">trending_down</i>';
+        html += '<i class="material-icons" style="color:green">trending_down</i>';
         html += '<p class="name-cmd">On</p>';
         html += '</a>';
         html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSbuttOFF" cucmdid="mode" title="Powersupply STBY" cucmdvalue=0>';
-        html += '<i class="material-icons rosso">pause_circle_outline</i>';
+        html += '<i class="material-icons" style="color:red">pause_circle_outline</i>';
         html += '<p class="name-cmd">Standby</p>';
         html += '</a>';
         html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSreset_alarm" title="Reset Powersupply Alarms" cucmdid="rset">';
-        html += '<i class="material-icons rosso">error</i>';
+        html += '<i class="material-icons" style="color:red">error</i>';
         html += '<p class="name-cmd">Reset</p>';
         html += '</a>';
         html += '<div class="col-md-3 box-cmd col-md-offset-1" id="input-value-mag">';
@@ -111,7 +111,7 @@ function getWidget() {
         html += '</div>';
         html += '<div class="row">';
         html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola" title="Powersupply Polarity POS" cucmdvalue=1 >';
-        html += '<i class="material-icons rosso">add_circle</i>';
+        html += '<i class="material-icons" style="color:red">add_circle</i>';
         html += '<p class="name-cmd">Pos</p>';
         html += '</a>';
         html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity OPEN" cucmdvalue=0 >';
@@ -119,7 +119,7 @@ function getWidget() {
         html += '<p class="name-cmd">Open</p>';
         html += '</a>';
         html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity NEGATIVE" cucmdvalue=-1 >';
-        html += '<i class="material-icons blu">remove_circle</i>';
+        html += '<i class="material-icons" style="color:blue">remove_circle</i>';
         html += '<p class="name-cmd">Neg</p>';
         html += '</a>';
         html += '</div>';
