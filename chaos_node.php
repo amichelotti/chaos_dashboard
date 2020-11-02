@@ -885,6 +885,9 @@ require_once('header.php');
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
 				}
+				if ((culist.length==0)&&(typeof handler === "function")) {
+					handler(jsree_data);
+				}
 				jchaos.node(culist, "desc", "all", (desc) => {
 					culist.forEach((elem, index) => {
 						var regex = /(.*)\/(.*)\/(.*)$/;
@@ -994,8 +997,16 @@ require_once('header.php');
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
-				});
+				},()=>{
+					if (typeof handler === "function") {
+				handler(jsree_data);
+					}
+			});
 
+			},()=>{
+				if (typeof handler === "function") {
+				handler(jsree_data);
+				}
 			});
 
 
@@ -1007,6 +1018,9 @@ require_once('header.php');
 				var roots = jchaos.search(filter, "root", alive);
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
+				}
+				if ((culist.length==0)&&(typeof handler === "function")) {
+					handler(jsree_data);
 				}
 				culist.forEach((elem) => {
 					//	var desc = jchaos.getDesc(elem, null);
@@ -1087,6 +1101,9 @@ require_once('header.php');
 				var roots = jchaos.search(filter, "root", alive);
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
+				}
+				if ((culist.length==0)&&(typeof handler === "function")) {
+					handler(jsree_data);
 				}
 				jchaos.node(culist, "desc", "all", (desc) => {
 
