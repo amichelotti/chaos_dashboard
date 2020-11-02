@@ -176,7 +176,7 @@ require_once('header.php');
 
 
 							}
-							if ((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined)) {
+							if ((impl!="")&&(cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined)) {
 								var dlist = cudb[impl].drivers;
 								// drivers for the implementation
 								for (d in dlist) {
@@ -280,7 +280,7 @@ require_once('header.php');
 			var tree = $('#hier_view').jstree(true);
 			var ID = $(node).attr('id');
 			if (node.hasOwnProperty("data")) {
-				if (node.data.hasOwnProperty('zone')) {
+				if (node.data.hasOwnProperty('zone') || (node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type=="nt_unit_server"))) {
 					items['new-cu'] = {
 						"separator_before": false,
 						"separator_after": false,
@@ -289,6 +289,9 @@ require_once('header.php');
 							var cu = {};
 							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
 							cu['id'] = "<MY ID>";
+							if((node.data.ndk_type=="nt_unit_server")){
+								cu['ndk_parent']=node.data.ndk_uid;
+							}
 							cu2editor(cu, (edit_templ, editobj, cudb) => {
 
 								jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
@@ -335,10 +338,20 @@ require_once('header.php');
 							label: "Paste",
 							action: function () {
 
-								var cu = cu_copied;
+								var cu = Object.assign({},cu_copied);
 								var decoded = jchaos.pathToZoneGroupId(cu.ndk_uid);
+								var zone;
+								if((node.data.ndk_type=="nt_unit_server")){
+									cu['ndk_parent']=node.data.ndk_uid;
+								}
+								if(node.data.zone!== undefined){
+									zone = node.data.zone;
+								} else {
+									zone=decoded['zone'];
+								}
+
 								if (decoded) {
-									cu["ndk_uid"] = node.data["zone"] + "/" + decoded["group"] + "/NewName" + (new Date()).getTime();
+									cu["ndk_uid"] = zone + "/" + decoded["group"] + "/" + decoded['id']+ (new Date()).getTime();
 
 									cu2editor(cu, (edit_templ, editobj) => {
 
@@ -474,6 +487,37 @@ require_once('header.php');
 										);
 
 									}
+								});
+							}
+						};
+						items['new-us'] = {
+							"separator_before": true,
+							"separator_after": false,
+							label: "New US",
+							action: function () {
+								var templ = {
+                    				$ref: "us.json",
+                    				format: "tabs"
+                				}
+								jqccs.jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, null, function (ok) {
+									jchaos.agentAssociateNode(selected_node,ok['ndk_uid'],"","UnitServer",okk=>{
+										jqccs.instantMessage("Unit server save ", " OK", 2000, true);
+										var newnode = {
+											"id": jchaos.encodeName(ok.ndk_uid),
+											"parent": ID,
+											"icon": "/img/devices/nt_unit_server.png",
+											"text": ok.ndk_uid,
+											"data": ok
+										};
+										tree.create_node(node, newnode);
+
+									},(badd)=>{
+										jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
+
+									}), function (bad) {
+										jqccs.instantMessage("Unit creation server failed:", JSON.stringify(bad), 4000, false);
+									}
+
 								});
 							}
 						};
@@ -879,8 +923,95 @@ require_once('header.php');
 		function createJSTreeByServer(filter, alive, handler) {
 			var jsree_data = [];
 			var node_created = {};
+			var roots = jchaos.search(filter, "root", alive);
 
-			jchaos.search(filter, "cu", alive, (culist) => {
+			jchaos.search(filter,"us",alive,(uslist)=>{
+				var nodes = uslist.concat(roots);
+				jchaos.node(nodes, "get", "us", (descl) => {
+					descl.forEach((desc)=>{
+					var icon_name = "";
+					var parent="#";
+					if(desc.ndk_type !== undefined){
+						icon_name = "/img/devices/" + desc.ndk_type + ".png";
+					}
+					if(desc.ndk_parent !== undefined){
+						parent=jchaos.encodeName(desc.ndk_parent);
+						if (!node_created.hasOwnProperty(parent)) {
+							var ext_par = jchaos.node(desc.ndk_parent, "desc", "all");
+
+							var iname = "/img/devices/" + ext_par.ndk_type + ".png";
+
+							var node = {
+								"id": parent,
+								"parent": "#",
+								"icon": iname,
+								"text": desc.ndk_parent,
+								"data": ext_par
+							};
+								jsree_data.push(node);
+								node_created[parent] = true;
+
+							}
+					} 
+					if(desc.ndk_uid !== undefined){
+						var idname=jchaos.encodeName(desc.ndk_uid);
+						if (!node_created.hasOwnProperty(idname)) {
+
+							var node = {
+										"id": idname,
+										"parent": jchaos.encodeName(parent),
+										"icon": icon_name,
+										"text": desc.ndk_uid,
+										"data": desc
+									};
+							
+							jsree_data.push(node);
+							node_created[idname] = true;
+						}
+				}
+					if(desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)){
+						var list=desc.us_desc.cu_desc;
+						list.forEach(cu=>{
+							var name=cu.ndk_uid;
+							var regex = /(.*)\/(.*)\/(.*)$/;
+							var match = regex.exec(name);
+							var icon_name = "";
+							if ((match != null) && (typeof match[2] !== "undefined")) {
+								icon_name = "/img/devices/" + match[2] + ".png";
+								cu["zone"]=match[1];
+								cu["group"]=match[2];
+							}
+							var idname = jchaos.encodeName(name);
+							
+							var node = {
+								"id": idname,
+								"parent": jchaos.encodeName(cu.ndk_parent),
+								"icon": icon_name,
+								"text": name,
+								"data": cu
+							};
+							if (!node_created.hasOwnProperty(idname)) {
+								jsree_data.push(node);
+								node_created[idname] = true;
+							}
+						});
+					}
+					
+				});
+				if (typeof handler === "function") {
+						handler(jsree_data);
+					}
+				},()=>{
+					if (typeof handler === "function") {
+				handler(jsree_data);
+					}
+				});
+			},()=>{
+					if (typeof handler === "function") {
+				handler(jsree_data);
+					}
+				});
+			/*jchaos.search(filter, "cu", alive, (culist) => {
 				var roots = jchaos.search(filter, "root", alive);
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
@@ -1008,7 +1139,7 @@ require_once('header.php');
 				handler(jsree_data);
 				}
 			});
-
+*/
 
 		}
 		function createJSTreeByZone(filter, alive, handler) {

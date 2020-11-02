@@ -2122,7 +2122,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
      */
     function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,eventFn) {
         var instant = $('<div id=edit-temp></div>').dialog({
-            minWidth: $(window).width() / 4,
+            minWidth: $(window).width() / 2,
             minHeight: $(window).height() / 4,
             title: name,
             position: "center",
@@ -7247,7 +7247,15 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             var alarm = tmpObj.data[cindex];
             if (alarm != null && alarm.hasOwnProperty("cu_alarms")) {
-                decodeDeviceAlarm(alarm.cu_alarms);
+                var obj={};
+                if(alarm.health.nh_lem!=""){
+                    obj=Object.assign({'message':alarm.health.nh_lem,'domain':alarm.health.nh_led},alarm.cu_alarms);
+                } else {
+                    obj=Object.assign({},alarm.cu_alarms);
+
+                }
+                
+                decodeDeviceAlarm(obj);
             }
         });
     }
@@ -7334,16 +7342,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                         $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">trending_down</i>');
 
                     } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
-                        //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons" style="color:red">error</i></a>');
-                        $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons" style="color:red">cancel</i></a>');
-                        $("#Error-" + name_id).off('click');
-                        $("#Error-" + name_id).on("click", function () {
-                            $("#name-FE-device").html(el.health.ndk_uid);
-                            $("#status_message").html(status);
+                        $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" cuname="' + name_device_db + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
+                        $("#" + name_id + "_health_status").attr('title', "Device status:'" + status +"' "+el.health.nh_lem);
 
-                            $("#error_message").html(el.health.nh_lem);
-                            $("#error_domain").html(el.health.nh_led);
-                        });
                     } else if (status == "Unload") {
                         $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">power</i>');
 
@@ -7376,11 +7377,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     if (cu_alarm == 1) {
                         $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
 
-                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" ><i class="material-icons" style="color:yellow">error_outline</i></a>');
+                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="material-icons" style="color:yellow">error_outline</i></a>');
                     } else if (cu_alarm == 2) {
                         $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
 
-                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button"><i  class="material-icons" style="color:red">error_outline</i></a>');
+                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i  class="material-icons" style="color:red">error_outline</i></a>');
                     } else {
                         $("#" + name_id + "_system_cu_alarm").html('');
                     }
