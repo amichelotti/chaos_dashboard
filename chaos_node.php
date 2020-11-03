@@ -650,6 +650,70 @@ require_once('header.php');
 
 
 				}
+
+				if(node.data.hasOwnProperty('group')){
+					items['add-class'] = {
+							"separator_before": true,
+							"separator_after": false,
+							label: "Add new Class/Driver",
+							action: function () {
+								var templ = {
+                					$ref: "classdb.json",
+                					format: "tabs"
+									}
+									var editobj={};
+									jchaos.variable("cu_catalog", "get", (cudb) => {
+
+								if(node.data.hasOwnProperty('instance_description')&&(node.data.instance_description.hasOwnProperty('control_unit_implementation'))){
+									var control_unit_implementation=node.data.instance_description.control_unit_implementation;
+										editobj['name']=control_unit_implementation;
+
+										if(cudb.hasOwnProperty(control_unit_implementation)){
+											if(cudb[control_unit_implementation].info !== undefined){
+												editobj['info']=cudb[control_unit_implementation].info;
+											}
+											if(cudb[control_unit_implementation].attrs !== undefined){
+												var alist=[];
+												for(var k in cudb[control_unit_implementation].attrs){
+													alist.push(cudb[control_unit_implementation].attrs[k]);
+												}
+												editobj['attrs']=alist;
+											}
+											if(cudb[control_unit_implementation].drivers !== undefined){
+												var drvlist=[];
+												for(var k in cudb[control_unit_implementation].drivers){
+													drvlist.push(cudb[control_unit_implementation].drivers[k]);
+												}
+												editobj['drivers']=drvlist;
+											}
+											
+										} 		
+								} 
+								jqccs.jsonEditWindow("ClassDB Editor", templ, editobj, obj=>{
+												if(obj.name !== undefined && obj.name !=""){
+													var drivers={};
+													var attrs={};
+													obj['drivers'].forEach(elem=>{
+														drivers[elem.cudk_driver_description_name]=elem;
+													});
+													obj['attrs'].forEach(elem=>{
+														attrs[elem.cudk_ds_attr_name]=elem;
+													});
+													
+													cudb[obj.name]={'info':obj['info'],'attrs':attrs,'drivers':drivers};
+													jchaos.variable("cu_catalog", "set", cudb,(ok)=>{
+														jqccs.instantMessage("Updated class DB " + obj.name, " OK", 2000, true);
+
+													});
+
+
+												}
+											});
+							});
+								return;
+							}
+						};
+				}
 			}
 			return items;
 		}
@@ -674,14 +738,14 @@ require_once('header.php');
 					}
 					jchaos.getChannel(ndk_uid, 255, function (bruninfo) {
 						var healt = bruninfo[0].health;
-						if (healt.dpck_ats !== undefined) {
+						if ((healt.dpck_ats !== undefined)&&((Math.abs(healt.dpck_ats-(new Date()).getTime()))<10000)) {
 							jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
 								//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
 								//node_data = Object.assign(bi, node_data);
-								node_data = Object.assign({}, { build: bi }, { state: bruninfo[0] }, { info: node_data });
+								var nd = Object.assign({}, { build: bi }, { state: bruninfo[0] }, { info: node_data });
 
 
-								$('#desc_view').html(jqccs.json2html(node_data));
+								$('#desc_view').html(jqccs.json2html(nd));
 								jqccs.jsonSetup($('#desc_view'), function (e) {
 								});
 								$('#desc_view').find('a.json-toggle').click();
@@ -692,16 +756,18 @@ require_once('header.php');
 							}, bad => {
 								// no build info
 								//node_data = Object.assign(bi, node_data);
-								node_data = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
-								$('#desc_view').html(jqccs.json2html(node_data));
+								var nd = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
+								$('#desc_view').html(jqccs.json2html(nd));
 								jqccs.jsonSetup($('#desc_view'), function (e) {
 								});
 								$('#desc_view').find('a.json-toggle').click();
 
 							})
 						} else {
-							node_data = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
-							$('#desc_view').html(jqccs.json2html(node_data));
+						//	var td=(Math.abs(healt.dpck_ats-(new Date()).getTime()));
+						//	console.log("time diff:"+td);
+							var nd = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
+							$('#desc_view').html(jqccs.json2html(nd));
 							jqccs.jsonSetup($('#desc_view'), function (e) {
 							});
 							$('#desc_view').find('a.json-toggle').click();
@@ -722,6 +788,9 @@ require_once('header.php');
 								$('#zone_image').attr('src', data);
 							}
 						});*/
+				} else if(node_data.hasOwnProperty("group")){
+					$('#desc_view').html(node_data.group);
+
 				}
 
 			}
@@ -771,80 +840,7 @@ require_once('header.php');
 			});
 			$("body").removeClass("loading");
 		}
-		//$('#hier_view').jstree({ 'plugins': ["contextmenu"] });
-		/*	$('#hier_view').jstree({
-				"core": {
-					"animation": 0,
-					"check_callback": true,
-					"themes": { "stripes": true },
-					'data': [
-						{ "id": "ajson1", "parent": "#", "text": "Simple root node" },
-						{ "id": "ajson2", "parent": "#", "text": "Root node 2" },
-						{ "id": "ajson3", "parent": "ajson2", "text": "Child 1" },
-						{ "id": "ajson4", "parent": "ajson2", "text": "Child 2" },
-					]
-				},
-				"plugins": [
-					"contextmenu", "dnd", "search"
-				],
-				"contextmenu":{
-					"items":{
-						"rename": {
-							// The item label
-							"label": "Rename",
-							// The function to execute upon a click
-							"action": function (obj) { this.rename(obj); },
-							// All below are optional 
-							"_disabled": true,		// clicking the item won't do a thing
-							"_class": "class",	// class is applied to the item LI node
-							"separator_before": false,	// Insert a separator before the item
-							"separator_after": true,		// Insert a separator after the item
-							// false or string - if does not contain `/` - used as classname
-							"icon": false,
-							"submenu": {
-							}
-						},
-						"pippolo": {
-							// The item label
-							"label": "Pippolone",
-							// The function to execute upon a click
-							"action": function (obj) { this.rename(obj); },
-							// All below are optional 
-							"_disabled": true,		// clicking the item won't do a thing
-							"_class": "class",	// class is applied to the item LI node
-							"separator_before": false,	// Insert a separator before the item
-							"separator_after": true,		// Insert a separator after the item
-							// false or string - if does not contain `/` - used as classname
-							"icon": false,
-							"submenu": {
-							}
-						}
-					
-					}
-				}
 	
-			});*/
-
-		/*	$.jstree.defaults.core.plugins = ["contextmenu"];
-			$.jstree.defaults.contextmenu.items = {
-				// Some key
-				"rename": {
-					// The item label
-					"label": "Rename",
-					// The function to execute upon a click
-					"action": function (obj) { this.rename(obj); },
-					// All below are optional 
-					"_disabled": true,		// clicking the item won't do a thing
-					"_class": "class",	// class is applied to the item LI node
-					"separator_before": false,	// Insert a separator before the item
-					"separator_after": true,		// Insert a separator after the item
-					// false or string - if does not contain `/` - used as classname
-					"icon": false,
-					"submenu": {
-					}
-				}
-			}
-	*/
 		function updateJST(what, search, alive) {
 			cu_copied = null;
 			$("body").addClass("loading");
@@ -927,6 +923,13 @@ require_once('header.php');
 
 			jchaos.search(filter,"us",alive,(uslist)=>{
 				var nodes = uslist.concat(roots);
+				if(nodes.length==0){
+					alert("No nodes found");
+					if (typeof handler === "function") {
+						handler(jsree_data);
+					}
+					return;
+				}
 				jchaos.node(nodes, "get", "us", (descl) => {
 					descl.forEach((desc)=>{
 					var icon_name = "";
@@ -1011,135 +1014,7 @@ require_once('header.php');
 				handler(jsree_data);
 					}
 				});
-			/*jchaos.search(filter, "cu", alive, (culist) => {
-				var roots = jchaos.search(filter, "root", alive);
-				if ((roots instanceof Array) && (roots.length > 0)) {
-					culist = culist.concat(roots);
-				}
-				if ((culist.length==0)&&(typeof handler === "function")) {
-					handler(jsree_data);
-				}
-				jchaos.node(culist, "desc", "all", (desc) => {
-					culist.forEach((elem, index) => {
-						var regex = /(.*)\/(.*)\/(.*)$/;
-						var match = regex.exec(elem);
-						var icon_name = "";
-
-						if ((match != null) && (typeof match[2] !== "undefined")) {
-							icon_name = "/img/devices/" + match[2] + ".png";
-						}
-						//	console.log(desc[index].ndk_uid + " =>"+desc[index].ndk_type);
-
-						if (desc[index].ndk_type !== undefined && desc[index].ndk_type == "nt_root") {
-							icon_name = "/img/devices/nt_root.png";
-
-						}
-						var next_parent = "#";
-						var parent = "";
-						if (desc[index].hasOwnProperty("ndk_parent")) {
-							parent = desc[index].ndk_parent;
-						} else if (desc[index].hasOwnProperty("instance_description") && desc[index].instance_description.hasOwnProperty("ndk_parent")) {
-							parent = desc[index].instance_description.ndk_parent;
-
-						}
-						if (parent != "") {
-							var idname = jchaos.encodeName(elem);
-
-							var node = {
-								"id": idname,
-								"parent": jchaos.encodeName(parent),
-								"icon": icon_name,
-								"text": elem,
-								"data": desc[index]
-							};
-							if (!node_created.hasOwnProperty(idname)) {
-								jsree_data.push(node);
-								node_created[idname] = true;
-								//	console.log("Adding :" + JSON.stringify(node));
-
-							}
-							var parentid = jchaos.encodeName(parent);
-
-							if (!node_created.hasOwnProperty(parentid)) {
-								var icon_name_parent = "";
-
-								var next_next_par = jchaos.node(parent, "desc", "all");
-								if (next_next_par != null) {
-									if (next_next_par.hasOwnProperty("ndk_type")) {
-										icon_name_parent = "/img/devices/" + next_next_par.ndk_type + ".png";
-									}
-									if (next_next_par.hasOwnProperty("ndk_parent") && (next_next_par.ndk_parent != "")) {
-										var idname = jchaos.encodeName(next_next_par.ndk_parent);
-
-										var icon_par_parent = "";
-										var node = {
-											"id": idname,
-											"parent": "#",
-											"icon": icon_par_parent,
-											"text": next_next_par.ndk_parent,
-											"data": next_next_par
-										};
-										var par = jchaos.node(next_next_par.ndk_parent, "desc", "all");
-										if ((par != null)) {
-											node['data'] = par;
-											if (par.hasOwnProperty("ndk_type")) {
-												icon_par_parent = "/img/devices/" + par.ndk_type + ".png";
-												node['icon'] = icon_par_parent;
-											}
-										}
-
-
-										if (!node_created.hasOwnProperty(idname)) {
-											jsree_data.push(node);
-											node_created[idname] = true;
-										}
-										node = {
-											"id": parentid,
-											"parent": idname,
-											"icon": icon_name_parent,
-											"text": parent,
-											"data": next_next_par
-										};
-
-										jsree_data.push(node);
-										node_created[parentid] = true;
-
-
-									} else {
-
-										var node = {
-											"id": parentid,
-											"parent": "#",
-											"icon": icon_name_parent,
-											"text": parent,
-											"data": next_next_par
-										};
-										jsree_data.push(node);
-										node_created[parentid] = true;
-
-									}
-								}
-
-							}
-
-						}
-
-					});
-					if (typeof handler === "function") {
-						handler(jsree_data);
-					}
-				},()=>{
-					if (typeof handler === "function") {
-				handler(jsree_data);
-					}
-			});
-
-			},()=>{
-				if (typeof handler === "function") {
-				handler(jsree_data);
-				}
-			});
-*/
+		
 
 		}
 		function createJSTreeByZone(filter, alive, handler) {
@@ -1233,8 +1108,12 @@ require_once('header.php');
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
 				}
-				if ((culist.length==0)&&(typeof handler === "function")) {
-					handler(jsree_data);
+				if ((culist.length==0)) {
+					alert("No nodes found");
+					if(typeof handler === "function"){
+						handler(jsree_data);
+					}
+					return;
 				}
 				jchaos.node(culist, "desc", "all", (desc) => {
 
@@ -1257,25 +1136,37 @@ require_once('header.php');
 								"parent": "#",
 								"icon": icon_name,
 								"text": device,
-								"data": null
+								"data": {'group':device}
 							};
+							
 							if (!node_created.hasOwnProperty(device)) {
 
 								jsree_data.push(node);
 								node_created[device] = true;
 							}
 							//var desc = jchaos.getDesc(elem, null);
+							var id=jchaos.encodeName(elem);
 							var node = {
-								"id": jchaos.encodeName(elem),
+								"id": id,
 								"parent": device,
 								"icon": icon_name,
 								"text": elem,
 								"data": desc[index]
 							};
-							jsree_data.push(node);
+							node.data['group']=device;
+							node.data['zone']=match[1];
+							if (!node_created.hasOwnProperty(id)) {
+
+								jsree_data.push(node);
+								node_created[id] = true;
+							}
 						}
 
 					});
+					if (typeof handler === "function") {
+						handler(jsree_data);
+					}
+				},(bad)=>{
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
