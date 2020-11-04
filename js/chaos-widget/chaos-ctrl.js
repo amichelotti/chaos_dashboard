@@ -3979,7 +3979,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '</div>';
 
         html += '<div class="container-fluid" id="specific-table-' + tempObj.template + '"></div>';
-        html += '<div class="box container-fluid" id="specific-control-' + tempObj.template + '"></div>';
+        html += '<div class="container-fluid" id="specific-control-' + tempObj.template + '"></div>';
         return html;
     }
 
@@ -8226,8 +8226,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         };
 
     }
-
-    function createQueryDialog(querycb, opencb) {
+    jqccs.createQueryDialog=function(querycb, opencb,opt) {
+        return createQueryDialog(querycb, opencb,opt); 
+    }
+    function createQueryDialog(querycb, opencb,gopt) {
         var dstart = new Date();
         dstart.setHours(0, 0, 0, 0);
         if (typeof query_params === "undefined") {
@@ -8253,33 +8255,47 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         var html = "";
         html += '<div class="row">';
 
-        html += '<div class="box col-md-12">';
-        html += '<div class="box-content">';
-        html += '<h3 class="box-header">Query options</h3>';
-
-        html += '<div id="reportrange-query" class="col-md-10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+        html += '<div id="reportrange-query" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
         html += '<i class="fa fa-calendar"></i>&nbsp';
         html += '<span></span> <i class="fa fa-caret-down"></i>';
+        html += '</div></div>';
+        html += '<div class="row">';
+        html += '<label class="label col-sm">Start </label>';
+        html += '<input class="input-xlarge focused col-sm" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
         html += '</div>';
-
-        html += '<label class="label col-md-3">Start </label>';
-        html += '<input class="input-xlarge focused col-md-9" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
-        html += '<label class="label col-md-3">Stop </label>';
-        html += '<input class="input-xlarge focused col-md-9" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
-
-        html += '<label class="label col-md-3">Available Tag</label>';
-        html += '<select class="col-md-9" id="select-tag" title="Existing tags"></select>';
-        html += '<label class="label col-md-3">Tag Name </label>';
-        html += '<input class="input-xlarge focused col-md-9" id="query-tag" title="Tag Name" type="text" value=' + query_params.tag + '>';
-
-        html += '<label class="label col-md-3">Page </label>';
-        html += '<input class="input-xlarge focused col-md-9" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
-        html += '<label class="label col-md-3">Query chunk </label>';
-        html += '<input class="input-xlarge focused col-md-9" id="query-chunk" title="Cut the query in chunk of the given seconds" type="number" value=3600>';
-        html += '<label class="label col-md-3">Data Factor reduction</label>';
-        html += '<input class="input-xlarge focused col-md-9" type="number" id="query-reduction" title="Reduction Factor" value=1>';
+        html += '<div class="row">';
+        html += '<label class="label col-sm">Stop </label>';
+        html += '<input class="input-xlarge focused col-sm" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
         html += '</div>';
-        html += '</div>';
+        if(gopt === undefined || (gopt.hasOwnProperty('tag')&&gopt.tag)){
+            html += '<div class="row">';
+            html += '<label class="label col-sm">Available Tag</label>';
+            html += '<select class="col-sm" id="select-tag" title="Existing tags"></select>';
+            html += '</div>';
+
+            html += '<div class="row">';
+            html += '<label class="label col-sm">Tag Name </label>';
+            html += '<input class="input-xlarge focused col-sm" id="query-tag" title="Tag Name" type="text" value=' + query_params.tag + '>';
+            html += '</div>';
+        }
+
+        if(gopt === undefined || (gopt.hasOwnProperty('page')&&gopt.page)){
+
+            html += '<div class="row">';
+            html += '<label class="label col-sm">Page </label>';
+            html += '<input class="input-xlarge focused col-sm" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
+            html += '</div>';
+            html += '<div class="row">';
+
+            html += '<label class="label col-sm">Query chunk </label>';
+            html += '<input class="input-xlarge focused col-sm" id="query-chunk" title="Cut the query in chunk of the given seconds" type="number" value=3600>';
+            html += '</div>';
+            html += '<div class="row">';
+
+            html += '<label class="label col-sm">Data Factor reduction</label>';
+            html += '<input class="input-xlarge focused col-sm" type="number" id="query-reduction" title="Reduction Factor" value=1>';
+            html += '</div>';
+        }
         html += '</div>';
 
         var opt = {
@@ -8303,7 +8319,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             querycb(query_params)
 
-        }, "Cancel", null, function () {
+        }, "Cancel", ()=>{if(gopt.cancelHandler !== undefined){gopt.cancelHandler()}}, function () {
             //open handle
             initializeTimePicker(function (ev, picker) {
                 //do something, like clearing an input

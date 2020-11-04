@@ -572,7 +572,7 @@ require_once('header.php');
 						"separator_before": true,
 						"separator_after": false,
 						label: "Update State",
-						action: function () { updateDescView(node.data); }
+						action: function () { updateDescView(node); }
 					};
 					if (node.data.ndk_parent !== undefined && (node.data.ndk_parent != "")) {
 						items['start'] = {
@@ -717,8 +717,9 @@ require_once('header.php');
 			}
 			return items;
 		}
-		function updateDescView(node_data) {
-			if ((node_data != null)) {
+		function updateDescView(node) {
+			if ((node != null)) {
+				var node_data=node.data;
 				if (node_data.hasOwnProperty("ndk_uid")) {
 					var ndk_uid = node_data.ndk_uid;
 					if (node_data.hasOwnProperty("zone") && synoptic.hasOwnProperty(node_data.zone) && synoptic[node_data.zone].hasOwnProperty(ndk_uid)) {
@@ -739,6 +740,7 @@ require_once('header.php');
 					jchaos.getChannel(ndk_uid, 255, function (bruninfo) {
 						var healt = bruninfo[0].health;
 						if ((healt.dpck_ats !== undefined)&&((Math.abs(healt.dpck_ats-(new Date()).getTime()))<10000)) {
+							//$("#"+node.id).addClass("bg-success");
 							jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
 								//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
 								//node_data = Object.assign(bi, node_data);
@@ -764,6 +766,8 @@ require_once('header.php');
 
 							})
 						} else {
+							$("#"+node.id).removeClass("bg-success");
+
 						//	var td=(Math.abs(healt.dpck_ats-(new Date()).getTime()));
 						//	console.log("time diff:"+td);
 							var nd = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
@@ -819,7 +823,7 @@ require_once('header.php');
 			});
 			$('#hier_view').on('select_node.jstree', function (e, data) {
 				var i, j, r = [];
-				var node_data = data.instance.get_node(data.selected[0]).data;
+				var node_data = data.instance.get_node(data.selected[0]);
 
 				updateDescView(node_data);
 				/*

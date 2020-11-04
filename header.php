@@ -679,12 +679,13 @@
 	}
 
 	function handle_log() {
-		$("body").addClass("loading");
-
+		//$("body").addClass("loading");
+		jqccs.createQueryDialog(query=>{
 		jqccs.createBrowserWindow("Log browser", (pid) => {
 			var jsree_data = [];
 			var node_created = {};
-			jchaos.log("", "search", "all", 0, 10000000000000, function (data) {
+			
+			jchaos.log("", "search", "all", query.start, query.end, function (data) {
 				if (data.hasOwnProperty("result_list")) {
 					data.result_list.forEach(function (item) {
 
@@ -694,6 +695,9 @@
 						var name = item.mdsndk_nl_sid;
 						var msg = item.mdsndk_nl_e_em;
 						var type = item.mdsndk_nl_ld;
+						if((item.mdsndk_nl_l_ld!==undefined)&&(item.mdsndk_nl_l_ld=="Error")){
+							type="error";
+						}
 						var origin = item.mdsndk_nl_e_ed;
 						var nodef = jchaos.encodeName(name) + "_" + item.mdsndk_nl_lts;
 						var node_group = {
@@ -717,7 +721,7 @@
 						dirs.forEach((ele, index) => {
 							var node_group;
 							if (index == 0) {
-								group = ele;
+								group = type+"/"+ele;
 								node_group = {
 									"id": jchaos.encodeName(group),
 									"parent": jchaos.encodeName(type),
@@ -788,6 +792,7 @@
 				$("body").removeClass("loading");
 			});
 		});
+	},null,{'page':false,'tag':false});
 	}
 
 
