@@ -90,6 +90,8 @@ require_once('header.php');
 		var synoptic = {};
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
+		},(bad)=>{
+
 		});
 
 
@@ -923,10 +925,50 @@ require_once('header.php');
 		function createJSTreeByServer(filter, alive, handler) {
 			var jsree_data = [];
 			var node_created = {};
-			var roots = jchaos.search(filter, "root", alive);
+		/*	var agents = jchaos.search(filter, "agent", alive);
+			if(agents instanceof Array){
+				agents.forEach((item)=>{
+					var iname = jchaos.encodeName(item);
 
-			jchaos.search(filter,"us",alive,(uslist)=>{
-				var nodes = uslist.concat(roots);
+					var node = {
+								"id": iname,
+								"parent": "#",
+								"icon": iname,
+								"text": "/img/devices/nt_agent.png",
+								"data": null
+							};
+						if(!node_created.hasOwnProperty(iname)){
+								node['data']=jchaos.node(item,"desc","agent");
+								jsree_data.push(node);
+								node_created[iname] = true;
+
+						}
+				})
+			}
+			var mds = jchaos.search(filter, "mds", alive);
+			if(mds instanceof Array){
+				mds.forEach((item)=>{
+					var iname = jchaos.encodeName(item);
+
+					var node = {
+								"id": iname,
+								"parent": "#",
+								"icon": iname,
+								"text": "/img/devices/nt_agent.png",
+								"data": null
+							};
+						if(!node_created.hasOwnProperty(iname)){
+								node['data']=jchaos.node(item,"desc","mds");
+								jsree_data.push(node);
+								node_created[iname] = true;
+
+						}
+				})
+			}
+
+			var roots = jchaos.search(filter, "root", alive);
+*/
+			jchaos.search(filter,"server",alive,(uslist)=>{
 				if(nodes.length==0){
 					alert("No nodes found");
 					if (typeof handler === "function") {
@@ -1102,7 +1144,11 @@ require_once('header.php');
 				if (typeof handler === "function") {
 					handler(jsree_data);
 				}
-			});
+			},()=>{
+				if (typeof handler === "function") {
+					handler(jsree_data);
+				}}
+				);
 		}
 		function createJSTreeByDevice(filter, alive, handler) {
 			var jsree_data = [];
@@ -1175,6 +1221,10 @@ require_once('header.php');
 						handler(jsree_data);
 					}
 				});
+			},()=>{
+				if (typeof handler === "function") {
+					handler(jsree_data);
+				}
 			});
 		}
 
