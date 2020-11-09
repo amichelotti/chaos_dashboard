@@ -1020,7 +1020,11 @@ require_once('header.php');
 				});
 
 
-			});
+			}, (bad) => {
+					if (typeof handler === "function") {
+						handler(jsree_data);
+					}
+				});
 
 
 		}
