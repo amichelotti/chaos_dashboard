@@ -90,7 +90,7 @@ require_once('header.php');
 		var synoptic = {};
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
-		},(bad)=>{
+		}, (bad) => {
 
 		});
 
@@ -178,7 +178,7 @@ require_once('header.php');
 
 
 							}
-							if ((impl!="")&&(cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined)) {
+							if ((impl != "") && (cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined)) {
 								var dlist = cudb[impl].drivers;
 								// drivers for the implementation
 								for (d in dlist) {
@@ -282,7 +282,7 @@ require_once('header.php');
 			var tree = $('#hier_view').jstree(true);
 			var ID = $(node).attr('id');
 			if (node.hasOwnProperty("data")) {
-				if (node.data.hasOwnProperty('zone') || (node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type=="nt_unit_server"))) {
+				if (node.data.hasOwnProperty('zone') || (node.data.hasOwnProperty("ndk_type") && (node.data.ndk_type == "nt_unit_server"))) {
 					items['new-cu'] = {
 						"separator_before": false,
 						"separator_after": false,
@@ -291,8 +291,8 @@ require_once('header.php');
 							var cu = {};
 							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
 							cu['id'] = "<MY ID>";
-							if((node.data.ndk_type=="nt_unit_server")){
-								cu['ndk_parent']=node.data.ndk_uid;
+							if ((node.data.ndk_type == "nt_unit_server")) {
+								cu['ndk_parent'] = node.data.ndk_uid;
 							}
 							cu2editor(cu, (edit_templ, editobj, cudb) => {
 
@@ -340,20 +340,20 @@ require_once('header.php');
 							label: "Paste",
 							action: function () {
 
-								var cu = Object.assign({},cu_copied);
+								var cu = Object.assign({}, cu_copied);
 								var decoded = jchaos.pathToZoneGroupId(cu.ndk_uid);
 								var zone;
-								if((node.data.ndk_type=="nt_unit_server")){
-									cu['ndk_parent']=node.data.ndk_uid;
+								if ((node.data.ndk_type == "nt_unit_server")) {
+									cu['ndk_parent'] = node.data.ndk_uid;
 								}
-								if(node.data.zone!== undefined){
+								if (node.data.zone !== undefined) {
 									zone = node.data.zone;
 								} else {
-									zone=decoded['zone'];
+									zone = decoded['zone'];
 								}
 
 								if (decoded) {
-									cu["ndk_uid"] = zone + "/" + decoded["group"] + "/" + decoded['id']+ (new Date()).getTime();
+									cu["ndk_uid"] = zone + "/" + decoded["group"] + "/" + decoded['id'] + (new Date()).getTime();
 
 									cu2editor(cu, (edit_templ, editobj) => {
 
@@ -477,7 +477,7 @@ require_once('header.php');
 									if (data != null) {
 										// editorFn = agentSave;
 										//jsonEdit(templ, data);
-										var opt={'node_selected':selected_node};
+										var opt = { 'node_selected': selected_node };
 										jqccs.jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, opt,
 											() => {
 												jqccs.instantMessage("Agent saved " + selected_node, " OK", 2000, true);
@@ -498,11 +498,11 @@ require_once('header.php');
 							label: "New US",
 							action: function () {
 								var templ = {
-                    				$ref: "us.json",
-                    				format: "tabs"
-                				}
+									$ref: "us.json",
+									format: "tabs"
+								}
 								jqccs.jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, null, function (ok) {
-									jchaos.agentAssociateNode(selected_node,ok['ndk_uid'],"","UnitServer",okk=>{
+									jchaos.agentAssociateNode(selected_node, ok['ndk_uid'], "", "UnitServer", okk => {
 										jqccs.instantMessage("Unit server save ", " OK", 2000, true);
 										var newnode = {
 											"id": jchaos.encodeName(ok.ndk_uid),
@@ -513,7 +513,7 @@ require_once('header.php');
 										};
 										tree.create_node(node, newnode);
 
-									},(badd)=>{
+									}, (badd) => {
 										jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
 
 									}), function (bad) {
@@ -653,75 +653,75 @@ require_once('header.php');
 
 				}
 
-				if(node.data.hasOwnProperty('group')){
+				if (node.data.hasOwnProperty('group')) {
 					items['add-class'] = {
-							"separator_before": true,
-							"separator_after": false,
-							label: "Add new Class/Driver",
-							action: function () {
-								var templ = {
-                					$ref: "classdb.json",
-                					format: "tabs"
-									}
-									var editobj={};
-									jchaos.variable("cu_catalog", "get", (cudb) => {
-
-								if(node.data.hasOwnProperty('instance_description')&&(node.data.instance_description.hasOwnProperty('control_unit_implementation'))){
-									var control_unit_implementation=node.data.instance_description.control_unit_implementation;
-										editobj['name']=control_unit_implementation;
-
-										if(cudb.hasOwnProperty(control_unit_implementation)){
-											if(cudb[control_unit_implementation].info !== undefined){
-												editobj['info']=cudb[control_unit_implementation].info;
-											}
-											if(cudb[control_unit_implementation].attrs !== undefined){
-												var alist=[];
-												for(var k in cudb[control_unit_implementation].attrs){
-													alist.push(cudb[control_unit_implementation].attrs[k]);
-												}
-												editobj['attrs']=alist;
-											}
-											if(cudb[control_unit_implementation].drivers !== undefined){
-												var drvlist=[];
-												for(var k in cudb[control_unit_implementation].drivers){
-													drvlist.push(cudb[control_unit_implementation].drivers[k]);
-												}
-												editobj['drivers']=drvlist;
-											}
-											
-										} 		
-								} 
-								jqccs.jsonEditWindow("ClassDB Editor", templ, editobj, obj=>{
-												if(obj.name !== undefined && obj.name !=""){
-													var drivers={};
-													var attrs={};
-													obj['drivers'].forEach(elem=>{
-														drivers[elem.cudk_driver_description_name]=elem;
-													});
-													obj['attrs'].forEach(elem=>{
-														attrs[elem.cudk_ds_attr_name]=elem;
-													});
-													
-													cudb[obj.name]={'info':obj['info'],'attrs':attrs,'drivers':drivers};
-													jchaos.variable("cu_catalog", "set", cudb,(ok)=>{
-														jqccs.instantMessage("Updated class DB " + obj.name, " OK", 2000, true);
-
-													});
-
-
-												}
-											});
-							});
-								return;
+						"separator_before": true,
+						"separator_after": false,
+						label: "Add new Class/Driver",
+						action: function () {
+							var templ = {
+								$ref: "classdb.json",
+								format: "tabs"
 							}
-						};
+							var editobj = {};
+							jchaos.variable("cu_catalog", "get", (cudb) => {
+
+								if (node.data.hasOwnProperty('instance_description') && (node.data.instance_description.hasOwnProperty('control_unit_implementation'))) {
+									var control_unit_implementation = node.data.instance_description.control_unit_implementation;
+									editobj['name'] = control_unit_implementation;
+
+									if (cudb.hasOwnProperty(control_unit_implementation)) {
+										if (cudb[control_unit_implementation].info !== undefined) {
+											editobj['info'] = cudb[control_unit_implementation].info;
+										}
+										if (cudb[control_unit_implementation].attrs !== undefined) {
+											var alist = [];
+											for (var k in cudb[control_unit_implementation].attrs) {
+												alist.push(cudb[control_unit_implementation].attrs[k]);
+											}
+											editobj['attrs'] = alist;
+										}
+										if (cudb[control_unit_implementation].drivers !== undefined) {
+											var drvlist = [];
+											for (var k in cudb[control_unit_implementation].drivers) {
+												drvlist.push(cudb[control_unit_implementation].drivers[k]);
+											}
+											editobj['drivers'] = drvlist;
+										}
+
+									}
+								}
+								jqccs.jsonEditWindow("ClassDB Editor", templ, editobj, obj => {
+									if (obj.name !== undefined && obj.name != "") {
+										var drivers = {};
+										var attrs = {};
+										obj['drivers'].forEach(elem => {
+											drivers[elem.cudk_driver_description_name] = elem;
+										});
+										obj['attrs'].forEach(elem => {
+											attrs[elem.cudk_ds_attr_name] = elem;
+										});
+
+										cudb[obj.name] = { 'info': obj['info'], 'attrs': attrs, 'drivers': drivers };
+										jchaos.variable("cu_catalog", "set", cudb, (ok) => {
+											jqccs.instantMessage("Updated class DB " + obj.name, " OK", 2000, true);
+
+										});
+
+
+									}
+								});
+							});
+							return;
+						}
+					};
 				}
 			}
 			return items;
 		}
 		function updateDescView(node) {
 			if ((node != null)) {
-				var node_data=node.data;
+				var node_data = node.data;
 				if (node_data.hasOwnProperty("ndk_uid")) {
 					var ndk_uid = node_data.ndk_uid;
 					if (node_data.hasOwnProperty("zone") && synoptic.hasOwnProperty(node_data.zone) && synoptic[node_data.zone].hasOwnProperty(ndk_uid)) {
@@ -741,7 +741,7 @@ require_once('header.php');
 					}
 					jchaos.getChannel(ndk_uid, 255, function (bruninfo) {
 						var healt = bruninfo[0].health;
-						if ((healt.dpck_ats !== undefined)&&((Math.abs(healt.dpck_ats-(new Date()).getTime()))<10000)) {
+						if ((healt.dpck_ats !== undefined) && ((Math.abs(healt.dpck_ats - (new Date()).getTime())) < 10000)) {
 							//$("#"+node.id).addClass("bg-success");
 							jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
 								//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
@@ -768,10 +768,10 @@ require_once('header.php');
 
 							})
 						} else {
-							$("#"+node.id).removeClass("bg-success");
+							$("#" + node.id).removeClass("bg-success");
 
-						//	var td=(Math.abs(healt.dpck_ats-(new Date()).getTime()));
-						//	console.log("time diff:"+td);
+							//	var td=(Math.abs(healt.dpck_ats-(new Date()).getTime()));
+							//	console.log("time diff:"+td);
 							var nd = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
 							$('#desc_view').html(jqccs.json2html(nd));
 							jqccs.jsonSetup($('#desc_view'), function (e) {
@@ -794,7 +794,7 @@ require_once('header.php');
 								$('#zone_image').attr('src', data);
 							}
 						});*/
-				} else if(node_data.hasOwnProperty("group")){
+				} else if (node_data.hasOwnProperty("group")) {
 					$('#desc_view').html(node_data.group);
 
 				}
@@ -846,7 +846,7 @@ require_once('header.php');
 			});
 			$("body").removeClass("loading");
 		}
-	
+
 		function updateJST(what, search, alive) {
 			cu_copied = null;
 			$("body").addClass("loading");
@@ -925,142 +925,103 @@ require_once('header.php');
 		function createJSTreeByServer(filter, alive, handler) {
 			var jsree_data = [];
 			var node_created = {};
-		/*	var agents = jchaos.search(filter, "agent", alive);
-			if(agents instanceof Array){
-				agents.forEach((item)=>{
-					var iname = jchaos.encodeName(item);
-
-					var node = {
-								"id": iname,
-								"parent": "#",
-								"icon": iname,
-								"text": "/img/devices/nt_agent.png",
-								"data": null
-							};
-						if(!node_created.hasOwnProperty(iname)){
-								node['data']=jchaos.node(item,"desc","agent");
-								jsree_data.push(node);
-								node_created[iname] = true;
-
-						}
-				})
-			}
-			var mds = jchaos.search(filter, "mds", alive);
-			if(mds instanceof Array){
-				mds.forEach((item)=>{
-					var iname = jchaos.encodeName(item);
-
-					var node = {
-								"id": iname,
-								"parent": "#",
-								"icon": iname,
-								"text": "/img/devices/nt_agent.png",
-								"data": null
-							};
-						if(!node_created.hasOwnProperty(iname)){
-								node['data']=jchaos.node(item,"desc","mds");
-								jsree_data.push(node);
-								node_created[iname] = true;
-
-						}
-				})
-			}
-
-			var roots = jchaos.search(filter, "root", alive);
-*/
-			jchaos.search(filter,"server",alive,(uslist)=>{
-				if(nodes.length==0){
+		
+			jchaos.search(filter, "server", alive, (nodes) => {
+				if (nodes.length == 0) {
 					alert("No nodes found");
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
 					return;
 				}
-				jchaos.node(nodes, "get", "us", (descl) => {
-					descl.forEach((desc)=>{
-					var icon_name = "";
-					var parent="#";
-					if(desc.ndk_type !== undefined){
-						icon_name = "/img/devices/" + desc.ndk_type + ".png";
-					}
-					if(desc.ndk_parent !== undefined){
-						parent=jchaos.encodeName(desc.ndk_parent);
-						if (!node_created.hasOwnProperty(parent)) {
-							var ext_par = jchaos.node(desc.ndk_parent, "desc", "all");
-
-							var iname = "/img/devices/" + ext_par.ndk_type + ".png";
+				jchaos.node(nodes, "desc", "all", (d) => {
+					d.forEach(edesc => {
+						if (edesc.ndk_type == "nt_data_service" || edesc.ndk_type == "nt_wan_proxy" || edesc.ndk_type == "nt_agent") {
+							var icon = "/img/devices/" + edesc.ndk_type + ".png";
+							var iname = jchaos.encodeName(edesc.ndk_uid);
 
 							var node = {
-								"id": parent,
+								"id": iname,
 								"parent": "#",
-								"icon": iname,
-								"text": desc.ndk_parent,
-								"data": ext_par
+								"icon": icon,
+								"text": edesc.ndk_uid,
+								"data": edesc
 							};
+							if (!node_created.hasOwnProperty(iname)) {
 								jsree_data.push(node);
 								node_created[parent] = true;
-
 							}
-					} 
-					if(desc.ndk_uid !== undefined){
-						var idname=jchaos.encodeName(desc.ndk_uid);
-						if (!node_created.hasOwnProperty(idname)) {
+						}
+						if (edesc.ndk_type == "nt_unit_server") {
+							var parent = "#";
+							var desc = jchaos.node(edesc.ndk_uid, "get", "us");
+							var icon_name = "";
+							var parent = "#";
+							icon_name = "/img/devices/" + desc.ndk_type + ".png";
 
-							var node = {
+							if (desc.ndk_parent !== undefined) {
+								parent = jchaos.encodeName(desc.ndk_parent);
+							}
+
+							if (desc.ndk_uid !== undefined) {
+								var idname = jchaos.encodeName(desc.ndk_uid);
+								if (!node_created.hasOwnProperty(idname)) {
+
+									var node = {
 										"id": idname,
 										"parent": jchaos.encodeName(parent),
 										"icon": icon_name,
 										"text": desc.ndk_uid,
 										"data": desc
 									};
-							
-							jsree_data.push(node);
-							node_created[idname] = true;
+
+									jsree_data.push(node);
+									node_created[idname] = true;
+								}
+
+								if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
+									var list = desc.us_desc.cu_desc;
+									list.forEach(cu => {
+										var name = cu.ndk_uid;
+										var regex = /(.*)\/(.*)\/(.*)$/;
+										var match = regex.exec(name);
+										var icon_name = "";
+										if ((match != null) && (typeof match[2] !== "undefined")) {
+											icon_name = "/img/devices/" + match[2] + ".png";
+											cu["zone"] = match[1];
+											cu["group"] = match[2];
+										}
+										var idname = jchaos.encodeName(name);
+
+										var node = {
+											"id": idname,
+											"parent": jchaos.encodeName(cu.ndk_parent),
+											"icon": icon_name,
+											"text": name,
+											"data": cu
+										};
+										if (!node_created.hasOwnProperty(idname)) {
+											jsree_data.push(node);
+											node_created[idname] = true;
+										}
+									});
+								}
+							}
+
 						}
-				}
-					if(desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)){
-						var list=desc.us_desc.cu_desc;
-						list.forEach(cu=>{
-							var name=cu.ndk_uid;
-							var regex = /(.*)\/(.*)\/(.*)$/;
-							var match = regex.exec(name);
-							var icon_name = "";
-							if ((match != null) && (typeof match[2] !== "undefined")) {
-								icon_name = "/img/devices/" + match[2] + ".png";
-								cu["zone"]=match[1];
-								cu["group"]=match[2];
-							}
-							var idname = jchaos.encodeName(name);
-							
-							var node = {
-								"id": idname,
-								"parent": jchaos.encodeName(cu.ndk_parent),
-								"icon": icon_name,
-								"text": name,
-								"data": cu
-							};
-							if (!node_created.hasOwnProperty(idname)) {
-								jsree_data.push(node);
-								node_created[idname] = true;
-							}
-						});
-					}
-					
-				});
-				if (typeof handler === "function") {
+					});
+					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
-				},()=>{
+				}, (bad) => {
 					if (typeof handler === "function") {
-				handler(jsree_data);
+						handler(jsree_data);
 					}
 				});
-			},()=>{
-					if (typeof handler === "function") {
-				handler(jsree_data);
-					}
-				});
-		
+
+
+			});
+
 
 		}
 		function createJSTreeByZone(filter, alive, handler) {
@@ -1071,7 +1032,7 @@ require_once('header.php');
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
 				}
-				if ((culist.length==0)&&(typeof handler === "function")) {
+				if ((culist.length == 0) && (typeof handler === "function")) {
 					handler(jsree_data);
 				}
 				culist.forEach((elem) => {
@@ -1144,11 +1105,12 @@ require_once('header.php');
 				if (typeof handler === "function") {
 					handler(jsree_data);
 				}
-			},()=>{
+			}, () => {
 				if (typeof handler === "function") {
 					handler(jsree_data);
-				}}
-				);
+				}
+			}
+			);
 		}
 		function createJSTreeByDevice(filter, alive, handler) {
 			var jsree_data = [];
@@ -1158,9 +1120,9 @@ require_once('header.php');
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
 				}
-				if ((culist.length==0)) {
+				if ((culist.length == 0)) {
 					alert("No nodes found");
-					if(typeof handler === "function"){
+					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
 					return;
@@ -1186,16 +1148,16 @@ require_once('header.php');
 								"parent": "#",
 								"icon": icon_name,
 								"text": device,
-								"data": {'group':device}
+								"data": { 'group': device }
 							};
-							
+
 							if (!node_created.hasOwnProperty(device)) {
 
 								jsree_data.push(node);
 								node_created[device] = true;
 							}
 							//var desc = jchaos.getDesc(elem, null);
-							var id=jchaos.encodeName(elem);
+							var id = jchaos.encodeName(elem);
 							var node = {
 								"id": id,
 								"parent": device,
@@ -1203,8 +1165,8 @@ require_once('header.php');
 								"text": elem,
 								"data": desc[index]
 							};
-							node.data['group']=device;
-							node.data['zone']=match[1];
+							node.data['group'] = device;
+							node.data['zone'] = match[1];
 							if (!node_created.hasOwnProperty(id)) {
 
 								jsree_data.push(node);
@@ -1216,12 +1178,12 @@ require_once('header.php');
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
-				},(bad)=>{
+				}, (bad) => {
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
 				});
-			},()=>{
+			}, () => {
 				if (typeof handler === "function") {
 					handler(jsree_data);
 				}
