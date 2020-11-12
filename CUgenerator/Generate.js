@@ -975,6 +975,8 @@ function CreateInterfaceHeader() {
         writer.WriteLine("public: " );
         writer.WriteLine(ClassName +"(chaos_driver::DriverAccessor*_accessor):accessor(_accessor){};" );
         writer.WriteLine("chaos_driver::DriverAccessor* accessor;" );
+        writer.WriteLine("uint64_t setGeneralAccessorTimeout(uint64_t timeo_ms); ");
+        writer.WriteLine("uint64_t getGeneralAccessorTimeout(); ");
         for (var  icmd in CU.Commands)
         {
             var cmd=CMDcreate( CU.Commands[icmd] );
@@ -1036,6 +1038,11 @@ function CreateInterfaceSource() {
         newCommand.isInterfaceCommand=false;
         CU.ptDriverCommandList.Add(newCommand);
         } */
+        
+        writer.WriteLine("#define INTERFACE_STD_TIMEOUT 4999");
+        writer.WriteLine("uint64_t GeneralTimeout = INTERFACE_STD_TIMEOUT;");
+        writer.WriteLine( "uint64_t "+ClassName+"::getGeneralAccessorTimeout() {return GeneralTimeout;};" );
+        writer.WriteLine( "uint64_t "+ClassName+"::setGeneralAccessorTimeout(uint64_t timeo_ms) {GeneralTimeout=timeo_ms;return GeneralTimeout;};" );
         for (var  icmd in CU.Commands)
         {
             var cmd=CMDcreate(CU.Commands[icmd]);
@@ -1057,7 +1064,7 @@ function CreateInterfaceSource() {
                 var  par=cmd.Parameters[i];
                 writer.WriteNoInd(","+par.Name);
             }
-            writer.WriteLineNoInd(",0);");//instead of timeout put 0
+            writer.WriteLineNoInd(",GeneralTimeout);");
             //+parString.ToUpper() );
             writer.delIndent();writer.WriteLine("} " );
         }
@@ -1091,7 +1098,7 @@ function CreateInterfaceSource() {
 
                 writer.WriteNoInd(","+par.Name);
             }
-            writer.WriteLineNoInd(",0);");
+            writer.WriteLineNoInd(",GeneralTimeout);");
             writer.delIndent();
             writer.WriteLine("} " );
 		}
