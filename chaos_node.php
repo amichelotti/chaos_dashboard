@@ -949,7 +949,7 @@ require_once('header.php');
 							};
 							if (!node_created.hasOwnProperty(iname)) {
 								jsree_data.push(node);
-								node_created[parent] = true;
+								node_created[iname] = true;
 							}
 						}
 						if (edesc.ndk_type == "nt_unit_server") {
