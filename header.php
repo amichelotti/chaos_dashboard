@@ -541,7 +541,29 @@
 					});
 				}
 			};
+			items['snap-edit'] = {
+				"separator_before": false,
+				"separator_after": false,
+				label: "Edit..",
+				action: function () {
+					var snap = node.data;
+					jchaos.snapshot(snap.name, "load", null, "", (dataset) => {
+						jqccs.jsonEditWindow("Snap Editor", {}, dataset, (snapdata)=>{
+							console.log("snapshot:"+JSON.stringify(snapdata));
+							/*vsets.forEach(function (elem) {
+							jchaos.snapshot(name, "set", "", JSON.stringify(elem), function (d) {
+								console.log("saving " + elem.name + " in " + name);
+							});
+						});*/
+						}, null, (ok) => {
+										jqccs.instantMessage("Created ", "OK", 2000, true);
 
+									}, (bad) => {
+										alert(" Cannot create node err:" + JSON.stringify(bad));
+									});
+					});
+				}
+			};
 			items['snap-remove'] = {
 				"separator_before": false,
 				"separator_after": false,
@@ -651,6 +673,7 @@
 					var i, j, r = [];
 					var node_data = data.instance.get_node(data.selected[0]).data;
 					jchaos.snapshot(node_data.name, "load", null, "", function (dataset) {
+						node_data['setpoints']=dataset;
 						$('#desc-' + pid).html(jqccs.json2html(node_data));
 						jqccs.jsonSetup($('#desc-' + pid), function (e) {
 						});
