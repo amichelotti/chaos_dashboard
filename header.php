@@ -533,7 +533,7 @@
 					jchaos.snapshot(snap.name, "load", null, "", (dataset) => {
 						save_obj = {
 							obj: dataset,
-							fname: "snapshot_" + snap_selected,
+							fname: "snapshot_" + snap.name,
 							fext: "json"
 						};
 						var blob = new Blob([JSON.stringify(save_obj.obj)], { type: "json;charset=utf-8" });
