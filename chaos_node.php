@@ -971,7 +971,7 @@ require_once('header.php');
 
 									var node = {
 										"id": idname,
-										"parent": jchaos.encodeName(parent),
+										"parent": parent,
 										"icon": icon_name,
 										"text": desc.ndk_uid,
 										"data": desc
