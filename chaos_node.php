@@ -91,6 +91,7 @@ require_once('header.php');
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
 		}, (bad) => {
+			console.error("error:"+JSONS.stringify(bad));
 
 		});
 
@@ -1016,6 +1017,7 @@ require_once('header.php');
 						handler(jsree_data);
 					}
 				}, (bad) => {
+					console.error("error:"+JSONS.stringify(bad));
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
@@ -1023,6 +1025,7 @@ require_once('header.php');
 
 
 			}, (bad) => {
+				console.error("error:"+JSONS.stringify(bad));
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
@@ -1185,11 +1188,14 @@ require_once('header.php');
 						handler(jsree_data);
 					}
 				}, (bad) => {
+					console.error("error:"+JSONS.stringify(bad));
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
 				});
-			}, () => {
+			}, (bad) => {
+				console.error("error:"+JSONS.stringify(bad));
+
 				if (typeof handler === "function") {
 					handler(jsree_data);
 				}
