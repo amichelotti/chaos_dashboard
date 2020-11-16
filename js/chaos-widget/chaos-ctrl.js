@@ -1714,19 +1714,72 @@
     }
 
     function generateProcessTable(tmpObj) {
+        var cu = [];
+        if (tmpObj['elems'] instanceof Array) {
+            cu = tmpObj.elems;
+        }
+        var template = tmpObj.type;
+        var html = '<div class="row" z-index=-1 id="table-space">';
+        html += '<div class="col-md-12">';
+        html += '<div class="box-content col-md-12">';
+        if (cu.length == 0) {
+            html += '<p id="no-result-monitoring">No results match</p>';
+
+        } else {
+            html += '<p id="no-result-monitoring"></p>';
+
+        }
+
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
+        html += '<thead class="box-header">';
+        html += '<tr>';
+        html += '<th>Instance</th>';
+        html += '<th>Name</th>';
+        html += '<th>Type</th>';
+        html += '<th>Start</th>';
+        html += '<th>End</th>';
+        html += '<th>LastLog(s ago)</th>';
+        html += '<th>Hostname</th>';
+        html += '<th>PID</th>';
+        html += '<th>Status</th>';
+        html += '<th>TimeStamp</th>';
+        html += '<th>Uptime</th>';
+        html += '<th>System Time</th>';
+        html += '<th>User Time</th>';
+        html += '<th>VMem(KB)</th>';
+        html += '<th colspan="2">RMem(KB)|%</th>';
+        html += '<th>Parent</th>';
+
+        html += '</tr>';
+
+
+        html += '</thead> ';
+        
+        html += '</table>';
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
+
+        return html;
+    }
+/*
+    function generateProcessTable(tmpObj) {
         var cu = tmpObj.elems;
         var template = tmpObj.type;
         var html = "";
+        html += '<div class="row">';
         html += '<table class="table table-striped" id="graph_table-' + template + '">';
-        html += '</table>';
+        html += '</table></div>';
 
 
-        html += '<div class="box col-md-12" id="container-main-table">';
+       // html += '<div class="box col-md" id="container-main-table">';
         html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
+        html += '<div class="row">';
+        html += '<div class="col-md">';
 
         html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header processMenu">';
-        html += '<tr class="processMenu">';
+        html += '<tr>';
         html += '<th>Instance</th>';
         html += '<th>Name</th>';
         html += '<th>Type</th>';
@@ -1751,13 +1804,16 @@
 
         html += '</table>';
         html += '</div>';
+
+        html += '</div>';
+        html += '</div>';
         html += '</div>';
 
-        html += generateScriptAdminModal();
+     //   html += generateScriptAdminModal();
         return html;
 
     }
-
+*/
     function generateNodeTable(tmpObj) {
         var cu = tmpObj.elems;
         var template = tmpObj.type;
@@ -5143,11 +5199,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             } else if (cmd == "console-node") {
                 var agentn = node_name_to_desc[node_selected].desc.ndk_parent;
                 var server = node_name_to_desc[node_selected].desc.ndk_host_name;
-              //  getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
+              //  getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
 
                 jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
                     console.log("->" + JSON.stringify(data));
-                    getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
+                    getConsole(server + ":" + node_selected, data.association_uid, server , 2, 1, 1000);
                 });
 
 
@@ -5680,12 +5736,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 console = 2;
             }
             //   var agentn = tmpObj[node_selected].parent;
-            var server = tmpObj.data[node_selected].hostname + ":8071";
+            var server = tmpObj.data[node_selected].hostname;
             var friendname = tmpObj.data[node_selected].pname;
             getConsole(tmpObj.data[node_selected].hostname + ":" + friendname + "(" + node_selected + ")", node_selected, server, 2, console, 1000, tmpObj.data[node_selected].ptype);
 
         } else if (cmd == "download-output") {
-            var server = tmpObj.data[node_selected].hostname + ":8071";
+            var server = tmpObj.data[node_selected].hostname;
             jchaos.setOptions({ "timeout": 60000 });
 
             jchaos.rmtDownload(server, node_selected, "", function (r) {
@@ -5704,7 +5760,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         } else if (cmd == "kill-process") {
             confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
                 function () {
-                    var server = tmpObj.data[node_selected].hostname + ":8071";
+                    var server = tmpObj.data[node_selected].hostname;
                     jchaos.rmtKill(server, node_selected, function (r) {
                         instantMessage("US KILL", "Killing " + node_selected + " ", 1000, true);
 
@@ -5785,7 +5841,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                             server = findBestServer(obj);
                         }
 
-                        jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+                        jchaos.rmtGetEnvironment(server, "CHAOS_PREFIX", function (r) {
                             if (r.err != 0) {
                                 instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
                                 return;
@@ -5796,10 +5852,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                                 if (data['app_broadcast']) {
                                     var serverlist = obj['agents'];
                                     for (var server in serverlist) {
-                                        jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
+                                        jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function (r) {
                                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server , 2, 1, 1000);
 
                                         }, function (bad) {
                                             console.log("Some error getting loading script:" + bad);
@@ -5814,10 +5870,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                                         server = findBestServer(obj);
                                     }
 
-                                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
+                                    jchaos.rmtCreateProcess(server , name, cmd_line, "exec", "", function (r) {
                                         console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                         instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                        getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                                        getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
 
                                     }, function (bad) {
                                         console.log("Some error getting loading script:" + bad);
@@ -5839,7 +5895,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         var serverlist = tmpObj['agents'];
         for (var key in serverlist) {
             var server = key;
-            jchaos.rmtPurge(server + ":8071", level, function (r) { }, function (bad) {
+            jchaos.rmtPurge(server, level, function (r) { }, function (bad) {
                 instantMessage("Purge Error", "Failed to purge ", 2000, false);
 
             })
@@ -5894,7 +5950,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 alert("NO Server Available");
                 return;
             }
-            jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+            jchaos.rmtGetEnvironment(server, "CHAOS_PREFIX", function (r) {
                 if (r.err != 0) {
                     instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
                     return;
@@ -5918,11 +5974,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
                         getEntryWindow(name, "Additional args", '', "Run", function (parm) {
 
-                            jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "", function (r) {
+                            jchaos.rmtCreateProcess(server , name, launch_arg + " " + parm, language, "", function (r) {
                                 console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                 var node_selected = tmpObj.node_selected;
                                 instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000, language);
+                                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000, language);
                             }, function (bad) {
                                 console.log("Some error getting loading script:" + bad);
                                 instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -5930,11 +5986,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                             });
                         }, "Cancel");
                     } else {
-                        jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + additional_args, language, "", function (r) {
+                        jchaos.rmtCreateProcess(server , name, launch_arg + " " + additional_args, language, "", function (r) {
                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                             var node_selected = tmpObj.node_selected;
                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000), language;
+                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000), language;
                         }, function (bad) {
                             console.log("Some error getting loading script:" + bad);
                             instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -5998,6 +6054,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
     function updateProcessTable(tmpObj) {
         var tablename = "main_table-" + tmpObj.template;
         var template = tmpObj.type;
+        var now = (new Date()).getTime();
+
         for (var p in tmpObj.data) {
             var pname = tmpObj.data[p].pname;
 
@@ -6008,7 +6066,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toLocaleString();
             var end_timestamp = (tmpObj.data[p].end_time > 0) ? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString() : "--";
-            var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time) / 1000;
+            var last_log = (now- tmpObj.data[p].last_log_time) / 1000;
             var pid = tmpObj.data[p].pid;
             var timestamp = (new Date(Number(tmpObj.data[p].ts))).toLocaleString();
             var uptime = tmpObj.data[p].uptime;
@@ -6026,7 +6084,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             var encoden = jchaos.encodeName(p);
             $("#" + encoden + "_start_ts").html(started_timestamp);
             $("#" + encoden + "_end_ts").html(end_timestamp);
-            $("#" + encoden + "_last_log_ts").html(last_log);
+            $("#" + encoden + "_last_log_ts").html(jchaos.toHHMMSS(last_log.toFixed(0)));
             if (status == "RUNNING") {
                 $("#" + encoden + "_status").html('<font color="green">' + status + "</font>");
 
@@ -6044,7 +6102,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             $("#" + encoden + "_parent").html(parent_str);
         }
-        if (tmpObj.hasOwnProperty("server_charts")) {
+     /*   if (tmpObj.hasOwnProperty("server_charts")) {
             var now = (new Date()).getTime();
             for (var server in tmpObj['agents']) {
                 var infoServer = tmpObj.agents[server];
@@ -6063,6 +6121,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
 
         }
+        */
 
     }
 
@@ -6108,7 +6167,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             var cnt = ag.length;
             ag.forEach(function (ser) {
                 var server = ser.ndk_host_name;
-                jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
+                jchaos.rmtUploadScript(server , jsonscript, function (r) {
                     if (r.err != 0) {
                         instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);
                     } else {
@@ -6127,7 +6186,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             });
         } else {
             serveList.forEach(function (elem) {
-                jchaos.rmtUploadScript(elem + ":8071", jsonscript, function (r) {
+                jchaos.rmtUploadScript(elem , jsonscript, function (r) {
 
                     console.log("Script loaded onto:" + elem + " :" + JSON.stringify(r));
 
@@ -6191,7 +6250,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
     function updateProcessInterface(tmpObj) {
         //  updateProcessList(tmpObj);
         var tablename = "main_table-" + tmpObj.template;
-        var graph_table = "graph_table-" + tmpObj.template;
+     //   var graph_table = "graph_table-" + tmpObj.template;
         var template = tmpObj.type;
         var cnt = 0;
         var num_chart = 3;
@@ -6221,7 +6280,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         if ((typeof tmpObj['agent_list'] === "undefined") || (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list']) || (typeof tmpObj['old_agent_list'] === "undefined"))) {
             tmpObj['old_agent_list'] = tmpObj['agent_list'];
 
-            var chart_options = {
+       /*     var chart_options = {
                 chart: {
                     height: (1 / (num_chart) * 100) + '%',
                     width: (hostWidth / (num_chart + 1))
@@ -6274,12 +6333,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 }]
             };
             $("#" + graph_table).find("tr:gt(0)").remove();
-
+*/
             var serverlist = tmpObj['agents'];
             var html = "";
             var server_charts = {};
 
-            for (var key in serverlist) {
+        /*    for (var key in serverlist) {
                 var encoden = jchaos.encodeName(key);
                 if ((cnt % num_chart) == 0) {
                     if (cnt > 0) {
@@ -6304,7 +6363,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 tmpObj['server_charts'] = server_charts;
 
             }
-        }
+        }*/
         var ordered = [];
         for (var p in tmpObj.data) {
             if (tmpObj.data.hasOwnProperty(p)) {
@@ -6338,28 +6397,29 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             var encoden = jchaos.encodeName(obj.uid);
 
             $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
-                '<td class="td_element" id="' + encoden + '">' + obj.uid + '</td>' +
-                '<td class="td_element">' + pname + '</td>' +
-                '<td class="td_element">' + ptype + '</td>' +
-                '<td class="td_element" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
-                '<td class="td_element" id="' + encoden + '_end_ts">' + end_timestamp + '</td>' +
-                '<td class="td_element" id="' + encoden + '_last_log_ts">' + last_log + '</td>' +
-                '<td class="td_element">' + hostname + '</td>' +
-                '<td class="td_element">' + pid + '</td>' +
-                '<td class="td_element" id="' + encoden + '_status">' + status + '</td>' +
-                '<td class="td_element" id="' + encoden + '_ts">' + timestamp + '</td>' +
-                '<td class="td_element" id="' + encoden + '_uptime">' + uptime + '</td>' +
-                '<td class="td_element" id="' + encoden + '_systime">' + systime + '</td>' +
-                '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>' +
-                '<td class="td_element" id="' + encoden + '_vmem">' + vmem + '</td>' +
-                '<td class="td_element" id="' + encoden + '_rmem">' + rmem + '</td>' +
-                '<td class="td_element" id="' + encoden + '_pmem">' + pmem + '</td>' +
-                '<td class="td_element" id="' + encoden + '_parent">' + parent + '</td></tr>'
+                '<td class="col-sm" id="' + encoden + '">' + obj.uid + '</td>' +
+                '<td class="col-sm">' + pname + '</td>' +
+                '<td class="col-sm">' + ptype + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_end_ts">' + end_timestamp + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_last_log_ts">' + last_log + '</td>' +
+                '<td class="col-sm">' + hostname + '</td>' +
+                '<td class="col-sm">' + pid + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_status">' + status + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_ts">' + timestamp + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_uptime">' + uptime + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_systime">' + systime + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_cputime">' + cputime + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_vmem">' + vmem + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_rmem">' + rmem + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_pmem">' + pmem + '</td>' +
+                '<td class="col-sm" id="' + encoden + '_parent">' + parent + '</td></tr>'
             );
 
         }
+    }
 
-        $("#main_table-" + template + " tbody tr").click(function (e) {
+        $("#"+tablename + " tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
      /*   n = $('#main_table-' + template + ' tr').size();

@@ -249,6 +249,8 @@
 										alert(" Cannot create node err:" + JSON.stringify(bad));
 									});
 
+								},(bad)=>{
+									alert("Cannot retrieve best server err:"+JSON.stringify(bad));
 								});
 
 

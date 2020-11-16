@@ -16,7 +16,7 @@ require_once('header.php');
 			
 			
 <div id="chaos_content" class="container-fluid-full fill">
-				<div id="main-dashboard"></div>
+				<div id="main-dashboard" class="container-fluid"></div>
 
 </div>
 	<footer><?php require_once('footer.php');?></footer>

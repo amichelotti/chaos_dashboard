@@ -91,7 +91,7 @@ require_once('header.php');
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
 		}, (bad) => {
-			console.error("error:"+JSONS.stringify(bad));
+			console.error("error:"+JSON.stringify(bad));
 
 		});
 
@@ -953,9 +953,15 @@ require_once('header.php');
 								node_created[iname] = true;
 							}
 						}
-						if (edesc.ndk_type == "nt_unit_server") {
+						if (edesc.ndk_type == "nt_unit_server" || (edesc.ndk_type == "nt_root")) {
 							var parent = "#";
-							var desc = jchaos.node(edesc.ndk_uid, "get", "us");
+							var desc;
+							if(edesc.ndk_type == "nt_unit_server"){
+								desc=jchaos.node(edesc.ndk_uid, "get", "us");
+							} else {
+								desc=jchaos.node(edesc.ndk_uid, "desc", "all");
+
+							}
 							var icon_name = "";
 							var parent = "#";
 							icon_name = "/img/devices/" + desc.ndk_type + ".png";
@@ -1016,7 +1022,7 @@ require_once('header.php');
 						handler(jsree_data);
 					}
 				}, (bad) => {
-					console.error("error:"+JSONS.stringify(bad));
+					console.error("error:"+JSON.stringify(bad));
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
@@ -1024,7 +1030,7 @@ require_once('header.php');
 
 
 			}, (bad) => {
-				console.error("error:"+JSONS.stringify(bad));
+				console.error("error:"+JSON.stringify(bad));
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
@@ -1097,8 +1103,13 @@ require_once('header.php');
 
 
 						//var desc = jchaos.getDesc(elem, null);
-						var icon_name = "/img/devices/" + desc['group'] + ".png";
+						var icon_name;
+						if(desc.ndk_type == "nt_root"){
+							icon_name = "/img/devices/" + desc.ndk_type + ".png";
 
+						} else {
+							icon_name = "/img/devices/" + desc['group'] + ".png";
+						}
 						var node = {
 							"id": uname,
 							"parent": next_parent,
@@ -1187,13 +1198,13 @@ require_once('header.php');
 						handler(jsree_data);
 					}
 				}, (bad) => {
-					console.error("error:"+JSONS.stringify(bad));
+					console.error("error:"+JSON.stringify(bad));
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
 				});
 			}, (bad) => {
-				console.error("error:"+JSONS.stringify(bad));
+				console.error("error:"+JSON.stringify(bad));
 
 				if (typeof handler === "function") {
 					handler(jsree_data);
