@@ -961,9 +961,8 @@ require_once('header.php');
 							icon_name = "/img/devices/" + desc.ndk_type + ".png";
 
 							if (desc.ndk_parent !== undefined) {
-								if(node_created.hasOwnProperty(jchaos.encodeName(desc.ndk_parent))){
-									parent = jchaos.encodeName(desc.ndk_parent);
-								}
+								parent = jchaos.encodeName(desc.ndk_parent);
+								
 							}
 
 							if (desc.ndk_uid !== undefined) {
