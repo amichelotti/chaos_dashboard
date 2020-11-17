@@ -91,7 +91,7 @@ require_once('header.php');
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
 		}, (bad) => {
-			console.error("error:"+JSON.stringify(bad));
+			console.error("error:" + JSON.stringify(bad));
 
 		});
 
@@ -923,10 +923,77 @@ require_once('header.php');
 				data.push(obj);
 			}
 		}
+		
+		function addUSOrRoot(jsree_data, node_created, edesc,without_parent) {
+			if (edesc.ndk_type == "nt_unit_server" || (edesc.ndk_type == "nt_root")) {
+				var parent = "#";
+				var desc;
+				if (edesc.ndk_type == "nt_unit_server") {
+					desc = jchaos.node(edesc.ndk_uid, "get", "us");
+				} else {
+					desc = edesc;
+
+				}
+				var icon_name = "";
+				var parent = "#";
+				icon_name = "/img/devices/" + desc.ndk_type + ".png";
+
+				if ((desc.ndk_parent !== undefined)&&(without_parent==false)) {
+					parent = jchaos.encodeName(desc.ndk_parent);
+
+				}
+
+				if (desc.ndk_uid !== undefined) {
+					var idname = jchaos.encodeName(desc.ndk_uid);
+					if (!node_created.hasOwnProperty(idname)) {
+
+						var node = {
+							"id": idname,
+							"parent": parent,
+							"icon": icon_name,
+							"text": desc.ndk_uid,
+							"data": desc
+						};
+
+						jsree_data.push(node);
+						node_created[idname] = true;
+					}
+
+					if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
+						var list = desc.us_desc.cu_desc;
+						list.forEach(cu => {
+							var name = cu.ndk_uid;
+							var regex = /(.*)\/(.*)\/(.*)$/;
+							var match = regex.exec(name);
+							var icon_name = "";
+							if ((match != null) && (typeof match[2] !== "undefined")) {
+								icon_name = "/img/devices/" + match[2] + ".png";
+								cu["zone"] = match[1];
+								cu["group"] = match[2];
+							}
+							var idname = jchaos.encodeName(name);
+
+							var node = {
+								"id": idname,
+								"parent": jchaos.encodeName(cu.ndk_parent),
+								"icon": icon_name,
+								"text": name,
+								"data": cu
+							};
+							if (!node_created.hasOwnProperty(idname)) {
+								jsree_data.push(node);
+								node_created[idname] = true;
+							}
+						});
+					}
+				}
+
+			}
+		}
 		function createJSTreeByServer(filter, alive, handler) {
 			var jsree_data = [];
 			var node_created = {};
-		
+
 			jchaos.search(filter, "server", alive, (nodes) => {
 				if (nodes.length == 0) {
 					alert("No nodes found");
@@ -936,6 +1003,8 @@ require_once('header.php');
 					return;
 				}
 				jchaos.node(nodes, "desc", "all", (d) => {
+					// add before agents and us
+					
 					d.forEach(edesc => {
 						if (edesc.ndk_type == "nt_data_service" || edesc.ndk_type == "nt_wan_proxy" || edesc.ndk_type == "nt_agent") {
 							var icon = "/img/devices/" + edesc.ndk_type + ".png";
@@ -952,77 +1021,45 @@ require_once('header.php');
 								jsree_data.push(node);
 								node_created[iname] = true;
 							}
-						}
-						if (edesc.ndk_type == "nt_unit_server" || (edesc.ndk_type == "nt_root")) {
-							var parent = "#";
-							var desc;
-							if(edesc.ndk_type == "nt_unit_server"){
-								desc=jchaos.node(edesc.ndk_uid, "get", "us");
-							} else {
-								desc=jchaos.node(edesc.ndk_uid, "desc", "all");
+							if(edesc.ndk_type == "nt_agent"){
+								if(edesc.hasOwnProperty("andk_node_associated")){
+									edesc.andk_node_associated.forEach((ass)=>{
+										var found=false;
+										d.forEach((m,index)=>{
+											//console.log(edesc.ndk_uid+" looking among live for:"+ass.ndk_uid)
+											if(m.ndk_uid == ass.ndk_uid){
+												addUSOrRoot(jsree_data, node_created, m,false);
+												found=true;
+												d.splice(index, 1);
+											}
+										});
+										if(!found){
+										//	console.log(edesc.ndk_uid+" looking among NOT live for:"+ass.ndk_uid)
 
-							}
-							var icon_name = "";
-							var parent = "#";
-							icon_name = "/img/devices/" + desc.ndk_type + ".png";
+											var nn=	jchaos.node(ass.ndk_uid, "desc", "all");
+											if(nn!=null && nn.hasOwnProperty('ndk_uid')){
+												addUSOrRoot(jsree_data, node_created, nn,false);
 
-							if (desc.ndk_parent !== undefined) {
-								parent = jchaos.encodeName(desc.ndk_parent);
-								
-							}
+											} else {
+												console.error("Node empty?:"+ass.ndk_uid+ " in agent :"+edesc.ndk_uid);
 
-							if (desc.ndk_uid !== undefined) {
-								var idname = jchaos.encodeName(desc.ndk_uid);
-								if (!node_created.hasOwnProperty(idname)) {
-
-									var node = {
-										"id": idname,
-										"parent": parent,
-										"icon": icon_name,
-										"text": desc.ndk_uid,
-										"data": desc
-									};
-
-									jsree_data.push(node);
-									node_created[idname] = true;
-								}
-
-								if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
-									var list = desc.us_desc.cu_desc;
-									list.forEach(cu => {
-										var name = cu.ndk_uid;
-										var regex = /(.*)\/(.*)\/(.*)$/;
-										var match = regex.exec(name);
-										var icon_name = "";
-										if ((match != null) && (typeof match[2] !== "undefined")) {
-											icon_name = "/img/devices/" + match[2] + ".png";
-											cu["zone"] = match[1];
-											cu["group"] = match[2];
+												alert("Agent "+edesc.ndk_uid+" is associated to a non valid node:"+ass.ndk_uid+" please remove it from associations")
+											}
 										}
-										var idname = jchaos.encodeName(name);
 
-										var node = {
-											"id": idname,
-											"parent": jchaos.encodeName(cu.ndk_parent),
-											"icon": icon_name,
-											"text": name,
-											"data": cu
-										};
-										if (!node_created.hasOwnProperty(idname)) {
-											jsree_data.push(node);
-											node_created[idname] = true;
-										}
 									});
 								}
 							}
-
-						}
+						} 	
+					});
+					d.forEach(edesc => {
+						addUSOrRoot(jsree_data, node_created, edesc,true);
 					});
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
 				}, (bad) => {
-					console.error("error:"+JSON.stringify(bad));
+					console.error("error:" + JSON.stringify(bad));
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
@@ -1030,11 +1067,11 @@ require_once('header.php');
 
 
 			}, (bad) => {
-				console.error("error:"+JSON.stringify(bad));
-					if (typeof handler === "function") {
-						handler(jsree_data);
-					}
-				});
+				console.error("error:" + JSON.stringify(bad));
+				if (typeof handler === "function") {
+					handler(jsree_data);
+				}
+			});
 
 
 		}
@@ -1104,7 +1141,7 @@ require_once('header.php');
 
 						//var desc = jchaos.getDesc(elem, null);
 						var icon_name;
-						if(desc.ndk_type == "nt_root"){
+						if (desc.ndk_type == "nt_root") {
 							icon_name = "/img/devices/" + desc.ndk_type + ".png";
 
 						} else {
@@ -1198,13 +1235,13 @@ require_once('header.php');
 						handler(jsree_data);
 					}
 				}, (bad) => {
-					console.error("error:"+JSON.stringify(bad));
+					console.error("error:" + JSON.stringify(bad));
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
 				});
 			}, (bad) => {
-				console.error("error:"+JSON.stringify(bad));
+				console.error("error:" + JSON.stringify(bad));
 
 				if (typeof handler === "function") {
 					handler(jsree_data);
