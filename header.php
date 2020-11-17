@@ -707,7 +707,13 @@
 			jqccs.createBrowserWindow("Log browser", (pid) => {
 				var jsree_data = [];
 				var node_created = {};
-
+				var node_all = {
+								"id": "ALL",
+								"parent": "#",
+								"text": "ALL",
+				};
+				jsree_data.push(node_all);
+				node_created['ALL'] = true;
 				jchaos.log("", "search", "all", query.start, query.end, function (data) {
 					if (data.hasOwnProperty("result_list")) {
 						data.result_list.forEach(function (item) {
@@ -741,8 +747,10 @@
 							}
 							var dirs = name.split("/");
 							var group = "";
+							var compname="";
 							dirs.forEach((ele, index) => {
 								var node_group;
+								compname=ele;
 								if (index == 0) {
 									group = type + "/" + ele;
 									node_group = {
@@ -777,6 +785,11 @@
 							node['data']['group'] = group;
 							if (!node_created.hasOwnProperty(nodef)) {
 								node_created[nodef] = true;
+								jsree_data.push(node);
+								// push also in all
+								node['id']="ALL_"+node['id'];
+								node['parent']="ALL";
+								node['text']=compname+"_"+node['text'];
 								jsree_data.push(node);
 							}
 						});
