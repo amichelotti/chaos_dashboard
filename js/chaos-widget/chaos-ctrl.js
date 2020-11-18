@@ -44,7 +44,7 @@
             }
         }
     }
-    jqccs.getSettings=function(){
+    jqccs.getSettings = function () {
         return dashboard_settings;
     }
     function getInterfaceFromClass(impl_class) {
@@ -189,7 +189,7 @@
             }
         });
     }
-    jqccs.getFile=function(msghead, msg, handler){
+    jqccs.getFile = function (msghead, msg, handler) {
         return getFile(msghead, msg, handler);
     }
     function getFile(msghead, msg, handler) {
@@ -204,7 +204,7 @@
                 $('#upload-file').on('change', function () {
                     var reader = new FileReader();
                     reader.onload = function (e) {
-                         try {
+                        try {
                             var json = JSON.parse(e.target.result);
                             handler(json);
                         } catch (err) {
@@ -212,7 +212,7 @@
                             obj['name'] = $('#upload-file').val();
                             obj['data'] = e.target.result;
                             handler(obj);
-                          }
+                        }
 
                         $(main).dialog("close").remove();
                     };
@@ -288,7 +288,7 @@
         });
     }
 
-    function showJson(msg, json ,tmpObj) {
+    function showJson(msg, json, tmpObj) {
         var name = jchaos.encodeName(msg);
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
@@ -333,11 +333,11 @@
             }
         });
     }
-    jqccs.showScript=function(msghead, group,type,handler,actions){
-        return showScript(msghead, group,type,handler,actions);
+    jqccs.showScript = function (msghead, group, type, handler, actions) {
+        return showScript(msghead, group, type, handler, actions);
     }
-    function showScript(msghead, group,type, handler,actions) {
-        var name = "script-"+(new Date()).getTime();
+    function showScript(msghead, group, type, handler, actions) {
+        var name = "script-" + (new Date()).getTime();
         var opt = {
             _name_: name,
             minWidth: hostWidth / 2,
@@ -348,118 +348,118 @@
             buttons: [
                 {
                     text: "close",
-                click: function (e) {
-                    $(this).dialog("close");
-                    
+                    click: function (e) {
+                        $(this).dialog("close");
+
+                    }
                 }
-                }
-                 ],
+            ],
 
             open: function () {
                 jchaos.search("", "script", false, function (l) {
-                    var scripts={};
-                    var scripts_flat={}
+                    var scripts = {};
+                    var scripts_flat = {}
                     if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
                         var list_algo = l['found_script_list'];
                         list_algo.forEach(function (p) {
-                            if((typeof type ==="string")&&(type !="")){
-                                if(p['eudk_script_language']!=type){
+                            if ((typeof type === "string") && (type != "")) {
+                                if (p['eudk_script_language'] != type) {
                                     return;
                                 }
                             }
-                            if((typeof group ==="string")&&(group!="")){
-                                if(p.hasOwnProperty("script_group")){
-                                    if((p["script_group"]!="ALL")&&(p["script_group"]!=group)){
+                            if ((typeof group === "string") && (group != "")) {
+                                if (p.hasOwnProperty("script_group")) {
+                                    if ((p["script_group"] != "ALL") && (p["script_group"] != group)) {
                                         return;
                                     }
                                 } else {
                                     return;
                                 }
                             }
-                            var group_name="ALL";
-                            if(p["script_group"]!=""){
-                                group_name=p["script_group"];
+                            var group_name = "ALL";
+                            if (p["script_group"] != "") {
+                                group_name = p["script_group"];
                             }
                             var encoden = jchaos.encodeName(p.script_name);
                             delete p._id;
-                            if(p.seq>0){
-                                p['date']=(new Date(p.seq)).toUTCString();
+                            if (p.seq > 0) {
+                                p['date'] = (new Date(p.seq)).toUTCString();
                             }
-                            var sgroup="";
-                            if((typeof group ==="string")&&(p.hasOwnProperty("script_group"))){
-                                if((group!="")){
-                                    if(p.script_group==group){
-                                        sgroup=group;
+                            var sgroup = "";
+                            if ((typeof group === "string") && (p.hasOwnProperty("script_group"))) {
+                                if ((group != "")) {
+                                    if (p.script_group == group) {
+                                        sgroup = group;
                                     }
                                 } else {
-                                    sgroup=p.script_group;
- 
-                                }   
-                            } 
-                            if(sgroup!=""){
-                                if(scripts.hasOwnProperty(sgroup)){
-                                    scripts[sgroup][encoden]=p;
-
-                                } else {
-                                    scripts[sgroup]={};
-                                    scripts[sgroup][encoden]=p;
+                                    sgroup = p.script_group;
 
                                 }
-                                scripts_flat[encoden]=p;
+                            }
+                            if (sgroup != "") {
+                                if (scripts.hasOwnProperty(sgroup)) {
+                                    scripts[sgroup][encoden] = p;
+
+                                } else {
+                                    scripts[sgroup] = {};
+                                    scripts[sgroup][encoden] = p;
+
+                                }
+                                scripts_flat[encoden] = p;
 
                             }
-                            
+
                         });
                     }
-                    var jsonhtml = json2html(scripts, {collapsed:true}, "");
+                    var jsonhtml = json2html(scripts, { collapsed: true }, "");
                     $("#" + name).html(jsonhtml);
-                    if(typeof handler === "function"){
-                        handler($("#" + name),scripts_flat);
+                    if (typeof handler === "function") {
+                        handler($("#" + name), scripts_flat);
                     }
-                    
+
                 });
             }
-    }
-    if((typeof actions !== "undefined")&&(actions instanceof Array )){
-        opt.buttons=actions.concat(opt.buttons);
+        }
+        if ((typeof actions !== "undefined") && (actions instanceof Array)) {
+            opt.buttons = actions.concat(opt.buttons);
+
+        }
+        createCustomDialog(opt);
 
     }
-    createCustomDialog(opt);
+    /*   var instant = $('<div id=dataset-' + name + '></div>').dialog({
+           minWidth: hostWidth / 4,
+           minHeight: hostHeight / 4,
+           closeOnEscape: true,
+           title: msghead,
+           resizable: true,
+           buttons: [ 
+           {
+               text: "save",
+               click: function (e) {
+                   var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
+                   saveAs(blob, name + ".json");
+               }
+           },
+           {
+               text: "close",
+               click: function (e) {
+                   // var interval=$(this).attr("refresh_time");
+                   $("#dataset-" + name).dialog('close');
 
-}
-     /*   var instant = $('<div id=dataset-' + name + '></div>').dialog({
-            minWidth: hostWidth / 4,
-            minHeight: hostHeight / 4,
-            closeOnEscape: true,
-            title: msghead,
-            resizable: true,
-            buttons: [ 
-            {
-                text: "save",
-                click: function (e) {
-                    var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
-                    saveAs(blob, name + ".json");
-                }
-            },
-            {
-                text: "close",
-                click: function (e) {
-                    // var interval=$(this).attr("refresh_time");
-                    $("#dataset-" + name).dialog('close');
-
-                }
-            }
+               }
+           }
 
 
-            ],
-            close: function (event, ui) {
+           ],
+           close: function (event, ui) {
 
-                $(this).remove();
-            },
-          
-            
-        });
-    }*/
+               $(this).remove();
+           },
+         
+           
+       });
+   }*/
     function showDataset(msghead, cuname, refresh, tmpObj) {
         var update;
         var started = 0;
@@ -555,7 +555,7 @@
 
                     // $(instant).dialog("close");
                 }
-            }, 
+            },
             {
                 text: "Format",
                 id: 'dataset-radix-' + name,
@@ -644,11 +644,11 @@
                             if (jchaos.isCollapsable(converted)) {
                                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                             }
-                            var html="";
-                            var lat=imdata[0].dpck_ts_diff/1000.0;
-                            html="<label>CU-MDS Latency(ms):"+lat+"</label>";
-                            
-                            html+=jsonhtml;
+                            var html = "";
+                            var lat = imdata[0].dpck_ts_diff / 1000.0;
+                            html = "<label>CU-MDS Latency(ms):" + lat + "</label>";
+
+                            html += jsonhtml;
                             $("#dataset-" + name).html(html);
                             if (started == 0) {
                                 started = 1;
@@ -671,11 +671,11 @@
             }
         });
     }
-    
-    
-    jqccs.editJSON=function(msghead, json,applyfunc) {
+
+
+    jqccs.editJSON = function (msghead, json, applyfunc) {
         var last_dataset = {};
-        var showformat=0;
+        var showformat = 0;
         var name = jchaos.encodeName(msghead);
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
@@ -685,7 +685,7 @@
             closeOnEscape: true,
             title: msghead,
             resizable: true,
-            buttons: [ 
+            buttons: [
                 {
                     text: "Format",
                     id: 'dataset-radix-' + name,
@@ -719,56 +719,56 @@
                             options["format"] = 10;
                         }
                         var converted = convertBinaryToArrays(json);
-               
+
                         var jsonhtml = json2html(converted, options, "");
                         $("#dataset-" + name).html(jsonhtml);
 
                         // $(instant).dialog("close");
                     }
                 },
-                 {
-                text: "Save to Disk",
-                click: function (e) {
-                    var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
-                    saveAs(blob, name + ".json");
-                }
-            },
-            {
-                text: "Upload From Disk",
-                click: function (e) {
-                    getFile("Upload", "upload the json", function (obj) {
-                        json=obj;
-                        var converted = convertBinaryToArrays(json);
-                        var jsonhtml = json2html(converted, options, "");
-                        $("#dataset-" + name).html(jsonhtml);
-                    });
-
-                }
-            },{
-                text: "Apply",
-                id: 'apply-' + name,
-                click: function (e) {
-                   if(typeof applyfunc==="function"){
-                       applyfunc(json,function(newjson){
-                        if(typeof newjson==="object"){
-                            var converted = convertBinaryToArrays(newjson);
+                {
+                    text: "Save to Disk",
+                    click: function (e) {
+                        var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
+                        saveAs(blob, name + ".json");
+                    }
+                },
+                {
+                    text: "Upload From Disk",
+                    click: function (e) {
+                        getFile("Upload", "upload the json", function (obj) {
+                            json = obj;
+                            var converted = convertBinaryToArrays(json);
                             var jsonhtml = json2html(converted, options, "");
                             $("#dataset-" + name).html(jsonhtml);
+                        });
+
+                    }
+                }, {
+                    text: "Apply",
+                    id: 'apply-' + name,
+                    click: function (e) {
+                        if (typeof applyfunc === "function") {
+                            applyfunc(json, function (newjson) {
+                                if (typeof newjson === "object") {
+                                    var converted = convertBinaryToArrays(newjson);
+                                    var jsonhtml = json2html(converted, options, "");
+                                    $("#dataset-" + name).html(jsonhtml);
+                                }
+                            });
                         }
-                       });
-                   }
 
-                }
-            },
-            {
-                text: "close",
-                click: function (e) {
-                    // var interval=$(this).attr("refresh_time");
-                    $("#dataset-" + name).dialog('close');
-                    $(this).remove();
+                    }
+                },
+                {
+                    text: "close",
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                        $("#dataset-" + name).dialog('close');
+                        $(this).remove();
 
+                    }
                 }
-            }
 
 
             ],
@@ -792,36 +792,36 @@
                 if (jchaos.isCollapsable(converted)) {
                     jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                 }
-                
+
                 $("#dataset-" + name).html(jsonhtml);
-                if(typeof applyfunc!=="function"){
-                    $( '#apply-' + name ).remove();
+                if (typeof applyfunc !== "function") {
+                    $('#apply-' + name).remove();
                 }
 
-                
-                
+
+
                 jqccs.jsonSetup($(this), function (e) {
-        
+
                 }, function (e) {
                     if (e.keyCode == 13) {
-        
+
                         var value = e.target.value;
                         var attrname = e.target.name;
                         var desc = jchaos.decodeCUPath(attrname);
-                        
-                        var obj=jchaos.changejsonfrompath(json,attrname,value);
+
+                        var obj = jchaos.changejsonfrompath(json, attrname, value);
                         var converted = convertBinaryToArrays(json);
 
                         var jsonhtml = json2html(converted, options, "");
-                         if (jchaos.isCollapsable(converted)) {
-                        jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                        if (jchaos.isCollapsable(converted)) {
+                            jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                         }
-                
+
                         $("#dataset-" + name).html(jsonhtml);
-                    } 
+                    }
                 })
-        
-            
+
+
                 $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
             }
@@ -832,26 +832,26 @@
      * @param {string} msgHead Title of the window
      * @param {function} nodeFn function that creates node, menu and handlers 
      */
-    jqccs.createBrowserWindow=function(msgHead,opt,nodeFn){
-        var width=$(window).width() / 2;
-        var height=$(window).height() / 2;
-        if(typeof opt === "function"){
-            nodeFn=opt;
-        } else if(opt !== undefined ){
-            if(opt['width'] !== undefined){
-                width=opt['width'];
+    jqccs.createBrowserWindow = function (msgHead, opt, nodeFn) {
+        var width = $(window).width() / 2;
+        var height = $(window).height() / 2;
+        if (typeof opt === "function") {
+            nodeFn = opt;
+        } else if (opt !== undefined) {
+            if (opt['width'] !== undefined) {
+                width = opt['width'];
             }
-            if(opt['height'] !== undefined){
-                height=opt['height'];
+            if (opt['height'] !== undefined) {
+                height = opt['height'];
             }
         }
 
-        var pid=(new Date()).getTime();
-        var hier="hier-"+pid;
-        var desc="desc-"+pid;
-        var html = '<div class="row"><div id="'+hier+'" class="col-md-6"></div><div id="'+desc+'" class="col-md-6"></div></div>';
-        
-        if(typeof nodeFn !== "function"){
+        var pid = (new Date()).getTime();
+        var hier = "hier-" + pid;
+        var desc = "desc-" + pid;
+        var html = '<div class="row"><div id="' + hier + '" class="col-md-6"></div><div id="' + desc + '" class="col-md-6"></div></div>';
+
+        if (typeof nodeFn !== "function") {
             throw "must provide a mode creation handler";
         }
         var opt = {
@@ -866,42 +866,42 @@
                     id: 'refresh-' + pid,
                     click: function (e) {
                         // var interval=$(this).attr("refresh_time");
-                    //    $('#console-' + pid).terminal().exit();
-                    nodeFn( pid);
-                }
-                
-            },
+                        //    $('#console-' + pid).terminal().exit();
+                        nodeFn(pid);
+                    }
+
+                },
                 {
                     text: "close",
                     id: 'console-close-' + pid,
                     click: function (e) {
                         // var interval=$(this).attr("refresh_time");
-                    //    $('#console-' + pid).terminal().exit();
-                    $(this).dialog("close");
+                        //    $('#console-' + pid).terminal().exit();
+                        $(this).dialog("close");
                     }
-                
-            }
-        ],
+
+                }
+            ],
             close: function (event, ui) {
-            //    $('#console-' + pid).terminal().exit();
-            $(this).dialog("close");
-         
+                //    $('#console-' + pid).terminal().exit();
+                $(this).dialog("close");
+
             },
 
             open: function (e) {
-                console.log(msgHead + " opening browser :" + pid+ " "+width+"x"+height);
-                nodeFn( pid);
-              
-        
-            } 
+                console.log(msgHead + " opening browser :" + pid + " " + width + "x" + height);
+                nodeFn(pid);
+
+
+            }
         }
-    
-      
+
+
         createCustomDialog(opt, html);
     }
-     jqccs.execConsole=function(msghead, execHandler,okhandle,nokhandle) {
-        var pid=(new Date()).getTime();
-        
+    jqccs.execConsole = function (msghead, execHandler, okhandle, nokhandle) {
+        var pid = (new Date()).getTime();
+
         var html = '<div id=console-' + pid + '></div>';
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
@@ -915,15 +915,15 @@
                 text: "download",
                 id: 'console-download-' + pid,
                 click: function (e) {
-                    var name=jchaos.encodeName(msghead)+pid;
+                    var name = jchaos.encodeName(msghead) + pid;
                     // var interval=$(this).attr("refresh_time");
                     var output = $('#console-' + pid).terminal().get_output();
                     var blob = new Blob([output], { type: "json;charset=utf-8" });
                     saveAs(blob, name + ".log");
 
-                 
+
                 }
-            }, 
+            },
             {
                 text: "pause",
                 id: 'console-pause-' + pid,
@@ -942,22 +942,22 @@
 
                 }
             },
-                {
-                    text: "close",
-                    id: 'console-close-' + pid,
-                    click: function (e) {
-                        // var interval=$(this).attr("refresh_time");
+            {
+                text: "close",
+                id: 'console-close-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
                     //    $('#console-' + pid).terminal().exit();
                     $(this).dialog("close");
-                    }
-                
+                }
+
             }],
             close: function (event, ui) {
-            //    $('#console-' + pid).terminal().exit();
-            $(this).dialog("close");
-            jchaos.exit=function(str){
-               alert(str);
-            }
+                //    $('#console-' + pid).terminal().exit();
+                $(this).dialog("close");
+                jchaos.exit = function (str) {
+                    alert(str);
+                }
             },
 
             open: function (e) {
@@ -965,71 +965,87 @@
 
                 //$(e.target).parent().css('background-color', 'black');
                 $('#console-' + pid).css('background-color', 'black');
-                $('#console-' + pid).terminal(function(command) {
+                $('#console-' + pid).terminal(function (command) {
                     if (command !== '') {
                         try {
-                            if(command == "help"){
+                            if (command == "help") {
                                 return;
                             }
-                            var regxp=/^\s*console\.([a-z]{3,})\((.*)\)\s*;/;
+                            var regxp = /^\s*console\.([a-z]{3,})\((.*)\)\s*;/;
                             var match = regxp.exec(command);
-             
-                            if(match!=null){
-                                
+
+                            if (match != null) {
+
                                 var result = window.eval(match[2]);
                                 if (result !== undefined) {
-                                    if(match[1]=="error"){
+                                    if (match[1] == "error") {
                                         this.error(new String(result));
-            
-                                    } else{
+
+                                    } else {
                                         this.echo(new String(result));
-                                    } 
+                                    }
                                 }
                             }
-                            
+
                             var result = window.eval(command);
-            
+
                             if (result !== undefined) {
                                 this.echo(new String(result));
                             }
 
 
-                        } catch(e) {
+                        } catch (e) {
                             this.error(new String(e));
                         }
                     } else {
-                       this.echo('');
+                        this.echo('');
                     }
                 }, {
                     greetings: 'JavaScript Chaos Interpreter',
                     name: 'JChaos',
                     height: 600,
                     prompt: 'chaos-js> '
-                  
-                   
+
+
                 });
-                setTimeout(()=>{
-                    if(typeof execHandler === "string"){
-                        $('#console-' + pid).terminal().exec(execHandler,false);
-                    } else if(typeof execHandler === "function"){
-                        $('#console-' + pid).terminal().exec(execHandler(),false);
+                setTimeout(() => {
+                    if (typeof execHandler === "string") {
+                        $('#console-' + pid).terminal().exec(execHandler, false);
+                    } else if (typeof execHandler === "function") {
+                        $('#console-' + pid).terminal().exec(execHandler(), false);
                     }
-                },500);
-                jchaos.exit=function(str){
-                    console.log("pausing: "+str);
+                }, 500);
+                jchaos.exit = function (str) {
+                    console.log("pausing: " + str);
                     $('#console-' + pid).terminal().logout();
 
                     $('#console-' + pid).terminal().disable();
                 }
-                jchaos.setOptions({"console_log":$('#console-' + pid).terminal().echo,"console_err":$('#console-' + pid).terminal().error});
-            }          
-            
+                jchaos.setOptions({ "console_log": $('#console-' + pid).terminal().echo, "console_err": $('#console-' + pid).terminal().error });
+            }
+
         }
-    
-      
+
+
         createCustomDialog(opt, html);
     }
-    jqccs.getConsole=function(msghead, pid, server, lines, consolen, refresh, type) {
+
+
+    jqccs.getConsoleByUid = function (msghead, uid) {
+        jchaos.node(uid, "desc", "all", (d) => {
+            if (d.ndk_parent !== undefined) {
+                jchaos.node(d.ndk_parent, "get", "agent", uid, null, function (data) {
+                    console.log("getConsoleByUid->" + JSON.stringify(data));
+                    jchaos.node(d.ndk_parent,"desc","all",(dd)=>{
+                    var server = dd.ndk_host_name + ":" + dd.ndk_rest_port;
+                    getConsole(msghead, data.association_uid, server, 2, 1, 1000);
+                    });
+                });
+            }
+        });
+
+    }
+    jqccs.getConsole = function (msghead, pid, server, lines, consolen, refresh, type) {
         return getConsole(msghead, pid, server, lines, consolen, refresh, type);
     }
     function getConsole(msghead, pid, server, lines, consolen, refresh, type) {
@@ -1143,7 +1159,7 @@
                     if (!stop_update) {
 
                         jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function (r) {
-                            if(r.data !== undefined){
+                            if (r.data !== undefined) {
                                 if (r.data.process.last_log_time != last_log_time) {
                                     //  var str = decodeURIComponent(escape(atob(r.data.console)));
                                     var str = atob(r.data.console);
@@ -1151,11 +1167,11 @@
                                     consoleParam.fromline = Number(r.data.process.output_line) - 1;
                                 }
                                 last_log_time = r.data.process.last_log_time;
-                        } else {
-                            var str="["+(new Date()).toString()+"] Cannot retrieve process on "+server;
-                            $('#console-' + pid).terminal().error(str);
+                            } else {
+                                var str = "[" + (new Date()).toString() + "] Cannot retrieve process on " + server;
+                                $('#console-' + pid).terminal().error(str);
 
-                        }
+                            }
                         }, function (bad) {
                             console.log("Some error getting console occur:" + JSON.stringify(bad));
                         });
@@ -1180,18 +1196,18 @@
         }
         createCustomDialog(opt, html);
     }
-    jqccs.showPicture=function(msghead, cuname, refresh,channel){
-        return showPicture(msghead, cuname, refresh,channel);
+    jqccs.showPicture = function (msghead, cuname, refresh, channel) {
+        return showPicture(msghead, cuname, refresh, channel);
     }
-    function showPicture(msghead, cuname, refresh,channel) {
+    function showPicture(msghead, cuname, refresh, channel) {
         var update;
         var data;
         var stop_update = false;
         var name = jchaos.encodeName(cuname) + (new Date()).getTime();
-        if(typeof channel==="undefined"){
-            channel =0;
+        if (typeof channel === "undefined") {
+            channel = 0;
         }
-        var instant = $('<div><img id="pict-' + name + '" src=""><div id="info-'+name+'"></div></div>').dialog({
+        var instant = $('<div><img id="pict-' + name + '" src=""><div id="info-' + name + '"></div></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
             title: msghead,
@@ -1246,7 +1262,7 @@
                 console.log(msghead + " refresh:" + refresh);
 
                 update = setInterval(function () {
-                    if(refresh==0){
+                    if (refresh == 0) {
                         clearInterval(update);
                     }
                     if (stop_update) {
@@ -1261,11 +1277,11 @@
                                 var bin = data.FRAMEBUFFER.$binary.base64;
                                 //  $("#pict-"+name).attr("src", "data:image/" + fmt + ";base64," + bin);
                                 $("#pict-" + name).attr("src", "data:;base64," + bin);
-                                var info_size="";
-                                if(data.hasOwnProperty("WIDTH")){
-                                   info_size=data.WIDTH +"x"+data.HEIGHT+ "("+data.OFFSETX +","+data.OFFSETY+") "; 
+                                var info_size = "";
+                                if (data.hasOwnProperty("WIDTH")) {
+                                    info_size = data.WIDTH + "x" + data.HEIGHT + "(" + data.OFFSETX + "," + data.OFFSETY + ") ";
                                 }
-                                $("#info-" + name).html(info_size+"frame:"+data.dpck_seq_id);
+                                $("#info-" + name).html(info_size + "frame:" + data.dpck_seq_id);
                             } else {
                                 alert("NO 'FRAMEBUFFER.$binary.base64' key EXISTS");
                                 clearInterval(update);
@@ -1558,7 +1574,7 @@
      */
 
 
-   
+
     function show_dev_alarm(id) {
         var dataset = node_live_selected[node_name_to_index[jchaos.encodeName(id)]];
         if ((dataset != null) && (dataset.hasOwnProperty("device_alarms"))) {
@@ -1574,7 +1590,7 @@
     }
 
     function decodeDeviceAlarm(dev_alarm) {
-        showJson("Alarm "+dev_alarm.ndk_uid,jchaos.filterAlarmObject(dev_alarm));
+        showJson("Alarm " + dev_alarm.ndk_uid, jchaos.filterAlarmObject(dev_alarm));
         //$("#name-device-alarm").html(dev_alarm.ndk_uid);
         //$("#table_device_alarm").html(jqccs.generateAlarmTable(dev_alarm));
     }
@@ -1754,7 +1770,7 @@
 
 
         html += '</thead> ';
-        
+
         html += '</table>';
         html += '</div>';
         html += '</div>';
@@ -1762,58 +1778,58 @@
 
         return html;
     }
-/*
-    function generateProcessTable(tmpObj) {
-        var cu = tmpObj.elems;
-        var template = tmpObj.type;
-        var html = "";
-        html += '<div class="row">';
-        html += '<table class="table table-striped" id="graph_table-' + template + '">';
-        html += '</table></div>';
-
-
-       // html += '<div class="box col-md" id="container-main-table">';
-        html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
-        html += '<div class="row">';
-        html += '<div class="col-md">';
-
-        html += '<table class="table table-striped" id="main_table-' + template + '">';
-        html += '<thead class="box-header processMenu">';
-        html += '<tr>';
-        html += '<th>Instance</th>';
-        html += '<th>Name</th>';
-        html += '<th>Type</th>';
-        html += '<th>Start</th>';
-        html += '<th>End</th>';
-        html += '<th>LastLog(s ago)</th>';
-        html += '<th>Hostname</th>';
-        html += '<th>PID</th>';
-        html += '<th>Status</th>';
-        html += '<th>TimeStamp</th>';
-        html += '<th>Uptime</th>';
-        html += '<th>System Time</th>';
-        html += '<th>User Time</th>';
-        html += '<th>VMem(KB)</th>';
-        html += '<th colspan="2">RMem(KB)|%</th>';
-        html += '<th>Parent</th>';
-
-        html += '</tr>';
-
-
-        html += '</thead> ';
-
-        html += '</table>';
-        html += '</div>';
-
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-
-     //   html += generateScriptAdminModal();
-        return html;
-
-    }
-*/
+    /*
+        function generateProcessTable(tmpObj) {
+            var cu = tmpObj.elems;
+            var template = tmpObj.type;
+            var html = "";
+            html += '<div class="row">';
+            html += '<table class="table table-striped" id="graph_table-' + template + '">';
+            html += '</table></div>';
+    
+    
+           // html += '<div class="box col-md" id="container-main-table">';
+            html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
+            html += '<div class="row">';
+            html += '<div class="col-md">';
+    
+            html += '<table class="table table-striped" id="main_table-' + template + '">';
+            html += '<thead class="box-header processMenu">';
+            html += '<tr>';
+            html += '<th>Instance</th>';
+            html += '<th>Name</th>';
+            html += '<th>Type</th>';
+            html += '<th>Start</th>';
+            html += '<th>End</th>';
+            html += '<th>LastLog(s ago)</th>';
+            html += '<th>Hostname</th>';
+            html += '<th>PID</th>';
+            html += '<th>Status</th>';
+            html += '<th>TimeStamp</th>';
+            html += '<th>Uptime</th>';
+            html += '<th>System Time</th>';
+            html += '<th>User Time</th>';
+            html += '<th>VMem(KB)</th>';
+            html += '<th colspan="2">RMem(KB)|%</th>';
+            html += '<th>Parent</th>';
+    
+            html += '</tr>';
+    
+    
+            html += '</thead> ';
+    
+            html += '</table>';
+            html += '</div>';
+    
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+    
+         //   html += generateScriptAdminModal();
+            return html;
+    
+        }
+    */
     function generateNodeTable(tmpObj) {
         var cu = tmpObj.elems;
         var template = tmpObj.type;
@@ -1939,7 +1955,7 @@
         });
     }
 
-    function algoLoadFromFile(obj,target) {
+    function algoLoadFromFile(obj, target) {
         getFile("Script Loading", "select the Script to load", function (script) {
             var scriptTmp = {};
             var name = script['name'];
@@ -1967,9 +1983,9 @@
             scriptTmp['script_name'] = name;
             scriptTmp['target'] = "remote";
 
-            if(typeof target !=="undefined"){
+            if (typeof target !== "undefined") {
                 scriptTmp['target'] = target;
-            } 
+            }
 
             scriptTmp['eudk_script_content'] = script['data'];
             scriptTmp['eudk_script_language'] = language;
@@ -1990,7 +2006,7 @@
         });
     }
 
-    jqccs.algoSave=function(json){
+    jqccs.algoSave = function (json) {
         return algoSave(json);
     }
     function algoSave(json) {
@@ -2014,9 +2030,9 @@
         });*/
         json.eudk_script_content = btoa(unescape(encodeURIComponent(json.eudk_script_content)));
 
-        json['eudk_script_language'] = ((json.eudk_script_language instanceof Array)?json.eudk_script_language[0]:json.eudk_script_language);
-        json['script_target'] = ((json.script_target instanceof Array)?json.script_target[0]:json.script_target);
-        json['script_group'] = ((json.script_group instanceof Array)?json.script_group[0]:json.script_group);
+        json['eudk_script_language'] = ((json.eudk_script_language instanceof Array) ? json.eudk_script_language[0] : json.eudk_script_language);
+        json['script_target'] = ((json.script_target instanceof Array) ? json.script_target[0] : json.script_target);
+        json['script_group'] = ((json.script_group instanceof Array) ? json.script_group[0] : json.script_group);
         proc[json.script_name] = json;
         //    jchaos.variable("script", "set", proc, null);
         delete json['_id'];
@@ -2024,12 +2040,12 @@
         jchaos.search(json.script_name, "script", false, function (l) {
             var script_inst = l['found_script_list'];
             if (!(script_inst instanceof Array) || (script_inst.length == 0)) {
-           //     json['seq'] = 0;
+                //     json['seq'] = 0;
                 jchaos.saveScript(json, function (data) {
                     console.log("Saving script:" + JSON.stringify(json));
                     instantMessage("Script " + json.script_name, " Saved", 1000, null, null, true)
 
-                },(bad)=>{
+                }, (bad) => {
                     instantMessage("Error Saving Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
                 });
@@ -2037,12 +2053,12 @@
                 confirm("Script Already Exist", "Do you want to replace:" + json.script_name, "Ok", function () {
                     var cnt = 0;
                     script_inst.forEach(function (elem) {
-                        if(elem.seq==json.seq){
-                            console.log(cnt + "] Updating script:" + json.script_name + " with seq:"+json.seq," content:"+JSON.stringify(json));
+                        if (elem.seq == json.seq) {
+                            console.log(cnt + "] Updating script:" + json.script_name + " with seq:" + json.seq, " content:" + JSON.stringify(json));
                             jchaos.saveScript(json, function (data) {
                                 instantMessage("Updated Script " + json.script_name, "Saved", 2000, null, null, true)
 
-                            },(bad)=>{
+                            }, (bad) => {
                                 instantMessage("Error updating Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
                             });
@@ -2053,8 +2069,8 @@
                                 console.log(cnt + "] removing script:" + json.script_name);
 
                                 if (cnt == script_inst.length) {
-                        //        json['seq'] = 0;
-                                   delete json['_id'];
+                                    //        json['seq'] = 0;
+                                    delete json['_id'];
 
                                     jchaos.saveScript(json, function (data) {
                                         console.log("Replacing script:" + json.script_name);
@@ -2062,11 +2078,11 @@
 
                                     });
                                 }
-                            },(bad)=>{
+                            }, (bad) => {
                                 instantMessage("Error removing Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
                             });
-                    }
+                        }
                     });
 
                 }, "Cancel");
@@ -2170,13 +2186,13 @@
 
 
 
-jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,eventFn){
-    return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,eventFn);
-}
+    jqccs.jsonEditWindow = function (name, jsontemp, jsonin, editorFn, tmpObj, ok, nok, eventFn) {
+        return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok, eventFn);
+    }
     /***
      * 
      */
-    function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,eventFn) {
+    function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok, eventFn) {
         var instant = $('<div id=edit-temp></div>').dialog({
             minWidth: $(window).width() / 2,
             minHeight: $(window).height() / 4,
@@ -2262,7 +2278,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 var element = $("#edit-temp");
                 var jopt = {};
                 jopt['ajax'] = true;
-                if(typeof jsontemp==="object"){
+                if (typeof jsontemp === "object") {
                     jopt['schema'] = jsontemp;
                 }
 
@@ -2274,18 +2290,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 if (json_editor != null) {
                     delete json_editor;
                 }
-            JSONEditor.defaults.options.theme = 'bootstrap4';
-            //JSONEditor.defaults.options.iconlib = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css";
-            JSONEditor.defaults.options.iconlib ='fontawesome3';
-           // JSONEditor.defaults.options.iconlib ='fundation3';
-             //JSONEditor.defaults.options.theme = 'bootstrap3';
-             //JSONEditor.defaults.options.theme = 'jqueryui';
-               // JSONEditor.defaults.iconlib = 'bootstrap3';
+                JSONEditor.defaults.options.theme = 'bootstrap4';
+                //JSONEditor.defaults.options.iconlib = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css";
+                JSONEditor.defaults.options.iconlib = 'fontawesome3';
+                // JSONEditor.defaults.options.iconlib ='fundation3';
+                //JSONEditor.defaults.options.theme = 'bootstrap3';
+                //JSONEditor.defaults.options.theme = 'jqueryui';
+                // JSONEditor.defaults.iconlib = 'bootstrap3';
                 json_editor = new JSONEditor(element.get(0), jopt);
-                if(typeof eventFn === "function"){
+                if (typeof eventFn === "function") {
                     // jopt['onEvent']=eventFn;
-                     json_editor.on('change',()=>{eventFn(json_editor);});
-                 }  
+                    json_editor.on('change', () => { eventFn(json_editor); });
+                }
                 $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
             }
@@ -2497,23 +2513,23 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         });
         */
     }
-    function jsonEnableScriptContext(dom,scripts) {
-       dom.contextMenu('destroy', '.json-key');
+    function jsonEnableScriptContext(dom, scripts) {
+        dom.contextMenu('destroy', '.json-key');
 
-       dom.contextMenu({
+        dom.contextMenu({
             selector: '.json-toggle',
             build: function ($trigger, e) {
                 var cuitem = {};
                 //  var portdir = $(e.currentTarget).attr("portdir");
-                var name=e.currentTarget.text;
-                console.log("choosing "+name);
-                if(scripts.hasOwnProperty(name)&& scripts[name].hasOwnProperty("eudk_script_language")){
-                    var language=scripts[name].eudk_script_language.toUpperCase();
-                    if(language=="JS" ||  language=="NODEJS"){
-                        cuitem['run-script'] = { name: "Run Script "+name,script:scripts[name] };
+                var name = e.currentTarget.text;
+                console.log("choosing " + name);
+                if (scripts.hasOwnProperty(name) && scripts[name].hasOwnProperty("eudk_script_language")) {
+                    var language = scripts[name].eudk_script_language.toUpperCase();
+                    if (language == "JS" || language == "NODEJS") {
+                        cuitem['run-script'] = { name: "Run Script " + name, script: scripts[name] };
                     }
-                    cuitem['delete-script'] = { name: "Delete Script "+name,script:scripts[name]  };
-                    cuitem['save-script'] = { name: "Save Script "+name,script:scripts[name] };
+                    cuitem['delete-script'] = { name: "Delete Script " + name, script: scripts[name] };
+                    cuitem['save-script'] = { name: "Save Script " + name, script: scripts[name] };
                 }
                 cuitem['sep1'] = "---------";
 
@@ -2529,30 +2545,30 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     callback: function (cmd, options) {
 
                         var fullname;
-                        var script=options.commands[cmd].script;
+                        var script = options.commands[cmd].script;
                         if (cmd == "run-script") {
-                           console.log("Running script "+JSON.stringify(script));
-                           jchaos.loadScript(script.script_name, script.seq, function (data) {
-                            if(typeof data==="object" && data.hasOwnProperty('eudk_script_content')){
-                                var obj = atob(data['eudk_script_content']);
-                                jqccs.execConsole(script.script_name,obj);
-                            } else {
-                                instantMessage("Empty content ",  script.script_name, 5000,false);
+                            console.log("Running script " + JSON.stringify(script));
+                            jchaos.loadScript(script.script_name, script.seq, function (data) {
+                                if (typeof data === "object" && data.hasOwnProperty('eudk_script_content')) {
+                                    var obj = atob(data['eudk_script_content']);
+                                    jqccs.execConsole(script.script_name, obj);
+                                } else {
+                                    instantMessage("Empty content ", script.script_name, 5000, false);
 
-                            }
-                           },function(bad){
-                            instantMessage("Error retriving ",  script.script_name, 5000,false);
+                                }
+                            }, function (bad) {
+                                instantMessage("Error retriving ", script.script_name, 5000, false);
 
-                           });
+                            });
 
                         } else if (cmd == "delete-script") {
                             console.log("Delete script ");
                             confirm("Delete script", "Your are deleting Script: " + script.scriot_name, "Ok", function () {
                                 jchaos.rmScript(script.scriot_name, function (data) {
                                     instantMessage("Remove Script", "removed:" + script.scriot_name, 2000);
-                
+
                                 });
-                
+
                             }, "Cancel");
 
                         } else if (cmd == "save-script") {
@@ -2563,7 +2579,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                                 saveAs(blob, data['script_name']);
                             });
 
-                        } 
+                        }
                         return;
                     },
                     items: cuitem
@@ -3175,8 +3191,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         if (descs instanceof Array) {
             descs.forEach(function (elem, id) {
                 var name = tmpObj['elems'][id];
-                if(!elem.hasOwnProperty("ndk_parent") && (elem.hasOwnProperty("instance_description")&&elem.instance_description.hasOwnProperty("ndk_parent"))){
-                    elem["ndk_parent"]=elem.instance_description.ndk_parent;
+                if (!elem.hasOwnProperty("ndk_parent") && (elem.hasOwnProperty("instance_description") && elem.instance_description.hasOwnProperty("ndk_parent"))) {
+                    elem["ndk_parent"] = elem.instance_description.ndk_parent;
                 }
 
                 tmpObj.node_name_to_desc[name] = elem;
@@ -3188,13 +3204,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 tmpObj.tableClickFn(tmpObj);
             }
         });
-   /*     n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { 
-            $("#table-scroll").css('height', '280px');
-        } else {
-            $("#table-scroll").css('height', '');
-        }
-*/
+        /*     n = $('#main_table-' + template + ' tr').size();
+             if (n > 22) { 
+                 $("#table-scroll").css('height', '280px');
+             } else {
+                 $("#table-scroll").css('height', '');
+             }
+     */
 
         $(".setSchedule").off('keypress');
         $(".setSchedule").on('keypress', function (event) {
@@ -3553,31 +3569,33 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             var y = crop_opt.y.toFixed();
             var width = crop_opt.width.toFixed();
             var height = crop_opt.height.toFixed();
-         /*   jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width),null);
-            jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height),null);
-            setTimeout(() => {
-                jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), null);
-            }, 1000);
-            setTimeout(() => {
-                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), null);
-            }, 1000);
-*/
-            console.log("setting WIDTH:"+width);
+            /*   jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width),null);
+               jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height),null);
+               setTimeout(() => {
+                   jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), null);
+               }, 1000);
+               setTimeout(() => {
+                   jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), null);
+               }, 1000);
+   */
+            console.log("setting WIDTH:" + width);
 
             jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
-                console.log("setting HEIGHT:"+height);
+                console.log("setting HEIGHT:" + height);
                 jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
-                setTimeout(() => {
-                    console.log("setting OFFSETX:"+x);
+                    setTimeout(() => {
+                        console.log("setting OFFSETX:" + x);
 
-                    jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
-                        setTimeout(() => {
-                            console.log("setting OFFSETY:"+y);
+                        jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
+                            setTimeout(() => {
+                                console.log("setting OFFSETY:" + y);
 
-                            jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
-                                instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
-                            });},1000);
-                    });},1000);
+                                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
+                                    instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+                                });
+                            }, 1000);
+                        });
+                    }, 1000);
                 });
             });
         } else if (cmd == 'exit-crop') {
@@ -3642,13 +3660,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             }, tmpObj);
 
         } else if (cmd == "calibrate") {
-            
-            jchaos.command(tmpObj.node_multi_selected,{"act_name":"calibrateNodeUnit"}, function (data) {
-                instantMessage("Calibration of:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 1000, true);
+
+            jchaos.command(tmpObj.node_multi_selected, { "act_name": "calibrateNodeUnit" }, function (data) {
+                instantMessage("Calibration of:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 1000, true);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             }, function (data) {
-                instantMessage("ERROR Calibrating:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :"+JSON.stringify(data), 5000, false);
+                instantMessage("ERROR Calibrating:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
@@ -3745,72 +3763,72 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             showDataset(currsel, currsel, 1000, tmpObj);
         } else if (cmd == "driver-prop") {
             //jchaos.sendCUCmd(tmpObj.node_multi_selected,"cu_prop_drv_get",null, function (data) {
-            jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (data) {
+            jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function (data) {
 
-                var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
-                jqccs.editJSON("Driver Prop " + currsel, data[0],(json,fupdate)=>{
-                    
-                    var changed={};
-                    for(var key in json){
-                       
-                        if(JSON.stringify(json[key])!==JSON.stringify(origin_json[key])){
-                            changed[key]=json[key];
-                            
+                var origin_json = JSON.parse(JSON.stringify(data[0])); // not reference
+                jqccs.editJSON("Driver Prop " + currsel, data[0], (json, fupdate) => {
+
+                    var changed = {};
+                    for (var key in json) {
+
+                        if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
+                            changed[key] = json[key];
+
                         }
                     }
-                    var msg={
-                        "act_msg":changed,
-                        "act_name":"cu_prop_drv_set"
+                    var msg = {
+                        "act_msg": changed,
+                        "act_name": "cu_prop_drv_set"
                     };
-                    console.log("sending changed:"+JSON.stringify(changed));
-                    jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
-                        instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
-                        jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (dd) {
+                    console.log("sending changed:" + JSON.stringify(changed));
+                    jchaos.command(tmpObj.node_multi_selected, msg, function (data) {
+                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+                        jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function (dd) {
                             //read back
                             fupdate(dd[0]);
                         });
 
-                    },(bad)=>{
-                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
+                    }, (bad) => {
+                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: " + JSON.stringify(bad), 5000, false);
 
                     });
 
                 });
 
             }, function (data) {
-                instantMessage("Getting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :"+JSON.stringify(data), 5000, false);
+                instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
         } else if (cmd == "cu-prop") {
-            jchaos.command(tmpObj.node_multi_selected,{"act_name":"ndk_get_prop"}, function (data) {
-                var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
-                jqccs.editJSON("CU/EU Prop " + currsel, data[0],(json)=>{
-                    
-                    var changed={};
-                    for(var key in json){
-                       
-                        if(JSON.stringify(json[key])!==JSON.stringify(origin_json[key])){
-                            changed[key]=json[key];
-                            
+            jchaos.command(tmpObj.node_multi_selected, { "act_name": "ndk_get_prop" }, function (data) {
+                var origin_json = JSON.parse(JSON.stringify(data[0])); // not reference
+                jqccs.editJSON("CU/EU Prop " + currsel, data[0], (json) => {
+
+                    var changed = {};
+                    for (var key in json) {
+
+                        if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
+                            changed[key] = json[key];
+
                         }
                     }
-                    var msg={
-                        "act_msg":changed,
-                        "act_name":"ndk_set_prop"
+                    var msg = {
+                        "act_msg": changed,
+                        "act_name": "ndk_set_prop"
                     };
-                    console.log("sending changed:"+JSON.stringify(changed));
-                    jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
-                        instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+                    console.log("sending changed:" + JSON.stringify(changed));
+                    jchaos.command(tmpObj.node_multi_selected, msg, function (data) {
+                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
 
-                    },(bad)=>{
-                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
+                    }, (bad) => {
+                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: " + JSON.stringify(bad), 5000, false);
 
                     });
 
                 });
             }, function (data) {
-                instantMessage("Getting Node prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                instantMessage("Getting Node prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
@@ -3855,37 +3873,37 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     // $("#mdl-dataset").modal("hide");
 
                     showPicture(currsel + " output", currsel, refresh);
-                    
+
                 } else {
                     alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
                 }
                 if (cu && cu.hasOwnProperty("custom") &&
-                cu.custom.hasOwnProperty("FRAMEBUFFER") &&
-                cu.custom.FRAMEBUFFER.hasOwnProperty("$binary") &&
-                cu.custom.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
-                // $("#mdl-dataset").modal("hide");
+                    cu.custom.hasOwnProperty("FRAMEBUFFER") &&
+                    cu.custom.FRAMEBUFFER.hasOwnProperty("$binary") &&
+                    cu.custom.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
+                    // $("#mdl-dataset").modal("hide");
 
-                showPicture(currsel + " custom", currsel, 0,2);
-                
-            } 
+                    showPicture(currsel + " custom", currsel, 0, 2);
+
+                }
             }, function (err) {
                 console.log(err);
             });
 
         } else if (cmd == "execute-jscript") {
-            showScript("Scripts", "","", (dom,scripts)=>{
+            showScript("Scripts", "", "", (dom, scripts) => {
                 jqccs.jsonSetup(dom, function (e) {
-            
+
                 }, function (e) {
                     if (e.keyCode == 13) {
-        
+
                         return true;
                     } else {
                         return false;
                     }
                 });
                 $(".json-toggle").trigger("click");
-                jsonEnableScriptContext(dom,scripts);
+                jsonEnableScriptContext(dom, scripts);
 
             });
 
@@ -3893,7 +3911,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             getFile("Control Script Loading", "select the Script to load", function (script) {
                 var regex = /.*[/\\](.*)$/;
                 var scriptTmp = {};
-                var name=script['name'];
+                var name = script['name'];
                 var match = regex.exec(name);
                 if (match != null) {
                     name = match[1];
@@ -3901,11 +3919,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 if (name.includes(".js")) {
                     language = "JS";
                 } else {
-                    instantMessage("cannot load"+name," You must load a .js extension:");
+                    instantMessage("cannot load" + name, " You must load a .js extension:");
                     return;
                 }
                 var zone_selected = $("#zones option:selected").val();
-                if(typeof zone_selected ==="string"){
+                if (typeof zone_selected === "string") {
                     scriptTmp['group'] = zone_selected;
                 } else {
                     scriptTmp['group'] = "SYSTEM";
@@ -3920,10 +3938,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     $ref: "algo.json",
                     format: "tabs"
                 }
-    
+
                 jsonEditWindow("Loaded", templ, scriptTmp, algoSave, obj);
             });
-            
+
 
         } else if (cmd == "history-cu-root") {
             createQueryDialog(function (query) {
@@ -4022,7 +4040,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
         html += '<input class="input-xlarge focused col-sm-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
-       // html += generateActionBox();
+        // html += generateActionBox();
         html += '</div>';
         html += generateModalActions();
 
@@ -4069,11 +4087,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
     }
 
     function setupCU(tempObj) {
-    //    graphSetup(tempObj);
-    //    snapSetup(tempObj);
+        //    graphSetup(tempObj);
+        //    snapSetup(tempObj);
         datasetSetup(tempObj);
         descriptionSetup(tempObj);
-   //     logSetup(tempObj);
+        //     logSetup(tempObj);
         mainCU(tempObj);
     }
 
@@ -4094,7 +4112,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             interface2NodeList(tempObj, function (list_cu) {
                 tempObj['elems'] = list_cu;
-                
+
                 updateInterface(tempObj);
 
             });
@@ -4122,7 +4140,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             });
 
         });
-   
+
 
     }
 
@@ -4465,6 +4483,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
     }
+
+
     /**********
      * 
      */
@@ -4578,13 +4598,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                         // editorFn = agentSave;
                         //jsonEdit(templ, data);
                         jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj,
-                        ()=>{
-                            instantMessage("Agent saved " + node_selected, " OK", 2000, true);
+                            () => {
+                                instantMessage("Agent saved " + node_selected, " OK", 2000, true);
 
-                        },(bad)=>{
-                            instantMessage("Agent  " + node_selected, "Save Error:"+JSON.stringify(bad), 4000, false);
+                            }, (bad) => {
+                                instantMessage("Agent  " + node_selected, "Save Error:" + JSON.stringify(bad), 4000, false);
 
-                        }
+                            }
                         );
                         /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
                            //rimuovi tutte le associazioni precedenti.
@@ -4617,7 +4637,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     }
                 });
                 return;
-            } else if(cmd == "edit-nt_root") {
+            } else if (cmd == "edit-nt_root") {
                 var templ = {
                     $ref: "cu.json",
                     format: "tabs"
@@ -4625,17 +4645,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 var stype = cmd.split("-");
 
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
-                jchaos.node(node_selected,"desc",typ,function(desc){
-                jsonEditWindow("Edit EU ", templ, desc, (json, obj, ok, bad)=>{
-                    jchaos.node(node_selected,"nodeupdate",typ,json.ndk_parent,json,ok,bad);
-                
-                }, tmpObj, function (ok) {
-                    instantMessage("EU save ", " OK", 2000, true);
+                jchaos.node(node_selected, "desc", typ, function (desc) {
+                    jsonEditWindow("Edit EU ", templ, desc, (json, obj, ok, bad) => {
+                        jchaos.node(node_selected, "nodeupdate", typ, json.ndk_parent, json, ok, bad);
 
-                }, function (bad) {
-                    instantMessage("EU save failed", JSON.stringify(bad), 2000, false);
+                    }, tmpObj, function (ok) {
+                        instantMessage("EU save ", " OK", 2000, true);
 
-                });});
+                    }, function (bad) {
+                        instantMessage("EU save failed", JSON.stringify(bad), 2000, false);
+
+                    });
+                });
             } else if ((cmd == "edit-nt_unit_server")) {
                 var templ = {
                     $ref: "us.json",
@@ -4705,79 +4726,79 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 var stype = cmd.split("-");
 
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
-                jchaos.node(node_selected,"desc",typ,function(data){
+                jchaos.node(node_selected, "desc", typ, function (data) {
 
                     showJson("Description " + node_selected, data);
-            });
+                });
 
-            } else if (cmd=="delete-histo-data") {
+            } else if (cmd == "delete-histo-data") {
 
                 createQueryDialog(function (query) {
                     // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
                     //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
                     //console.log("start:"+start_s + " end:"+end_s);
                     // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
-                   // var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
-    
-                    var val={
-                        'start':query.start.toString(),
-                        'end':query.stop.toString()
+                    // var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
+
+                    var val = {
+                        'start': query.start.toString(),
+                        'end': query.stop.toString()
                     };
-                    var st=(new Date(query.start)).toDateString();
-                    var en=(new Date(query.start)).toDateString();
+                    var st = (new Date(query.start)).toDateString();
+                    var en = (new Date(query.start)).toDateString();
 
-                    jchaos.node(node_selected,"deletedata","all",null,val,function(data){
-                        instantMessage("Node Data deleted ", "from:"+st +"["+query.start+"] end:"+en+ "["+query.stop+"]", 4000, true);
+                    jchaos.node(node_selected, "deletedata", "all", null, val, function (data) {
+                        instantMessage("Node Data deleted ", "from:" + st + "[" + query.start + "] end:" + en + "[" + query.stop + "]", 4000, true);
 
-                    },function(data){
-                        instantMessage("Node Data deleting ", "from:"+st +"["+query.start+"] end:"+en+ "["+query.stop+"]", 4000, false);
+                    }, function (data) {
+                        instantMessage("Node Data deleting ", "from:" + st + "[" + query.start + "] end:" + en + "[" + query.stop + "]", 4000, false);
 
                     });
-                    })
-               
+                })
+
             } else if (cmd == "del-nt_unit_server" || (cmd == "del-nt_root")) {
                 var stype = cmd.split("-");
 
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
 
                 confirm("Delete " + typ, "Your are deleting : " + node_selected, "Ok", function () {
-                    if(cmd == "del-nt_unit_server"){
+                    if (cmd == "del-nt_unit_server") {
 
-                        jchaos.node(node_selected,"desc","all",(info)=>{
-                            if(info.hasOwnProperty("ndk_parent")&&info.ndk_parent!=""){
-                                jchaos.node(info.ndk_parent, "del", "agent", node_selected, function(daa) {
-                                    instantMessage("Removed association "+info.ndk_parent, " OK", 1000, true);
+                        jchaos.node(node_selected, "desc", "all", (info) => {
+                            if (info.hasOwnProperty("ndk_parent") && info.ndk_parent != "") {
+                                jchaos.node(info.ndk_parent, "del", "agent", node_selected, function (daa) {
+                                    instantMessage("Removed association " + info.ndk_parent, " OK", 1000, true);
 
                                 });
 
                             }
                         });
                         jchaos.node(node_selected, "get", typ, function (data) {
-                            
-                            if(data.hasOwnProperty('us_desc')&&data.us_desc.hasOwnProperty('cu_desc')){
-                                var culist=data.us_desc.cu_desc;
-                                if(culist instanceof Array){
-                                    confirm("US  " + node_selected, "Contains : " + culist.length+ " CUs do you want to proceed?", "Proceed", function () {
-                                        culist.forEach((elem)=>{
+
+                            if (data.hasOwnProperty('us_desc') && data.us_desc.hasOwnProperty('cu_desc')) {
+                                var culist = data.us_desc.cu_desc;
+                                if (culist instanceof Array) {
+                                    confirm("US  " + node_selected, "Contains : " + culist.length + " CUs do you want to proceed?", "Proceed", function () {
+                                        culist.forEach((elem) => {
                                             jchaos.node(elem.ndk_uid, "deletenode", "cu", function () {
-                                                instantMessage("Node deleted "+elem.ndk_uid, " OK", 1000, true);
+                                                instantMessage("Node deleted " + elem.ndk_uid, " OK", 1000, true);
                                             }, function (err) {
                                                 instantMessage("cannot delete cu:", JSON.stringify(err), 2000, false);
-                        
+
                                             });
                                         });
-                                        
+
                                         updateNodeEvent();
 
-                                    },"Cancel");
+                                    }, "Cancel");
 
                                 }
                             }
                             jchaos.node(node_selected, "deletenode", typ, function () {
-                                instantMessage("Node deleted "+node_selected, " OK", 1000, true);
+                                instantMessage("Node deleted " + node_selected, " OK", 1000, true);
                             }, function (err) {
                                 instantMessage("cannot delete:", JSON.stringify(err), 2000, false);
-        
+
                             });
                         })
 
@@ -4791,7 +4812,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     });
                 }, "Cancel");
                 return;
-            } else if (cmd == "delete-node" ) {
+            } else if (cmd == "delete-node") {
 
 
                 confirm("Delete Node", "Your are deleting : " + node_selected, "Ok", function () {
@@ -5024,7 +5045,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 }
                 // editorFn = jchaos.newCuSave;
                 def_obj.ndk_parent = node_selected;
-                
+
 
 
                 return;
@@ -5037,17 +5058,17 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 }
                 var def = {};
 
-                def['ndk_parent']=node_selected;
-                def['ndk_type']="nt_control_unit";
-                def['auto_load']=true;
-                def['auto_init']=true;
-                def['auto_start']=true;
-                def['cudk_thr_sch_delay']=1000000;
-                def["cudk_desc"]="<CU description>";
-                def["cudk_load_param"]="{}";
-                def["cudk_props"]="{}";
+                def['ndk_parent'] = node_selected;
+                def['ndk_type'] = "nt_control_unit";
+                def['auto_load'] = true;
+                def['auto_init'] = true;
+                def['auto_start'] = true;
+                def['cudk_thr_sch_delay'] = 1000000;
+                def["cudk_desc"] = "<CU description>";
+                def["cudk_load_param"] = "{}";
+                def["cudk_props"] = "{}";
 
-                def['dsndk_storage_type']=2;
+                def['dsndk_storage_type'] = 2;
 
 
 
@@ -5182,7 +5203,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 jchaos.node(node_multi_selected, "start", "us", function () {
                     instantMessage("US START", "Starting " + node_selected + " via agent", 1000, true);
                 }, function (bad) {
-                    instantMessage("ERROR US START", "Starting " + node_selected + " via agent:"+JSON.stringify(bad), 1000, false);
+                    instantMessage("ERROR US START", "Starting " + node_selected + " via agent:" + JSON.stringify(bad), 1000, false);
                 });
                 return;
             } else if (cmd == "stop-node") {
@@ -5190,18 +5211,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000, true);
 
                 }, function (bad) {
-                    instantMessage("ERROR US STOP", "Stopping " + node_selected + " via agent:"+JSON.stringify(bad), 1000, false);
+                    instantMessage("ERROR US STOP", "Stopping " + node_selected + " via agent:" + JSON.stringify(bad), 1000, false);
 
                 });
                 return;
             } else if (cmd == "console-node") {
                 var agentn = node_name_to_desc[node_selected].desc.ndk_parent;
                 var server = node_name_to_desc[node_selected].desc.ndk_host_name;
-              //  getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
+                //  getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
 
                 jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
                     console.log("->" + JSON.stringify(data));
-                    getConsole(server + ":" + node_selected, data.association_uid, server , 2, 1, 1000);
+                    getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
                 });
 
 
@@ -5222,7 +5243,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                         jchaos.node(node_selected, "restart", "us", function () {
                             instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000, true);
                         }, function (bad) {
-                            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent:"+JSON.stringify(bad), 1000, false);
+                            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent:" + JSON.stringify(bad), 1000, false);
                         })
                     }, "Joke",
                     function () { });
@@ -5432,23 +5453,23 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             node_list.forEach(function (elem, index) {
                 var ds = data[index];
 
-                if(!ds.hasOwnProperty("ndk_parent") && (ds.hasOwnProperty("instance_description")&&ds.instance_description.hasOwnProperty("ndk_parent"))){
-                    ds["ndk_parent"]=ds.instance_description.ndk_parent;
+                if (!ds.hasOwnProperty("ndk_parent") && (ds.hasOwnProperty("instance_description") && ds.instance_description.hasOwnProperty("ndk_parent"))) {
+                    ds["ndk_parent"] = ds.instance_description.ndk_parent;
                 }
-                tmpObj.node_name_to_desc[elem] = { desc: ds};
-           
+                tmpObj.node_name_to_desc[elem] = { desc: ds };
+
             });
         });
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-    /*    n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { 
-            $("#table-scroll").css('height', '280px');
-        } else {
-            $("#table-scroll").css('height', '');
-        }
-*/
+        /*    n = $('#main_table-' + template + ' tr').size();
+            if (n > 22) { 
+                $("#table-scroll").css('height', '280px');
+            } else {
+                $("#table-scroll").css('height', '');
+            }
+    */
 
         $("#cuname").draggable({
 
@@ -5647,13 +5668,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-   /*     n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { 
-            $("#table-scroll").css('height', '280px');
-        } else {
-            $("#table-scroll").css('height', '');
-        }
-*/
+        /*     n = $('#main_table-' + template + ' tr').size();
+             if (n > 22) { 
+                 $("#table-scroll").css('height', '280px');
+             } else {
+                 $("#table-scroll").css('height', '');
+             }
+     */
 
         $.contextMenu('destroy', '.algoMenu');
 
@@ -5775,7 +5796,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             }, function () {
                 instantMessage("ERROR START", "Starting " + tmpObj.data[node_selected].pname + " via agent", 3000, false);
             });
-        return;
+            return;
         } else if (cmd == "new-script") {
             var templ = {
                 $ref: "algo.json",
@@ -5793,7 +5814,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         } else if (cmd == "manage-script") {
             updateScriptModal(tmpObj);
         } else if (cmd == "load-script") {
-            algoLoadFromFile(tmpOb,"remote");
+            algoLoadFromFile(tmpOb, "remote");
         } else if (cmd == "root-script") {
             runRemoteScript(tmpObj, "Chaos Root", "CPP");
         } else if (cmd == "new-process-template") {
@@ -5853,7 +5874,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                                         jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function (r) {
                                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server , 2, 1, 1000);
+                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
 
                                         }, function (bad) {
                                             console.log("Some error getting loading script:" + bad);
@@ -5868,7 +5889,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                                         server = findBestServer(obj);
                                     }
 
-                                    jchaos.rmtCreateProcess(server , name, cmd_line, "exec", "", function (r) {
+                                    jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function (r) {
                                         console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                         instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                                         getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
@@ -5972,7 +5993,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
                         getEntryWindow(name, "Additional args", '', "Run", function (parm) {
 
-                            jchaos.rmtCreateProcess(server , name, launch_arg + " " + parm, language, "", function (r) {
+                            jchaos.rmtCreateProcess(server, name, launch_arg + " " + parm, language, "", function (r) {
                                 console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                 var node_selected = tmpObj.node_selected;
                                 instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
@@ -5984,7 +6005,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                             });
                         }, "Cancel");
                     } else {
-                        jchaos.rmtCreateProcess(server , name, launch_arg + " " + additional_args, language, "", function (r) {
+                        jchaos.rmtCreateProcess(server, name, launch_arg + " " + additional_args, language, "", function (r) {
                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                             var node_selected = tmpObj.node_selected;
                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
@@ -6033,8 +6054,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 // items['open-process-errconsole'] = { name: "Open Error console" };
                 items['download-output'] = { name: "Download Files" };
                 items['kill-process'] = { name: "Kill " };
-                if(tmpObj.data.hasOwnProperty(node_selected)&&tmpObj.data[node_selected].hasOwnProperty("msg")&&(tmpObj.data[node_selected].msg !== "RUNNING")){
-                  items['start-process'] = { name: "Start " };
+                if (tmpObj.data.hasOwnProperty(node_selected) && tmpObj.data[node_selected].hasOwnProperty("msg") && (tmpObj.data[node_selected].msg !== "RUNNING")) {
+                    items['start-process'] = { name: "Start " };
                 }
 
             }
@@ -6064,7 +6085,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toLocaleString();
             var end_timestamp = (tmpObj.data[p].end_time > 0) ? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString() : "--";
-            var last_log = (now- tmpObj.data[p].last_log_time) / 1000;
+            var last_log = (now - tmpObj.data[p].last_log_time) / 1000;
             var pid = tmpObj.data[p].pid;
             var timestamp = (new Date(Number(tmpObj.data[p].ts))).toLocaleString();
             var uptime = tmpObj.data[p].uptime;
@@ -6100,26 +6121,26 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             $("#" + encoden + "_parent").html(parent_str);
         }
-     /*   if (tmpObj.hasOwnProperty("server_charts")) {
-            var now = (new Date()).getTime();
-            for (var server in tmpObj['agents']) {
-                var infoServer = tmpObj.agents[server];
-                var enc = jchaos.encodeName(server);
-                var chart = tmpObj['server_charts'][enc];
-                if ((chart != null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
-                    chart.series[0].addPoint([now, infoServer.idle], false, false);
-                    chart.series[1].addPoint([now, infoServer.user], false, false);
-                    chart.series[2].addPoint([now, infoServer.sys], false, false);
-                    chart.series[3].addPoint([now, infoServer.io], false, false);
-                    chart.series[4].addPoint([now, infoServer.pmem], false, false);
-
-                    chart.redraw();
-                }
-            }
-
-
-        }
-        */
+        /*   if (tmpObj.hasOwnProperty("server_charts")) {
+               var now = (new Date()).getTime();
+               for (var server in tmpObj['agents']) {
+                   var infoServer = tmpObj.agents[server];
+                   var enc = jchaos.encodeName(server);
+                   var chart = tmpObj['server_charts'][enc];
+                   if ((chart != null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
+                       chart.series[0].addPoint([now, infoServer.idle], false, false);
+                       chart.series[1].addPoint([now, infoServer.user], false, false);
+                       chart.series[2].addPoint([now, infoServer.sys], false, false);
+                       chart.series[3].addPoint([now, infoServer.io], false, false);
+                       chart.series[4].addPoint([now, infoServer.pmem], false, false);
+   
+                       chart.redraw();
+                   }
+               }
+   
+   
+           }
+           */
 
     }
 
@@ -6165,7 +6186,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             var cnt = ag.length;
             ag.forEach(function (ser) {
                 var server = ser.ndk_host_name;
-                jchaos.rmtUploadScript(server , jsonscript, function (r) {
+                jchaos.rmtUploadScript(server, jsonscript, function (r) {
                     if (r.err != 0) {
                         instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);
                     } else {
@@ -6184,7 +6205,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             });
         } else {
             serveList.forEach(function (elem) {
-                jchaos.rmtUploadScript(elem , jsonscript, function (r) {
+                jchaos.rmtUploadScript(elem, jsonscript, function (r) {
 
                     console.log("Script loaded onto:" + elem + " :" + JSON.stringify(r));
 
@@ -6248,7 +6269,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
     function updateProcessInterface(tmpObj) {
         //  updateProcessList(tmpObj);
         var tablename = "main_table-" + tmpObj.template;
-     //   var graph_table = "graph_table-" + tmpObj.template;
+        //   var graph_table = "graph_table-" + tmpObj.template;
         var template = tmpObj.type;
         var cnt = 0;
         var num_chart = 3;
@@ -6256,176 +6277,176 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         var hostHeight = $(window).height();
         $("#" + tablename).find("tr:gt(0)").remove();
 
-      /*  if (typeof tmpObj['agents'] === "undefined") {
-            var ag_list = {};
-            var obj = {
-                idle: 100,
-                io: 0,
-                pmem: 0,
-                sys: 0,
-                ts: 0,
-                user: 0
-            }
-            var list = jchaos.search("", "agent", true, false);
-            list.forEach(function (ele) {
-                ag_list[ele] = obj;
-            })
-            tmpObj['agents'] = ag_list;
-
-        }*/
-        if((typeof tmpObj['agents'] === "undefined"))
+        /*  if (typeof tmpObj['agents'] === "undefined") {
+              var ag_list = {};
+              var obj = {
+                  idle: 100,
+                  io: 0,
+                  pmem: 0,
+                  sys: 0,
+                  ts: 0,
+                  user: 0
+              }
+              var list = jchaos.search("", "agent", true, false);
+              list.forEach(function (ele) {
+                  ag_list[ele] = obj;
+              })
+              tmpObj['agents'] = ag_list;
+  
+          }*/
+        if ((typeof tmpObj['agents'] === "undefined"))
             return;
         if ((typeof tmpObj['agent_list'] === "undefined") || (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list']) || (typeof tmpObj['old_agent_list'] === "undefined"))) {
             tmpObj['old_agent_list'] = tmpObj['agent_list'];
 
-       /*     var chart_options = {
-                chart: {
-                    height: (1 / (num_chart) * 100) + '%',
-                    width: (hostWidth / (num_chart + 1))
-
-                },
-                title: {
-                    text: ''
-                },
-
-                xAxis: {
-                    type: "datetime",
-                    title: {
-                        text: 'Time'
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: '%'
-                    },
-                    max: 100
-                },
-                legend: {
-                    layout: 'vertical',
-                    align: 'right',
-                    verticalAlign: 'middle'
-                },
-
-                plotOptions: {
-                    series: {
-                        label: {
-                            connectorAllowed: false
-                        },
-                    }
-                },
-                series: [{
-                    name: 'idle',
-                    data: []
-                }, {
-                    name: 'cpu',
-                    data: []
-                }, {
-                    name: 'sys',
-                    data: []
-                }, {
-                    name: 'iow',
-                    data: []
-                }, {
-                    name: 'mem',
-                    data: []
-                }]
-            };
-            $("#" + graph_table).find("tr:gt(0)").remove();
-*/
+            /*     var chart_options = {
+                     chart: {
+                         height: (1 / (num_chart) * 100) + '%',
+                         width: (hostWidth / (num_chart + 1))
+     
+                     },
+                     title: {
+                         text: ''
+                     },
+     
+                     xAxis: {
+                         type: "datetime",
+                         title: {
+                             text: 'Time'
+                         }
+                     },
+                     yAxis: {
+                         title: {
+                             text: '%'
+                         },
+                         max: 100
+                     },
+                     legend: {
+                         layout: 'vertical',
+                         align: 'right',
+                         verticalAlign: 'middle'
+                     },
+     
+                     plotOptions: {
+                         series: {
+                             label: {
+                                 connectorAllowed: false
+                             },
+                         }
+                     },
+                     series: [{
+                         name: 'idle',
+                         data: []
+                     }, {
+                         name: 'cpu',
+                         data: []
+                     }, {
+                         name: 'sys',
+                         data: []
+                     }, {
+                         name: 'iow',
+                         data: []
+                     }, {
+                         name: 'mem',
+                         data: []
+                     }]
+                 };
+                 $("#" + graph_table).find("tr:gt(0)").remove();
+     */
             var serverlist = tmpObj['agents'];
             var html = "";
             var server_charts = {};
 
-        /*    for (var key in serverlist) {
-                var encoden = jchaos.encodeName(key);
-                if ((cnt % num_chart) == 0) {
-                    if (cnt > 0) {
-                        html += "</tr>"
-                    }
-                    html += '<tr class="row_element" id=graph-row"' + cnt + '">';
-                }
-                html += '<td class="td_element processMenu" id="graph-' + encoden + '" agent-name="' + key + '"></td>';
-
-                cnt++;
-            };
-            if (cnt > 0) {
-                html += "</tr>";
-                $("#" + graph_table).append(html);
-                for (var key in serverlist) {
+            /*    for (var key in serverlist) {
                     var encoden = jchaos.encodeName(key);
-                    chart_options.title.text = "Agent on " + key;
-
-                    server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
-
+                    if ((cnt % num_chart) == 0) {
+                        if (cnt > 0) {
+                            html += "</tr>"
+                        }
+                        html += '<tr class="row_element" id=graph-row"' + cnt + '">';
+                    }
+                    html += '<td class="td_element processMenu" id="graph-' + encoden + '" agent-name="' + key + '"></td>';
+    
+                    cnt++;
+                };
+                if (cnt > 0) {
+                    html += "</tr>";
+                    $("#" + graph_table).append(html);
+                    for (var key in serverlist) {
+                        var encoden = jchaos.encodeName(key);
+                        chart_options.title.text = "Agent on " + key;
+    
+                        server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
+    
+                    }
+                    tmpObj['server_charts'] = server_charts;
+    
                 }
-                tmpObj['server_charts'] = server_charts;
-
+            }*/
+            var ordered = [];
+            for (var p in tmpObj.data) {
+                if (tmpObj.data.hasOwnProperty(p)) {
+                    ordered.push(p);
+                }
             }
-        }*/
-        var ordered = [];
-        for (var p in tmpObj.data) {
-            if (tmpObj.data.hasOwnProperty(p)) {
-                ordered.push(p);
+            ordered.sort();
+
+            for (var cnt = 0; cnt < ordered.length; cnt++) {
+                var obj = tmpObj.data[ordered[cnt]];
+                var ptype = obj.ptype;
+                var pname = obj.pname;
+
+                if (tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))) {
+                    continue;
+                }
+                var started_timestamp = obj.start_time;
+                var end_timestamp = obj.end_time;
+                var last_log = (obj.ts - obj.last_log_time);
+                var pid = obj.pid;
+                var timestamp = obj.ts;
+                var uptime = obj.uptime;
+                var systime = parseFloat(obj.systime).toFixed(3);
+                var cputime = parseFloat(obj.cputime).toFixed(3);
+                var vmem = obj.vmem;
+                var rmem = obj.rmem;
+                var pmem = obj.pmem;
+                var hostname = obj.hostname;
+                var status = obj.msg;
+                var parent = obj.ndk_parent;
+                var encoden = jchaos.encodeName(obj.uid);
+
+                $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
+                    '<td class="col-sm" id="' + encoden + '">' + obj.uid + '</td>' +
+                    '<td class="col-sm">' + pname + '</td>' +
+                    '<td class="col-sm">' + ptype + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_end_ts">' + end_timestamp + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_last_log_ts">' + last_log + '</td>' +
+                    '<td class="col-sm">' + hostname + '</td>' +
+                    '<td class="col-sm">' + pid + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_status">' + status + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_ts">' + timestamp + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_uptime">' + uptime + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_systime">' + systime + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_cputime">' + cputime + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_vmem">' + vmem + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_rmem">' + rmem + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_pmem">' + pmem + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_parent">' + parent + '</td></tr>'
+                );
+
             }
         }
-        ordered.sort();
 
-        for (var cnt = 0; cnt < ordered.length; cnt++) {
-            var obj = tmpObj.data[ordered[cnt]];
-            var ptype = obj.ptype;
-            var pname = obj.pname;
-
-            if (tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))) {
-                continue;
-            }
-            var started_timestamp = obj.start_time;
-            var end_timestamp = obj.end_time;
-            var last_log = (obj.ts - obj.last_log_time);
-            var pid = obj.pid;
-            var timestamp = obj.ts;
-            var uptime = obj.uptime;
-            var systime = parseFloat(obj.systime).toFixed(3);
-            var cputime = parseFloat(obj.cputime).toFixed(3);
-            var vmem = obj.vmem;
-            var rmem = obj.rmem;
-            var pmem = obj.pmem;
-            var hostname = obj.hostname;
-            var status = obj.msg;
-            var parent = obj.ndk_parent;
-            var encoden = jchaos.encodeName(obj.uid);
-
-            $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
-                '<td class="col-sm" id="' + encoden + '">' + obj.uid + '</td>' +
-                '<td class="col-sm">' + pname + '</td>' +
-                '<td class="col-sm">' + ptype + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_end_ts">' + end_timestamp + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_last_log_ts">' + last_log + '</td>' +
-                '<td class="col-sm">' + hostname + '</td>' +
-                '<td class="col-sm">' + pid + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_status">' + status + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_ts">' + timestamp + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_uptime">' + uptime + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_systime">' + systime + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_cputime">' + cputime + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_vmem">' + vmem + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_rmem">' + rmem + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_pmem">' + pmem + '</td>' +
-                '<td class="col-sm" id="' + encoden + '_parent">' + parent + '</td></tr>'
-            );
-
-        }
-    }
-
-        $("#"+tablename + " tr").click(function (e) {
+        $("#" + tablename + " tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-     /*   n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { 
-            $("#table-scroll").css('height', '280px');
-        } else {
-            $("#table-scroll").css('height', '');
-        }*/
+        /*   n = $('#main_table-' + template + ' tr').size();
+           if (n > 22) { 
+               $("#table-scroll").css('height', '280px');
+           } else {
+               $("#table-scroll").css('height', '');
+           }*/
         $.contextMenu('destroy', '.processMenu');
 
         $.contextMenu({
@@ -6467,7 +6488,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             });
         });
-       // $("#script-edit").off('click');
+        // $("#script-edit").off('click');
         $("#script-edit").on('click', function () {
             console.log("show " + tmpObj.node_selected);
 
@@ -6508,117 +6529,117 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 $ref: "agent.json",
                 format: "tabs"
             }
-            var supported=false;
-            var script_type="";
+            var supported = false;
+            var script_type = "";
 
-       
-            jchaos.findBestServer(function (server,best_agent) {
+
+            jchaos.findBestServer(function (server, best_agent) {
                 jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (dscript) {
 
-                jchaos.node(best_agent, "info", "agent", function (data) {
-                    var supported=false;
-                    if (data != null) {
-                        if (!(data.hasOwnProperty("andk_node_associated") || !(data.andk_node_associated instanceof Array))) {
-                            data['andk_node_associated']=[]
-                        }
-                        var tmp = {
-                            ndk_uid: tmpObj.node_selected+"_RENAME",
-                            association_uid: 0,
-                            node_launch_cmd_line: "",
-                            node_script_id: tmpObj.node_selected,
-                            node_workdir: "",
-                            node_auto_start: true,
-                            node_keep_alive: false,
-                            node_log_on_console: true
-                        };
-                        var script_type="";
-                        getEntryWindow(tmpObj.node_selected +" arguments ", tmpObj.node_selected, "()","Continue", function (fargs) {
+                    jchaos.node(best_agent, "info", "agent", function (data) {
+                        var supported = false;
+                        if (data != null) {
+                            if (!(data.hasOwnProperty("andk_node_associated") || !(data.andk_node_associated instanceof Array))) {
+                                data['andk_node_associated'] = []
+                            }
+                            var tmp = {
+                                ndk_uid: tmpObj.node_selected + "_RENAME",
+                                association_uid: 0,
+                                node_launch_cmd_line: "",
+                                node_script_id: tmpObj.node_selected,
+                                node_workdir: "",
+                                node_auto_start: true,
+                                node_keep_alive: false,
+                                node_log_on_console: true
+                            };
+                            var script_type = "";
+                            getEntryWindow(tmpObj.node_selected + " arguments ", tmpObj.node_selected, "()", "Continue", function (fargs) {
 
-                        if(dscript['eudk_script_language']=="CPP"){
-                            fargs.replace("\"", "\\\"");
+                                if (dscript['eudk_script_language'] == "CPP") {
+                                    fargs.replace("\"", "\\\"");
 
-                            tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + fargs + "\"";
-                            supported=true;
-                            data['instance_name']=best_agent;
-                            script_type="nt_root";
-                        }
-
-                        if(supported){
-                            getEntryWindow("Specify Unique Identifier for "+dscript['eudk_script_language']+ " SCript", tmpObj.node_selected, "NONAME_" + tmpObj.node_selected, "Create", function (inst_name) {
-                                tmp['ndk_uid']= inst_name;
-
-                                data.andk_node_associated.push(tmp);
-                                var template = {};
-                                var templ = {
-                                    $ref: "cu.json",
-                                    format: "tabs"
+                                    tmp['node_launch_cmd_line'] = "chaosRoot --rootopt \"-q " + tmpObj.node_selected + fargs + "\"";
+                                    supported = true;
+                                    data['instance_name'] = best_agent;
+                                    script_type = "nt_root";
                                 }
-                                template['ndk_uid'] = inst_name;
-                                template["ndk_parent"] = best_agent;
-                                template['ndk_type']= script_type;
-                                template['cudk_desc']= dscript['script_description'];
-                                template['auto_load']=true;
-                                template['auto_init']=true;
-                                template['auto_start']=true;
-                                template['cudk_thr_sch_delay']=1;
-                                template['control_unit_implementation']=tmp['node_launch_cmd_line'];
-                                template['seq_id']=0;
-                                //editorFn = jchaos.newCuSave;
-                                //jsonEdit(templ, template);
-                                jsonEditWindow("New EU ", templ, template, (json, obj, ok, bad)=>{
-                                    jchaos.node(inst_name,"new",script_type,best_agent,json,ok,bad);
-                                
-                                }, tmpObj, function (ok) {
-                                    var template = {};
-                                    var templ = {
-                                    $ref: "agent.json",
-                                    format: "tabs"
-                                }
-                                    jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (k) {
-                                        instantMessage("Agent save ", " OK", 2000, true);
-        
-                                    }, function (bad) {
-                                        instantMessage("Agent save failed", JSON.stringify(bad), 4000, false);
-        
-                                    });
-        
-                                }, function (bad) {
-                                    instantMessage("EU save failed", bad, 2000, false);
-        
-                                });
-                               /* jchaos.node(inst_name,"new",script_type,best_agent,()=>{
 
-                                    jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
-                                        if(dscript['eudk_script_language']=="CPP"){
-                
+                                if (supported) {
+                                    getEntryWindow("Specify Unique Identifier for " + dscript['eudk_script_language'] + " SCript", tmpObj.node_selected, "NONAME_" + tmpObj.node_selected, "Create", function (inst_name) {
+                                        tmp['ndk_uid'] = inst_name;
+
+                                        data.andk_node_associated.push(tmp);
+                                        var template = {};
+                                        var templ = {
+                                            $ref: "cu.json",
+                                            format: "tabs"
                                         }
-                                        instantMessage("Agent save ", " OK", 2000, true);
-        
-                                    }, function (bad) {
-                                        instantMessage("Agent save failed", bad, 2000, false);
-        
-                                    });
-                            },(bad)=>{
-                                instantMessage("Cannot create container", bad, 5000, false);
+                                        template['ndk_uid'] = inst_name;
+                                        template["ndk_parent"] = best_agent;
+                                        template['ndk_type'] = script_type;
+                                        template['cudk_desc'] = dscript['script_description'];
+                                        template['auto_load'] = true;
+                                        template['auto_init'] = true;
+                                        template['auto_start'] = true;
+                                        template['cudk_thr_sch_delay'] = 1;
+                                        template['control_unit_implementation'] = tmp['node_launch_cmd_line'];
+                                        template['seq_id'] = 0;
+                                        //editorFn = jchaos.newCuSave;
+                                        //jsonEdit(templ, template);
+                                        jsonEditWindow("New EU ", templ, template, (json, obj, ok, bad) => {
+                                            jchaos.node(inst_name, "new", script_type, best_agent, json, ok, bad);
 
-                            });*/
-                                              
-                
+                                        }, tmpObj, function (ok) {
+                                            var template = {};
+                                            var templ = {
+                                                $ref: "agent.json",
+                                                format: "tabs"
+                                            }
+                                            jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (k) {
+                                                instantMessage("Agent save ", " OK", 2000, true);
+
+                                            }, function (bad) {
+                                                instantMessage("Agent save failed", JSON.stringify(bad), 4000, false);
+
+                                            });
+
+                                        }, function (bad) {
+                                            instantMessage("EU save failed", bad, 2000, false);
+
+                                        });
+                                        /* jchaos.node(inst_name,"new",script_type,best_agent,()=>{
+         
+                                             jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
+                                                 if(dscript['eudk_script_language']=="CPP"){
+                         
+                                                 }
+                                                 instantMessage("Agent save ", " OK", 2000, true);
+                 
+                                             }, function (bad) {
+                                                 instantMessage("Agent save failed", bad, 2000, false);
+                 
+                                             });
+                                     },(bad)=>{
+                                         instantMessage("Cannot create container", bad, 5000, false);
+         
+                                     });*/
+
+
+                                    }, "Cancel");
+
+
+                                    //editorFn = agentSave;
+                                    //jsonEdit(templ, data);
+
+
+                                } else {
+                                    alert("association with " + dscript['eudk_script_language'] + " not supported yet");
+                                }
                             }, "Cancel");
-                
-                            
-                            //editorFn = agentSave;
-                            //jsonEdit(templ, data);
-                            
-                           
-                    } else {
-                        alert ("association with "+dscript['eudk_script_language']+ " not supported yet");
-                    }
-                }, "Cancel");
-                    };
+                        };
+                    });
                 });
             });
-        });
 
         });// end associate
         $("#script-save").off('click');
@@ -6660,7 +6681,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 old_ele = t['old_elems'].sort();
             }
 
-            if ((JSON.stringify(new_ele) !== JSON.stringify(old_ele))&&((typeof t['agents'] !== "undefined"))) {
+            if ((JSON.stringify(new_ele) !== JSON.stringify(old_ele)) && ((typeof t['agents'] !== "undefined"))) {
                 updateProcessInterface(t);
                 t['old_elems'] = t['elems'];
 
@@ -6763,7 +6784,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         if (interface != "--Select--" && interface != "ALL") {
             sopt['impl'] = implementation_map[interface];
         }
-        dashboard_settings['search']=search_string;
+        dashboard_settings['search'] = search_string;
         jchaos.search(search_string, what, (alive == "true"), sopt, function (list_cu) {
             var search_query = {
                 search: search_string,
@@ -6775,7 +6796,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             tmpObj['search_query'] = search_query;
             $(".pageindex").css("visibility", "visible");
             $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
-           
+
             buildCUPage(tmpObj, list_cu.list, implementation_map[interface]);
 
         });
@@ -6820,7 +6841,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         if ($radio.is(":checked") === false) {
             $radio.filter("[value=true]").prop('checked', true);
         }
-        var alive = ($("[name=search-alive]:checked").val()=="true");
+        var alive = ($("[name=search-alive]:checked").val() == "true");
 
         var zones = jchaos.search("", "zone", alive);
         element_sel('#zones', zones, 1);
@@ -6828,14 +6849,14 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
         $("#zones").click(function () {
             var zone_selected = $("#zones option:selected").val();
-            if(zone_selected=="ALL"){
-                var alive = ($("[name=search-alive]:checked").val()=="true");
+            if (zone_selected == "ALL") {
+                var alive = ($("[name=search-alive]:checked").val() == "true");
                 jchaos.search("", "zone", alive, function (zones) {
                     element_sel('#zones', zones, 1);
                 }, function (error) {
                     stateOutput(error, true);
                 });
-        }
+            }
         });
         element_sel('#classe', classe, 1);
 
@@ -6864,7 +6885,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
 
             //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-            
+
         });
 
         $("#elements").change(function () {
@@ -6904,7 +6925,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
         $("input[type=radio][name=search-alive]").change(function (e) {
             dashboard_settings.current_page = 0;
-            var alive = ($("[name=search-alive]:checked").val()=="true");
+            var alive = ($("[name=search-alive]:checked").val() == "true");
             jchaos.search("", "zone", alive, function (zones) {
                 element_sel('#zones', zones, 1);
             }, function (error) {
@@ -6992,7 +7013,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 tempObj.type = "ALL";
                 $(".pageindex").css("visibility", "visible");
                 $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
-                handler(node.list.filter((val)=>{return (val!="");}));
+                handler(node.list.filter((val) => { return (val != ""); }));
 
             });
 
@@ -7004,9 +7025,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                     tempObj['search_query'] = search_query;
                     $(".pageindex").css("visibility", "visible");
                     $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
-                    var filt_list=[];
-                    if(list.list instanceof Array){
-                        filt_list=list.list.filter((val)=>{return (val!="")});
+                    var filt_list = [];
+                    if (list.list instanceof Array) {
+                        filt_list = list.list.filter((val) => { return (val != "") });
 
                     }
                     handler(filt_list);
@@ -7162,7 +7183,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             tmpObj.node_multi_selected = [];
             tmpObj.node_selected = null;
             tmpObj.last_index_selected = -1;
-            dashboard_settings['selection']=[];
+            dashboard_settings['selection'] = [];
             return;
         }
         tmpObj.node_selected = $(e.currentTarget).attr(tmpObj.type + "-name");
@@ -7201,7 +7222,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             tmpObj.node_multi_selected.push(node_list[nrows])
         }
         tmpObj.last_index_selected = $(e.currentTarget).index();
-        dashboard_settings['selection']=tmpObj.node_multi_selected;
+        dashboard_settings['selection'] = tmpObj.node_multi_selected;
     }
 
 
@@ -7305,14 +7326,14 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             var alarm = tmpObj.data[cindex];
             if (alarm != null && alarm.hasOwnProperty("cu_alarms")) {
-                var obj={};
-                if(alarm.health.nh_lem!=""){
-                    obj=Object.assign({'message':alarm.health.nh_lem,'domain':alarm.health.nh_led},alarm.cu_alarms);
+                var obj = {};
+                if (alarm.health.nh_lem != "") {
+                    obj = Object.assign({ 'message': alarm.health.nh_lem, 'domain': alarm.health.nh_led }, alarm.cu_alarms);
                 } else {
-                    obj=Object.assign({},alarm.cu_alarms);
+                    obj = Object.assign({}, alarm.cu_alarms);
 
                 }
-                
+
                 decodeDeviceAlarm(obj);
             }
         });
@@ -7372,7 +7393,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                         var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
                         $("#" + name_id + "_health_pband").html(band.toFixed(3));
                     }
-                    if ((status != "Unload") && (status !="Fatal Error")) {
+                    if ((status != "Unload") && (status != "Fatal Error")) {
                         switch (tmpObj.off_line[name_device_db]) {
                             case 1:
                                 status = "Dead";
@@ -7401,7 +7422,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
                     } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
                         $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" cuname="' + name_device_db + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
-                        $("#" + name_id + "_health_status").attr('title', "Device status:'" + status +"' "+el.health.nh_lem);
+                        $("#" + name_id + "_health_status").attr('title', "Device status:'" + status + "' " + el.health.nh_lem);
 
                     } else if (status == "Unload") {
                         $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">power</i>');
@@ -7517,7 +7538,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                         }
                     }
                 }
-                
+
                 /*if (el.hasOwnProperty("output")){
                     var lat=el.output.dpck_mds_ats-el.output.dpck_ats;
                     if(typeof lat === "number"){
@@ -8284,10 +8305,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         };
 
     }
-    jqccs.createQueryDialog=function(querycb, opencb,opt) {
-        return createQueryDialog(querycb, opencb,opt); 
+    jqccs.createQueryDialog = function (querycb, opencb, opt) {
+        return createQueryDialog(querycb, opencb, opt);
     }
-    function createQueryDialog(querycb, opencb,gopt) {
+    function createQueryDialog(querycb, opencb, gopt) {
         var dstart = new Date();
         dstart.setHours(0, 0, 0, 0);
         if (typeof query_params === "undefined") {
@@ -8325,7 +8346,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '<label class="label col-sm">Stop </label>';
         html += '<input class="input-xlarge focused col-sm" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
         html += '</div>';
-        if(gopt === undefined || (gopt.hasOwnProperty('tag')&&gopt.tag)){
+        if (gopt === undefined || (gopt.hasOwnProperty('tag') && gopt.tag)) {
             html += '<div class="row">';
             html += '<label class="label col-sm">Available Tag</label>';
             html += '<select class="col-sm" id="select-tag" title="Existing tags"></select>';
@@ -8337,7 +8358,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             html += '</div>';
         }
 
-        if(gopt === undefined || (gopt.hasOwnProperty('page')&&gopt.page)){
+        if (gopt === undefined || (gopt.hasOwnProperty('page') && gopt.page)) {
 
             html += '<div class="row">';
             html += '<label class="label col-sm">Page </label>';
@@ -8377,7 +8398,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
             querycb(query_params)
 
-        }, "Cancel", ()=>{if(gopt.cancelHandler !== undefined){gopt.cancelHandler()}}, function () {
+        }, "Cancel", () => { if (gopt.cancelHandler !== undefined) { gopt.cancelHandler() } }, function () {
             //open handle
             initializeTimePicker(function (ev, picker) {
                 //do something, like clearing an input
@@ -9416,13 +9437,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             */
         }
 
-      //  html += generateDataSet();
-       // html += generateDescription();
-       // html += generateSnapshotTable();
+        //  html += generateDataSet();
+        // html += generateDescription();
+        // html += generateSnapshotTable();
         html += generateAlarms();
-     //   html += generateLog();
+        //   html += generateLog();
         html += generateGraphTable();
-     //   html += generateGraphList();
+        //   html += generateGraphList();
         //  html += generateQueryTable();
 
 
@@ -9775,7 +9796,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
         html += "<div class='col-sm'>";
         html += "<div class='row' >";
-       
+
         html += "<div class='col-sm'>";
         html += '<p class="row lead">Scheduling(us)</p>';
 
@@ -9814,12 +9835,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += '<div class="row"><label for="restore-enable">on init</label><input class="input-xlarge" id="restore-true" title="Enable Restore on init" name="restore-enable" type="radio" value="true"></div>';
         html += '<div class="row"><label for="restore-enable">disable</label><input class="input-xlarge" id="restore-false" title="Disable Restore on init" name="restore-enable" type="radio" value="false"></div>';
         html += '</div>'
-       
+
         html += '</div>'
         html += '</div>';
 
         //first col
-       
+
         // html += "<div class='col-md-3'>";
         // html += "</div>";
         //second col/row
@@ -9846,7 +9867,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         html += "</div>";
 
 
-       
+
 
 
         html += "</div>";
@@ -9894,9 +9915,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
     function createCustomDialog(opt, html, butyes, yeshandle, cancelText, nohandle, open_handle, close_handle) {
 
         var dlg_opt = {};
-        var id="customdlg-"+(new Date()).getTime();
-        if(opt.hasOwnProperty('_name_')){
-            id=opt['_name_'];
+        var id = "customdlg-" + (new Date()).getTime();
+        if (opt.hasOwnProperty('_name_')) {
+            id = opt['_name_'];
             delete opt['_name_'];
         }
         dlg_opt['buttons'] = [];
@@ -9945,8 +9966,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         for (var i in opt) {
             dlg_opt[i] = opt[i];
         }
-        if(typeof html ==="undefined"){
-            html='<div id='+id+'></div>';
+        if (typeof html === "undefined") {
+            html = '<div id=' + id + '></div>';
         }
         $('<div></div>').appendTo('body')
             .html(html)
@@ -10005,7 +10026,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         }, cancelText);
 
     }
-    jqccs.confirm=function(hmsg, msg, butyes, yeshandle, butno, nohandle) {
+    jqccs.confirm = function (hmsg, msg, butyes, yeshandle, butno, nohandle) {
         return confirm(hmsg, msg, butyes, yeshandle, butno, nohandle);
     }
     function confirm(hmsg, msg, butyes, yeshandle, butno, nohandle) {
@@ -10126,11 +10147,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         }
 
         items['edit-' + node_type] = { name: "Edit ..." };
-        items['desc-'+node_type] = {name: "Desc"};
-        items['delete-histo-data'] = {name:"Delete HISTO data"};
-        var associated="";
-        if((typeof node ==="object")&&node.hasOwnProperty('desc')&&node.desc.hasOwnProperty('ndk_parent')){
-            associated=node.desc;
+        items['desc-' + node_type] = { name: "Desc" };
+        items['delete-histo-data'] = { name: "Delete HISTO data" };
+        var associated = "";
+        if ((typeof node === "object") && node.hasOwnProperty('desc') && node.desc.hasOwnProperty('ndk_parent')) {
+            associated = node.desc;
         } else {
             associated = jchaos.node(node_selected, "parent", "us", null, null);
 
@@ -10138,12 +10159,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
         if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "" && (node_type == "nt_unit_server" || node_type == "nt_root")) {
             items['sep5'] = "---------";
 
-            items['start-node'] = { name: "Start "+ jchaos.nodeTypeToHuman(node_type)+"..." };
-            items['stop-node'] = { name: "Stop "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
-            items['restart-node'] = { name: "Restart "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
-            items['kill-node'] = { name: "Kill "+ jchaos.nodeTypeToHuman(node_type)+" (via agent) ..." };
+            items['start-node'] = { name: "Start " + jchaos.nodeTypeToHuman(node_type) + "..." };
+            items['stop-node'] = { name: "Stop " + jchaos.nodeTypeToHuman(node_type) + " ..." };
+            items['restart-node'] = { name: "Restart " + jchaos.nodeTypeToHuman(node_type) + " ..." };
+            items['kill-node'] = { name: "Kill " + jchaos.nodeTypeToHuman(node_type) + " (via agent) ..." };
 
-            items['console-node'] = { name: "Console "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
+            items['console-node'] = { name: "Console " + jchaos.nodeTypeToHuman(node_type) + " ..." };
 
 
 
@@ -10161,7 +10182,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
                 items['paste-nt_control_unit'] = { name: "Paste/Move \"" + cu_copied.ndk_uid };
             }
 
-            
+
         } else if (node_type == "nt_root") {
             items['del-' + node_type] = { name: "Del " + node_selected };
             items['copy-' + node_type] = { name: "Copy " + node_selected };
@@ -10296,8 +10317,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             items['show-dataset'] = { name: "Show/Set/Plot Dataset" };
             items['show-desc'] = { name: "Show Description" };
             items['show-tags'] = { name: "Show Tags info" };
-            items['driver-prop'] = {name: "Edit Driver properties"};
-            items['cu-prop'] = {name: "Edit Node properties"};
+            items['driver-prop'] = { name: "Edit Driver properties" };
+            items['cu-prop'] = { name: "Edit Node properties" };
 
             items['show-picture'] = { name: "Show as Picture.." };
         }
@@ -10342,7 +10363,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             $("#cmd-recover-error").children().remove();
             $("#cmd-bypass-on-off").children().remove();
             */
-            if ((status != "Unload") && (status !="Fatal Error")) {
+            if ((status != "Unload") && (status != "Fatal Error")) {
                 switch (tmpObj.off_line[encoden]) {
                     case 1:
                         status = "Dead";
@@ -10445,7 +10466,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
             if (tmpObj.node_name_to_desc[name] == null) {
                 jchaos.getDesc(tmpObj.node_selected, function (desc) {
                     if (desc[0] != null) {
-                       
+
                         tmpObj.node_name_to_desc[name] = desc[0];
 
                     }
@@ -10726,7 +10747,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
     jqccs.generateScraperTable = function (tmpObj) {
         return generateScraperTable(tmpObj);
     }
-    
+
 
     function initSettings() {
         var sett = localStorage['chaos_dashboard_settings'];
