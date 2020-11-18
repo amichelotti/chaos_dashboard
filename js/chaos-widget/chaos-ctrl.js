@@ -3867,9 +3867,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok,
 
                 showPicture(currsel + " custom", currsel, 0,2);
                 
-            } else {
-                alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
-            }
+            } 
             }, function (err) {
                 console.log(err);
             });

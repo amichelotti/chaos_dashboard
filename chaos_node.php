@@ -88,12 +88,60 @@ require_once('header.php');
 	<script>
 		var cu_copied = null;
 		var synoptic = {};
+		var node_list=[];
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
 		}, (bad) => {
 			console.error("error:" + JSON.stringify(bad));
 
 		});
+		setInterval(function(){ 
+			var now=(new Date()).getTime();
+			if(node_list.length>0){
+				node_list.forEach((d)=>{
+					var iname=jchaos.encodeName(d);
+					
+
+				});
+				jchaos.getChannel(node_list, 255, function (run_info) {
+					run_info.forEach((elem,index)=>{
+					var healt = elem.health;
+					if ((healt.dpck_ats !== undefined)){
+						var iname=jchaos.encodeName(healt.ndk_uid);
+
+						if ((Math.abs(healt.dpck_ats - now) < 10000)) {
+							if(!$("#"+iname).hasClass("text-success")){
+								removeTextClasses(iname);
+								$("#"+iname).addClass("text-success");
+							}
+						} else {
+							if(!$("#"+iname).hasClass("text-muted")){
+								removeTextClasses(iname);
+
+								$("#"+iname).addClass("text-muted");
+							}
+
+						} 
+						if(healt.hasOwnProperty("nh_status")){
+							$("#"+iname).attr('title', "Status:" + healt.nh_status + " Uptime:"+jchaos.toHHMMSS(healt.nh_upt));
+							if(healt.nh_status == 'Fatal Error'){
+								if(!$("#"+iname).hasClass("text-danger")){
+									removeTextClasses(iname);
+							
+									$("#"+iname).addClass("text-danger");
+								}
+
+							}
+						}
+					} else {
+						removeTextClasses(iname);
+
+					}
+					});
+
+				});
+			}
+		}, 5000);
 
 
 		function cu2editor(ob, func) {
@@ -852,9 +900,15 @@ require_once('header.php');
 			cu_copied = null;
 			$("body").addClass("loading");
 			$('#hier_view').jstree("destroy");
-
+			node_list=[];
 			if (what == "byzone") {
 				createJSTreeByZone(search, (alive == "true"), (ds) => {
+					ds.forEach((elem)=>{
+						if(elem.hasOwnProperty('data')&& elem.data.hasOwnProperty("ndk_uid")){
+							node_list.push(elem.data.ndk_uid);
+
+						}
+					});
 					$('#hier_view').jstree({
 						"plugins": ["dnd", "contextmenu"],
 						"contextmenu": {
@@ -878,6 +932,12 @@ require_once('header.php');
 				});
 			} else if (what == "byserver") {
 				createJSTreeByServer(search, (alive == "true"), (ds) => {
+					ds.forEach((elem)=>{
+						if(elem.hasOwnProperty('data')&& elem.data.hasOwnProperty("ndk_uid")){
+							node_list.push(elem.data.ndk_uid);
+
+						}
+					});
 					$('#hier_view').jstree({
 						'core': {
 							'data': ds, "multiple": true,
@@ -898,6 +958,13 @@ require_once('header.php');
 
 			} else if (what == "bydevice") {
 				createJSTreeByDevice(search, (alive == "true"), (ds) => {
+					ds.forEach((elem)=>{
+						if(elem.hasOwnProperty('data')&& elem.data.hasOwnProperty("ndk_uid")){
+							node_list.push(elem.data.ndk_uid);
+
+						}
+					});
+					
 					$('#hier_view').jstree({
 						'core': {
 							'data': ds, "multiple": true,
@@ -1086,87 +1153,75 @@ require_once('header.php');
 				if ((culist.length == 0) && (typeof handler === "function")) {
 					handler(jsree_data);
 				}
-				culist.forEach((elem) => {
+				jchaos.node(culist, "desc", "all",(descs) => {
+					descs.forEach((elem)=>{
 					//	var desc = jchaos.getDesc(elem, null);
-					var decoded = jchaos.pathToZoneGroupId(elem);
+					var decoded = jchaos.pathToZoneGroupId(elem.ndk_uid);
 					if (decoded != null) {
 						var zone = decoded.zone;
 						var group = decoded.group;
-						var filename = zone.split("/");
+						var filename = (zone+"/"+decoded.id).split("/");
 						var next_parent = "";
 						if (filename.length > 0) {
 							next_parent = filename[filename.length - 1];
 						}
 						var desc = "";
-						desc = jchaos.node(elem, "desc", "all");
-						var uname = jchaos.encodeName(elem);
-						if (desc.seq !== undefined) {
-							uname = uname + "_" + desc.seq;
-						}
-						var zone = "";
-						var implementation = "";
+						var uname = jchaos.encodeName(elem.ndk_uid);
+						
+						/*var implementation = "";
 						if (desc.instance_description !== undefined && desc.instance_description.control_unit_implementation !== undefined) {
 							implementation = desc.instance_description.control_unit_implementation;
-						}
+						}*/
 						filename.forEach((p, index) => {
+							var par=p;
 							var node = {};
 							if (index == 0) {
-								node = { "id": p, "icon": "", "parent": "#", "text": p };
+								node = { "id": p, "icon": "", "parent": "#", "text": p,"data":{'zone':p} };
 								zone = p;
 							} else {
+								par=zone;
 								zone = zone + "/" + p;
-								node = { "id": p, "icon": "", "parent": filename[index - 1], "text": p };
+								node = { "id": jchaos.encodeName(zone), "icon": "", "parent": jchaos.encodeName(par), "text": p,"data":{'zone':par}  };
+
 							}
-							if (desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("ndk_parent") && (desc.ndk_parent == next_parent)) {
-								var parent_desc = jchaos.node(next_parent, "desc", "all");
-								node['data'] = parent_desc;
-								if (parent_desc.hasOwnProperty("ndk_type")) {
-									node['icon'] = "/img/devices/" + parent_desc.ndk_type + ".png";
+							if(index==(filename.length - 1)){
+								node['data']=elem;
+								node['data']['zone']=par;
+								node['data']['group']=group;
+								if(elem.hasOwnProperty("ndk_type")&&(elem.ndk_type=="nt_root")){
+									node['icon'] = "/img/devices/nt_root.png";
+								}else {
+									node['icon'] = "/img/devices/" + decoded.group+ ".png";
 								}
-							} else {
+								node['id']=uname;
 
-								node['data'] = { "zone": zone }
 							}
-							if (!node_created.hasOwnProperty(p)) {
+							if (!node_created.hasOwnProperty(node['id'])) {
+								node_created[node['id']] = true;
 								jsree_data.push(node);
-								node_created[p] = true;
+
 							}
-
-
+							
 						});
-						var node_name = decoded.id;
-						desc['zone'] = decoded.zone;
-						desc['group'] = decoded.group;
-
-
-						//var desc = jchaos.getDesc(elem, null);
-						var icon_name;
-						if (desc.ndk_type == "nt_root") {
-							icon_name = "/img/devices/" + desc.ndk_type + ".png";
-
-						} else {
-							icon_name = "/img/devices/" + desc['group'] + ".png";
-						}
-						var node = {
-							"id": uname,
-							"parent": next_parent,
-							"icon": icon_name,
-							"text": node_name,
-							"data": desc
-						};
-						jsree_data.push(node);
-					}
-
-				});
-				if (typeof handler === "function") {
+				
+				
+				
+			}
+		});
+			if (typeof handler === "function") {
 					handler(jsree_data);
 				}
 			}, () => {
 				if (typeof handler === "function") {
 					handler(jsree_data);
 				}
-			}
-			);
+			})}
+			,()=>{
+				if (typeof handler === "function") {
+					handler(jsree_data);
+				}
+			});
+
 		}
 		function createJSTreeByDevice(filter, alive, handler) {
 			var jsree_data = [];
@@ -1276,6 +1331,12 @@ require_once('header.php');
 		});
 		$("input[type=radio][name=search-alive]").trigger("change");
 
+		function removeTextClasses(iname){	
+			$("#"+iname).removeClass("text-success");
+			$("#"+iname).removeClass("text-dark");
+			$("#"+iname).removeClass("text-danger");
+			$("#"+iname).removeClass("text-muted");
+		}
 	</script>
 
 
