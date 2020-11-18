@@ -88,55 +88,75 @@ require_once('header.php');
 	<script>
 		var cu_copied = null;
 		var synoptic = {};
-		var node_list=[];
+		var node_list = [];
+		var node_state = {};
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
 		}, (bad) => {
 			console.error("error:" + JSON.stringify(bad));
 
 		});
-		setInterval(function(){ 
-			var now=(new Date()).getTime();
-			if(node_list.length>0){
-				node_list.forEach((d)=>{
-					var iname=jchaos.encodeName(d);
-					
+		setInterval(function () {
+			var now = (new Date()).getTime();
+			if (node_list.length > 0) {
+				node_list.forEach((d) => {
+					var iname = jchaos.encodeName(d);
+
 
 				});
 				jchaos.getChannel(node_list, 255, function (run_info) {
-					run_info.forEach((elem,index)=>{
-					var healt = elem.health;
-					if ((healt.dpck_ats !== undefined)){
-						var iname=jchaos.encodeName(healt.ndk_uid);
+					run_info.forEach((elem, index) => {
+						var healt = elem.health;
+						elem['lives'] = false;
+						node_state[node_list[index]] = elem;
 
-						if ((Math.abs(healt.dpck_ats - now) < 10000)) {
-							if(!$("#"+iname).hasClass("text-success")){
-								removeTextClasses(iname);
-								$("#"+iname).addClass("text-success");
-							}
-						} else {
-							if(!$("#"+iname).hasClass("text-muted")){
-								removeTextClasses(iname);
+						if ((healt.dpck_ats !== undefined)) {
+							var iname = jchaos.encodeName(healt.ndk_uid);
 
-								$("#"+iname).addClass("text-muted");
-							}
-
-						} 
-						if(healt.hasOwnProperty("nh_status")){
-							$("#"+iname).attr('title', "Status:" + healt.nh_status + " Uptime:"+jchaos.toHHMMSS(healt.nh_upt));
-							if(healt.nh_status == 'Fatal Error'){
-								if(!$("#"+iname).hasClass("text-danger")){
+							if ((Math.abs(healt.dpck_ats - now) < 10000)) {
+								if (!$("#" + iname).hasClass("text-success")) {
 									removeTextClasses(iname);
-							
-									$("#"+iname).addClass("text-danger");
+									$("#" + iname).addClass("text-success");
+								}
+								elem['lives'] = true;
+
+								node_state[node_list[index]]['lives'] = true;
+							} else {
+								if (!$("#" + iname).hasClass("text-muted")) {
+									removeTextClasses(iname);
+
+									$("#" + iname).addClass("text-muted");
 								}
 
 							}
-						}
-					} else {
-						removeTextClasses(iname);
+							if (healt.hasOwnProperty("nh_status")) {
+								var title = new Date(healt.dpck_ats).toLocaleString() + " Status:'" + healt.nh_status + "' Uptime:'" + jchaos.toHHMMSS(healt.nh_upt);
+								if (healt.nh_status == 'Fatal Error') {
+									if (healt.hasOwnProperty("nh_lem") && healt.nh_lem != "") {
+										title += ", Error message:" + healt.nh_lem;
+									}
+									if ((healt.nh_led !== undefined) && (healt.nh_led != "")) {
+										title += ", in :" + healt.nh_led;
 
-					}
+									}
+									if ((elem['lives'])&&(!$("#" + iname).hasClass("text-danger"))) {
+										removeTextClasses(iname);
+
+										$("#" + iname).addClass("text-danger");
+									}
+
+								} else if ((elem['lives'])&&(healt.nh_status != 'Start')) {
+									removeTextClasses(iname);
+
+									$("#" + iname).addClass("text-warning");
+								}
+								$("#" + iname).attr('title', title);
+
+							}
+						} else {
+							removeTextClasses(iname);
+
+						}
 					});
 
 				});
@@ -678,6 +698,68 @@ require_once('header.php');
 							}
 						};
 					}
+					if (node.data.ndk_type !== undefined && ((node.data.ndk_type == "nt_root") || (node.data.ndk_type == "nt_control_unit"))){
+						items['init'] = {
+							"separator_before": true,
+							"separator_after": false,
+							label: "Init",
+							action: function () {
+								jchaos.node(node.data.ndk_uid, "init", "cu", function () {
+
+									jqccs.instantMessage(node.data.ndk_uid, "Sending Init ok  " + node.data.ndk_parent, 2000, true);
+
+
+
+								}, function (bad) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error sending Init ,error: " + JSON.stringify(bad), 4000, false);
+								});
+
+							}
+						};
+						items['deinit'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Deinit",
+							action: function () {
+								jchaos.node(node.data.ndk_uid, "deinit", "cu", function () {
+									jqccs.instantMessage(node.data.ndk_uid, "Deinitializing  ", 2000, true);
+								}, function (bad) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error Deinitializing  error: " + JSON.stringify(bad), 4000, false);
+								});
+							}
+						};
+						items['load'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Load",
+							action: function () {
+								jchaos.loadUnload(node.data.ndk_uid, true, function (data) {
+									jqccs.instantMessage(node.data.ndk_uid, "Loading  ", 2000, true);
+
+								}, function (data) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error Loading  error: " + JSON.stringify(bad), 4000, false);
+
+								});
+
+							}
+						};
+						items['unload'] = {
+							"separator_before": false,
+							"separator_after": true,
+							label: "Unload",
+							action: function () {
+								jchaos.loadUnload(node.data.ndk_uid, false, function (data) {
+									jqccs.instantMessage(node.data.ndk_uid, "Unload  ", 2000, true);
+
+								}, function (data) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error Unload  error: " + JSON.stringify(bad), 4000, false);
+
+								});
+
+							}
+						};
+
+					}
 					items['shutdown'] = {
 						"separator_before": true,
 						"separator_after": false,
@@ -900,11 +982,11 @@ require_once('header.php');
 			cu_copied = null;
 			$("body").addClass("loading");
 			$('#hier_view').jstree("destroy");
-			node_list=[];
+			node_list = [];
 			if (what == "byzone") {
 				createJSTreeByZone(search, (alive == "true"), (ds) => {
-					ds.forEach((elem)=>{
-						if(elem.hasOwnProperty('data')&& elem.data.hasOwnProperty("ndk_uid")){
+					ds.forEach((elem) => {
+						if (elem.hasOwnProperty('data') && elem.data.hasOwnProperty("ndk_uid")) {
 							node_list.push(elem.data.ndk_uid);
 
 						}
@@ -932,8 +1014,8 @@ require_once('header.php');
 				});
 			} else if (what == "byserver") {
 				createJSTreeByServer(search, (alive == "true"), (ds) => {
-					ds.forEach((elem)=>{
-						if(elem.hasOwnProperty('data')&& elem.data.hasOwnProperty("ndk_uid")){
+					ds.forEach((elem) => {
+						if (elem.hasOwnProperty('data') && elem.data.hasOwnProperty("ndk_uid")) {
 							node_list.push(elem.data.ndk_uid);
 
 						}
@@ -958,13 +1040,13 @@ require_once('header.php');
 
 			} else if (what == "bydevice") {
 				createJSTreeByDevice(search, (alive == "true"), (ds) => {
-					ds.forEach((elem)=>{
-						if(elem.hasOwnProperty('data')&& elem.data.hasOwnProperty("ndk_uid")){
+					ds.forEach((elem) => {
+						if (elem.hasOwnProperty('data') && elem.data.hasOwnProperty("ndk_uid")) {
 							node_list.push(elem.data.ndk_uid);
 
 						}
 					});
-					
+
 					$('#hier_view').jstree({
 						'core': {
 							'data': ds, "multiple": true,
@@ -990,8 +1072,8 @@ require_once('header.php');
 				data.push(obj);
 			}
 		}
-		
-		function addUSOrRoot(jsree_data, node_created, edesc,without_parent) {
+
+		function addUSOrRoot(jsree_data, node_created, edesc, without_parent) {
 			if (edesc.ndk_type == "nt_unit_server" || (edesc.ndk_type == "nt_root")) {
 				var parent = "#";
 				var desc;
@@ -1005,7 +1087,7 @@ require_once('header.php');
 				var parent = "#";
 				icon_name = "/img/devices/" + desc.ndk_type + ".png";
 
-				if ((desc.ndk_parent !== undefined)&&(without_parent==false)) {
+				if ((desc.ndk_parent !== undefined) && (without_parent == false)) {
 					parent = jchaos.encodeName(desc.ndk_parent);
 
 				}
@@ -1071,7 +1153,7 @@ require_once('header.php');
 				}
 				jchaos.node(nodes, "desc", "all", (d) => {
 					// add before agents and us
-					
+
 					d.forEach(edesc => {
 						if (edesc.ndk_type == "nt_data_service" || edesc.ndk_type == "nt_wan_proxy" || edesc.ndk_type == "nt_agent") {
 							var icon = "/img/devices/" + edesc.ndk_type + ".png";
@@ -1088,39 +1170,42 @@ require_once('header.php');
 								jsree_data.push(node);
 								node_created[iname] = true;
 							}
-							if(edesc.ndk_type == "nt_agent"){
-								if(edesc.hasOwnProperty("andk_node_associated")){
-									edesc.andk_node_associated.forEach((ass)=>{
-										var found=false;
-										d.forEach((m,index)=>{
+							if (edesc.ndk_type == "nt_agent") {
+								if (edesc.hasOwnProperty("andk_node_associated")) {
+									edesc.andk_node_associated.forEach((ass) => {
+										var found = false;
+										d.forEach((m, index) => {
 											//console.log(edesc.ndk_uid+" looking among live for:"+ass.ndk_uid)
-											if(m.ndk_uid == ass.ndk_uid){
-												addUSOrRoot(jsree_data, node_created, m,false);
-												found=true;
-												d.splice(index, 1);
+											if (m.ndk_uid == ass.ndk_uid) {
+												if (!node_created.hasOwnProperty(jchaos.encodeName(m.ndk_uid))) {
+
+													addUSOrRoot(jsree_data, node_created, m, false);
+												}
+												found = true;
+												//d.splice(index, 1);
 											}
 										});
-										if(!found){
-										//	console.log(edesc.ndk_uid+" looking among NOT live for:"+ass.ndk_uid)
+										if (!found) {
+											//	console.log(edesc.ndk_uid+" looking among NOT live for:"+ass.ndk_uid)
 
-											var nn=	jchaos.node(ass.ndk_uid, "desc", "all");
-											if(nn!=null && nn.hasOwnProperty('ndk_uid')){
-												addUSOrRoot(jsree_data, node_created, nn,false);
+											var nn = jchaos.node(ass.ndk_uid, "desc", "all");
+											if (nn != null && nn.hasOwnProperty('ndk_uid')) {
+												addUSOrRoot(jsree_data, node_created, nn, false);
 
 											} else {
-												console.error("Node empty?:"+ass.ndk_uid+ " in agent :"+edesc.ndk_uid);
+												console.error("Node empty?:" + ass.ndk_uid + " in agent :" + edesc.ndk_uid);
 
-												alert("Agent "+edesc.ndk_uid+" is associated to a non valid node:"+ass.ndk_uid+" please remove it from associations")
+												alert("Agent " + edesc.ndk_uid + " is associated to a non valid node:" + ass.ndk_uid + " please remove it from associations")
 											}
 										}
 
 									});
 								}
 							}
-						} 	
+						}
 					});
 					d.forEach(edesc => {
-						addUSOrRoot(jsree_data, node_created, edesc,true);
+						addUSOrRoot(jsree_data, node_created, edesc, true);
 					});
 					if (typeof handler === "function") {
 						handler(jsree_data);
@@ -1153,74 +1238,75 @@ require_once('header.php');
 				if ((culist.length == 0) && (typeof handler === "function")) {
 					handler(jsree_data);
 				}
-				jchaos.node(culist, "desc", "all",(descs) => {
-					descs.forEach((elem)=>{
-					//	var desc = jchaos.getDesc(elem, null);
-					var decoded = jchaos.pathToZoneGroupId(elem.ndk_uid);
-					if (decoded != null) {
-						var zone = decoded.zone;
-						var group = decoded.group;
-						var filename = (zone+"/"+decoded.id).split("/");
-						var next_parent = "";
-						if (filename.length > 0) {
-							next_parent = filename[filename.length - 1];
-						}
-						var desc = "";
-						var uname = jchaos.encodeName(elem.ndk_uid);
-						
-						/*var implementation = "";
-						if (desc.instance_description !== undefined && desc.instance_description.control_unit_implementation !== undefined) {
-							implementation = desc.instance_description.control_unit_implementation;
-						}*/
-						filename.forEach((p, index) => {
-							var par=p;
-							var node = {};
-							if (index == 0) {
-								node = { "id": p, "icon": "", "parent": "#", "text": p,"data":{'zone':p} };
-								zone = p;
-							} else {
-								par=zone;
-								zone = zone + "/" + p;
-								node = { "id": jchaos.encodeName(zone), "icon": "", "parent": jchaos.encodeName(par), "text": p,"data":{'zone':par}  };
-
+				jchaos.node(culist, "desc", "all", (descs) => {
+					descs.forEach((elem) => {
+						//	var desc = jchaos.getDesc(elem, null);
+						var decoded = jchaos.pathToZoneGroupId(elem.ndk_uid);
+						if (decoded != null) {
+							var zone = decoded.zone;
+							var group = decoded.group;
+							var filename = (zone + "/" + decoded.id).split("/");
+							var next_parent = "";
+							if (filename.length > 0) {
+								next_parent = filename[filename.length - 1];
 							}
-							if(index==(filename.length - 1)){
-								node['data']=elem;
-								node['data']['zone']=par;
-								node['data']['group']=group;
-								if(elem.hasOwnProperty("ndk_type")&&(elem.ndk_type=="nt_root")){
-									node['icon'] = "/img/devices/nt_root.png";
-								}else {
-									node['icon'] = "/img/devices/" + decoded.group+ ".png";
+							var desc = "";
+							var uname = jchaos.encodeName(elem.ndk_uid);
+
+							/*var implementation = "";
+							if (desc.instance_description !== undefined && desc.instance_description.control_unit_implementation !== undefined) {
+								implementation = desc.instance_description.control_unit_implementation;
+							}*/
+							filename.forEach((p, index) => {
+								var par = p;
+								var node = {};
+								if (index == 0) {
+									node = { "id": p, "icon": "", "parent": "#", "text": p, "data": { 'zone': p } };
+									zone = p;
+								} else {
+									par = zone;
+									zone = zone + "/" + p;
+									node = { "id": jchaos.encodeName(zone), "icon": "", "parent": jchaos.encodeName(par), "text": p, "data": { 'zone': par } };
+
 								}
-								node['id']=uname;
+								if (index == (filename.length - 1)) {
+									node['data'] = elem;
+									node['data']['zone'] = par;
+									node['data']['group'] = group;
+									if (elem.hasOwnProperty("ndk_type") && (elem.ndk_type == "nt_root")) {
+										node['icon'] = "/img/devices/nt_root.png";
+									} else {
+										node['icon'] = "/img/devices/" + decoded.group + ".png";
+									}
+									node['id'] = uname;
 
-							}
-							if (!node_created.hasOwnProperty(node['id'])) {
-								node_created[node['id']] = true;
-								jsree_data.push(node);
+								}
+								if (!node_created.hasOwnProperty(node['id'])) {
+									node_created[node['id']] = true;
+									jsree_data.push(node);
 
-							}
-							
-						});
-				
-				
-				
+								}
+
+							});
+
+
+
+						}
+					});
+					if (typeof handler === "function") {
+						handler(jsree_data);
+					}
+				}, () => {
+					if (typeof handler === "function") {
+						handler(jsree_data);
+					}
+				})
 			}
-		});
-			if (typeof handler === "function") {
-					handler(jsree_data);
-				}
-			}, () => {
-				if (typeof handler === "function") {
-					handler(jsree_data);
-				}
-			})}
-			,()=>{
-				if (typeof handler === "function") {
-					handler(jsree_data);
-				}
-			});
+				, () => {
+					if (typeof handler === "function") {
+						handler(jsree_data);
+					}
+				});
 
 		}
 		function createJSTreeByDevice(filter, alive, handler) {
@@ -1331,11 +1417,11 @@ require_once('header.php');
 		});
 		$("input[type=radio][name=search-alive]").trigger("change");
 
-		function removeTextClasses(iname){	
-			$("#"+iname).removeClass("text-success");
-			$("#"+iname).removeClass("text-dark");
-			$("#"+iname).removeClass("text-danger");
-			$("#"+iname).removeClass("text-muted");
+		function removeTextClasses(iname) {
+			$("#" + iname).removeClass("text-success");
+			$("#" + iname).removeClass("text-dark");
+			$("#" + iname).removeClass("text-danger");
+			$("#" + iname).removeClass("text-muted");
 		}
 	</script>
 
