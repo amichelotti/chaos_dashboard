@@ -104,15 +104,16 @@ require_once('header.php');
 
 
 				});
-				jchaos.getChannel(node_list, 255, function (run_info) {
+				jchaos.getChannel(node_list, 255,function (run_info) {
 					run_info.forEach((elem, index) => {
+					if((elem.health !== undefined)&&(elem.health.ndk_uid!== undefined)){
 						var healt = elem.health;
+						var uid =healt.ndk_uid;
 						elem['lives'] = false;
-						node_state[node_list[index]] = elem;
+						node_state[uid] = elem;
+						var iname = jchaos.encodeName(uid);
 
 						if ((healt.dpck_ats !== undefined)) {
-							var iname = jchaos.encodeName(healt.ndk_uid);
-
 							if ((Math.abs(healt.dpck_ats - now) < 10000)) {
 								if (!$("#" + iname).hasClass("text-success")) {
 									removeTextClasses(iname);
@@ -120,7 +121,7 @@ require_once('header.php');
 								}
 								elem['lives'] = true;
 
-								node_state[node_list[index]]['lives'] = true;
+								node_state[uid]['lives'] = true;
 							} else {
 								if (!$("#" + iname).hasClass("text-muted")) {
 									removeTextClasses(iname);
@@ -130,7 +131,7 @@ require_once('header.php');
 
 							}
 							if (healt.hasOwnProperty("nh_status")) {
-								var title = new Date(healt.dpck_ats).toLocaleString() + " Status:'" + healt.nh_status + "' Uptime:'" + jchaos.toHHMMSS(healt.nh_upt);
+								var title = uid+ ":"+new Date(healt.dpck_ats).toLocaleString() + " Status:'" + healt.nh_status + "' Uptime:'" + jchaos.toHHMMSS(healt.nh_upt);
 								if (healt.nh_status == 'Fatal Error') {
 									if (healt.hasOwnProperty("nh_lem") && healt.nh_lem != "") {
 										title += ", Error message:" + healt.nh_lem;
@@ -152,11 +153,20 @@ require_once('header.php');
 								}
 								$("#" + iname).attr('title', title);
 
-							}
+							} 
 						} else {
 							removeTextClasses(iname);
 
 						}
+					} else {
+						var uid =node_list[index];
+						var iname = jchaos.encodeName(uid);
+						removeTextClasses(iname);
+						$("#" + iname).addClass("text-dark");
+						$("#" + iname).attr('title', uid+": DEAD no info");
+
+
+					}
 					});
 
 				});
@@ -645,11 +655,12 @@ require_once('header.php');
 						label: "Update State",
 						action: function () { updateDescView(node); }
 					};
-					if (node.data.ndk_parent !== undefined && (node.data.ndk_parent != "")) {
+					if (node.data.ndk_parent !== undefined && (node.data.ndk_parent != "")&& ((node.data.ndk_type == "nt_unit_server" || (node.data.ndk_type == "nt_root")))) {
+						if((!node_state.hasOwnProperty(node.data.ndk_uid))||(node_state[node.data.ndk_uid]['lives']==false)){
 						items['start'] = {
 							"separator_before": true,
 							"separator_after": false,
-							label: "Start",
+							label: "Start Node(Launch)",
 							action: function () {
 								jchaos.node(node.data.ndk_uid, "start", "us", function () {
 
@@ -685,10 +696,11 @@ require_once('header.php');
 
 							}
 						};
+					}
 						items['stop'] = {
 							"separator_before": false,
 							"separator_after": false,
-							label: "Stop",
+							label: "Stop Node(Kill)",
 							action: function () {
 								jchaos.node(node.data.ndk_uid, "stop", "us", function () {
 									jqccs.instantMessage(node.data.ndk_uid, "Stopping on  " + node.data.ndk_parent, 2000, true);
@@ -697,6 +709,16 @@ require_once('header.php');
 								});
 							}
 						};
+						items['console'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Remote Console",
+							action: function () {
+								jqccs.getConsoleByUid("console",node.data.ndk_uid);
+								
+							}
+						};
+					
 					}
 					if (node.data.ndk_type !== undefined && ((node.data.ndk_type == "nt_root") || (node.data.ndk_type == "nt_control_unit"))){
 						items['init'] = {
@@ -1176,7 +1198,7 @@ require_once('header.php');
 										var found = false;
 										d.forEach((m, index) => {
 											//console.log(edesc.ndk_uid+" looking among live for:"+ass.ndk_uid)
-											if (m.ndk_uid == ass.ndk_uid) {
+											if ((m !== undefined)&&(m.ndk_uid == ass.ndk_uid)) {
 												if (!node_created.hasOwnProperty(jchaos.encodeName(m.ndk_uid))) {
 
 													addUSOrRoot(jsree_data, node_created, m, false);
