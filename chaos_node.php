@@ -27,7 +27,7 @@ require_once('header.php');
 						<h3>Node Type</h3>
 						<select id="View" size="auto">
 							<option value="byzone" selected="selected">By Zone</option>
-							<option value="bydevice">By Device Type</option>
+							<option value="bydevice">By Type</option>
 							<option value="byserver">By Server</option>
 						</select>
 					</div>
@@ -657,7 +657,7 @@ require_once('header.php');
 					};
 					if (node.data.ndk_parent !== undefined && (node.data.ndk_parent != "")&& ((node.data.ndk_type == "nt_unit_server" || (node.data.ndk_type == "nt_root")))) {
 						if((!node_state.hasOwnProperty(node.data.ndk_uid))||(node_state[node.data.ndk_uid]['lives']==false)){
-						items['start'] = {
+						items['start_node'] = {
 							"separator_before": true,
 							"separator_after": false,
 							label: "Start Node(Launch)",
@@ -697,7 +697,7 @@ require_once('header.php');
 							}
 						};
 					}
-						items['stop'] = {
+						items['stop_node'] = {
 							"separator_before": false,
 							"separator_after": false,
 							label: "Stop Node(Kill)",
@@ -720,9 +720,54 @@ require_once('header.php');
 						};
 					
 					}
+					items['shutdown'] = {
+						"separator_before": false,
+						"separator_after": true,
+						label: "Shutdown Node and all siblings",
+						action: function () {
+							var typ = jchaos.nodeTypeToHuman(type);
+
+							jqccs.confirm("Do you want to IMMEDIATELY SHUTDOWN " + typ + " " + selected_node, "Pay attention all children and siblings will be killed as well", "Kill",
+								function () {
+									jchaos.node(selected_node, "shutdown", typ, function () {
+										jqccs.instantMessage("SHUTDOWN NODE", "Killing " + selected_node + "", 1000, true);
+									}, function () {
+										jqccs.instantMessage("SHUTDOWN NODE ", "Killing " + selected_node + "", 4000, false);
+									}, function () {
+										// handle error ok
+									})
+								}, "Joke",
+								function () { });
+						}
+					}
 					if (node.data.ndk_type !== undefined && ((node.data.ndk_type == "nt_root") || (node.data.ndk_type == "nt_control_unit"))){
-						items['init'] = {
+			
+						items['start'] = {
 							"separator_before": true,
+							"separator_after": false,
+							label: "Start",
+							action: function () {
+								jchaos.node(node.data.ndk_uid, "start", "cu", function () {
+									jqccs.instantMessage(node.data.ndk_uid, "Starting  ", 2000, true);
+								}, function (bad) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error Starting  error: " + JSON.stringify(bad), 4000, false);
+								});
+							}
+						};
+						items['stop'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Stop",
+							action: function () {
+								jchaos.node(node.data.ndk_uid, "stop", "cu", function () {
+									jqccs.instantMessage(node.data.ndk_uid, "Stopping  ", 2000, true);
+								}, function (bad) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error Stopping  error: " + JSON.stringify(bad), 4000, false);
+								});
+							}
+						};
+						items['init'] = {
+							"separator_before": false,
 							"separator_after": false,
 							label: "Init",
 							action: function () {
@@ -782,26 +827,7 @@ require_once('header.php');
 						};
 
 					}
-					items['shutdown'] = {
-						"separator_before": true,
-						"separator_after": false,
-						label: "Shutdown Node and all siblings",
-						action: function () {
-							var typ = jchaos.nodeTypeToHuman(type);
-
-							jqccs.confirm("Do you want to IMMEDIATELY SHUTDOWN " + typ + " " + selected_node, "Pay attention all children and siblings will be killed as well", "Kill",
-								function () {
-									jchaos.node(selected_node, "shutdown", typ, function () {
-										jqccs.instantMessage("SHUTDOWN NODE", "Killing " + selected_node + "", 1000, true);
-									}, function () {
-										jqccs.instantMessage("SHUTDOWN NODE ", "Killing " + selected_node + "", 4000, false);
-									}, function () {
-										// handle error ok
-									})
-								}, "Joke",
-								function () { });
-						}
-					}
+					
 
 
 				}

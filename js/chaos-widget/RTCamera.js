@@ -284,7 +284,12 @@ function getWidget() {
                   var id=jchaos.encodeName(elem);
                   // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
                   $("#cameraImage-" + id).attr("src", "data:image/" + fmt + ";base64," + bin);
-                  $("#info-" + id).html(selected.output.WIDTH +"x"+selected.output.HEIGHT+ "("+selected.output.OFFSETX +","+selected.output.OFFSETY+") frame:"+selected.output.dpck_seq_id);
+                  if(selected.output.WIDTH !== undefined){
+                    $("#info-" + id).html(selected.output.WIDTH +"x"+selected.output.HEIGHT+ "("+selected.output.OFFSETX +","+selected.output.OFFSETY+") frame:"+selected.output.dpck_seq_id);
+                  } else {
+                    $("#info-" + id).html("frame:"+selected.output.dpck_seq_id);
+
+                  }
 
                   
                 }
@@ -401,16 +406,16 @@ function getWidget() {
   function executeCameraMenuCmd(tmpObj, cmd, opt) {
     if(cmd == 'set-reference'){
       var crop_opt=opt.items[cmd].crop_opt;
+      
+      var width=crop_opt.width/2;
+      var height=crop_opt.height/2;
+      var x=crop_opt.x+width;
+      var y=crop_opt.y+height;
 
-      var width=crop_opt.width.toFixed();
-      var height=crop_opt.height.toFixed();
-      var x=crop_opt.x.toFixed();
-      var y=crop_opt.y.toFixed();
-
-      jchaos.setAttribute(crop_opt.cu, "REFOFFSETX", String(x), function () {
-        jchaos.setAttribute(crop_opt.cu, "REFOFFSETY", String(y), function () {
-          jchaos.setAttribute(crop_opt.cu, "REFSIZEX",String(width) , function () {
-            jchaos.setAttribute(crop_opt.cu, "REFSIZEY",String(height), function () {
+      jchaos.setAttribute(crop_opt.cu, "REFX", String(x.toFixed()), function () {
+        jchaos.setAttribute(crop_opt.cu, "REFY", String(y.toFixed()), function () {
+          jchaos.setAttribute(crop_opt.cu, "REFSX",String(width.toFixed()) , function () {
+            jchaos.setAttribute(crop_opt.cu, "REFSY",String(height.toFixed()), function () {
               jqccs.instantMessage("SET REFERENCE "+crop_opt.cu, "("+x+","+y+") "+width+"x"+height, 3000, true);
 
             });

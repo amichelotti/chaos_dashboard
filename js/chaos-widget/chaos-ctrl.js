@@ -1515,12 +1515,18 @@
     function cusWithInterface(tmpObj, culist, interface) {
         var retlist = [];
         culist.forEach(function (name) {
-            if (tmpObj.node_name_to_desc[name] == null) {
-                var desc = jchaos.getDesc(name, null);
-                tmpObj.node_name_to_desc[name] = desc[0];
+            if (tmpObj.node_name_to_desc[name] == null || (!tmpObj.node_name_to_desc[name].hasOwnProperty('instance_description'))) {
+                var desc = jchaos.node(name,"desc","all", null);
+                tmpObj.node_name_to_desc[name] = desc;
             }
             var node_name_to_desc = tmpObj.node_name_to_desc;
-            if (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[name].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
+            var impl="";
+            if(node_name_to_desc[name].hasOwnProperty("cudk_view")){
+                impl=node_name_to_desc[name].cudk_view;
+            } else if( (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") )){
+                impl=node_name_to_desc[name].instance_description.control_unit_implementation;
+            }
+            if( (impl.indexOf(interface) != -1)) {
                 retlist.push(name);
             }
         });
@@ -3833,10 +3839,10 @@
 
             });
         } else if (cmd == "show-desc") {
-            jchaos.getDesc(currsel, function (data) {
-                tmpObj.node_name_to_desc[currsel] = data[0];
+            jchaos.node(currsel, "desc","all",function (data) {
+                tmpObj.node_name_to_desc[currsel] = data;
 
-                showJson("Description " + currsel, data[0]);
+                showJson("Description " + currsel, data);
             });
 
         } else if (cmd == "show-tags") {
@@ -4892,9 +4898,9 @@
 
             } else if (cmd == "del-nt_control_unit") {
                 node_multi_selected.forEach(function (nod, index) {
-                    jchaos.getDesc(nod, function (desc) {
-                        if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
-                            var parent = desc[0].instance_description.ndk_parent;
+                    jchaos.node(nod,"desc","all", function (desc) {
+                        if (desc != null && desc.hasOwnProperty("instance_description")) {
+                            var parent = desc.instance_description.ndk_parent;
                             confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
                                 jchaos.node(nod, "del", "cu", parent, null, function (ok) {
                                     instantMessage("Deleted", "CU " + nod, 1000, true);
@@ -6788,7 +6794,7 @@
         jchaos.search(search_string, what, (alive == "true"), sopt, function (list_cu) {
             var search_query = {
                 search: search_string,
-                type: "cu",
+                type: "ceu",
                 alive: (alive == "true"),
                 opt: { "pagestart": dashboard_settings.current_page, "pagelen": dashboard_settings.maxNodesPerPage }
             }
@@ -6881,7 +6887,7 @@
                     element_sel('#elements', ll, 1);
                 });
             }
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
 
             //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
@@ -6902,13 +6908,13 @@
             }
 
             dashboard_settings.current_page = 0;
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
         });
         $("#classe").change(function () {
             dashboard_settings.current_page = 0;
             $("#search-chaos").val("");
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
 
         });
@@ -6917,7 +6923,7 @@
                 search_string = $(this).val();
                 dashboard_settings.current_page = 0;
 
-                buildInterfaceFromPagedSearch(tmpObj, "cu");
+                buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
             }
             //var tt =prompt('type value');
@@ -6934,7 +6940,7 @@
             jchaos.search(search_string, "class", alive, function (ll) {
                 element_sel('#elements', ll, 1);
             });
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
         });
         var defzone = "";
@@ -6985,7 +6991,7 @@
 
         }
         if (defzone != "" || defgroup != "" || definterface != "") {
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
         }
 
@@ -10464,10 +10470,10 @@
             $("#cu_full_commands").empty();
 
             if (tmpObj.node_name_to_desc[name] == null) {
-                jchaos.getDesc(tmpObj.node_selected, function (desc) {
-                    if (desc[0] != null) {
+                jchaos.node(tmpObj.node_selected, "desc","all",function (desc) {
+                    if (desc!= null) {
 
-                        tmpObj.node_name_to_desc[name] = desc[0];
+                        tmpObj.node_name_to_desc[name] = desc;
 
                     }
                 });
