@@ -2961,7 +2961,7 @@
         $("#graph_search").off('keypress');
         $("#graph_search").on('keypress', function (event) {
             var t = $(event.target);
-            var value = $(t).attr("value");
+            var value = $(t).val();
             updateGraph(value);
             // if ((event.which == 13)) {
             //  var name = $(t).attr("cuname");
@@ -3224,7 +3224,7 @@
 
             if ((event.which == 13)) {
                 //  var name = $(t).attr("cuname");
-                var value = $(t).attr("value");
+                var value = $(t).val();
                 jchaos.setSched(tmpObj.node_multi_selected, value, function () {
                     instantMessage("Set scheduling", "to " + value + " us Hz:" + 1000000 / Number(value), 2000, true);
 
@@ -4325,7 +4325,7 @@
         $("#process_search").off('keypress');
         $("#process_search").on('keypress', function (event) {
             var t = $(event.target);
-            var value = $(t).attr("value");
+            var value = $(t).val();
             tempObj['filter'] = value;
             updateProcessInterface(tempObj);
         });

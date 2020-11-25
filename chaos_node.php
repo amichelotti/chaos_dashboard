@@ -249,14 +249,14 @@ require_once('header.php');
 							var drv_impl = obj.cudk_driver_description;
 							var list_drivers = [];
 
-							if ((drv_impl !== undefined) && (drv_impl.length)) {
+						/*	if ((drv_impl !== undefined) && (drv_impl.length)) {
 								drv_impl.forEach((d) => {
 									list_drivers.push(d.cudk_driver_description_name);
 								});
 								// return just the drivers that are supported
 
 
-							}
+							}*/
 							if ((impl != "") && (cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined)) {
 								var dlist = cudb[impl].drivers;
 								// drivers for the implementation
@@ -277,7 +277,11 @@ require_once('header.php');
 									}
 								}
 							}
-							templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum = list_drivers;
+							if(list_drivers.length>0){
+								templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum = list_drivers;
+							} else {
+								delete templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name']['enum'];
+							}
 
 							/*	if((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined )&& (drv !== undefined)){
 									templ['properties']['cudk_driver_description']['properties'].cudk_driver_description_name=cudb[impl].drivers;
@@ -361,7 +365,7 @@ require_once('header.php');
 			var tree = $('#hier_view').jstree(true);
 			var ID = $(node).attr('id');
 			if (node.hasOwnProperty("data")) {
-				if (node.data.hasOwnProperty('zone') || (node.data.hasOwnProperty("ndk_type") && (node.data.ndk_type == "nt_unit_server"))) {
+				if (node.data.hasOwnProperty('zone') || (node.data.ndk_type == "nt_unit_server")) {
 					items['new-cu'] = {
 						"separator_before": false,
 						"separator_after": false,
