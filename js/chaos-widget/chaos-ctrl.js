@@ -1401,9 +1401,9 @@
         }
         //var name = jchaos.encodeName(tmpObj.node_selected);
         var name = tmpObj.node_selected;
-        var node_name_to_desc = tmpObj.node_name_to_desc;
-        if (tmpObj.node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
-            var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
+        var descr=jchaos.node(name,"desc","all");
+        if (tmpObj.node_selected != null && descr.hasOwnProperty("cudk_ds_desc") && descr.cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+            var desc = descr.cudk_ds_desc.cudk_ds_command_description;
             desc.forEach(function (item) {
                 if (item.bc_alias == alias) {
                     var params = item.bc_parameters;
