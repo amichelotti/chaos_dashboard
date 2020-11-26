@@ -717,18 +717,18 @@
 				jchaos.log("", "search", "all", query.start, query.end, function (data) {
 					if (data.hasOwnProperty("result_list")) {
 						data.result_list.forEach(function (item) {
+							var name = item.mdsndk_nl_sid;
+							var nodef = jchaos.encodeName(name) + "_" + item.mdsndk_nl_lts;
 
 							var dat = new Date(item.mdsndk_nl_lts).toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
 
 							item.mdsndk_nl_lts = new Date(item.mdsndk_nl_lts).toLocaleString('it-IT');
-							var name = item.mdsndk_nl_sid;
 							var msg = item.mdsndk_nl_e_em;
 							var type = item.mdsndk_nl_ld;
 							if ((item.mdsndk_nl_l_ld !== undefined) && (item.mdsndk_nl_l_ld == "Error")) {
 								type = "error";
 							}
 							var origin = item.mdsndk_nl_e_ed;
-							var nodef = jchaos.encodeName(name) + "_" + item.mdsndk_nl_lts;
 							var node_group = {
 								"id": jchaos.encodeName(type),
 								"parent": "#",
@@ -743,34 +743,35 @@
 							}
 							if (!node_created.hasOwnProperty(type)) {
 								jsree_data.push(node_group);
-								node_created[type] = true;
+								node_created[type] = node_group['parent'];
 							}
 							var dirs = name.split("/");
 							var group = "";
 							var compname="";
+							var parent = "";
+
 							dirs.forEach((ele, index) => {
 								var node_group;
 								compname=ele;
 								if (index == 0) {
 									group = type + "/" + ele;
-									node_group = {
-										"id": jchaos.encodeName(group),
-										"parent": jchaos.encodeName(type),
-										"text": ele,
-									};
+									parent=type;
 								} else {
-									var parent = group;
+									parent = group;
 									group = group + "/" + ele;
-									node_group = {
-										"id": jchaos.encodeName(group),
+									
+								}
+
+								var egroup=jchaos.encodeName(group);
+								node_group = {
+										"id": egroup,
 										"parent": jchaos.encodeName(parent),
 										"text": ele
 									};
-								}
 								node_group['data'] = { "group": group }
 
-								if (!node_created.hasOwnProperty(group)) {
-									node_created[group] = true;
+								if (!node_created.hasOwnProperty(egroup)) {
+									node_created[egroup] = node_group['parent'];
 									jsree_data.push(node_group);
 								}
 
@@ -784,13 +785,16 @@
 							};
 							node['data']['group'] = group;
 							if (!node_created.hasOwnProperty(nodef)) {
-								node_created[nodef] = true;
+								node_created[node['id']] = node['parent'];
 								jsree_data.push(node);
 								// push also in all
-								node['id']="ALL_"+node['id'];
-								node['parent']="ALL";
-								node['text']=compname+"_"+node['text'];
-								jsree_data.push(node);
+								var nn=JSON.parse(JSON.stringify(node));
+								nn['id']="ALL_"+node['id'];
+								nn['parent']="ALL";
+								nn['text']=compname+"_"+node['text'];
+								nn[node['id']] = node['parent'];
+
+								jsree_data.push(nn);
 							}
 						});
 					}
