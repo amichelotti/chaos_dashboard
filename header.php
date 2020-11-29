@@ -91,6 +91,7 @@
 </div>
 </div>
 <script>
+	jqccs.initSettings();
 	$( <?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
 	function addMenuScriptItems(pid, node) {
 		var items = {};

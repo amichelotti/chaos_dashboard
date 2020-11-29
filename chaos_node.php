@@ -104,69 +104,69 @@ require_once('header.php');
 
 
 				});
-				jchaos.getChannel(node_list, 255,function (run_info) {
+				jchaos.getChannel(node_list, 255, function (run_info) {
 					run_info.forEach((elem, index) => {
-					if((elem.health !== undefined)&&(elem.health.ndk_uid!== undefined)){
-						var healt = elem.health;
-						var uid =healt.ndk_uid;
-						elem['lives'] = false;
-						node_state[uid] = elem;
-						var iname = jchaos.encodeName(uid);
+						if ((elem.health !== undefined) && (elem.health.ndk_uid !== undefined)) {
+							var healt = elem.health;
+							var uid = healt.ndk_uid;
+							elem['lives'] = false;
+							node_state[uid] = elem;
+							var iname = jchaos.encodeName(uid);
 
-						if ((healt.dpck_ats !== undefined)) {
-							if ((Math.abs(healt.dpck_ats - now) < 10000)) {
-								if (!$("#" + iname).hasClass("text-success")) {
-									removeTextClasses(iname);
-									$("#" + iname).addClass("text-success");
-								}
-								elem['lives'] = true;
-
-								node_state[uid]['lives'] = true;
-							} else {
-								if (!$("#" + iname).hasClass("text-muted")) {
-									removeTextClasses(iname);
-
-									$("#" + iname).addClass("text-muted");
-								}
-
-							}
-							if (healt.hasOwnProperty("nh_status")) {
-								var title = uid+ ":"+new Date(healt.dpck_ats).toLocaleString() + " Status:'" + healt.nh_status + "' Uptime:'" + jchaos.toHHMMSS(healt.nh_upt);
-								if (healt.nh_status == 'Fatal Error') {
-									if (healt.hasOwnProperty("nh_lem") && healt.nh_lem != "") {
-										title += ", Error message:" + healt.nh_lem;
+							if ((healt.dpck_ats !== undefined)) {
+								if ((Math.abs(healt.dpck_ats - now) < 10000)) {
+									if (!$("#" + iname).hasClass("text-success")) {
+										removeTextClasses(iname);
+										$("#" + iname).addClass("text-success");
 									}
-									if ((healt.nh_led !== undefined) && (healt.nh_led != "")) {
-										title += ", in :" + healt.nh_led;
+									elem['lives'] = true;
 
-									}
-									if ((elem['lives'])&&(!$("#" + iname).hasClass("text-danger"))) {
+									node_state[uid]['lives'] = true;
+								} else {
+									if (!$("#" + iname).hasClass("text-muted")) {
 										removeTextClasses(iname);
 
-										$("#" + iname).addClass("text-danger");
+										$("#" + iname).addClass("text-muted");
 									}
 
-								} else if ((elem['lives'])&&(healt.nh_status != 'Start')) {
-									removeTextClasses(iname);
-
-									$("#" + iname).addClass("text-warning");
 								}
-								$("#" + iname).attr('title', title);
+								if (healt.hasOwnProperty("nh_status")) {
+									var title = uid + ":" + new Date(healt.dpck_ats).toLocaleString() + " Status:'" + healt.nh_status + "' Uptime:'" + jchaos.toHHMMSS(healt.nh_upt);
+									if (healt.nh_status == 'Fatal Error') {
+										if (healt.hasOwnProperty("nh_lem") && healt.nh_lem != "") {
+											title += ", Error message:" + healt.nh_lem;
+										}
+										if ((healt.nh_led !== undefined) && (healt.nh_led != "")) {
+											title += ", in :" + healt.nh_led;
 
-							} 
+										}
+										if ((elem['lives']) && (!$("#" + iname).hasClass("text-danger"))) {
+											removeTextClasses(iname);
+
+											$("#" + iname).addClass("text-danger");
+										}
+
+									} else if ((elem['lives']) && (healt.nh_status != 'Start')) {
+										removeTextClasses(iname);
+
+										$("#" + iname).addClass("text-warning");
+									}
+									$("#" + iname).attr('title', title);
+
+								}
+							} else {
+								removeTextClasses(iname);
+
+							}
 						} else {
+							var uid = node_list[index];
+							var iname = jchaos.encodeName(uid);
 							removeTextClasses(iname);
+							$("#" + iname).addClass("text-dark");
+							$("#" + iname).attr('title', uid + ": DEAD no info");
+
 
 						}
-					} else {
-						var uid =node_list[index];
-						var iname = jchaos.encodeName(uid);
-						removeTextClasses(iname);
-						$("#" + iname).addClass("text-dark");
-						$("#" + iname).attr('title', uid+": DEAD no info");
-
-
-					}
 					});
 
 				});
@@ -249,14 +249,14 @@ require_once('header.php');
 							var drv_impl = obj.cudk_driver_description;
 							var list_drivers = [];
 
-						/*	if ((drv_impl !== undefined) && (drv_impl.length)) {
-								drv_impl.forEach((d) => {
-									list_drivers.push(d.cudk_driver_description_name);
-								});
-								// return just the drivers that are supported
-
-
-							}*/
+							/*	if ((drv_impl !== undefined) && (drv_impl.length)) {
+									drv_impl.forEach((d) => {
+										list_drivers.push(d.cudk_driver_description_name);
+									});
+									// return just the drivers that are supported
+	
+	
+								}*/
 							if ((impl != "") && (cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined)) {
 								var dlist = cudb[impl].drivers;
 								// drivers for the implementation
@@ -277,7 +277,7 @@ require_once('header.php');
 									}
 								}
 							}
-							if(list_drivers.length>0){
+							if (list_drivers.length > 0) {
 								templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum = list_drivers;
 							} else {
 								delete templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name']['enum'];
@@ -298,15 +298,8 @@ require_once('header.php');
 							var list_storage = [];
 
 							if (obj.dsndk_storage_type !== undefined) {
-								if (obj.dsndk_storage_type & 0x1) {
-									list_storage.push("History");
-								}
-								if (obj.dsndk_storage_type & 0x2) {
-									list_storage.push("Live");
-								}
-								if (obj.dsndk_storage_type & 0x10) {
-									list_storage.push("Log");
-								}
+								list_storage=jchaos.storage2List(obj.dsndk_storage_type);
+								
 							} else {
 								list_storage.push("Live");
 							}
@@ -414,66 +407,69 @@ require_once('header.php');
 								});
 							});
 						}
+
 					};
 
 					if ((cu_copied != null) && (typeof cu_copied === "object")) {
-						items['paste'] = {
-							"separator_before": false,
-							"separator_after": false,
-							label: "Paste",
-							action: function () {
+						if ((cu_copied.ndk_type == "nt_control_unit") && (node.data.ndk_type == "nt_unit_server")) {
+							items['paste'] = {
+								"separator_before": false,
+								"separator_after": false,
+								label: "Paste " + cu_copied.ndk_uid + " in " + node.data.ndk_uid,
+								action: function () {
 
-								var cu = Object.assign({}, cu_copied);
-								var decoded = jchaos.pathToZoneGroupId(cu.ndk_uid);
-								var zone;
-								if ((node.data.ndk_type == "nt_unit_server")) {
+									var cu = Object.assign({}, cu_copied);
+									var decoded = jchaos.pathToZoneGroupId(cu.ndk_uid);
+									var zone;
 									cu['ndk_parent'] = node.data.ndk_uid;
-								}
-								if (node.data.zone !== undefined) {
-									zone = node.data.zone;
-								} else {
-									zone = decoded['zone'];
-								}
 
-								if (decoded) {
-									cu["ndk_uid"] = zone + "/" + decoded["group"] + "/" + decoded['id'] + (new Date()).getTime();
+									if (node.data.zone !== undefined) {
+										zone = node.data.zone;
+									} else {
+										zone = decoded['zone'];
+									}
 
-									cu2editor(cu, (edit_templ, editobj) => {
+									if (decoded) {
+										cu["ndk_uid"] = zone + "/" + decoded["group"] + "/" + decoded['id'] + (new Date()).getTime();
 
-										jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
-											jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
-											decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
-											var icon_name = "/img/devices/" + decoded["group"] + ".png";
+										cu2editor(cu, (edit_templ, editobj) => {
 
-											if (decoded) {
-												json['group'] = decoded["group"];
-												var newnode = {
-													"id": jchaos.encodeName(json.ndk_uid),
-													"parent": node.id,
-													"icon": icon_name,
-													"text": decoded["id"],
-													"data": json
-												};
+											jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
+												jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
+												decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
+												var icon_name = "/img/devices/" + decoded["group"] + ".png";
 
-												tree.create_node(node, newnode);
+												if (decoded) {
+													json['group'] = decoded["group"];
+													var newnode = {
+														"id": jchaos.encodeName(json.ndk_uid),
+														"parent": node.id,
+														"icon": icon_name,
+														"text": decoded["id"],
+														"data": json
+													};
 
-											}
-										}, function (bad) {
-											jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
+													tree.create_node(node, newnode);
 
+												}
+											}, function (bad) {
+												jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
+
+											});
 										});
-									});
-								} else {
-									alert("Not a valid uid:'" + cu.ndk_uid + "' must contain at least zone/group/id")
+									} else {
+										alert("Not a valid uid:'" + cu.ndk_uid + "' must contain at least zone/group/id")
+									}
 								}
-							}
-						};
+							};
+						}
 					}
 				}
 
 				if (node.data.hasOwnProperty("ndk_type") && node.data.hasOwnProperty("ndk_uid")) {
 					var selected_node = node.data.ndk_uid;
 					var type = node.data.ndk_type;
+
 					if ((type == "nt_control_unit") || (type == "nt_root")) {
 						var uid
 						items['edit'] = {
@@ -509,7 +505,12 @@ require_once('header.php');
 								jchaos.node(selected_node, "get", "cu", function (data) {
 									if (data != null) {
 										cu_copied = data;
-										jqccs.instantMessage("CU/EU copied " + selected_node, " OK", 2000, true);
+										if (type == "nt_root") {
+											jqccs.instantMessage("Copied EU " + selected_node, " you can paste it into an AGENT", 4000, true);
+
+										} else {
+											jqccs.instantMessage("Copied CU " + selected_node, " you can paste it into an US", 4000, true);
+										}
 
 										copyToClipboard(JSON.stringify(data));
 									}
@@ -606,6 +607,45 @@ require_once('header.php');
 								});
 							}
 						};
+						if ((cu_copied != null) && (typeof cu_copied === "object")) {
+							if (cu_copied.ndk_type == "nt_root") {
+								items['paste-root'] = {
+									"separator_before": false,
+									"separator_after": false,
+									label: "Paste EU "+cu_copied.ndk_uid+ " in Agent "+selected_node,
+									action: function () {
+										$.get('eu_write_mask.json', function (templ) {
+												
+												var eu = JSON.parse(JSON.stringify(cu_copied));
+												var decoded = jchaos.pathToZoneGroupId(cu_copied.ndk_uid);
+
+												var ll=[];
+												delete templ['properties']['group']['enum'];
+												ll=jchaos.storage2List(eu.dsndk_storage_type);
+												eu['zone']=decoded.zone;
+												eu['group']=decoded.group;
+												eu['id']=decoded.id + "_TOCHANGE_"+(new Date()).getTime();
+
+												if(ll.length>0){
+													eu.dsndk_storage_type=ll
+												} else {
+													eu['dsndk_storage_type']=["Live"];
+												}
+
+												templ['properties']['ndk_parent'] = selected_node;
+			
+												jqccs.jsonEditWindow("EU Editor", templ, eu, jchaos.cuSave, null, (ok) => {
+													jqccs.instantMessage("Created ", "OK", 2000, true);
+			
+												}, (bad) => {
+													alert(" Cannot create node err:" + JSON.stringify(bad));
+												});
+											});
+										
+								}
+							}
+						}
+						}
 
 					} else if (type == "nt_unit_server") {
 						items['edit'] = {
@@ -643,6 +683,16 @@ require_once('header.php');
 							jqccs.confirm("Delete Node", "Your are deleting : " + selected_node, "Ok", function () {
 								jchaos.node(selected_node, "deletenode", "all", function () {
 									jqccs.instantMessage("Node deleted " + selected_node, " OK", 2000, true);
+									if(node.data.hasOwnProperty('ndk_parent')&&node.data.ndk_parent!=""){
+										jchaos.node(node.data.ndk_parent,"desc","all",(pd)=>{
+											if(pd.ndk_type == "nt_agent"){
+												jchaos.node(node.data.ndk_parent, "del", "agent", selected_node, function (daa) {
+													instantMessage("Removed association " + selected_node, " OK", 2000, true);
+				
+												});
+											}
+										},(bad)=>{});
+									}
 									tree.delete_node(node);
 
 								}, function (err) {
@@ -659,48 +709,48 @@ require_once('header.php');
 						label: "Update State",
 						action: function () { updateDescView(node); }
 					};
-					if (node.data.ndk_parent !== undefined && (node.data.ndk_parent != "")&& ((node.data.ndk_type == "nt_unit_server" || (node.data.ndk_type == "nt_root")))) {
-						if((!node_state.hasOwnProperty(node.data.ndk_uid))||(node_state[node.data.ndk_uid]['lives']==false)){
-						items['start_node'] = {
-							"separator_before": true,
-							"separator_after": false,
-							label: "Start Node(Launch)",
-							action: function () {
-								jchaos.node(node.data.ndk_uid, "start", "us", function () {
+					if (node.data.ndk_parent !== undefined && (node.data.ndk_parent != "") && ((node.data.ndk_type == "nt_unit_server" || (node.data.ndk_type == "nt_root")))) {
+						if ((!node_state.hasOwnProperty(node.data.ndk_uid)) || (node_state[node.data.ndk_uid]['lives'] == false)) {
+							items['start_node'] = {
+								"separator_before": true,
+								"separator_after": false,
+								label: "Start Node(Launch)",
+								action: function () {
+									jchaos.node(node.data.ndk_uid, "start", "us", function () {
 
-									jqccs.instantMessage(node.data.ndk_uid, "Starting on  " + node.data.ndk_parent, 2000, true);
+										jqccs.instantMessage(node.data.ndk_uid, "Starting on  " + node.data.ndk_parent, 2000, true);
 
-									jchaos.node(node.data.ndk_parent, "desc", "agent", function (data) {
-										console.log("->" + JSON.stringify(data));
-										var server = "";
-										if (data.ndk_host_name !== undefined) {
-											server = data.ndk_host_name;
-										} else if (data.ndk_rpc_addr !== undefined) {
-											server = data.ndk_rpc_addr;
-											server.replace(/:\d+/g, '');
-										}
-										var uid = "";
-										data.andk_node_associated.forEach(ele => {
-											if (ele.ndk_uid == node.data.ndk_uid) {
-												uid = ele.association_uid;
+										jchaos.node(node.data.ndk_parent, "desc", "agent", function (data) {
+											console.log("->" + JSON.stringify(data));
+											var server = "";
+											if (data.ndk_host_name !== undefined) {
+												server = data.ndk_host_name;
+											} else if (data.ndk_rpc_addr !== undefined) {
+												server = data.ndk_rpc_addr;
+												server.replace(/:\d+/g, '');
+											}
+											var uid = "";
+											data.andk_node_associated.forEach(ele => {
+												if (ele.ndk_uid == node.data.ndk_uid) {
+													uid = ele.association_uid;
+												}
+											});
+											if (uid != "") {
+												jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
+											} else {
+												jqccs.instantMessage(node.data.ndk_uid, "Cannot open console, uid not found for " + node.data.ndk_uid, 4000, false);
+
 											}
 										});
-										if (uid != "") {
-											jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
-										} else {
-											jqccs.instantMessage(node.data.ndk_uid, "Cannot open console, uid not found for " + node.data.ndk_uid, 4000, false);
 
-										}
+
+									}, function (bad) {
+										jqccs.instantMessage(node.data.ndk_uid, "Error Starting on " + node.data.ndk_parent + " error: " + JSON.stringify(bad), 4000, false);
 									});
 
-
-								}, function (bad) {
-									jqccs.instantMessage(node.data.ndk_uid, "Error Starting on " + node.data.ndk_parent + " error: " + JSON.stringify(bad), 4000, false);
-								});
-
-							}
-						};
-					}
+								}
+							};
+						}
 						items['stop_node'] = {
 							"separator_before": false,
 							"separator_after": false,
@@ -718,11 +768,11 @@ require_once('header.php');
 							"separator_after": false,
 							label: "Remote Console",
 							action: function () {
-								jqccs.getConsoleByUid("console",node.data.ndk_uid);
-								
+								jqccs.getConsoleByUid("console", node.data.ndk_uid);
+
 							}
 						};
-					
+
 					}
 					items['shutdown'] = {
 						"separator_before": false,
@@ -744,8 +794,8 @@ require_once('header.php');
 								function () { });
 						}
 					}
-					if (node.data.ndk_type !== undefined && ((node.data.ndk_type == "nt_root") || (node.data.ndk_type == "nt_control_unit"))){
-			
+					if (node.data.ndk_type !== undefined && ((node.data.ndk_type == "nt_root") || (node.data.ndk_type == "nt_control_unit"))) {
+
 						items['start'] = {
 							"separator_before": true,
 							"separator_after": false,
@@ -831,7 +881,7 @@ require_once('header.php');
 						};
 
 					}
-					
+
 
 
 				}
@@ -1228,7 +1278,7 @@ require_once('header.php');
 										var found = false;
 										d.forEach((m, index) => {
 											//console.log(edesc.ndk_uid+" looking among live for:"+ass.ndk_uid)
-											if ((m !== undefined)&&(m.ndk_uid == ass.ndk_uid)) {
+											if ((m !== undefined) && (m.ndk_uid == ass.ndk_uid)) {
 												if (!node_created.hasOwnProperty(jchaos.encodeName(m.ndk_uid))) {
 
 													addUSOrRoot(jsree_data, node_created, m, false);

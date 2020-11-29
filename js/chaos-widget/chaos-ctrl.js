@@ -31,7 +31,7 @@
     var graph_selected;
     var search_string;
     var notupdate_dataset = 1;
-    var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera", "BPM": "SCLibera" };
+    var implementation_map = { "powersupply": "SCPowerSupply", "motor": "SCActuator", "camera": "RTCamera", "BPM": "SCLibera" };
     var hostWidth = 640;
     var hostHeight = 640;
     function GetURLParameter(sParam) {
@@ -3767,6 +3767,9 @@
 
         } else if (cmd == "show-dataset") {
             showDataset(currsel, currsel, 1000, tmpObj);
+        } else if(cmd== "save-default"){
+            jchaos.saveSetPointAsDefault(currsel);
+
         } else if (cmd == "driver-prop") {
             //jchaos.sendCUCmd(tmpObj.node_multi_selected,"cu_prop_drv_get",null, function (data) {
             jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function (data) {
@@ -6842,7 +6845,7 @@
 
     function mainCU(tmpObj) {
         var list_cu = [];
-        var classe = ["powersupply", "scraper", "camera", "BPM"];
+        var classe = ["powersupply", "motor", "camera", "BPM"];
         var $radio = $("input:radio[name=search-alive]");
         if ($radio.is(":checked") === false) {
             $radio.filter("[value=true]").prop('checked', true);
@@ -10321,6 +10324,8 @@
         if (tmpObj.node_multi_selected.length == 1) {
 
             items['show-dataset'] = { name: "Show/Set/Plot Dataset" };
+            items['save-default'] = { name: "Save Setpoint as Default" };
+
             items['show-desc'] = { name: "Show Description" };
             items['show-tags'] = { name: "Show Tags info" };
             items['driver-prop'] = { name: "Edit Driver properties" };
