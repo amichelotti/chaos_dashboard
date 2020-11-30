@@ -3204,6 +3204,7 @@
                 tmpObj.node_name_to_desc[name] = elem;
             });
         }
+        $("#main_table-" + template + " tbody tr").off('click');
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
             if (tmpObj.hasOwnProperty('tableClickFn')) {
