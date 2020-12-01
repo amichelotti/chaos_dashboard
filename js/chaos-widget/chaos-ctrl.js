@@ -3769,7 +3769,20 @@
         } else if (cmd == "show-dataset") {
             showDataset(currsel, currsel, 1000, tmpObj);
         } else if(cmd== "save-default"){
-            jchaos.saveSetPointAsDefault(currsel);
+            jchaos.saveSetPointAsDefault(currsel,1,(ok)=>{
+                instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+            },(bad)=>{
+                instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false); 
+
+            });
+
+        } else if(cmd== "save-readout-default"){
+            jchaos.saveSetPointAsDefault(currsel,0,(ok)=>{
+                instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+            },(bad)=>{
+                instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false); 
+
+            });
 
         } else if (cmd == "driver-prop") {
             //jchaos.sendCUCmd(tmpObj.node_multi_selected,"cu_prop_drv_get",null, function (data) {
@@ -10326,6 +10339,7 @@
 
             items['show-dataset'] = { name: "Show/Set/Plot Dataset" };
             items['save-default'] = { name: "Save Setpoint as Default" };
+            items['save-readout-default'] = { name: "Save ReadOut as Default" };
 
             items['show-desc'] = { name: "Show Description" };
             items['show-tags'] = { name: "Show Tags info" };
