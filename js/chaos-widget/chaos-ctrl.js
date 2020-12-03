@@ -1203,6 +1203,8 @@
         var update;
         var data;
         var stop_update = false;
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var name = jchaos.encodeName(cuname) + (new Date()).getTime();
         if (typeof channel === "undefined") {
             channel = 0;

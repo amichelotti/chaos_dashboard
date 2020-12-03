@@ -90,6 +90,8 @@ require_once('header.php');
 		var synoptic = {};
 		var node_list = [];
 		var node_state = {};
+		var node_old_state = {};
+
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
 		}, (bad) => {
@@ -110,11 +112,29 @@ require_once('header.php');
 							var healt = elem.health;
 							var uid = healt.ndk_uid;
 							elem['lives'] = false;
+							if((node_old_state.uid !== undefined)&&(node_state.uid !== undefined)){
+								node_old_state[uid]=node_state.uid;
+
+							} else {
+								node_old_state[uid]=elem;
+
+							}
 							node_state[uid] = elem;
 							var iname = jchaos.encodeName(uid);
 
 							if ((healt.dpck_ats !== undefined)) {
+								var isalive=false;
 								if ((Math.abs(healt.dpck_ats - now) < 10000)) {
+									isalive=true;
+								} else if(node_old_state.uid !== undefined && node_state.uid !== undefined){
+									if(node_state[uid].dpck_ats!== undefined  && node_old_state[uid] !== undefined){
+										if(node_state[uid].dpck_ats>node_old_state[uid]){
+											isalive=true;
+										}
+									}
+								}
+								
+								if (isalive) {
 									if (!$("#" + iname).hasClass("text-success")) {
 										removeTextClasses(iname);
 										$("#" + iname).addClass("text-success");

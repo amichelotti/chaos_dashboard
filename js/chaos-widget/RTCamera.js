@@ -1,6 +1,361 @@
 
 var selectedCams = [];
 var stateObj={};
+
+function showHisto(msghead, cuname, refresh, channel) {
+  var update;
+  var data;
+  var stop_update = false;
+  var hostWidth = $(window).width();
+  var hostHeight = $(window).height();
+  var name = jchaos.encodeName(cuname) + (new Date()).getTime();
+  if (typeof channel === "undefined") {
+      channel = 0;
+  }
+  //html='<div><img id="pict-' + name + '" src=""><div id="info-' + name + '"></div></div>'+buildHisto(name);
+  html=buildHisto(name);
+  var instant = $(html).dialog({
+      minWidth: hostWidth / 4,
+      minHeight: hostHeight / 4,
+      title: msghead,
+      position: "center",
+      resizable: true,
+      dialogClass: 'no-close',
+      buttons: [{
+          text: "save",
+          click: function (e) {
+              var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
+              /* var len = binary_string.length;
+               var bytes = new Uint8Array(len);
+               for (var i = 0; i < len; i++) {
+                 bytes[i] = binary_string.charCodeAt(i);
+               }
+               var blob = new Blob([bytes], { type: "image/png" });
+              */
+              saveAsBinary(binary_string, name + ".png");
+
+          }
+      },
+      {
+          text: "update",
+          id: 'pict-update-' + name,
+          click: function (e) {
+              // var interval=$(this).attr("refresh_time");
+              stop_update = !stop_update;
+
+          }
+      },
+      {
+          text: "close",
+          click: function (e) {
+              // var interval=$(this).attr("refresh_time");
+
+              clearInterval(update);
+              // $(instant).dialog("close");
+              $(this).remove();
+          }
+      }
+
+
+      ],
+      close: function (event, ui) {
+          //  var interval=$(this).attr("refresh_time");
+
+          clearInterval(update);
+          // $(instant).dialog("close");
+          $(this).remove();
+      },
+      open: function () {
+          console.log(msghead + " refresh:" + refresh);
+
+          update = setInterval(function () {
+              if (refresh == 0) {
+                  clearInterval(update);
+              }
+              if (stop_update) {
+                  $('#pict-update-' + name).text("Update");
+              } else {
+                  $('#pict-update-' + name).text("Not Update");
+              }
+              if (!stop_update) {
+                  updateHisto("cameraImage-" + jchaos.encodeName(cuname),name);
+
+                  /*jchaos.getChannel(cuname, channel, function (imdata) {
+                      data = imdata[0];
+                      if (data.hasOwnProperty("FRAMEBUFFER") && data.FRAMEBUFFER.hasOwnProperty("$binary") && data.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
+                          var bin = data.FRAMEBUFFER.$binary.base64;
+                          //  $("#pict-"+name).attr("src", "data:image/" + fmt + ";base64," + bin);
+                          $("#pict-" + name).attr("src", "data:;base64," + bin);
+                          var info_size = "";
+                          if (data.hasOwnProperty("WIDTH")) {
+                              info_size = data.WIDTH + "x" + data.HEIGHT + "(" + data.OFFSETX + "," + data.OFFSETY + ") ";
+                          }
+                          $("#info-" + name).html(info_size + "frame:" + data.dpck_seq_id);
+                          updateHisto("pict-" + name,name);
+                      } else {
+                          alert("NO 'FRAMEBUFFER.$binary.base64' key EXISTS");
+                          clearInterval(update);
+                          $(this).remove();
+
+                      }
+                  }, function (err) {
+                  });*/
+              }
+              //$(this).attr("refresh_time",update);
+          }, refresh);
+      }
+  });
+}
+
+
+function buildHisto(id){
+  var html='<div class="card"><p>Histogram</p>';
+  html+='<div><label><input name="rType" id="typeValue" type="radio" checked/> Value</label>&nbsp<label>';
+  html+='<input name="rType" type="radio" /> Color</label></div>';
+  html+='<canvas id="canvasHistogram-'+id+'" width="256" height="150"></canvas></div>';
+  return html;
+}
+  function processImage(inImg,id) {
+  const width = inImg.width;
+  const height = inImg.height;
+  const src = new Uint32Array(inImg.data.buffer);
+  const isValueHistogram = $("#typeValue").prop('checked');
+  
+  let histBrightness = (new Array(256)).fill(0);
+  let histR = (new Array(256)).fill(0);
+  let histG = (new Array(256)).fill(0);
+  let histB = (new Array(256)).fill(0);
+  for (let i = 0; i < src.length; i++) {
+    let r = src[i] & 0xFF;
+    let g = (src[i] >> 8) & 0xFF;
+    let b = (src[i] >> 16) & 0xFF;
+    histBrightness[r]++;
+    histBrightness[g]++;
+    histBrightness[b]++;
+    histR[r]++;
+    histG[g]++;
+    histB[b]++;
+  }
+  
+  let maxBrightness = 0;
+  if (isValueHistogram) {
+    for (let i = 1; i < 256; i++) {
+      if (maxBrightness < histBrightness[i]) {
+        maxBrightness = histBrightness[i]
+      }
+    }
+  } else {
+    for (let i = 0; i < 256; i++) {
+      if (maxBrightness < histR[i]) {
+        maxBrightness = histR[i]
+      } else if (maxBrightness < histG[i]) {
+        maxBrightness = histG[i]
+      } else if (maxBrightness < histB[i]) {
+        maxBrightness = histB[i]
+      }
+    }
+  }
+  
+  const canvas = document.getElementById('canvasHistogram-'+id);
+  const ctx = canvas.getContext('2d');
+  let guideHeight = 8;
+  let startY = (canvas.height - guideHeight);
+  let dx = canvas.width / 256;
+  let dy = startY / maxBrightness;
+  ctx.lineWidth = dx;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  for (let i = 0; i < 256; i++) {
+    let x = i * dx;
+    if (isValueHistogram) {
+      // Value
+      ctx.strokeStyle = "#000000";
+      ctx.beginPath();
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, startY - histBrightness[i] * dy);
+      ctx.closePath();
+      ctx.stroke(); 
+    } else {
+      // Red
+      ctx.strokeStyle = "rgba(220,0,0,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, startY - histR[i] * dy);
+      ctx.closePath();
+      ctx.stroke(); 
+      // Green
+      ctx.strokeStyle = "rgba(0,210,0,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, startY - histG[i] * dy);
+      ctx.closePath();
+      ctx.stroke(); 
+      // Blue
+      ctx.strokeStyle = "rgba(0,0,255,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, startY - histB[i] * dy);
+      ctx.closePath();
+      ctx.stroke(); 
+    }
+    // Guide
+    ctx.strokeStyle = 'rgb(' + i + ', ' + i + ', ' + i + ')';
+    ctx.beginPath();
+    ctx.moveTo(x, startY);
+    ctx.lineTo(x, canvas.height);
+    ctx.closePath();
+    ctx.stroke(); 
+  }
+}
+
+function getImageData(el) {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  const img = document.getElementById(el);
+  canvas.width = img.width;
+  canvas.height = img.height;
+  context.drawImage(img, 0, 0);
+  return context.getImageData(0, 0, img.width, img.height);
+}
+
+document.getElementById('input').addEventListener('change', function() {
+  if (this.files && this.files[0]) {
+    var img = document.getElementById('img');
+    img.src = URL.createObjectURL(this.files[0]);
+    img.onload = update;
+  }
+});
+
+
+
+function updateHisto(e,id) {
+  console.log("src:"+e + " dst:"+id);
+  processImage(getImageData(e),id);
+}
+
+
+function processImage(inImg,id) {
+  const width = inImg.width;
+  const height = inImg.height;
+  const src = new Uint32Array(inImg.data.buffer);
+  const isValueHistogram = $("#typeValue").prop('checked');
+  
+  let histBrightness = (new Array(256)).fill(0);
+  let histR = (new Array(256)).fill(0);
+  let histG = (new Array(256)).fill(0);
+  let histB = (new Array(256)).fill(0);
+  for (let i = 0; i < src.length; i++) {
+    let r = src[i] & 0xFF;
+    let g = (src[i] >> 8) & 0xFF;
+    let b = (src[i] >> 16) & 0xFF;
+    histBrightness[r]++;
+    histBrightness[g]++;
+    histBrightness[b]++;
+    histR[r]++;
+    histG[g]++;
+    histB[b]++;
+  }
+  
+  let maxBrightness = 0;
+  if (isValueHistogram) {
+    for (let i = 1; i < 256; i++) {
+      if (maxBrightness < histBrightness[i]) {
+        maxBrightness = histBrightness[i]
+      }
+    }
+  } else {
+    for (let i = 0; i < 256; i++) {
+      if (maxBrightness < histR[i]) {
+        maxBrightness = histR[i]
+      } else if (maxBrightness < histG[i]) {
+        maxBrightness = histG[i]
+      } else if (maxBrightness < histB[i]) {
+        maxBrightness = histB[i]
+      }
+    }
+  }
+  
+  const canvas = document.getElementById('canvasHistogram-'+id);
+  const ctx = canvas.getContext('2d');
+  let guideHeight = 8;
+  let startY = (canvas.height - guideHeight);
+  let dx = canvas.width / 256;
+  let dy = startY / maxBrightness;
+  ctx.lineWidth = dx;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  for (let i = 0; i < 256; i++) {
+    let x = i * dx;
+    if (isValueHistogram) {
+      // Value
+      ctx.strokeStyle = "#000000";
+      ctx.beginPath();
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, startY - histBrightness[i] * dy);
+      ctx.closePath();
+      ctx.stroke(); 
+    } else {
+      // Red
+      ctx.strokeStyle = "rgba(220,0,0,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, startY - histR[i] * dy);
+      ctx.closePath();
+      ctx.stroke(); 
+      // Green
+      ctx.strokeStyle = "rgba(0,210,0,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, startY - histG[i] * dy);
+      ctx.closePath();
+      ctx.stroke(); 
+      // Blue
+      ctx.strokeStyle = "rgba(0,0,255,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, startY - histB[i] * dy);
+      ctx.closePath();
+      ctx.stroke(); 
+    }
+    // Guide
+    ctx.strokeStyle = 'rgb(' + i + ', ' + i + ', ' + i + ')';
+    ctx.beginPath();
+    ctx.moveTo(x, startY);
+    ctx.lineTo(x, canvas.height);
+    ctx.closePath();
+    ctx.stroke(); 
+  }
+}
+
+function getImageData(el) {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  const img = document.getElementById(el);
+  canvas.width = img.width;
+  canvas.height = img.height;
+  context.drawImage(img, 0, 0);
+  return context.getImageData(0, 0, img.width, img.height);
+}
+/*
+document.getElementById('input').addEventListener('change', function() {
+  if (this.files && this.files[0]) {
+    var img = document.getElementById('img');
+    img.src = URL.createObjectURL(this.files[0]);
+    img.onload = update;
+  }
+});
+
+$('input[name="rType"]').on('click change', update);
+
+function update(e) {
+  processImage(getImageData('img'));
+}
+
+
+update();
+*/
 function rebuildCam(tmpObj){
 
     var cnt = 0;
@@ -9,7 +364,11 @@ function rebuildCam(tmpObj){
     var html = '<table class="table table-striped" id="' + tablename + '">';
    
     if (selectedCams instanceof Array) {
-
+      var hostWidth = $(window).width();
+      var hostHeight = $(window).height();
+      var maxwidth=Math.trunc(hostWidth/tmpObj.maxCameraCol);
+      var maxheight=Math.trunc(hostHeight/tmpObj.cameraPerRow);
+      
       selectedCams.forEach(function (key) {
         if (cnt < tmpObj.maxCameraCol) {
           var encoden = jchaos.encodeName(key);
@@ -17,14 +376,15 @@ function rebuildCam(tmpObj){
             if (cnt > 0) {
               html += "</tr>"
             }
-            html += '<tr class="row_element" id=camera-row"' + cnt + '">';
+            html += '<tr class="row_element" height="'+maxheight+'px" id=camera-row"' + cnt + '">';
           }
-          html += '<td class="td_element cameraMenu" id="camera-' + encoden + '" cuname="' + key + '" >'
+          html += '<td class="cameraMenu" width="'+maxwidth+'px" id="camera-' + encoden + '" cuname="' + key + '" >'
           //   html += '<div><b>'+key+'</b>';
           html += '<div>';
           if (selectedCams.length > 1) {
-            html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" width="659" height="494"/>';
-          } else {
+            html += '<img class="chaos_image mw-100 mh-100" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
+       //   html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
+        } else {
             html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
 
           }
@@ -81,16 +441,26 @@ function rebuildCam(tmpObj){
       build: function ($trigger, e) {
         var name = $(e.currentTarget).attr("cuname");
         var cuitem = {};
+        var desc=jchaos.node(name,"desc","all");
+
         if (tmpObj.hasOwnProperty('crop')) {
           var crop_obj = tmpObj['crop'][name];
           if (typeof crop_obj === "object") {
             crop_obj['cu'] = name;
-            cuitem['set-roi'] = { name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
-            cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+            if(desc.ndk_type != "nt_root"){
+
+              cuitem['set-roi'] = { name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+            }
 
           }
 
         }
+        if(desc.ndk_type == "nt_root"){
+          cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+
+        }
+        cuitem['histo-image'] = { name: "Histogram", cu: name };
+
         cuitem['exit-crop'] = { name: "Exit cropping", cu: name };
         cuitem['reset-roi'] = { name: "Reset ROI", cu: name };
 
@@ -496,6 +866,8 @@ function rebuildCam(tmpObj){
       // big value means maximum.
       setRoi(opt.items[cmd].cu, 1000000, 1000000, 0, 0, () => { $("#cameraImage-" + encoden).cropper('destroy'); });
 
+    } else if(cmd == "histo-image"){
+      showHisto("Histogram "+opt.items[cmd].cu,opt.items[cmd].cu,1000,0);
     }
   }
 
