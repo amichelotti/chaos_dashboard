@@ -7,10 +7,7 @@
     "properties": {
     "cudk_driver_description_name": {
         "type": "string",
-        "enum": [
-        ],
         "description":"Driver Class Name that Abstract the driver"
-
     },
 	
 		"cudk_driver_description_version" :{
