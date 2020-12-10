@@ -2192,7 +2192,47 @@
     }
 
 
+    jqccs.tagConfigStart=function(selection,ok,bad){
+        var templ = {
+            $ref: "tag_entry.json",
+            format: "tabs"
+        }
+        var def = {};
+        def['tag_elements'] = selection;
+        def['tag_type'] = "CYCLE";
+        def['tag_name'] = "NONAME_" + (new Date()).getTime();
+        def['tag_duration'] = 1;
+        def['tag_desc'] = JSON.stringify(selection) + " at:" + (new Date());
+        jsonEditWindow("TAG Editor", templ, def, function (data, obj) {
+            var ttype = 2;
+            if (data.tag_type == "CYCLE") {
+                ttype = 1;
+            }
+            jchaos.tag(data.tag_name, selection, ttype, data.tag_duration,
+                function (k) {
+                    var tag_obj = jchaos.variable("tags", "get", null, null);
+                    data.tag_ts = (new Date()).getTime();
+                    data.tag_elements = selection;
+                    tag_obj[data.tag_name] = data;
+                    jchaos.variable("tags", "set", tag_obj, null);
+                    jqccs.instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
+                    if(typeof ok === "function"){
+                        ok(k)
+                    }
 
+                },
+                function (b) {
+                    if(typeof bad === "function"){
+                        bad(b);
+                    } else {
+                        jqccs.instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
+                    }
+
+                });
+            return 0;
+        }, null);
+
+    }
 
     jqccs.jsonEditWindow = function (name, jsontemp, jsonin, editorFn, tmpObj, ok, nok, eventFn) {
         return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok, eventFn);
@@ -3635,39 +3675,8 @@
             }, "Cancel");
 
         } else if (cmd == "tag-cu") {
-            var templ = {
-                $ref: "tag_entry.json",
-                format: "tabs"
-            }
-            var def = {};
-            def['tag_elements'] = node_multi_selected;
-            def['tag_type'] = "CYCLE";
-            def['tag_name'] = "NONAME_" + (new Date()).getTime();
-            def['tag_duration'] = 1;
-            def['tag_desc'] = JSON.stringify(tmpObj.node_multi_selected) + " at:" + (new Date());
-            jsonEditWindow("TAG Editor", templ, def, function (data, obj) {
-                var ttype = 2;
-                if (data.tag_type == "CYCLE") {
-                    ttype = 1;
-                }
-                jchaos.tag(data.tag_name, obj.node_multi_selected, ttype, data.tag_duration,
-                    function () {
-                        var tag_obj = jchaos.variable("tags", "get", null, null);
-                        data.tag_ts = (new Date()).getTime();
-                        data.tag_elements = obj.node_multi_selected;
-                        tag_obj[data.tag_name] = data;
-                        jchaos.variable("tags", "set", tag_obj, null);
-                        instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
-
-                    },
-                    function () {
-
-                        instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
-
-                    });
-                return 0;
-            }, tmpObj);
-
+            jqccs.tagConfigStart(node_multi_selected);
+            
         } else if (cmd == "calibrate") {
 
             jchaos.command(tmpObj.node_multi_selected, { "act_name": "calibrateNodeUnit" }, function (data) {
@@ -9999,7 +10008,9 @@
             .dialog(dlg_opt);
 
     }
-
+    jqccs.getEntryWindow=function(hmsg, msg, def_text, butyes, yeshandle, cancelText){
+        return getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText);
+    }
     function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
         var html = '<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>';
         var opt = {
