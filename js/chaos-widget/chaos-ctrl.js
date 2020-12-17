@@ -1302,18 +1302,18 @@
     function instantMessage(msghead, msg, tim, sizex, sizey, ok) {
 
         if (sizex == null) {
-            sizex = 350;
+            sizex = $(window).width() / 2;
         }
         if (sizey == null) {
-            sizey = 200;
+            sizey = $(window).height() / 4;
         }
         if (typeof (sizex) === "boolean") {
             ok = sizex;
-            sizex = 350;
+            sizex = $(window).width() / 2;
         }
         if (typeof (sizey) === "boolean") {
             ok = sizey;
-            sizey = 200;
+            sizey = $(window).height() / 4;
         }
         var instant = $('<div></div>').html(msg).dialog({
             width: sizex,
@@ -2217,7 +2217,7 @@
                     jchaos.variable("tags", "set", tag_obj, null);
                     jqccs.instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
                     if(typeof ok === "function"){
-                        ok(k)
+                        ok(data)
                     }
 
                 },
@@ -4556,7 +4556,7 @@
 
 
         }
-        $.getScript("/js/chaos-widget/" + tmpObj.type + ".js", function (data, textStatus, jqxhr) {
+        $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function (data, textStatus, jqxhr) {
             var w = getWidget();
             tmpObj.htmlFn = w.dsFn;
             tmpObj.generateTableFn = w.tableFn;
@@ -4574,8 +4574,10 @@
             }
             handler(tmpObj);
 
+        }).fail(()=>{
+            handler(tmpObj);
         });
-        handler(tmpObj);
+        
     }
 
     function buildCUPage(tmpObj, cuids, cutype) {
