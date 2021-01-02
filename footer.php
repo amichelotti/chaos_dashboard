@@ -1,4 +1,4 @@
-<div class="wait_modal"><!-- Place at bottom of page --></div>
+<!-- <div class="wait_modal">Place at bottom of page </div>-->
 
 <!-- Footer -->
 <footer class="page-footer font-small bg-dark">

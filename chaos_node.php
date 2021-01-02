@@ -56,11 +56,13 @@ require_once('header.php');
 
 		<div class="box row">
 			<div id="hier_view" class="col-md-3"></div>
+			<div class="wait_modal"></div>
 			<div id="desc_view" class="col-md-3"></div>
 			<div class="chaos_synoptic_container">
 				<img id="zone_image" src="" />
 				<svg id="svg_img" viewBox="0 0 640 480"></svg>
 			</div>
+		
 		</div>
 	</div>
 
@@ -1097,12 +1099,15 @@ require_once('header.php');
 			}
 			$('#desc_view').html(jqccs.json2html(r));*/
 		});
-		$("body").removeClass("loading");
+		//$("body").removeClass("loading");
+		jqccs.busyWindow(false);
+
 	}
 
 	function updateJST(what, search, alive) {
 		cu_copied = null;
-		$("body").addClass("loading");
+		jqccs.busyWindow(true,120000);
+		//$("body").addClass("loading");
 		$('#hier_view').jstree("destroy");
 		node_list = [];
 		if (what == "byzone") {

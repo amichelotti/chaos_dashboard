@@ -24,7 +24,7 @@ require_once('header.php');
 			
 			
 				<div class="row-fluid">
-					<div id="terminal"> </div>
+					<div id="terminal"> <div class="wait_modal"></div></div>
 					<div class="box">
 						<div>
 							<label class="label" for="save-script">Save script</label>

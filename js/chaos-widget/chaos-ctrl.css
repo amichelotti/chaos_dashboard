@@ -176,7 +176,15 @@ body.loading .wait_modal {
 body.loading .wait_modal {
   display: block;
 }
+div.loading .wait_modal {
+  overflow: hidden;   
+}
 
+/* Anytime the body has the loading class, our
+ modal element will be visible */
+div.loading .wait_modal {
+  display: block;
+}
 .chaos_img {
   display: block;
 

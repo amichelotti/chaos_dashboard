@@ -902,7 +902,7 @@
     jqccs.execConsole = function (msghead, execHandler, okhandle, nokhandle) {
         var pid = (new Date()).getTime();
 
-        var html = '<div id=console-' + pid + '></div>';
+        var html = '<div id=console-' + pid + '></div><div class="wait_modal"></div>';
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
         var opt = {
@@ -2190,7 +2190,17 @@
         }
         return 0;
     }
+    jqccs.busyWindow=function(enable,timeoutms){
+        if(enable){
+            $("div").addClass("loading");
+        } else {
+            $("div").removeClass("loading");
+        }
+        if(typeof timeout === "number"){
+            setTimeout(()=>{$(this).removeClass("loading");},timeoutms);
+        }
 
+    }
 
     jqccs.tagConfigStart=function(selection,ok,bad){
         var templ = {
