@@ -3,11 +3,10 @@
 <?php
 require_once('head.php');
 
-$curr_page = "Home";
+$curr_page = "SHELL";
 
 			
 //link script
-echo '<script type="text/javascript" src="https://root.cern/js/latest/scripts/JSRootCore.js?2d"></script>';
 
 ?>
 <body>
@@ -23,16 +22,9 @@ require_once('header.php');
 			<!-- start: Content -->
 			<div id="chaos_content" class="span12">
 			
-				<ul class="breadcrumb">
-					<li>
-						<i class="icon-home"></i>
-						<a href="<?php echo $index; ?>"><?php echo $curr_page; ?></a> 
-						<i class="icon-angle-right"></i>
-					</li>
-				</ul>
 			
 				<div class="row-fluid">
-					<div id="terminal"> </div>
+					<div id="terminal"> <div class="wait_modal"></div></div>
 					<div class="box">
 						<div>
 							<label class="label" for="save-script">Save script</label>
@@ -111,6 +103,13 @@ function newWindow(id, name,sizex,sizey) {
 	methods.forEach(function(elem){
 		methods_full.push("jqccs."+elem);
 	 });
+	/* var cn=jchaos.chaosNodeCreate();
+	methods=Object.getOwnPropertyNames(cn).filter(function(property) {
+        return typeof cn[property] == 'function';
+	});
+	methods.forEach(function(elem){
+		methods_full.push("ChaosNode."+elem);
+	 });*/
 	 jqccs.initSettings();
 
 	  $('#terminal').terminal(function(command) {

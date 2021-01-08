@@ -715,13 +715,13 @@ ul.messages li .message {
 	position: relative;
 }
 
-#chaos_content {
-	background: #ffffff;
-	filter: none;
-	min-height: 100%;
-	padding: 10px 10px;
-	position: relative;
-}
+/* Start by setting display:none to make this hidden.
+   Then we position it in relation to the viewport window
+   with position:fixed. Width, height, top and left speak
+   for themselves. Background we set to 80% white with
+   our animation centered, and no-repeating */
+   
+
 .breadcrumb {
 	margin: -28px -28px 28px -28px;
 	line-height: 34px;
@@ -1599,19 +1599,19 @@ fieldset[disabled] .btn {
           box-shadow: none;
 }
 
-.btn-large {
+.btn-lg {
   padding: 11px 14px;
   font-size: 17.5px;
   border-radius: 0px;
 }
 
-.btn-small {
+.btn-sm {
   padding: 2px 10px;
   font-size: 11.9px;
   border-radius: 0px;
 }
 
-.btn-mini {
+.btn-xs {
   padding: 0 6px;
   font-size: 10.5px;
   border-radius: 0px;
@@ -2096,7 +2096,7 @@ fieldset[disabled] .btn-link:focus {
 	font-weight: normal;
 }
 
-.login-box .input-prepend {
+.login-box .input-group {
 	background: #fff;
 	width: 100%;
 	text-align: center;
@@ -2112,13 +2112,13 @@ fieldset[disabled] .btn-link:focus {
 	border-left: 3px solid #646464;
 }
 
-.login-box .add-on {
+.login-box .input-group-addon {
 	border: 1px solid #eee !important;
 	background: #fff;
 	margin-left: -10px;
 }
 
-.login-box .add-on i{
+.login-box .input-group-addon i{
 	opacity: .1;
 	filter: alpha(opacity=10);
 	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=10)";

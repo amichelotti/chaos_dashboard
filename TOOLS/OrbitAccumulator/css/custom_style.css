@@ -28,12 +28,12 @@ td.position_element{
 	text-align: right !important;
 }
 
-a.quick-button-small.span1.btn-cmd {
+a.quick-button-small.col-md-1.btn-cmd {
 	padding-top: 8px !important;
 	margin-top:4px;
 }
 
-a.quick-button-small.span1.btn-value {
+a.quick-button-small.col-md-1.btn-value {
 	margin-top:4px;
 }
 
@@ -48,7 +48,7 @@ p.name-cmd {
 }
 
 
-.box.span12.box-cmd {
+.box.col-md-12.box-cmd {
 	border:2px solid #43B5AD;
 }
 

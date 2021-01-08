@@ -2495,8 +2495,8 @@ $.extend( $.effects, {
 
 			placeholder = $( "<" + element[ 0 ].nodeName + ">" ).insertAfter( element ).css( {
 
-				// Convert inline to inline block to account for inline elements
-				// that turn to inline block based on content (like img)
+				// Convert list-inline to list-inline block to account for list-inline elements
+				// that turn to list-inline block based on content (like img)
 				display: /^(inline|ruby)/.test( element.css( "display" ) ) ?
 					"inline-block" :
 					"block",
@@ -7173,7 +7173,7 @@ var widgetsButton = $.ui.button;
 
 //>>label: Datepicker
 //>>group: Widgets
-//>>description: Displays a calendar from an input or inline for selecting dates.
+//>>description: Displays a calendar from an input or list-inline for selecting dates.
 //>>docs: http://api.jqueryui.com/datepicker/
 //>>demos: http://jqueryui.com/datepicker/
 //>>css.structure: ../../themes/base/core.css
@@ -7222,7 +7222,7 @@ function Datepicker() {
 	this._datepickerShowing = false; // True if the popup picker is showing , false if not
 	this._inDialog = false; // True if showing within a "dialog", false if not
 	this._mainDivId = "ui-datepicker-div"; // The ID of the main datepicker division
-	this._inlineClass = "ui-datepicker-inline"; // The name of the inline marker class
+	this._inlineClass = "ui-datepicker-inline"; // The name of the list-inline marker class
 	this._appendClass = "ui-datepicker-append"; // The name of the append marker class
 	this._triggerClass = "ui-datepicker-trigger"; // The name of the trigger marker class
 	this._dialogClass = "ui-datepicker-dialog"; // The name of the dialog marker class
@@ -7333,27 +7333,27 @@ $.extend( Datepicker.prototype, {
 	_attachDatepicker: function( target, settings ) {
 		var nodeName, inline, inst;
 		nodeName = target.nodeName.toLowerCase();
-		inline = ( nodeName === "div" || nodeName === "span" );
+		list-inline = ( nodeName === "div" || nodeName === "span" );
 		if ( !target.id ) {
 			this.uuid += 1;
 			target.id = "dp" + this.uuid;
 		}
-		inst = this._newInst( $( target ), inline );
+		inst = this._newInst( $( target ), list-inline );
 		inst.settings = $.extend( {}, settings || {} );
 		if ( nodeName === "input" ) {
 			this._connectDatepicker( target, inst );
-		} else if ( inline ) {
+		} else if ( list-inline ) {
 			this._inlineDatepicker( target, inst );
 		}
 	},
 
 	/* Create a new instance object. */
-	_newInst: function( target, inline ) {
+	_newInst: function( target, list-inline ) {
 		var id = target[ 0 ].id.replace( /([^A-Za-z0-9_\-])/g, "\\\\$1" ); // escape jQuery meta chars
 		return { id: id, input: target, // associated target
 			selectedDay: 0, selectedMonth: 0, selectedYear: 0, // current selection
 			drawMonth: 0, drawYear: 0, // month being drawn
-			inline: inline, // is datepicker inline or not
+			inline: inline, // is datepicker list-inline or not
 			dpDiv: ( !inline ? this.dpDiv : // presentation div
 			datepicker_bindHover( $( "<div class='" + this._inlineClass + " ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all'></div>" ) ) ) };
 	},
@@ -7428,7 +7428,7 @@ $.extend( Datepicker.prototype, {
 
 	/* Apply the maximum length for the date format. */
 	_autoSize: function( inst ) {
-		if ( this._get( inst, "autoSize" ) && !inst.inline ) {
+		if ( this._get( inst, "autoSize" ) && !inst.list-inline ) {
 			var findMax, max, maxI, i,
 				date = new Date( 2009, 12 - 1, 20 ), // Ensure double digits
 				dateFormat = this._get( inst, "dateFormat" );
@@ -7454,7 +7454,7 @@ $.extend( Datepicker.prototype, {
 		}
 	},
 
-	/* Attach an inline date picker to a div. */
+	/* Attach an list-inline date picker to a div. */
 	_inlineDatepicker: function( target, inst ) {
 		var divSpan = $( target );
 		if ( divSpan.hasClass( this.markerClassName ) ) {
@@ -7578,9 +7578,9 @@ $.extend( Datepicker.prototype, {
 				each( function() { this.disabled = false; } ).end().
 				filter( "img" ).css( { opacity: "1.0", cursor: "" } );
 		} else if ( nodeName === "div" || nodeName === "span" ) {
-			inline = $target.children( "." + this._inlineClass );
-			inline.children().removeClass( "ui-state-disabled" );
-			inline.find( "select.ui-datepicker-month, select.ui-datepicker-year" ).
+			list-inline = $target.children( "." + this._inlineClass );
+			list-inline.children().removeClass( "ui-state-disabled" );
+			list-inline.find( "select.ui-datepicker-month, select.ui-datepicker-year" ).
 				prop( "disabled", false );
 		}
 		this._disabledInputs = $.map( this._disabledInputs,
@@ -7606,9 +7606,9 @@ $.extend( Datepicker.prototype, {
 				each( function() { this.disabled = true; } ).end().
 				filter( "img" ).css( { opacity: "0.5", cursor: "default" } );
 		} else if ( nodeName === "div" || nodeName === "span" ) {
-			inline = $target.children( "." + this._inlineClass );
-			inline.children().addClass( "ui-state-disabled" );
-			inline.find( "select.ui-datepicker-month, select.ui-datepicker-year" ).
+			list-inline = $target.children( "." + this._inlineClass );
+			list-inline.children().addClass( "ui-state-disabled" );
+			list-inline.find( "select.ui-datepicker-month, select.ui-datepicker-year" ).
 				prop( "disabled", true );
 		}
 		this._disabledInputs = $.map( this._disabledInputs,
@@ -7738,7 +7738,7 @@ $.extend( Datepicker.prototype, {
 	 */
 	_getDateDatepicker: function( target, noDefault ) {
 		var inst = this._getInst( target );
-		if ( inst && !inst.inline ) {
+		if ( inst && !inst.list-inline ) {
 			this._setDateFromField( inst, noDefault );
 		}
 		return ( inst ? this._getDate( inst ) : null );
@@ -7949,7 +7949,7 @@ $.extend( Datepicker.prototype, {
 			"static" : ( isFixed ? "fixed" : "absolute" ) ), display: "none",
 			left: offset.left + "px", top: offset.top + "px" } );
 
-		if ( !inst.inline ) {
+		if ( !inst.list-inline ) {
 			showAnim = $.datepicker._get( inst, "showAnim" );
 			duration = $.datepicker._get( inst, "duration" );
 			inst.dpDiv.css( "z-index", datepicker_getZindex( $( input ) ) + 1 );
@@ -8217,7 +8217,7 @@ $.extend( Datepicker.prototype, {
 			inst.input.trigger( "change" ); // fire the change event
 		}
 
-		if ( inst.inline ) {
+		if ( inst.list-inline ) {
 			this._updateDatepicker( inst );
 		} else {
 			this._hideDatepicker();
@@ -8872,7 +8872,7 @@ $.extend( Datepicker.prototype, {
 		currentText = ( !navigationAsDateFormat ? currentText :
 			this.formatDate( currentText, gotoDate, this._getFormatConfig( inst ) ) );
 
-		controls = ( !inst.inline ? "<button type='button' class='ui-datepicker-close ui-state-default ui-priority-primary ui-corner-all' data-handler='hide' data-event='click'>" +
+		controls = ( !inst.list-inline ? "<button type='button' class='ui-datepicker-close ui-state-default ui-priority-primary ui-corner-all' data-handler='hide' data-event='click'>" +
 			this._get( inst, "closeText" ) + "</button>" : "" );
 
 		buttonPanel = ( showButtonPanel ) ? "<div class='ui-datepicker-buttonpane ui-widget-content'>" + ( isRTL ? controls : "" ) +
@@ -9196,7 +9196,7 @@ function datepicker_bindHover( dpDiv ) {
 }
 
 function datepicker_handleMouseover() {
-	if ( !$.datepicker._isDisabledDatepicker( datepicker_instActive.inline ? datepicker_instActive.dpDiv.parent()[ 0 ] : datepicker_instActive.input[ 0 ] ) ) {
+	if ( !$.datepicker._isDisabledDatepicker( datepicker_instActive.list-inline ? datepicker_instActive.dpDiv.parent()[ 0 ] : datepicker_instActive.input[ 0 ] ) ) {
 		$( this ).parents( ".ui-datepicker-calendar" ).find( "a" ).removeClass( "ui-state-hover" );
 		$( this ).addClass( "ui-state-hover" );
 		if ( this.className.indexOf( "ui-datepicker-prev" ) !== -1 ) {
@@ -14395,7 +14395,7 @@ var widgetsSelectmenu = $.widget( "ui.selectmenu", [ $.ui.formResetMixin, {
 	_resizeButton: function() {
 		var width = this.options.width;
 
-		// For `width: false`, just remove inline style and stop
+		// For `width: false`, just remove list-inline style and stop
 		if ( width === false ) {
 			this.button.css( "width", "" );
 			return;
@@ -16096,7 +16096,7 @@ var widgetsSortable = $.widget( "ui.sortable", $.ui.mouse, {
 					}
 
 					//If the element doesn't have a actual height by itself (without styles coming
-					// from a stylesheet), it receives the inline height from the dragged item
+					// from a stylesheet), it receives the list-inline height from the dragged item
 					if ( !p.height() ) {
 						p.height(
 							that.currentItem.innerHeight() -

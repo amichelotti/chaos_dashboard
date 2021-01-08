@@ -31,7 +31,7 @@
     var graph_selected;
     var search_string;
     var notupdate_dataset = 1;
-    var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera", "BPM": "SCLibera" };
+    var implementation_map = { "powersupply": "SCPowerSupply", "motor": "SCActuator", "camera": "RTCamera", "BPM": "SCLibera" };
     var hostWidth = 640;
     var hostHeight = 640;
     function GetURLParameter(sParam) {
@@ -44,7 +44,7 @@
             }
         }
     }
-    jqccs.getSettings=function(){
+    jqccs.getSettings = function () {
         return dashboard_settings;
     }
     function getInterfaceFromClass(impl_class) {
@@ -189,11 +189,11 @@
             }
         });
     }
-    jqccs.getFile=function(msghead, msg, handler){
+    jqccs.getFile = function (msghead, msg, handler) {
         return getFile(msghead, msg, handler);
     }
     function getFile(msghead, msg, handler) {
-        var instant = $('<div></div>').html('<div><p>' + msg + '</p></div><div><input type="file" id="upload-file" class="span3" /></div>').dialog({
+        var instant = $('<div></div>').html('<div><p>' + msg + '</p></div><div><input type="file" id="upload-file" class="col-md-3" /></div>').dialog({
             width: 680,
             height: 400,
             title: msghead,
@@ -204,7 +204,7 @@
                 $('#upload-file').on('change', function () {
                     var reader = new FileReader();
                     reader.onload = function (e) {
-                         try {
+                        try {
                             var json = JSON.parse(e.target.result);
                             handler(json);
                         } catch (err) {
@@ -212,7 +212,7 @@
                             obj['name'] = $('#upload-file').val();
                             obj['data'] = e.target.result;
                             handler(obj);
-                          }
+                        }
 
                         $(main).dialog("close").remove();
                     };
@@ -235,6 +235,8 @@
         var html = '<div><div id="specific-table-ctrl"></div>';
         html += '<div id="specific-control-ctrl"></div></div>';
         newObj.template = "ctrl";
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         changeView(newObj, cutype, function (newObj) {
             var nintervals = 0;
             var orginal_list = [];
@@ -286,9 +288,10 @@
         });
     }
 
-    function showJson(tmpObj, msg, cuname, json) {
-        var name = jchaos.encodeName(cuname);
-
+    function showJson(msg, json, tmpObj) {
+        var name = jchaos.encodeName(msg);
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var instant = $('<div id=desc-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -315,10 +318,10 @@
                 $(this).remove();
             },
             open: function () {
-                console.log(cuname + " description");
+                console.log(msg + " description");
                 //   $("#desc-"+name).width(hostWidth/4);
                 //  $("#desc-"+name).height(hostHeight/4);
-                var jsonhtml = json2html(json, options, cuname);
+                var jsonhtml = json2html(json, options, null);
                 if (jchaos.isCollapsable(json)) {
                     jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                 }
@@ -330,11 +333,11 @@
             }
         });
     }
-    jqccs.showScript=function(msghead, group,type,handler,actions){
-        return showScript(msghead, group,type,handler,actions);
+    jqccs.showScript = function (msghead, group, type, handler, actions) {
+        return showScript(msghead, group, type, handler, actions);
     }
-    function showScript(msghead, group,type, handler,actions) {
-        var name = "script-"+(new Date()).getTime();
+    function showScript(msghead, group, type, handler, actions) {
+        var name = "script-" + (new Date()).getTime();
         var opt = {
             _name_: name,
             minWidth: hostWidth / 2,
@@ -345,100 +348,118 @@
             buttons: [
                 {
                     text: "close",
-                click: function (e) {
-                    $(this).dialog("close");
-                    
+                    click: function (e) {
+                        $(this).dialog("close");
+
+                    }
                 }
-                }
-                 ],
+            ],
 
             open: function () {
                 jchaos.search("", "script", false, function (l) {
-                    var scripts={};
-                    var scripts_flat={}
+                    var scripts = {};
+                    var scripts_flat = {}
                     if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
                         var list_algo = l['found_script_list'];
                         list_algo.forEach(function (p) {
-                            if((typeof type ==="string")&&(type !="")){
-                                if(p['eudk_script_language']!=type){
+                            if ((typeof type === "string") && (type != "")) {
+                                if (p['eudk_script_language'] != type) {
                                     return;
                                 }
                             }
-                            if((typeof group ==="string")&&(group!="")){
-                                if(p.hasOwnProperty("script_group")){
-                                    if((p["script_group"]!="ALL")&&(p["script_group"]!=group)){
+                            if ((typeof group === "string") && (group != "")) {
+                                if (p.hasOwnProperty("script_group")) {
+                                    if ((p["script_group"] != "ALL") && (p["script_group"] != group)) {
                                         return;
                                     }
                                 } else {
                                     return;
                                 }
                             }
-                            var group_name="ALL";
-                            if(p["script_group"]!=""){
-                                group_name=p["script_group"];
+                            var group_name = "ALL";
+                            if (p["script_group"] != "") {
+                                group_name = p["script_group"];
                             }
                             var encoden = jchaos.encodeName(p.script_name);
                             delete p._id;
-                            if(p.seq>0){
-                                p['date']=(new Date(p.seq)).toUTCString();
+                            if (p.seq > 0) {
+                                p['date'] = (new Date(p.seq)).toUTCString();
                             }
-                            if(!scripts.hasOwnProperty(group_name)){
-                                scripts[group_name]={};
+                            var sgroup = "";
+                            if ((typeof group === "string") && (p.hasOwnProperty("script_group"))) {
+                                if ((group != "")) {
+                                    if (p.script_group == group) {
+                                        sgroup = group;
+                                    }
+                                } else {
+                                    sgroup = p.script_group;
+
+                                }
                             }
-                            scripts[group_name][encoden]=p;
-                            scripts_flat[encoden]=p;
-                            
+                            if (sgroup != "") {
+                                if (scripts.hasOwnProperty(sgroup)) {
+                                    scripts[sgroup][encoden] = p;
+
+                                } else {
+                                    scripts[sgroup] = {};
+                                    scripts[sgroup][encoden] = p;
+
+                                }
+                                scripts_flat[encoden] = p;
+
+                            }
+
                         });
                     }
-                    var jsonhtml = json2html(scripts, {collapsed:true}, "");
+                    var jsonhtml = json2html(scripts, { collapsed: true }, "");
                     $("#" + name).html(jsonhtml);
-                    if(typeof handler === "function"){
-                        handler($("#" + name),scripts_flat);
+                    if (typeof handler === "function") {
+                        handler($("#" + name), scripts_flat);
                     }
-                    
+
                 });
             }
-    }
-    if((typeof actions !== "undefined")&&(actions instanceof Array )){
-        opt.buttons=actions.concat(opt.buttons);
+        }
+        if ((typeof actions !== "undefined") && (actions instanceof Array)) {
+            opt.buttons = actions.concat(opt.buttons);
+
+        }
+        createCustomDialog(opt);
 
     }
-    createCustomDialog(opt);
+    /*   var instant = $('<div id=dataset-' + name + '></div>').dialog({
+           minWidth: hostWidth / 4,
+           minHeight: hostHeight / 4,
+           closeOnEscape: true,
+           title: msghead,
+           resizable: true,
+           buttons: [ 
+           {
+               text: "save",
+               click: function (e) {
+                   var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
+                   saveAs(blob, name + ".json");
+               }
+           },
+           {
+               text: "close",
+               click: function (e) {
+                   // var interval=$(this).attr("refresh_time");
+                   $("#dataset-" + name).dialog('close');
 
-}
-     /*   var instant = $('<div id=dataset-' + name + '></div>').dialog({
-            minWidth: hostWidth / 4,
-            minHeight: hostHeight / 4,
-            closeOnEscape: true,
-            title: msghead,
-            resizable: true,
-            buttons: [ 
-            {
-                text: "save",
-                click: function (e) {
-                    var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
-                    saveAs(blob, name + ".json");
-                }
-            },
-            {
-                text: "close",
-                click: function (e) {
-                    // var interval=$(this).attr("refresh_time");
-                    $("#dataset-" + name).dialog('close');
-
-                }
-            }
+               }
+           }
 
 
-            ],
-            close: function (event, ui) {
+           ],
+           close: function (event, ui) {
 
-                $(this).remove();
-            },
-          
-            
-        });
-    }*/
+               $(this).remove();
+           },
+         
+           
+       });
+   }*/
     function showDataset(msghead, cuname, refresh, tmpObj) {
         var update;
         var started = 0;
@@ -448,6 +469,8 @@
         var vardir = "";
         var last_dataset = {};
         var name = jchaos.encodeName(cuname);
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -532,7 +555,7 @@
 
                     // $(instant).dialog("close");
                 }
-            }, 
+            },
             {
                 text: "Format",
                 id: 'dataset-radix-' + name,
@@ -621,11 +644,11 @@
                             if (jchaos.isCollapsable(converted)) {
                                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                             }
-                            var html="";
-                            var lat=imdata[0].dpck_ts_diff/1000.0;
-                            html="<label>CU-MDS Latency(ms):"+lat+"</label>";
-                            
-                            html+=jsonhtml;
+                            var html = "";
+                            var lat = imdata[0].dpck_ts_diff / 1000.0;
+                            html = "<label>CU-MDS Latency(ms):" + lat + "</label>";
+
+                            html += jsonhtml;
                             $("#dataset-" + name).html(html);
                             if (started == 0) {
                                 started = 1;
@@ -648,19 +671,21 @@
             }
         });
     }
-    
-    
-    jqccs.editJSON=function(msghead, json,applyfunc) {
+
+
+    jqccs.editJSON = function (msghead, json, applyfunc) {
         var last_dataset = {};
-        var showformat=0;
+        var showformat = 0;
         var name = jchaos.encodeName(msghead);
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
             closeOnEscape: true,
             title: msghead,
             resizable: true,
-            buttons: [ 
+            buttons: [
                 {
                     text: "Format",
                     id: 'dataset-radix-' + name,
@@ -694,56 +719,56 @@
                             options["format"] = 10;
                         }
                         var converted = convertBinaryToArrays(json);
-               
+
                         var jsonhtml = json2html(converted, options, "");
                         $("#dataset-" + name).html(jsonhtml);
 
                         // $(instant).dialog("close");
                     }
                 },
-                 {
-                text: "Save to Disk",
-                click: function (e) {
-                    var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
-                    saveAs(blob, name + ".json");
-                }
-            },
-            {
-                text: "Upload From Disk",
-                click: function (e) {
-                    getFile("Upload", "upload the json", function (obj) {
-                        json=obj;
-                        var converted = convertBinaryToArrays(json);
-                        var jsonhtml = json2html(converted, options, "");
-                        $("#dataset-" + name).html(jsonhtml);
-                    });
-
-                }
-            },{
-                text: "Apply",
-                id: 'apply-' + name,
-                click: function (e) {
-                   if(typeof applyfunc==="function"){
-                       applyfunc(json,function(newjson){
-                        if(typeof newjson==="object"){
-                            var converted = convertBinaryToArrays(newjson);
+                {
+                    text: "Save to Disk",
+                    click: function (e) {
+                        var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
+                        saveAs(blob, name + ".json");
+                    }
+                },
+                {
+                    text: "Upload From Disk",
+                    click: function (e) {
+                        getFile("Upload", "upload the json", function (obj) {
+                            json = obj;
+                            var converted = convertBinaryToArrays(json);
                             var jsonhtml = json2html(converted, options, "");
                             $("#dataset-" + name).html(jsonhtml);
+                        });
+
+                    }
+                }, {
+                    text: "Apply",
+                    id: 'apply-' + name,
+                    click: function (e) {
+                        if (typeof applyfunc === "function") {
+                            applyfunc(json, function (newjson) {
+                                if (typeof newjson === "object") {
+                                    var converted = convertBinaryToArrays(newjson);
+                                    var jsonhtml = json2html(converted, options, "");
+                                    $("#dataset-" + name).html(jsonhtml);
+                                }
+                            });
                         }
-                       });
-                   }
 
-                }
-            },
-            {
-                text: "close",
-                click: function (e) {
-                    // var interval=$(this).attr("refresh_time");
-                    $("#dataset-" + name).dialog('close');
-                    $(this).remove();
+                    }
+                },
+                {
+                    text: "close",
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                        $("#dataset-" + name).dialog('close');
+                        $(this).remove();
 
+                    }
                 }
-            }
 
 
             ],
@@ -767,44 +792,119 @@
                 if (jchaos.isCollapsable(converted)) {
                     jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                 }
-                
+
                 $("#dataset-" + name).html(jsonhtml);
-                if(typeof applyfunc!=="function"){
-                    $( '#apply-' + name ).remove();
+                if (typeof applyfunc !== "function") {
+                    $('#apply-' + name).remove();
                 }
 
-                
-                
+
+
                 jqccs.jsonSetup($(this), function (e) {
-        
+
                 }, function (e) {
                     if (e.keyCode == 13) {
-        
+
                         var value = e.target.value;
                         var attrname = e.target.name;
                         var desc = jchaos.decodeCUPath(attrname);
-                        
-                        var obj=jchaos.changejsonfrompath(json,attrname,value);
+
+                        var obj = jchaos.changejsonfrompath(json, attrname, value);
                         var converted = convertBinaryToArrays(json);
 
                         var jsonhtml = json2html(converted, options, "");
-                         if (jchaos.isCollapsable(converted)) {
-                        jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                        if (jchaos.isCollapsable(converted)) {
+                            jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                         }
-                
+
                         $("#dataset-" + name).html(jsonhtml);
-                    } 
+                    }
                 })
-        
-            
+
+
                 $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
             }
         });
     }
-     jqccs.execConsole=function(msghead, execHandler,okhandle,nokhandle) {
-        var pid=(new Date()).getTime();
-        var html = '<div id=console-' + pid + '></div>';
+    /**
+     * 
+     * @param {string} msgHead Title of the window
+     * @param {function} nodeFn function that creates node, menu and handlers 
+     */
+    jqccs.createBrowserWindow = function (msgHead, opt, nodeFn) {
+        var width = $(window).width() / 2;
+        var height = $(window).height() / 2;
+        if (typeof opt === "function") {
+            nodeFn = opt;
+        } else if (opt !== undefined) {
+            if (opt['width'] !== undefined) {
+                width = opt['width'];
+            }
+            if (opt['height'] !== undefined) {
+                height = opt['height'];
+            }
+        }
+
+        var pid = (new Date()).getTime();
+        var hier = "hier-" + pid;
+        var desc = "desc-" + pid;
+        var html = '<div class="row"><div id="' + hier + '" class="col-md-6"></div><div id="' + desc + '" class="col-md-6"></div></div>';
+
+        if (typeof nodeFn !== "function") {
+            throw "must provide a mode creation handler";
+        }
+        var opt = {
+            minWidth: width,
+            minHeight: height,
+            title: msgHead,
+            resizable: true,
+            dialogClass: 'no-close',
+            buttons: [
+                {
+                    text: "refresh",
+                    id: 'refresh-' + pid,
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                        //    $('#console-' + pid).terminal().exit();
+                        nodeFn(pid);
+                    }
+
+                },
+                {
+                    text: "close",
+                    id: 'console-close-' + pid,
+                    click: function (e) {
+                        // var interval=$(this).attr("refresh_time");
+                        //    $('#console-' + pid).terminal().exit();
+                        $(this).dialog("close");
+                    }
+
+                }
+            ],
+            close: function (event, ui) {
+                //    $('#console-' + pid).terminal().exit();
+                $(this).dialog("close");
+
+            },
+
+            open: function (e) {
+                console.log(msgHead + " opening browser :" + pid + " " + width + "x" + height);
+                nodeFn(pid);
+
+
+            }
+        }
+
+
+        createCustomDialog(opt, html);
+    }
+    jqccs.execConsole = function (msghead, execHandler, okhandle, nokhandle) {
+        var pid = (new Date()).getTime();
+
+        var html = '<div id=console-' + pid + '></div><div class="wait_modal"></div>';
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var opt = {
             minWidth: hostWidth / 2,
             minHeight: hostHeight / 4,
@@ -815,14 +915,15 @@
                 text: "download",
                 id: 'console-download-' + pid,
                 click: function (e) {
+                    var name = jchaos.encodeName(msghead) + pid;
                     // var interval=$(this).attr("refresh_time");
                     var output = $('#console-' + pid).terminal().get_output();
                     var blob = new Blob([output], { type: "json;charset=utf-8" });
-                    saveAs(blob, pid + ".log");
+                    saveAs(blob, name + ".log");
 
-                 
+
                 }
-            }, 
+            },
             {
                 text: "pause",
                 id: 'console-pause-' + pid,
@@ -841,78 +942,111 @@
 
                 }
             },
-                {
-                    text: "close",
-                    id: 'console-close-' + pid,
-                    click: function (e) {
-                        // var interval=$(this).attr("refresh_time");
+            {
+                text: "close",
+                id: 'console-close-' + pid,
+                click: function (e) {
+                    // var interval=$(this).attr("refresh_time");
                     //    $('#console-' + pid).terminal().exit();
                     $(this).dialog("close");
-                    }
-                
+                }
+
             }],
             close: function (event, ui) {
-            //    $('#console-' + pid).terminal().exit();
-            $(this).dialog("close");
+                //    $('#console-' + pid).terminal().exit();
+                $(this).dialog("close");
+                jchaos.exit = function (str) {
+                    alert(str);
+                }
             },
 
             open: function (e) {
-                console.log(msghead + "opening terminal :" + pid);
+                console.log(msghead + " opening terminal :" + pid);
 
                 //$(e.target).parent().css('background-color', 'black');
                 $('#console-' + pid).css('background-color', 'black');
-                $('#console-' + pid).terminal(function(command) {
+                $('#console-' + pid).terminal(function (command) {
                     if (command !== '') {
                         try {
-                            if(command == "help"){
+                            if (command == "help") {
                                 return;
                             }
-                            var regxp=/^\s*console\.([a-z]{3,})\((.*)\)\s*;/;
+                            var regxp = /^\s*console\.([a-z]{3,})\((.*)\)\s*;/;
                             var match = regxp.exec(command);
-             
-                            if(match!=null){
-                                
+
+                            if (match != null) {
+
                                 var result = window.eval(match[2]);
                                 if (result !== undefined) {
-                                    if(match[1]=="error"){
+                                    if (match[1] == "error") {
                                         this.error(new String(result));
-            
-                                    } else{
+
+                                    } else {
                                         this.echo(new String(result));
-                                    } 
+                                    }
                                 }
                             }
-                            
+
                             var result = window.eval(command);
-            
+
                             if (result !== undefined) {
                                 this.echo(new String(result));
                             }
-                        } catch(e) {
+
+
+                        } catch (e) {
                             this.error(new String(e));
                         }
                     } else {
-                       this.echo('');
+                        this.echo('');
                     }
                 }, {
                     greetings: 'JavaScript Chaos Interpreter',
                     name: 'JChaos',
                     height: 600,
                     prompt: 'chaos-js> '
-                   
+
+
                 });
-                jchaos.setOptions({"console_log":$('#console-' + pid).terminal().echo,"console_err":$('#console-' + pid).terminal().error});
-                if(typeof execHandler === "string"){
-                    $('#console-' + pid).terminal().exec(execHandler,false);
-                } else if(typeof execHandler === "function"){
-                    $('#console-' + pid).terminal().exec(execHandler(),false);
+                setTimeout(() => {
+                    if (typeof execHandler === "string") {
+                        $('#console-' + pid).terminal().exec(execHandler, false);
+                    } else if (typeof execHandler === "function") {
+                        $('#console-' + pid).terminal().exec(execHandler(), false);
+                    }
+                }, 500);
+                jchaos.exit = function (str) {
+                    console.log("pausing: " + str);
+                    $('#console-' + pid).terminal().logout();
+
+                    $('#console-' + pid).terminal().disable();
                 }
-               
-            
+                jchaos.setOptions({ "console_log": $('#console-' + pid).terminal().echo, "console_err": $('#console-' + pid).terminal().error });
+            }
+
         }
-    };
-      
+
+
         createCustomDialog(opt, html);
+    }
+
+
+    jqccs.getConsoleByUid = function (msghead, uid) {
+        jchaos.node(uid, "desc", "all", (d) => {
+            if (d.ndk_parent !== undefined) {
+                jchaos.node(d.ndk_parent, "get", "agent", uid, null, function (data) {
+                    console.log("getConsoleByUid->" + JSON.stringify(data));
+                    jchaos.node(d.ndk_parent,"desc","all",(dd)=>{
+                    var server = dd.ndk_host_name + ":" + dd.ndk_rest_port;
+                    getConsole(msghead, data.association_uid, server, 2, 1, 1000);
+                    });
+                });
+            }
+        });
+
+    }
+    jqccs.getConsole = function (msghead, pid, server, lines, consolen, refresh, type) {
+        return getConsole(msghead, pid, server, lines, consolen, refresh, type);
     }
     function getConsole(msghead, pid, server, lines, consolen, refresh, type) {
         var update;
@@ -920,8 +1054,9 @@
         var stop_update = false;
         var html = '<div id=console-' + pid + '></div>';
 
-        html += '<div class="row-fluid"><label class="span4">Console buffering:</label><input class="span4" id="buffer-update" type="text" title="Remote flush Update(bytes)" value=1 /></div>';
-
+        html += '<div class="row"><label class="col-md-4">Console buffering:</label><input class="col-md-4" id="buffer-update" type="text" title="Remote flush Update(bytes)" value=1 /></div>';
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
         var opt = {
             minWidth: hostWidth / 2,
             minHeight: hostHeight / 4,
@@ -1024,14 +1159,19 @@
                     if (!stop_update) {
 
                         jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function (r) {
-                            if (r.data.process.last_log_time != last_log_time) {
-                                //  var str = decodeURIComponent(escape(atob(r.data.console)));
-                                var str = atob(r.data.console);
-                                $('#console-' + pid).terminal().echo(str);
-                                consoleParam.fromline = Number(r.data.process.output_line) - 1;
-                            }
-                            last_log_time = r.data.process.last_log_time;
+                            if (r.data !== undefined) {
+                                if (r.data.process.last_log_time != last_log_time) {
+                                    //  var str = decodeURIComponent(escape(atob(r.data.console)));
+                                    var str = atob(r.data.console);
+                                    $('#console-' + pid).terminal().echo(str);
+                                    consoleParam.fromline = Number(r.data.process.output_line) - 1;
+                                }
+                                last_log_time = r.data.process.last_log_time;
+                            } else {
+                                var str = "[" + (new Date()).toString() + "] Cannot retrieve process on " + server;
+                                $('#console-' + pid).terminal().error(str);
 
+                            }
                         }, function (bad) {
                             console.log("Some error getting console occur:" + JSON.stringify(bad));
                         });
@@ -1056,13 +1196,20 @@
         }
         createCustomDialog(opt, html);
     }
-
-    function showPicture(msghead, fmt, cuname, refresh) {
+    jqccs.showPicture = function (msghead, cuname, refresh, channel) {
+        return showPicture(msghead, cuname, refresh, channel);
+    }
+    function showPicture(msghead, cuname, refresh, channel) {
         var update;
         var data;
         var stop_update = false;
-        var name = jchaos.encodeName(cuname);
-        var instant = $('<div><img id=pict-' + name + ' src=""></div>').dialog({
+        var hostWidth = $(window).width();
+        var hostHeight = $(window).height();
+        var name = jchaos.encodeName(cuname) + (new Date()).getTime();
+        if (typeof channel === "undefined") {
+            channel = 0;
+        }
+        var instant = $('<div><img id="pict-' + name + '" src=""><div id="info-' + name + '"></div></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
             title: msghead,
@@ -1114,21 +1261,29 @@
                 $(this).remove();
             },
             open: function () {
-                console.log(msghead + " refresh:" + refresh, " fmt:" + fmt);
+                console.log(msghead + " refresh:" + refresh);
 
                 update = setInterval(function () {
+                    if (refresh == 0) {
+                        clearInterval(update);
+                    }
                     if (stop_update) {
                         $('#pict-update-' + name).text("Update");
                     } else {
                         $('#pict-update-' + name).text("Not Update");
                     }
                     if (!stop_update) {
-                        jchaos.getChannel(cuname, 0, function (imdata) {
+                        jchaos.getChannel(cuname, channel, function (imdata) {
                             data = imdata[0];
                             if (data.hasOwnProperty("FRAMEBUFFER") && data.FRAMEBUFFER.hasOwnProperty("$binary") && data.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
                                 var bin = data.FRAMEBUFFER.$binary.base64;
                                 //  $("#pict-"+name).attr("src", "data:image/" + fmt + ";base64," + bin);
                                 $("#pict-" + name).attr("src", "data:;base64," + bin);
+                                var info_size = "";
+                                if (data.hasOwnProperty("WIDTH")) {
+                                    info_size = data.WIDTH + "x" + data.HEIGHT + "(" + data.OFFSETX + "," + data.OFFSETY + ") ";
+                                }
+                                $("#info-" + name).html(info_size + "frame:" + data.dpck_seq_id);
                             } else {
                                 alert("NO 'FRAMEBUFFER.$binary.base64' key EXISTS");
                                 clearInterval(update);
@@ -1136,7 +1291,6 @@
 
                             }
                         }, function (err) {
-                            console.log(err);
                         });
                     }
                     //$(this).attr("refresh_time",update);
@@ -1148,18 +1302,18 @@
     function instantMessage(msghead, msg, tim, sizex, sizey, ok) {
 
         if (sizex == null) {
-            sizex = 350;
+            sizex = $(window).width() / 2;
         }
         if (sizey == null) {
-            sizey = 200;
+            sizey = $(window).height() / 4;
         }
         if (typeof (sizex) === "boolean") {
             ok = sizex;
-            sizex = 350;
+            sizex = $(window).width() / 2;
         }
         if (typeof (sizey) === "boolean") {
             ok = sizey;
-            sizey = 200;
+            sizey = $(window).height() / 4;
         }
         var instant = $('<div></div>').html(msg).dialog({
             width: sizex,
@@ -1249,9 +1403,9 @@
         }
         //var name = jchaos.encodeName(tmpObj.node_selected);
         var name = tmpObj.node_selected;
-        var node_name_to_desc = tmpObj.node_name_to_desc;
-        if (tmpObj.node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
-            var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
+        var descr=jchaos.node(name,"desc","all");
+        if (tmpObj.node_selected != null && descr.hasOwnProperty("cudk_ds_desc") && descr.cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+            var desc = descr.cudk_ds_desc.cudk_ds_command_description;
             desc.forEach(function (item) {
                 if (item.bc_alias == alias) {
                     var params = item.bc_parameters;
@@ -1363,12 +1517,18 @@
     function cusWithInterface(tmpObj, culist, interface) {
         var retlist = [];
         culist.forEach(function (name) {
-            if (tmpObj.node_name_to_desc[name] == null) {
-                var desc = jchaos.getDesc(name, null);
-                tmpObj.node_name_to_desc[name] = desc[0];
+            if (tmpObj.node_name_to_desc[name] == null || (!tmpObj.node_name_to_desc[name].hasOwnProperty('instance_description'))) {
+                var desc = jchaos.node(name,"desc","all", null);
+                tmpObj.node_name_to_desc[name] = desc;
             }
             var node_name_to_desc = tmpObj.node_name_to_desc;
-            if (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[name].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
+            var impl="";
+            if(node_name_to_desc[name].hasOwnProperty("cudk_view")){
+                impl=node_name_to_desc[name].cudk_view;
+            } else if( (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") )){
+                impl=node_name_to_desc[name].instance_description.control_unit_implementation;
+            }
+            if( (impl.indexOf(interface) != -1)) {
                 retlist.push(name);
             }
         });
@@ -1423,7 +1583,6 @@
 
 
 
-
     function show_dev_alarm(id) {
         var dataset = node_live_selected[node_name_to_index[jchaos.encodeName(id)]];
         if ((dataset != null) && (dataset.hasOwnProperty("device_alarms"))) {
@@ -1439,8 +1598,9 @@
     }
 
     function decodeDeviceAlarm(dev_alarm) {
-        $("#name-device-alarm").html(dev_alarm.ndk_uid);
-        $("#table_device_alarm").html(jqccs.generateAlarmTable(dev_alarm));
+        showJson("Alarm " + dev_alarm.ndk_uid, jchaos.filterAlarmObject(dev_alarm));
+        //$("#name-device-alarm").html(dev_alarm.ndk_uid);
+        //$("#table_device_alarm").html(jqccs.generateAlarmTable(dev_alarm));
     }
     /**
      * Check if a string represents a valid url
@@ -1454,22 +1614,22 @@
 
 
     function buildAlgoBody() {
-        var html = '<div class="row-fluid">';
-        /*html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
+        var html = '<div class="row">';
+        /*html += '<div class="statbox purple" onTablet="col-md-4" onDesktop="col-md-3">'
     html += '<h3>Algorithm Type</h3>';
     html += '<select id="classe" size="auto"></select>';
     html += '</div>';
 */
-        html += '<div class="statbox purple row-fluid" onTablet="span8" onDesktop="span6">'
-        html += '<div class="span6">'
+        html += '<div class="statbox purple row" onTablet="col-md-8" onDesktop="col-md-6">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-algo">Search Algorithms</label><input class="input-xlarge" id="search-algo" title="Search Algorithms" name="search-algo" type="radio" value=true>';
         html += '</div>'
-        html += '<div class="span6">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-algo">Search Instanced</label><input class="input-xlarge" id="search-instance" title="Search Instanced Algorithms" name="search-algo" type="radio" value=false>';
         html += '</div>'
-        // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="col-md-3">Search</h3>';
 
-        html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
         html += '</div>';
 
@@ -1496,29 +1656,29 @@
     }
     /*
       function buildAlgoBody() {
-        var html = '<div class="row-fluid">';
+        var html = '<div class="row">';
   
-        html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span8">'
-        html += '<div class="span6">'
+        html += '<div class="statbox purple row" onTablet="col-md-4" onDesktop="col-md-8">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-alive">Search All Alghoritm</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
-        html += '<div class="span6">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
         html += '</div>'
-        // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="col-md-3">Search</h3>';
   
-        html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
         html += '</div>';
         return html;
       }*/
     function generateAlgoTable(cu, interface, template) {
-        var html = '<div class="row-fluid" id="table-space">';
+        var html = '<div class="row" id="table-space">';
 
-        html += '<div class="box span12" id="container-main-table">';
-        html += '<div class="box-content span12">';
+        html += '<div class="box col-md-12" id="container-main-table">';
+        html += '<div class="box-content col-md-12">';
 
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         if (interface == "algo-instance") {
             html += '<tr class="algoInstanceMenu">';
@@ -1566,8 +1726,8 @@
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12 hide" id="container-table-helper">';
-        html += '<div class="box-content-helper span12">';
+        html += '<div class="box col-md-12 hide" id="container-table-helper">';
+        html += '<div class="box-content-helper col-md-12">';
         html += '</div>';
         html += '</div>';
 
@@ -1578,21 +1738,25 @@
     }
 
     function generateProcessTable(tmpObj) {
-        var cu = tmpObj.elems;
+        var cu = [];
+        if (tmpObj['elems'] instanceof Array) {
+            cu = tmpObj.elems;
+        }
         var template = tmpObj.type;
-        var html = "";
-        html += '<table class="table table-bordered" id="graph_table-' + template + '">';
-        html += '</table>';
-        html += '<div class="row-fluid" id="table-space">';
+        var html = '<div class="row" z-index=-1 id="table-space">';
+        html += '<div class="col-md-12">';
+        html += '<div class="box-content col-md-12">';
+        if (cu.length == 0) {
+            html += '<p id="no-result-monitoring">No results match</p>';
 
+        } else {
+            html += '<p id="no-result-monitoring"></p>';
 
-        html += '<div class="box span12" id="container-main-table">';
-        html += '<div class="box-content span12">';
-        html += '<div class="row-fluid"><label class="span1">Search:</label><input class="input-xlarge focused" id="process_search" class="span5" type="text" title="Search a Process" value=""></div>';
+        }
 
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
-        html += '<thead class="box-header processMenu">';
-        html += '<tr class="processMenu">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
+        html += '<thead class="box-header">';
+        html += '<tr>';
         html += '<th>Instance</th>';
         html += '<th>Name</th>';
         html += '<th>Type</th>';
@@ -1618,27 +1782,71 @@
         html += '</table>';
         html += '</div>';
         html += '</div>';
-
-        html += '<div class="box span12 hide" id="container-table-helper">';
-        html += '<div class="box-content-helper span12">';
-        html += '</div>';
         html += '</div>';
 
-        html += '</div>';
-        html += generateScriptAdminModal();
         return html;
-
     }
-
+    /*
+        function generateProcessTable(tmpObj) {
+            var cu = tmpObj.elems;
+            var template = tmpObj.type;
+            var html = "";
+            html += '<div class="row">';
+            html += '<table class="table table-striped" id="graph_table-' + template + '">';
+            html += '</table></div>';
+    
+    
+           // html += '<div class="box col-md" id="container-main-table">';
+            html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
+            html += '<div class="row">';
+            html += '<div class="col-md">';
+    
+            html += '<table class="table table-striped" id="main_table-' + template + '">';
+            html += '<thead class="box-header processMenu">';
+            html += '<tr>';
+            html += '<th>Instance</th>';
+            html += '<th>Name</th>';
+            html += '<th>Type</th>';
+            html += '<th>Start</th>';
+            html += '<th>End</th>';
+            html += '<th>LastLog(s ago)</th>';
+            html += '<th>Hostname</th>';
+            html += '<th>PID</th>';
+            html += '<th>Status</th>';
+            html += '<th>TimeStamp</th>';
+            html += '<th>Uptime</th>';
+            html += '<th>System Time</th>';
+            html += '<th>User Time</th>';
+            html += '<th>VMem(KB)</th>';
+            html += '<th colspan="2">RMem(KB)|%</th>';
+            html += '<th>Parent</th>';
+    
+            html += '</tr>';
+    
+    
+            html += '</thead> ';
+    
+            html += '</table>';
+            html += '</div>';
+    
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+    
+         //   html += generateScriptAdminModal();
+            return html;
+    
+        }
+    */
     function generateNodeTable(tmpObj) {
         var cu = tmpObj.elems;
         var template = tmpObj.type;
-        var html = '<div class="row-fluid" id="table-space">';
+        var html = '<div class="row" id="table-space">';
 
-        html += '<div class="box span12" id="container-main-table">';
-        html += '<div class="box-content span12">';
+        html += '<div class="box col-md-12" id="container-main-table">';
+        html += '<div class="box-content col-md-12">';
 
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr class="nodeMenu">';
         html += '<th>Node</th>';
@@ -1679,8 +1887,8 @@
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12 hide" id="container-table-helper">';
-        html += '<div class="box-content-helper span12">';
+        html += '<div class="box col-md-12 hide" id="container-table-helper">';
+        html += '<div class="box-content-helper col-md-12">';
         html += '</div>';
         html += '</div>';
 
@@ -1755,7 +1963,7 @@
         });
     }
 
-    function algoLoadFromFile(obj,target) {
+    function algoLoadFromFile(obj, target) {
         getFile("Script Loading", "select the Script to load", function (script) {
             var scriptTmp = {};
             var name = script['name'];
@@ -1783,9 +1991,9 @@
             scriptTmp['script_name'] = name;
             scriptTmp['target'] = "remote";
 
-            if(typeof target !=="undefined"){
+            if (typeof target !== "undefined") {
                 scriptTmp['target'] = target;
-            } 
+            }
 
             scriptTmp['eudk_script_content'] = script['data'];
             scriptTmp['eudk_script_language'] = language;
@@ -1806,7 +2014,7 @@
         });
     }
 
-    jqccs.algoSave=function(json){
+    jqccs.algoSave = function (json) {
         return algoSave(json);
     }
     function algoSave(json) {
@@ -1829,30 +2037,37 @@
         return '&#' + c.charCodeAt(0) + ';';
         });*/
         json.eudk_script_content = btoa(unescape(encodeURIComponent(json.eudk_script_content)));
-        json['eudk_script_language'] = json.eudk_script_language[0];
-        json['script_target'] = json.script_target[0];
-        json['script_group'] = json.script_group[0];
+
+        json['eudk_script_language'] = ((json.eudk_script_language instanceof Array) ? json.eudk_script_language[0] : json.eudk_script_language);
+        json['script_target'] = ((json.script_target instanceof Array) ? json.script_target[0] : json.script_target);
+        json['script_group'] = ((json.script_group instanceof Array) ? json.script_group[0] : json.script_group);
         proc[json.script_name] = json;
         //    jchaos.variable("script", "set", proc, null);
-       
+        delete json['_id'];
+
         jchaos.search(json.script_name, "script", false, function (l) {
             var script_inst = l['found_script_list'];
             if (!(script_inst instanceof Array) || (script_inst.length == 0)) {
-           //     json['seq'] = 0;
-                delete json['_id'];
+                //     json['seq'] = 0;
                 jchaos.saveScript(json, function (data) {
-                    console.log("saving script:" + JSON.stringify(json));
-                    instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
+                    console.log("Saving script:" + JSON.stringify(json));
+                    instantMessage("Script " + json.script_name, " Saved", 1000, null, null, true)
+
+                }, (bad) => {
+                    instantMessage("Error Saving Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
                 });
             } else {
                 confirm("Script Already Exist", "Do you want to replace:" + json.script_name, "Ok", function () {
                     var cnt = 0;
                     script_inst.forEach(function (elem) {
-                        if(elem.seq==json.seq){
-                            console.log(cnt + "] updatinf script:" + json.script_name + " with seq:"+json.seq);
+                        if (elem.seq == json.seq) {
+                            console.log(cnt + "] Updating script:" + json.script_name + " with seq:" + json.seq, " content:" + JSON.stringify(json));
                             jchaos.saveScript(json, function (data) {
-                                instantMessage("Updataing Script " + json.script_name, "Saved", 2000, null, null, true)
+                                instantMessage("Updated Script " + json.script_name, "Saved", 2000, null, null, true)
+
+                            }, (bad) => {
+                                instantMessage("Error updating Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
                             });
                             cnt++;
@@ -1862,8 +2077,8 @@
                                 console.log(cnt + "] removing script:" + json.script_name);
 
                                 if (cnt == script_inst.length) {
-                        //        json['seq'] = 0;
-                                   delete json['_id'];
+                                    //        json['seq'] = 0;
+                                    delete json['_id'];
 
                                     jchaos.saveScript(json, function (data) {
                                         console.log("Replacing script:" + json.script_name);
@@ -1871,8 +2086,11 @@
 
                                     });
                                 }
+                            }, (bad) => {
+                                instantMessage("Error removing Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
+
                             });
-                    }
+                        }
                     });
 
                 }, "Cancel");
@@ -1972,20 +2190,70 @@
         }
         return 0;
     }
+    jqccs.busyWindow=function(enable,timeoutms){
+        if(enable){
+            $("div").addClass("loading");
+        } else {
+            $("div").removeClass("loading");
+        }
+        if(typeof timeout === "number"){
+            setTimeout(()=>{$(this).removeClass("loading");},timeoutms);
+        }
 
+    }
 
+    jqccs.tagConfigStart=function(selection,ok,bad){
+        var templ = {
+            $ref: "tag_entry.json",
+            format: "tabs"
+        }
+        var def = {};
+        def['tag_elements'] = selection;
+        def['tag_type'] = "CYCLE";
+        def['tag_name'] = "NONAME_" + (new Date()).getTime();
+        def['tag_duration'] = 1;
+        def['tag_desc'] = JSON.stringify(selection) + " at:" + (new Date());
+        jsonEditWindow("TAG Editor", templ, def, function (data, obj) {
+            var ttype = 2;
+            if (data.tag_type == "CYCLE") {
+                ttype = 1;
+            }
+            jchaos.tag(data.tag_name, selection, ttype, data.tag_duration,
+                function (k) {
+                    var tag_obj = jchaos.variable("tags", "get", null, null);
+                    data.tag_ts = (new Date()).getTime();
+                    data.tag_elements = selection;
+                    tag_obj[data.tag_name] = data;
+                    jchaos.variable("tags", "set", tag_obj, null);
+                    jqccs.instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
+                    if(typeof ok === "function"){
+                        ok(data)
+                    }
 
+                },
+                function (b) {
+                    if(typeof bad === "function"){
+                        bad(b);
+                    } else {
+                        jqccs.instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
+                    }
 
-jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok){
-    return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok);
-}
+                });
+            return 0;
+        }, null);
+
+    }
+
+    jqccs.jsonEditWindow = function (name, jsontemp, jsonin, editorFn, tmpObj, ok, nok, eventFn) {
+        return jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok, eventFn);
+    }
     /***
      * 
      */
-    function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok) {
+    function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok, eventFn) {
         var instant = $('<div id=edit-temp></div>').dialog({
-            minWidth: hostWidth / 4,
-            minHeight: hostHeight / 4,
+            minWidth: $(window).width() / 2,
+            minHeight: $(window).height() / 4,
             title: name,
             position: "center",
             resizable: true,
@@ -2068,7 +2336,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 var element = $("#edit-temp");
                 var jopt = {};
                 jopt['ajax'] = true;
-                if(typeof jsontemp==="object"){
+                if (typeof jsontemp === "object") {
                     jopt['schema'] = jsontemp;
                 }
 
@@ -2080,11 +2348,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 if (json_editor != null) {
                     delete json_editor;
                 }
-                JSONEditor.defaults.options.theme = 'bootstrap2';
-                JSONEditor.defaults.options.iconlib = "bootstrap2";
-
-                //    JSONEditor.defaults.iconlib = 'fontawesome4';
+                JSONEditor.defaults.options.theme = 'bootstrap4';
+                //JSONEditor.defaults.options.iconlib = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css";
+                JSONEditor.defaults.options.iconlib = 'fontawesome3';
+                // JSONEditor.defaults.options.iconlib ='fundation3';
+                //JSONEditor.defaults.options.theme = 'bootstrap3';
+                //JSONEditor.defaults.options.theme = 'jqueryui';
+                // JSONEditor.defaults.iconlib = 'bootstrap3';
                 json_editor = new JSONEditor(element.get(0), jopt);
+                if (typeof eventFn === "function") {
+                    // jopt['onEvent']=eventFn;
+                    json_editor.on('change', () => { eventFn(json_editor); });
+                }
                 $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
             }
@@ -2245,7 +2520,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             if (snap_selected != "") {
                 jchaos.snapshot(snap_selected, "load", null, "", function (dataset) {
-                    showJson(null, "Snapshot " + snap_selected, snap_selected, dataset);
+                    showJson("Snapshot " + snap_selected, dataset);
                 });
             }
         });
@@ -2296,23 +2571,23 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         });
         */
     }
-    function jsonEnableScriptContext(dom,scripts) {
-       dom.contextMenu('destroy', '.json-key');
+    function jsonEnableScriptContext(dom, scripts) {
+        dom.contextMenu('destroy', '.json-key');
 
-       dom.contextMenu({
+        dom.contextMenu({
             selector: '.json-toggle',
             build: function ($trigger, e) {
                 var cuitem = {};
                 //  var portdir = $(e.currentTarget).attr("portdir");
-                var name=e.currentTarget.text;
-                console.log("choosing "+name);
-                if(scripts.hasOwnProperty(name)&& scripts[name].hasOwnProperty("eudk_script_language")){
-                    var language=scripts[name].eudk_script_language.toUpperCase();
-                    if(language=="JS" ||  language=="NODEJS"){
-                        cuitem['run-script'] = { name: "Run Script "+name,script:scripts[name] };
+                var name = e.currentTarget.text;
+                console.log("choosing " + name);
+                if (scripts.hasOwnProperty(name) && scripts[name].hasOwnProperty("eudk_script_language")) {
+                    var language = scripts[name].eudk_script_language.toUpperCase();
+                    if (language == "JS" || language == "NODEJS") {
+                        cuitem['run-script'] = { name: "Run Script " + name, script: scripts[name] };
                     }
-                    cuitem['delete-script'] = { name: "Delete Script "+name,script:scripts[name]  };
-                    cuitem['save-script'] = { name: "Save Script "+name,script:scripts[name] };
+                    cuitem['delete-script'] = { name: "Delete Script " + name, script: scripts[name] };
+                    cuitem['save-script'] = { name: "Save Script " + name, script: scripts[name] };
                 }
                 cuitem['sep1'] = "---------";
 
@@ -2328,30 +2603,30 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     callback: function (cmd, options) {
 
                         var fullname;
-                        var script=options.commands[cmd].script;
+                        var script = options.commands[cmd].script;
                         if (cmd == "run-script") {
-                           console.log("Running script "+JSON.stringify(script));
-                           jchaos.loadScript(script.script_name, script.seq, function (data) {
-                            if(typeof data==="object" && data.hasOwnProperty('eudk_script_content')){
-                                var obj = atob(data['eudk_script_content']);
-                                jqccs.execConsole(script.script_name,obj);
-                            } else {
-                                instantMessage("Empty content ",  script.script_name, 5000,false);
+                            console.log("Running script " + JSON.stringify(script));
+                            jchaos.loadScript(script.script_name, script.seq, function (data) {
+                                if (typeof data === "object" && data.hasOwnProperty('eudk_script_content')) {
+                                    var obj = atob(data['eudk_script_content']);
+                                    jqccs.execConsole(script.script_name, obj);
+                                } else {
+                                    instantMessage("Empty content ", script.script_name, 5000, false);
 
-                            }
-                           },function(bad){
-                            instantMessage("Error retriving ",  script.script_name, 5000,false);
+                                }
+                            }, function (bad) {
+                                instantMessage("Error retriving ", script.script_name, 5000, false);
 
-                           });
+                            });
 
                         } else if (cmd == "delete-script") {
                             console.log("Delete script ");
                             confirm("Delete script", "Your are deleting Script: " + script.scriot_name, "Ok", function () {
                                 jchaos.rmScript(script.scriot_name, function (data) {
                                     instantMessage("Remove Script", "removed:" + script.scriot_name, 2000);
-                
+
                                 });
-                
+
                             }, "Cancel");
 
                         } else if (cmd == "save-script") {
@@ -2362,7 +2637,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                                 saveAs(blob, data['script_name']);
                             });
 
-                        } 
+                        }
                         return;
                     },
                     items: cuitem
@@ -2668,9 +2943,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         });
         $(main_dom).on("click", "#table_graph_items tbody tr", function (e) {
-            $(".row_element").removeClass("row_snap_selected");
+            $(".row_element").removeClass("bg-warning");
             var tname = $(this).attr("tracename");
-            $(this).addClass("row_snap_selected");
+            $(this).addClass("bg-warning");
             $("#trace-name").val(tname);
             var tlist = getElementByName(tname, trace_list);
             $("#xvar").val(encodeCUPath(tlist.x));
@@ -2738,7 +3013,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         $("#graph_search").off('keypress');
         $("#graph_search").on('keypress', function (event) {
             var t = $(event.target);
-            var value = $(t).attr("value");
+            var value = $(t).val();
             updateGraph(value);
             // if ((event.which == 13)) {
             //  var name = $(t).attr("cuname");
@@ -2974,26 +3249,27 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         if (descs instanceof Array) {
             descs.forEach(function (elem, id) {
                 var name = tmpObj['elems'][id];
-                if(!elem.hasOwnProperty("ndk_parent") && (elem.hasOwnProperty("instance_description")&&elem.instance_description.hasOwnProperty("ndk_parent"))){
-                    elem["ndk_parent"]=elem.instance_description.ndk_parent;
+                if (!elem.hasOwnProperty("ndk_parent") && (elem.hasOwnProperty("instance_description") && elem.instance_description.hasOwnProperty("ndk_parent"))) {
+                    elem["ndk_parent"] = elem.instance_description.ndk_parent;
                 }
 
                 tmpObj.node_name_to_desc[name] = elem;
             });
         }
+        $("#main_table-" + template + " tbody tr").off('click');
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
             if (tmpObj.hasOwnProperty('tableClickFn')) {
                 tmpObj.tableClickFn(tmpObj);
             }
         });
-        n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
-            $("#table-scroll").css('height', '280px');
-        } else {
-            $("#table-scroll").css('height', '');
-        }
-
+        /*     n = $('#main_table-' + template + ' tr').size();
+             if (n > 22) { 
+                 $("#table-scroll").css('height', '280px');
+             } else {
+                 $("#table-scroll").css('height', '');
+             }
+     */
 
         $(".setSchedule").off('keypress');
         $(".setSchedule").on('keypress', function (event) {
@@ -3001,7 +3277,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             if ((event.which == 13)) {
                 //  var name = $(t).attr("cuname");
-                var value = $(t).attr("value");
+                var value = $(t).val();
                 jchaos.setSched(tmpObj.node_multi_selected, value, function () {
                     instantMessage("Set scheduling", "to " + value + " us Hz:" + 1000000 / Number(value), 2000, true);
 
@@ -3352,31 +3628,33 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             var y = crop_opt.y.toFixed();
             var width = crop_opt.width.toFixed();
             var height = crop_opt.height.toFixed();
-         /*   jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width),null);
-            jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height),null);
-            setTimeout(() => {
-                jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), null);
-            }, 1000);
-            setTimeout(() => {
-                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), null);
-            }, 1000);
-*/
-            console.log("setting WIDTH:"+width);
+            /*   jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width),null);
+               jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height),null);
+               setTimeout(() => {
+                   jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), null);
+               }, 1000);
+               setTimeout(() => {
+                   jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), null);
+               }, 1000);
+   */
+            console.log("setting WIDTH:" + width);
 
             jchaos.setAttribute(crop_opt.cu, "WIDTH", String(width), function () {
-                console.log("setting HEIGHT:"+height);
+                console.log("setting HEIGHT:" + height);
                 jchaos.setAttribute(crop_opt.cu, "HEIGHT", String(height), function () {
-                setTimeout(() => {
-                    console.log("setting OFFSETX:"+x);
+                    setTimeout(() => {
+                        console.log("setting OFFSETX:" + x);
 
-                    jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
-                        setTimeout(() => {
-                            console.log("setting OFFSETY:"+y);
+                        jchaos.setAttribute(crop_opt.cu, "OFFSETX", String(x), function () {
+                            setTimeout(() => {
+                                console.log("setting OFFSETY:" + y);
 
-                            jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
-                                instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
-                            });},1000);
-                    });},1000);
+                                jchaos.setAttribute(crop_opt.cu, "OFFSETY", String(y), function () {
+                                    instantMessage("ROI " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+                                });
+                            }, 1000);
+                        });
+                    }, 1000);
                 });
             });
         } else if (cmd == 'exit-crop') {
@@ -3407,47 +3685,16 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             }, "Cancel");
 
         } else if (cmd == "tag-cu") {
-            var templ = {
-                $ref: "tag_entry.json",
-                format: "tabs"
-            }
-            var def = {};
-            def['tag_elements'] = node_multi_selected;
-            def['tag_type'] = "CYCLE";
-            def['tag_name'] = "NONAME_" + (new Date()).getTime();
-            def['tag_duration'] = 1;
-            def['tag_desc'] = JSON.stringify(tmpObj.node_multi_selected) + " at:" + (new Date());
-            jsonEditWindow("TAG Editor", templ, def, function (data, obj) {
-                var ttype = 2;
-                if (data.tag_type == "CYCLE") {
-                    ttype = 1;
-                }
-                jchaos.tag(data.tag_name, obj.node_multi_selected, ttype, data.tag_duration,
-                    function () {
-                        var tag_obj = jchaos.variable("tags", "get", null, null);
-                        data.tag_ts = (new Date()).getTime();
-                        data.tag_elements = obj.node_multi_selected;
-                        tag_obj[data.tag_name] = data;
-                        jchaos.variable("tags", "set", tag_obj, null);
-                        instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
-
-                    },
-                    function () {
-
-                        instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
-
-                    });
-                return 0;
-            }, tmpObj);
-
-        } else if (cmd == "calibrate") {
+            jqccs.tagConfigStart(node_multi_selected);
             
-            jchaos.command(tmpObj.node_multi_selected,{"act_name":"calibrateNodeUnit"}, function (data) {
-                instantMessage("Calibration of:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 1000, true);
+        } else if (cmd == "calibrate") {
+
+            jchaos.command(tmpObj.node_multi_selected, { "act_name": "calibrateNodeUnit" }, function (data) {
+                instantMessage("Calibration of:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 1000, true);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             }, function (data) {
-                instantMessage("ERROR Calibrating:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                instantMessage("ERROR Calibrating:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
@@ -3542,82 +3789,98 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         } else if (cmd == "show-dataset") {
             showDataset(currsel, currsel, 1000, tmpObj);
+        } else if(cmd== "save-default"){
+            jchaos.saveSetPointAsDefault(currsel,1,(ok)=>{
+                instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+            },(bad)=>{
+                instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false); 
+
+            });
+
+        } else if(cmd== "save-readout-default"){
+            jchaos.saveSetPointAsDefault(currsel,0,(ok)=>{
+                instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+            },(bad)=>{
+                instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false); 
+
+            });
+
         } else if (cmd == "driver-prop") {
             //jchaos.sendCUCmd(tmpObj.node_multi_selected,"cu_prop_drv_get",null, function (data) {
-            jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (data) {
+            jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function (data) {
 
-                var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
-                jqccs.editJSON("Driver Prop " + currsel, data[0],(json,fupdate)=>{
-                    
-                    var changed={};
-                    for(var key in json){
-                       
-                        if(JSON.stringify(json[key])!==JSON.stringify(origin_json[key])){
-                            changed[key]=json[key];
-                            
+                var origin_json = JSON.parse(JSON.stringify(data[0])); // not reference
+                jqccs.editJSON("Driver Prop " + currsel, data[0], (json, fupdate) => {
+
+                    var changed = {};
+                    for (var key in json) {
+
+                        if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
+                            changed[key] = json[key];
+
                         }
                     }
-                    var msg={
-                        "act_msg":changed,
-                        "act_name":"cu_prop_drv_set"
+                    var msg = {
+                        "act_msg": changed,
+                        "act_name": "cu_prop_drv_set"
                     };
-                    console.log("sending changed:"+JSON.stringify(changed));
-                    jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
-                        instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
-                        jchaos.command(tmpObj.node_multi_selected,{"act_name":"cu_prop_drv_get"}, function (dd) {
+                    console.log("sending changed:" + JSON.stringify(changed));
+                    jchaos.command(tmpObj.node_multi_selected, msg, function (data) {
+                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+                        jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function (dd) {
                             //read back
                             fupdate(dd[0]);
                         });
 
-                    },(bad)=>{
-                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
+                    }, (bad) => {
+                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: " + JSON.stringify(bad), 5000, false);
 
                     });
 
                 });
 
             }, function (data) {
-                instantMessage("Getting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
         } else if (cmd == "cu-prop") {
-            jchaos.command(tmpObj.node_multi_selected,{"act_name":"ndk_get_prop"}, function (data) {
-                var origin_json=JSON.parse(JSON.stringify(data[0])); // not reference
-                jqccs.editJSON("CU/EU Prop " + currsel, data[0],(json)=>{
-                    
-                    var changed={};
-                    for(var key in json){
-                       
-                        if(JSON.stringify(json[key])!==JSON.stringify(origin_json[key])){
-                            changed[key]=json[key];
-                            
+            jchaos.command(tmpObj.node_multi_selected, { "act_name": "ndk_get_prop" }, function (data) {
+                var origin_json = JSON.parse(JSON.stringify(data[0])); // not reference
+                jqccs.editJSON("CU/EU Prop " + currsel, data[0], (json) => {
+
+                    var changed = {};
+                    for (var key in json) {
+
+                        if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
+                            changed[key] = json[key];
+
                         }
                     }
-                    var msg={
-                        "act_msg":changed,
-                        "act_name":"ndk_set_prop"
+                    var msg = {
+                        "act_msg": changed,
+                        "act_name": "ndk_set_prop"
                     };
-                    console.log("sending changed:"+JSON.stringify(changed));
-                    jchaos.command(tmpObj.node_multi_selected,msg, function (data) {
-                        instantMessage("Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+                    console.log("sending changed:" + JSON.stringify(changed));
+                    jchaos.command(tmpObj.node_multi_selected, msg, function (data) {
+                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
 
-                    },(bad)=>{
-                        instantMessage("Error Setting driver prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: "+JSON.stringify(bad), 5000, false);
+                    }, (bad) => {
+                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: " + JSON.stringify(bad), 5000, false);
 
                     });
 
                 });
             }, function (data) {
-                instantMessage("Getting Node prop:"+tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                instantMessage("Getting Node prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
                 //   $('.context-menu-list').trigger('contextmenu:hide')
 
             });
         } else if (cmd == "show-desc") {
-            jchaos.getDesc(currsel, function (data) {
-                tmpObj.node_name_to_desc[currsel] = data[0];
+            jchaos.node(currsel, "desc","all",function (data) {
+                tmpObj.node_name_to_desc[currsel] = data;
 
-                showJson(tmpObj, "Description " + currsel, currsel, data[0]);
+                showJson("Description " + currsel, data);
             });
 
         } else if (cmd == "show-tags") {
@@ -3632,7 +3895,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     });
                 }
                 if (names.length) {
-                    showJson(null, "Tags of " + currsel, currsel, names);
+                    showJson("Tags of " + currsel, names);
                 } else {
                     alert("No tag associated to " + currsel);
                 }
@@ -3653,28 +3916,38 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
                     // $("#mdl-dataset").modal("hide");
 
-                    showPicture(currsel, "png", currsel, refresh);
+                    showPicture(currsel + " output", currsel, refresh);
+
                 } else {
                     alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
+                }
+                if (cu && cu.hasOwnProperty("custom") &&
+                    cu.custom.hasOwnProperty("FRAMEBUFFER") &&
+                    cu.custom.FRAMEBUFFER.hasOwnProperty("$binary") &&
+                    cu.custom.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
+                    // $("#mdl-dataset").modal("hide");
+
+                    showPicture(currsel + " custom", currsel, 0, 2);
+
                 }
             }, function (err) {
                 console.log(err);
             });
 
         } else if (cmd == "execute-jscript") {
-            showScript("Scripts", "","", (dom,scripts)=>{
+            showScript("Scripts", "", "", (dom, scripts) => {
                 jqccs.jsonSetup(dom, function (e) {
-            
+
                 }, function (e) {
                     if (e.keyCode == 13) {
-        
+
                         return true;
                     } else {
                         return false;
                     }
                 });
                 $(".json-toggle").trigger("click");
-                jsonEnableScriptContext(dom,scripts);
+                jsonEnableScriptContext(dom, scripts);
 
             });
 
@@ -3682,7 +3955,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             getFile("Control Script Loading", "select the Script to load", function (script) {
                 var regex = /.*[/\\](.*)$/;
                 var scriptTmp = {};
-                var name=script['name'];
+                var name = script['name'];
                 var match = regex.exec(name);
                 if (match != null) {
                     name = match[1];
@@ -3690,11 +3963,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 if (name.includes(".js")) {
                     language = "JS";
                 } else {
-                    instantMessage("cannot load"+name," You must load a .js extension:");
+                    instantMessage("cannot load" + name, " You must load a .js extension:");
                     return;
                 }
                 var zone_selected = $("#zones option:selected").val();
-                if(typeof zone_selected ==="string"){
+                if (typeof zone_selected === "string") {
                     scriptTmp['group'] = zone_selected;
                 } else {
                     scriptTmp['group'] = "SYSTEM";
@@ -3709,10 +3982,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     $ref: "algo.json",
                     format: "tabs"
                 }
-    
+
                 jsonEditWindow("Loaded", templ, scriptTmp, algoSave, obj);
             });
-            
+
 
         } else if (cmd == "history-cu-root") {
             createQueryDialog(function (query) {
@@ -3783,35 +4056,35 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
      */
     function buildCUInterface(tempObj) {
 
-        var html = '<div class="row-fluid">';
+        var html = '<div class="row">';
 
-        html += '<div class="statbox purple span2" >';
-        html += '<h3>Zones</h3>';
-        html += '<select id="zones" size="auto"></select>';
+        html += '<div class="statbox purple col-sm-2" >';
+        html += '<h3>Zone</h3>';
+        html += '<select id="zones"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple span2">';
-        html += '<h3>Group</h3>';
-        html += '<select id="elements" size="auto"></select>';
+        html += '<div class="statbox purple col-sm-2">';
+        html += '<h3>Family</h3>';
+        html += '<select id="elements"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple span2">'
-        html += '<h3>Class</h3>';
-        html += '<select id="classe" size="auto"></select>';
+        html += '<div class="statbox purple col-sm-2">'
+        html += '<h3>Interface</h3>';
+        html += '<select id="classe"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row-fluid span3">'
-        html += '<div class="span3">'
-        html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
+        html += '<div class="statbox purple row col-sm-3 align-items-center">'
+        html += '<div class="col-sm-3">'
+        html += '<label for="search-alive">Search: All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
-        html += '<div class="span3">'
-        html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
+        html += '<div class="col-sm-3">'
+        html += '<label for="search-alive">Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
         html += '</div>'
-        // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="col-md-3">Search</h3>';
 
-        html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<input class="input-xlarge focused col-sm-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
-        html += generateActionBox();
+        // html += generateActionBox();
         html += '</div>';
         html += generateModalActions();
 
@@ -3821,29 +4094,29 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<a href="#" class="chaositem next_page round">&#8250;</a>';
         html += '</div>';
 
-        html += '<div id="specific-table-' + tempObj.template + '"></div>';
-        html += '<div id="specific-control-' + tempObj.template + '"></div>';
+        html += '<div class="container-fluid" id="specific-table-' + tempObj.template + '"></div>';
+        html += '<div class="container-fluid" id="specific-control-' + tempObj.template + '"></div>';
         return html;
     }
 
     function buildNodeInterface(tempObj) {
-        var html = '<div class="row-fluid">';
-        html += '<div class="statbox purple span3">'
+        var html = '<div class="row">';
+        html += '<div class="statbox purple col-md-3">'
         html += '<h3>Node Type</h3>';
         html += '<select id="classe" size="auto"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row-fluid span3">'
-        html += '<div class="span6">'
+        html += '<div class="statbox purple row col-md-3">'
+        html += '<div class="col-md-6">'
         html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '</div>'
-        html += '<div class="span6">'
-        html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
+        html += '<div class="col-md-6">'
+        html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true checked>';
         html += '</div>'
 
-        // html += '<h3 class="span3">Search</h3>';
+        // html += '<h3 class="col-md-3">Search</h3>';
 
-        html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
         html += '</div>';
         html += '<div class="chaosrow pageindex">';
@@ -3858,11 +4131,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     }
 
     function setupCU(tempObj) {
-        graphSetup(tempObj);
-        snapSetup(tempObj);
+        //    graphSetup(tempObj);
+        //    snapSetup(tempObj);
         datasetSetup(tempObj);
         descriptionSetup(tempObj);
-        logSetup(tempObj);
+        //     logSetup(tempObj);
         mainCU(tempObj);
     }
 
@@ -3883,7 +4156,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             interface2NodeList(tempObj, function (list_cu) {
                 tempObj['elems'] = list_cu;
-                
+
                 updateInterface(tempObj);
 
             });
@@ -3911,39 +4184,39 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             });
 
         });
-   
+
 
     }
 
     function buildProcessInterface(tempObj) {
         var html = "";
-        /*var html = '<div class="row-fluid">';
+        /*var html = '<div class="row">';
  
-     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+     html += '<div class="statbox purple" onTablet="col-md-6" onDesktop="col-md-2">';
      html += '<h3>Zones</h3>';
      html += '<select id="zones" size="auto"></select>';
      html += '</div>';
  
-     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+     html += '<div class="statbox purple" onTablet="col-md-6" onDesktop="col-md-2">';
      html += '<h3>Instances</h3>';
      html += '<select id="elements" size="auto"></select>';
      html += '</div>';
  
-     html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
+     html += '<div class="statbox purple" onTablet="col-md-4" onDesktop="col-md-2">'
      html += '<h3>Class Algorithm</h3>';
      html += '<select id="classe" size="auto"></select>';
      html += '</div>';
  
-     html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
-     html += '<div class="span3">'
+     html += '<div class="statbox purple row" onTablet="col-md-4" onDesktop="col-md-3">'
+     html += '<div class="col-md-3">'
      html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
      html += '</div>'
-     html += '<div class="span3">'
+     html += '<div class="col-md-3">'
      html += '<label for="search-alive">Search Running</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
      html += '</div>'
-     // html += '<h3 class="span3">Search</h3>';
+     // html += '<h3 class="col-md-3">Search</h3>';
  
-     html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+     html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
      html += '</div>';
      //    html += generateActionBox();
      html += '</div>';
@@ -4090,7 +4363,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         $("#process_search").off('keypress');
         $("#process_search").on('keypress', function (event) {
             var t = $(event.target);
-            var value = $(t).attr("value");
+            var value = $(t).val();
             tempObj['filter'] = value;
             updateProcessInterface(tempObj);
         });
@@ -4254,6 +4527,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
     }
+
+
     /**********
      * 
      */
@@ -4291,7 +4566,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
 
         }
-        $.getScript("/js/chaos-widget/" + tmpObj.type + ".js", function (data, textStatus, jqxhr) {
+        $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function (data, textStatus, jqxhr) {
             var w = getWidget();
             tmpObj.htmlFn = w.dsFn;
             tmpObj.generateTableFn = w.tableFn;
@@ -4309,8 +4584,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             }
             handler(tmpObj);
 
+        }).fail(()=>{
+            handler(tmpObj);
         });
-        handler(tmpObj);
+        
     }
 
     function buildCUPage(tmpObj, cuids, cutype) {
@@ -4366,7 +4643,15 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     if (data != null) {
                         // editorFn = agentSave;
                         //jsonEdit(templ, data);
-                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj);
+                        jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, tmpObj,
+                            () => {
+                                instantMessage("Agent saved " + node_selected, " OK", 2000, true);
+
+                            }, (bad) => {
+                                instantMessage("Agent  " + node_selected, "Save Error:" + JSON.stringify(bad), 4000, false);
+
+                            }
+                        );
                         /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
                            //rimuovi tutte le associazioni precedenti.
                            data.andk_node_associated.forEach(function (item) {
@@ -4398,7 +4683,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     }
                 });
                 return;
-            } else if(cmd == "edit-nt_root") {
+            } else if (cmd == "edit-nt_root") {
                 var templ = {
                     $ref: "cu.json",
                     format: "tabs"
@@ -4406,17 +4691,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 var stype = cmd.split("-");
 
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
-                jchaos.node(node_selected,"desc",typ,function(desc){
-                jsonEditWindow("Edit EU ", templ, desc, (json, obj, ok, bad)=>{
-                    jchaos.node(node_selected,"nodeupdate",typ,json.ndk_parent,json,ok,bad);
-                
-                }, tmpObj, function (ok) {
-                    instantMessage("EU save ", " OK", 2000, true);
+                jchaos.node(node_selected, "desc", typ, function (desc) {
+                    jsonEditWindow("Edit EU ", templ, desc, (json, obj, ok, bad) => {
+                        jchaos.node(node_selected, "nodeupdate", typ, json.ndk_parent, json, ok, bad);
 
-                }, function (bad) {
-                    instantMessage("EU save failed", JSON.stringify(bad), 2000, false);
+                    }, tmpObj, function (ok) {
+                        instantMessage("EU save ", " OK", 2000, true);
 
-                });});
+                    }, function (bad) {
+                        instantMessage("EU save failed", JSON.stringify(bad), 2000, false);
+
+                    });
+                });
             } else if ((cmd == "edit-nt_unit_server")) {
                 var templ = {
                     $ref: "us.json",
@@ -4486,42 +4772,83 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 var stype = cmd.split("-");
 
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
-                jchaos.node(node_selected,"desc",typ,function(data){
+                jchaos.node(node_selected, "desc", typ, function (data) {
 
-                    showJson(null, "Description " + node_selected, node_selected, data);
-            });
+                    showJson("Description " + node_selected, data);
+                });
 
-            } else if (cmd=="delete-histo-data") {
+            } else if (cmd == "delete-histo-data") {
 
                 createQueryDialog(function (query) {
                     // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
                     //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
                     //console.log("start:"+start_s + " end:"+end_s);
                     // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
-                   // var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
-    
-                    var val={
-                        'start':query.start.toString(),
-                        'end':query.stop.toString()
+                    // var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
+
+                    var val = {
+                        'start': query.start.toString(),
+                        'end': query.stop.toString()
                     };
-                    var st=(new Date(query.start)).toDateString();
-                    var en=(new Date(query.start)).toDateString();
+                    var st = (new Date(query.start)).toDateString();
+                    var en = (new Date(query.start)).toDateString();
 
-                    jchaos.node(node_selected,"deletedata","all",null,val,function(data){
-                        instantMessage("Node Data deleted ", "from:"+st +"["+query.start+"] end:"+en+ "["+query.stop+"]", 4000, true);
+                    jchaos.node(node_selected, "deletedata", "all", null, val, function (data) {
+                        instantMessage("Node Data deleted ", "from:" + st + "[" + query.start + "] end:" + en + "[" + query.stop + "]", 4000, true);
 
-                    },function(data){
-                        instantMessage("Node Data deleting ", "from:"+st +"["+query.start+"] end:"+en+ "["+query.stop+"]", 4000, false);
+                    }, function (data) {
+                        instantMessage("Node Data deleting ", "from:" + st + "[" + query.start + "] end:" + en + "[" + query.stop + "]", 4000, false);
 
                     });
-                    })
-               
+                })
+
             } else if (cmd == "del-nt_unit_server" || (cmd == "del-nt_root")) {
                 var stype = cmd.split("-");
 
                 var typ = jchaos.nodeTypeToHuman(stype[1]);
 
                 confirm("Delete " + typ, "Your are deleting : " + node_selected, "Ok", function () {
+                    if (cmd == "del-nt_unit_server") {
+
+                        jchaos.node(node_selected, "desc", "all", (info) => {
+                            if (info.hasOwnProperty("ndk_parent") && info.ndk_parent != "") {
+                                jchaos.node(info.ndk_parent, "del", "agent", node_selected, function (daa) {
+                                    instantMessage("Removed association " + info.ndk_parent, " OK", 1000, true);
+
+                                });
+
+                            }
+                        });
+                        jchaos.node(node_selected, "get", typ, function (data) {
+
+                            if (data.hasOwnProperty('us_desc') && data.us_desc.hasOwnProperty('cu_desc')) {
+                                var culist = data.us_desc.cu_desc;
+                                if (culist instanceof Array) {
+                                    confirm("US  " + node_selected, "Contains : " + culist.length + " CUs do you want to proceed?", "Proceed", function () {
+                                        culist.forEach((elem) => {
+                                            jchaos.node(elem.ndk_uid, "deletenode", "cu", function () {
+                                                instantMessage("Node deleted " + elem.ndk_uid, " OK", 1000, true);
+                                            }, function (err) {
+                                                instantMessage("cannot delete cu:", JSON.stringify(err), 2000, false);
+
+                                            });
+                                        });
+
+                                        updateNodeEvent();
+
+                                    }, "Cancel");
+
+                                }
+                            }
+                            jchaos.node(node_selected, "deletenode", typ, function () {
+                                instantMessage("Node deleted " + node_selected, " OK", 1000, true);
+                            }, function (err) {
+                                instantMessage("cannot delete:", JSON.stringify(err), 2000, false);
+
+                            });
+                        })
+
+                    }
                     jchaos.node(node_selected, "deletenode", typ, function () {
                         instantMessage("Node deleted ", " OK", 2000, true);
                         updateNodeEvent();
@@ -4531,7 +4858,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     });
                 }, "Cancel");
                 return;
-            } else if (cmd == "delete-node" ) {
+            } else if (cmd == "delete-node") {
 
 
                 confirm("Delete Node", "Your are deleting : " + node_selected, "Ok", function () {
@@ -4611,9 +4938,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             } else if (cmd == "del-nt_control_unit") {
                 node_multi_selected.forEach(function (nod, index) {
-                    jchaos.getDesc(nod, function (desc) {
-                        if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
-                            var parent = desc[0].instance_description.ndk_parent;
+                    jchaos.node(nod,"desc","all", function (desc) {
+                        if (desc != null && desc.hasOwnProperty("instance_description")) {
+                            var parent = desc.instance_description.ndk_parent;
                             confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
                                 jchaos.node(nod, "del", "cu", parent, null, function (ok) {
                                     instantMessage("Deleted", "CU " + nod, 1000, true);
@@ -4764,7 +5091,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 }
                 // editorFn = jchaos.newCuSave;
                 def_obj.ndk_parent = node_selected;
-                
+
 
 
                 return;
@@ -4777,17 +5104,17 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 }
                 var def = {};
 
-                def['ndk_parent']=node_selected;
-                def['ndk_type']="nt_control_unit";
-                def['auto_load']=true;
-                def['auto_init']=true;
-                def['auto_start']=true;
-                def['cudk_thr_sch_delay']=1000000;
-                def["cudk_desc"]="<CU description>";
-                def["cudk_load_param"]="{}";
-                def["cudk_props"]="{}";
+                def['ndk_parent'] = node_selected;
+                def['ndk_type'] = "nt_control_unit";
+                def['auto_load'] = true;
+                def['auto_init'] = true;
+                def['auto_start'] = true;
+                def['cudk_thr_sch_delay'] = 1000000;
+                def["cudk_desc"] = "<CU description>";
+                def["cudk_load_param"] = "{}";
+                def["cudk_props"] = "{}";
 
-                def['dsndk_storage_type']=2;
+                def['dsndk_storage_type'] = 2;
 
 
 
@@ -4921,27 +5248,27 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             } else if (cmd == "start-node") {
                 jchaos.node(node_multi_selected, "start", "us", function () {
                     instantMessage("US START", "Starting " + node_selected + " via agent", 1000, true);
-                }, function () {
-                    instantMessage("ERROR US START", "Starting " + node_selected + " via agent", 1000, false);
+                }, function (bad) {
+                    instantMessage("ERROR US START", "Starting " + node_selected + " via agent:" + JSON.stringify(bad), 1000, false);
                 });
                 return;
             } else if (cmd == "stop-node") {
                 jchaos.node(node_multi_selected, "stop", "us", function () {
                     instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000, true);
 
-                }, function () {
-                    instantMessage("ERROR US STOP", "Stopping " + node_selected + " via agent", 1000, false);
+                }, function (bad) {
+                    instantMessage("ERROR US STOP", "Stopping " + node_selected + " via agent:" + JSON.stringify(bad), 1000, false);
 
                 });
                 return;
             } else if (cmd == "console-node") {
                 var agentn = node_name_to_desc[node_selected].desc.ndk_parent;
                 var server = node_name_to_desc[node_selected].desc.ndk_host_name;
-              //  getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
+                //  getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
 
                 jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
                     console.log("->" + JSON.stringify(data));
-                    getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
+                    getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
                 });
 
 
@@ -4961,8 +5288,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     function () {
                         jchaos.node(node_selected, "restart", "us", function () {
                             instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000, true);
-                        }, function () {
-                            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000, false);
+                        }, function (bad) {
+                            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent:" + JSON.stringify(bad), 1000, false);
                         })
                     }, "Joke",
                     function () { });
@@ -5172,23 +5499,23 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             node_list.forEach(function (elem, index) {
                 var ds = data[index];
 
-                if(!ds.hasOwnProperty("ndk_parent") && (ds.hasOwnProperty("instance_description")&&ds.instance_description.hasOwnProperty("ndk_parent"))){
-                    ds["ndk_parent"]=ds.instance_description.ndk_parent;
+                if (!ds.hasOwnProperty("ndk_parent") && (ds.hasOwnProperty("instance_description") && ds.instance_description.hasOwnProperty("ndk_parent"))) {
+                    ds["ndk_parent"] = ds.instance_description.ndk_parent;
                 }
-                tmpObj.node_name_to_desc[elem] = { desc: ds};
-           
+                tmpObj.node_name_to_desc[elem] = { desc: ds };
+
             });
         });
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-        n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
-            $("#table-scroll").css('height', '280px');
-        } else {
-            $("#table-scroll").css('height', '');
-        }
-
+        /*    n = $('#main_table-' + template + ' tr').size();
+            if (n > 22) { 
+                $("#table-scroll").css('height', '280px');
+            } else {
+                $("#table-scroll").css('height', '');
+            }
+    */
 
         $("#cuname").draggable({
 
@@ -5387,13 +5714,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         $("#main_table-" + template + " tbody tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-        n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
-            $("#table-scroll").css('height', '280px');
-        } else {
-            $("#table-scroll").css('height', '');
-        }
-
+        /*     n = $('#main_table-' + template + ' tr').size();
+             if (n > 22) { 
+                 $("#table-scroll").css('height', '280px');
+             } else {
+                 $("#table-scroll").css('height', '');
+             }
+     */
 
         $.contextMenu('destroy', '.algoMenu');
 
@@ -5474,12 +5801,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 console = 2;
             }
             //   var agentn = tmpObj[node_selected].parent;
-            var server = tmpObj.data[node_selected].hostname + ":8071";
+            var server = tmpObj.data[node_selected].hostname;
             var friendname = tmpObj.data[node_selected].pname;
             getConsole(tmpObj.data[node_selected].hostname + ":" + friendname + "(" + node_selected + ")", node_selected, server, 2, console, 1000, tmpObj.data[node_selected].ptype);
 
         } else if (cmd == "download-output") {
-            var server = tmpObj.data[node_selected].hostname + ":8071";
+            var server = tmpObj.data[node_selected].hostname;
             jchaos.setOptions({ "timeout": 60000 });
 
             jchaos.rmtDownload(server, node_selected, "", function (r) {
@@ -5498,7 +5825,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         } else if (cmd == "kill-process") {
             confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
                 function () {
-                    var server = tmpObj.data[node_selected].hostname + ":8071";
+                    var server = tmpObj.data[node_selected].hostname;
                     jchaos.rmtKill(server, node_selected, function (r) {
                         instantMessage("US KILL", "Killing " + node_selected + " ", 1000, true);
 
@@ -5515,7 +5842,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             }, function () {
                 instantMessage("ERROR START", "Starting " + tmpObj.data[node_selected].pname + " via agent", 3000, false);
             });
-        return;
+            return;
         } else if (cmd == "new-script") {
             var templ = {
                 $ref: "algo.json",
@@ -5533,7 +5860,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         } else if (cmd == "manage-script") {
             updateScriptModal(tmpObj);
         } else if (cmd == "load-script") {
-            algoLoadFromFile(tmpOb,"remote");
+            algoLoadFromFile(tmpOb, "remote");
         } else if (cmd == "root-script") {
             runRemoteScript(tmpObj, "Chaos Root", "CPP");
         } else if (cmd == "new-process-template") {
@@ -5579,7 +5906,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                             server = findBestServer(obj);
                         }
 
-                        jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+                        jchaos.rmtGetEnvironment(server, "CHAOS_PREFIX", function (r) {
                             if (r.err != 0) {
                                 instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
                                 return;
@@ -5590,10 +5917,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                                 if (data['app_broadcast']) {
                                     var serverlist = obj['agents'];
                                     for (var server in serverlist) {
-                                        jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
+                                        jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function (r) {
                                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
 
                                         }, function (bad) {
                                             console.log("Some error getting loading script:" + bad);
@@ -5608,10 +5935,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                                         server = findBestServer(obj);
                                     }
 
-                                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
+                                    jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function (r) {
                                         console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                         instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                        getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                                        getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
 
                                     }, function (bad) {
                                         console.log("Some error getting loading script:" + bad);
@@ -5633,7 +5960,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         var serverlist = tmpObj['agents'];
         for (var key in serverlist) {
             var server = key;
-            jchaos.rmtPurge(server + ":8071", level, function (r) { }, function (bad) {
+            jchaos.rmtPurge(server, level, function (r) { }, function (bad) {
                 instantMessage("Purge Error", "Failed to purge ", 2000, false);
 
             })
@@ -5688,7 +6015,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 alert("NO Server Available");
                 return;
             }
-            jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+            jchaos.rmtGetEnvironment(server, "CHAOS_PREFIX", function (r) {
                 if (r.err != 0) {
                     instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
                     return;
@@ -5712,11 +6039,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
                         getEntryWindow(name, "Additional args", '', "Run", function (parm) {
 
-                            jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "", function (r) {
+                            jchaos.rmtCreateProcess(server, name, launch_arg + " " + parm, language, "", function (r) {
                                 console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                 var node_selected = tmpObj.node_selected;
                                 instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000, language);
+                                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000, language);
                             }, function (bad) {
                                 console.log("Some error getting loading script:" + bad);
                                 instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -5724,11 +6051,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                             });
                         }, "Cancel");
                     } else {
-                        jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + additional_args, language, "", function (r) {
+                        jchaos.rmtCreateProcess(server, name, launch_arg + " " + additional_args, language, "", function (r) {
                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                             var node_selected = tmpObj.node_selected;
                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000), language;
+                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000), language;
                         }, function (bad) {
                             console.log("Some error getting loading script:" + bad);
                             instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -5773,8 +6100,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 // items['open-process-errconsole'] = { name: "Open Error console" };
                 items['download-output'] = { name: "Download Files" };
                 items['kill-process'] = { name: "Kill " };
-                if(tmpObj.data.hasOwnProperty(node_selected)&&tmpObj.data[node_selected].hasOwnProperty("msg")&&(tmpObj.data[node_selected].msg !== "RUNNING")){
-                  items['start-process'] = { name: "Start " };
+                if (tmpObj.data.hasOwnProperty(node_selected) && tmpObj.data[node_selected].hasOwnProperty("msg") && (tmpObj.data[node_selected].msg !== "RUNNING")) {
+                    items['start-process'] = { name: "Start " };
                 }
 
             }
@@ -5792,6 +6119,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     function updateProcessTable(tmpObj) {
         var tablename = "main_table-" + tmpObj.template;
         var template = tmpObj.type;
+        var now = (new Date()).getTime();
+
         for (var p in tmpObj.data) {
             var pname = tmpObj.data[p].pname;
 
@@ -5802,7 +6131,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toLocaleString();
             var end_timestamp = (tmpObj.data[p].end_time > 0) ? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString() : "--";
-            var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time) / 1000;
+            var last_log = (now - tmpObj.data[p].last_log_time) / 1000;
             var pid = tmpObj.data[p].pid;
             var timestamp = (new Date(Number(tmpObj.data[p].ts))).toLocaleString();
             var uptime = tmpObj.data[p].uptime;
@@ -5820,7 +6149,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             var encoden = jchaos.encodeName(p);
             $("#" + encoden + "_start_ts").html(started_timestamp);
             $("#" + encoden + "_end_ts").html(end_timestamp);
-            $("#" + encoden + "_last_log_ts").html(last_log);
+            $("#" + encoden + "_last_log_ts").html(jchaos.toHHMMSS(last_log.toFixed(0)));
             if (status == "RUNNING") {
                 $("#" + encoden + "_status").html('<font color="green">' + status + "</font>");
 
@@ -5838,25 +6167,26 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             $("#" + encoden + "_parent").html(parent_str);
         }
-        if (tmpObj.hasOwnProperty("server_charts")) {
-            var now = (new Date()).getTime();
-            for (var server in tmpObj['agents']) {
-                var infoServer = tmpObj.agents[server];
-                var enc = jchaos.encodeName(server);
-                var chart = tmpObj['server_charts'][enc];
-                if ((chart != null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
-                    chart.series[0].addPoint([now, infoServer.idle], false, false);
-                    chart.series[1].addPoint([now, infoServer.user], false, false);
-                    chart.series[2].addPoint([now, infoServer.sys], false, false);
-                    chart.series[3].addPoint([now, infoServer.io], false, false);
-                    chart.series[4].addPoint([now, infoServer.pmem], false, false);
-
-                    chart.redraw();
-                }
-            }
-
-
-        }
+        /*   if (tmpObj.hasOwnProperty("server_charts")) {
+               var now = (new Date()).getTime();
+               for (var server in tmpObj['agents']) {
+                   var infoServer = tmpObj.agents[server];
+                   var enc = jchaos.encodeName(server);
+                   var chart = tmpObj['server_charts'][enc];
+                   if ((chart != null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
+                       chart.series[0].addPoint([now, infoServer.idle], false, false);
+                       chart.series[1].addPoint([now, infoServer.user], false, false);
+                       chart.series[2].addPoint([now, infoServer.sys], false, false);
+                       chart.series[3].addPoint([now, infoServer.io], false, false);
+                       chart.series[4].addPoint([now, infoServer.pmem], false, false);
+   
+                       chart.redraw();
+                   }
+               }
+   
+   
+           }
+           */
 
     }
 
@@ -5902,7 +6232,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             var cnt = ag.length;
             ag.forEach(function (ser) {
                 var server = ser.ndk_host_name;
-                jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
+                jchaos.rmtUploadScript(server, jsonscript, function (r) {
                     if (r.err != 0) {
                         instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);
                     } else {
@@ -5921,7 +6251,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             });
         } else {
             serveList.forEach(function (elem) {
-                jchaos.rmtUploadScript(elem + ":8071", jsonscript, function (r) {
+                jchaos.rmtUploadScript(elem, jsonscript, function (r) {
 
                     console.log("Script loaded onto:" + elem + " :" + JSON.stringify(r));
 
@@ -5985,7 +6315,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     function updateProcessInterface(tmpObj) {
         //  updateProcessList(tmpObj);
         var tablename = "main_table-" + tmpObj.template;
-        var graph_table = "graph_table-" + tmpObj.template;
+        //   var graph_table = "graph_table-" + tmpObj.template;
         var template = tmpObj.type;
         var cnt = 0;
         var num_chart = 3;
@@ -5993,175 +6323,176 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         var hostHeight = $(window).height();
         $("#" + tablename).find("tr:gt(0)").remove();
 
-      /*  if (typeof tmpObj['agents'] === "undefined") {
-            var ag_list = {};
-            var obj = {
-                idle: 100,
-                io: 0,
-                pmem: 0,
-                sys: 0,
-                ts: 0,
-                user: 0
-            }
-            var list = jchaos.search("", "agent", true, false);
-            list.forEach(function (ele) {
-                ag_list[ele] = obj;
-            })
-            tmpObj['agents'] = ag_list;
-
-        }*/
-        if((typeof tmpObj['agents'] === "undefined"))
+        /*  if (typeof tmpObj['agents'] === "undefined") {
+              var ag_list = {};
+              var obj = {
+                  idle: 100,
+                  io: 0,
+                  pmem: 0,
+                  sys: 0,
+                  ts: 0,
+                  user: 0
+              }
+              var list = jchaos.search("", "agent", true, false);
+              list.forEach(function (ele) {
+                  ag_list[ele] = obj;
+              })
+              tmpObj['agents'] = ag_list;
+  
+          }*/
+        if ((typeof tmpObj['agents'] === "undefined"))
             return;
         if ((typeof tmpObj['agent_list'] === "undefined") || (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list']) || (typeof tmpObj['old_agent_list'] === "undefined"))) {
             tmpObj['old_agent_list'] = tmpObj['agent_list'];
 
-            var chart_options = {
-                chart: {
-                    height: (1 / (num_chart) * 100) + '%',
-                    width: (hostWidth / (num_chart + 1))
-
-                },
-                title: {
-                    text: ''
-                },
-
-                xAxis: {
-                    type: "datetime",
-                    title: {
-                        text: 'Time'
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: '%'
-                    },
-                    max: 100
-                },
-                legend: {
-                    layout: 'vertical',
-                    align: 'right',
-                    verticalAlign: 'middle'
-                },
-
-                plotOptions: {
-                    series: {
-                        label: {
-                            connectorAllowed: false
-                        },
-                    }
-                },
-                series: [{
-                    name: 'idle',
-                    data: []
-                }, {
-                    name: 'cpu',
-                    data: []
-                }, {
-                    name: 'sys',
-                    data: []
-                }, {
-                    name: 'iow',
-                    data: []
-                }, {
-                    name: 'mem',
-                    data: []
-                }]
-            };
-            $("#" + graph_table).find("tr:gt(0)").remove();
-
+            /*     var chart_options = {
+                     chart: {
+                         height: (1 / (num_chart) * 100) + '%',
+                         width: (hostWidth / (num_chart + 1))
+     
+                     },
+                     title: {
+                         text: ''
+                     },
+     
+                     xAxis: {
+                         type: "datetime",
+                         title: {
+                             text: 'Time'
+                         }
+                     },
+                     yAxis: {
+                         title: {
+                             text: '%'
+                         },
+                         max: 100
+                     },
+                     legend: {
+                         layout: 'vertical',
+                         align: 'right',
+                         verticalAlign: 'middle'
+                     },
+     
+                     plotOptions: {
+                         series: {
+                             label: {
+                                 connectorAllowed: false
+                             },
+                         }
+                     },
+                     series: [{
+                         name: 'idle',
+                         data: []
+                     }, {
+                         name: 'cpu',
+                         data: []
+                     }, {
+                         name: 'sys',
+                         data: []
+                     }, {
+                         name: 'iow',
+                         data: []
+                     }, {
+                         name: 'mem',
+                         data: []
+                     }]
+                 };
+                 $("#" + graph_table).find("tr:gt(0)").remove();
+     */
             var serverlist = tmpObj['agents'];
             var html = "";
             var server_charts = {};
 
-            for (var key in serverlist) {
-                var encoden = jchaos.encodeName(key);
-                if ((cnt % num_chart) == 0) {
-                    if (cnt > 0) {
-                        html += "</tr>"
-                    }
-                    html += '<tr class="row_element" id=graph-row"' + cnt + '">';
-                }
-                html += '<td class="td_element processMenu" id="graph-' + encoden + '" agent-name="' + key + '"></td>';
-
-                cnt++;
-            };
-            if (cnt > 0) {
-                html += "</tr>";
-                $("#" + graph_table).append(html);
-                for (var key in serverlist) {
+            /*    for (var key in serverlist) {
                     var encoden = jchaos.encodeName(key);
-                    chart_options.title.text = "Agent on " + key;
-
-                    server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
-
+                    if ((cnt % num_chart) == 0) {
+                        if (cnt > 0) {
+                            html += "</tr>"
+                        }
+                        html += '<tr class="row_element" id=graph-row"' + cnt + '">';
+                    }
+                    html += '<td class="td_element processMenu" id="graph-' + encoden + '" agent-name="' + key + '"></td>';
+    
+                    cnt++;
+                };
+                if (cnt > 0) {
+                    html += "</tr>";
+                    $("#" + graph_table).append(html);
+                    for (var key in serverlist) {
+                        var encoden = jchaos.encodeName(key);
+                        chart_options.title.text = "Agent on " + key;
+    
+                        server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
+    
+                    }
+                    tmpObj['server_charts'] = server_charts;
+    
                 }
-                tmpObj['server_charts'] = server_charts;
+            }*/
+            var ordered = [];
+            for (var p in tmpObj.data) {
+                if (tmpObj.data.hasOwnProperty(p)) {
+                    ordered.push(p);
+                }
+            }
+            ordered.sort();
+
+            for (var cnt = 0; cnt < ordered.length; cnt++) {
+                var obj = tmpObj.data[ordered[cnt]];
+                var ptype = obj.ptype;
+                var pname = obj.pname;
+
+                if (tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))) {
+                    continue;
+                }
+                var started_timestamp = obj.start_time;
+                var end_timestamp = obj.end_time;
+                var last_log = (obj.ts - obj.last_log_time);
+                var pid = obj.pid;
+                var timestamp = obj.ts;
+                var uptime = obj.uptime;
+                var systime = parseFloat(obj.systime).toFixed(3);
+                var cputime = parseFloat(obj.cputime).toFixed(3);
+                var vmem = obj.vmem;
+                var rmem = obj.rmem;
+                var pmem = obj.pmem;
+                var hostname = obj.hostname;
+                var status = obj.msg;
+                var parent = obj.ndk_parent;
+                var encoden = jchaos.encodeName(obj.uid);
+
+                $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
+                    '<td class="col-sm" id="' + encoden + '">' + obj.uid + '</td>' +
+                    '<td class="col-sm">' + pname + '</td>' +
+                    '<td class="col-sm">' + ptype + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_end_ts">' + end_timestamp + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_last_log_ts">' + last_log + '</td>' +
+                    '<td class="col-sm">' + hostname + '</td>' +
+                    '<td class="col-sm">' + pid + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_status">' + status + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_ts">' + timestamp + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_uptime">' + uptime + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_systime">' + systime + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_cputime">' + cputime + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_vmem">' + vmem + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_rmem">' + rmem + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_pmem">' + pmem + '</td>' +
+                    '<td class="col-sm" id="' + encoden + '_parent">' + parent + '</td></tr>'
+                );
 
             }
         }
-        var ordered = [];
-        for (var p in tmpObj.data) {
-            if (tmpObj.data.hasOwnProperty(p)) {
-                ordered.push(p);
-            }
-        }
-        ordered.sort();
 
-        for (var cnt = 0; cnt < ordered.length; cnt++) {
-            var obj = tmpObj.data[ordered[cnt]];
-            var ptype = obj.ptype;
-            var pname = obj.pname;
-
-            if (tmpObj.hasOwnProperty('filter') && !(pname.includes(tmpObj['filter']))) {
-                continue;
-            }
-            var started_timestamp = obj.start_time;
-            var end_timestamp = obj.end_time;
-            var last_log = (obj.ts - obj.last_log_time);
-            var pid = obj.pid;
-            var timestamp = obj.ts;
-            var uptime = obj.uptime;
-            var systime = parseFloat(obj.systime).toFixed(3);
-            var cputime = parseFloat(obj.cputime).toFixed(3);
-            var vmem = obj.vmem;
-            var rmem = obj.rmem;
-            var pmem = obj.pmem;
-            var hostname = obj.hostname;
-            var status = obj.msg;
-            var parent = obj.ndk_parent;
-            var encoden = jchaos.encodeName(obj.uid);
-
-            $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + obj.uid + '>' +
-                '<td class="td_element" id="' + encoden + '">' + obj.uid + '</td>' +
-                '<td class="td_element">' + pname + '</td>' +
-                '<td class="td_element">' + ptype + '</td>' +
-                '<td class="td_element" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
-                '<td class="td_element" id="' + encoden + '_end_ts">' + end_timestamp + '</td>' +
-                '<td class="td_element" id="' + encoden + '_last_log_ts">' + last_log + '</td>' +
-                '<td class="td_element">' + hostname + '</td>' +
-                '<td class="td_element">' + pid + '</td>' +
-                '<td class="td_element" id="' + encoden + '_status">' + status + '</td>' +
-                '<td class="td_element" id="' + encoden + '_ts">' + timestamp + '</td>' +
-                '<td class="td_element" id="' + encoden + '_uptime">' + uptime + '</td>' +
-                '<td class="td_element" id="' + encoden + '_systime">' + systime + '</td>' +
-                '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>' +
-                '<td class="td_element" id="' + encoden + '_vmem">' + vmem + '</td>' +
-                '<td class="td_element" id="' + encoden + '_rmem">' + rmem + '</td>' +
-                '<td class="td_element" id="' + encoden + '_pmem">' + pmem + '</td>' +
-                '<td class="td_element" id="' + encoden + '_parent">' + parent + '</td></tr>'
-            );
-
-        }
-
-        $("#main_table-" + template + " tbody tr").click(function (e) {
+        $("#" + tablename + " tr").click(function (e) {
             mainTableCommonHandling("main_table-" + template, tmpObj, e);
         });
-        n = $('#main_table-' + template + ' tr').size();
-        if (n > 22) { /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
-            $("#table-scroll").css('height', '280px');
-        } else {
-            $("#table-scroll").css('height', '');
-        }
+        /*   n = $('#main_table-' + template + ' tr').size();
+           if (n > 22) { 
+               $("#table-scroll").css('height', '280px');
+           } else {
+               $("#table-scroll").css('height', '');
+           }*/
         $.contextMenu('destroy', '.processMenu');
 
         $.contextMenu({
@@ -6203,7 +6534,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             });
         });
-        $("#script-edit").off('click');
+        // $("#script-edit").off('click');
         $("#script-edit").on('click', function () {
             console.log("show " + tmpObj.node_selected);
 
@@ -6244,115 +6575,117 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 $ref: "agent.json",
                 format: "tabs"
             }
-            var supported=false;
-            var script_type="";
+            var supported = false;
+            var script_type = "";
 
-       
-            jchaos.findBestServer(function (server,best_agent) {
+
+            jchaos.findBestServer(function (server, best_agent) {
                 jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (dscript) {
 
-                jchaos.node(best_agent, "info", "agent", function (data) {
-                    var supported=false;
-                    if (data != null) {
-                        if (!(data.hasOwnProperty("andk_node_associated") || !(data.andk_node_associated instanceof Array))) {
-                            data['andk_node_associated']=[]
-                        }
-                        var tmp = {
-                            ndk_uid: tmpObj.node_selected+"_RENAME",
-                            association_uid: 0,
-                            node_launch_cmd_line: "",
-                            node_script_id: tmpObj.node_selected,
-                            node_workdir: "",
-                            node_auto_start: true,
-                            node_keep_alive: false,
-                            node_log_on_console: true
-                        };
-                        var script_type="";
-                        getEntryWindow(tmpObj.node_selected +" arguments ", tmpObj.node_selected, "()","Continue", function (fargs) {
+                    jchaos.node(best_agent, "info", "agent", function (data) {
+                        var supported = false;
+                        if (data != null) {
+                            if (!(data.hasOwnProperty("andk_node_associated") || !(data.andk_node_associated instanceof Array))) {
+                                data['andk_node_associated'] = []
+                            }
+                            var tmp = {
+                                ndk_uid: tmpObj.node_selected + "_RENAME",
+                                association_uid: 0,
+                                node_launch_cmd_line: "",
+                                node_script_id: tmpObj.node_selected,
+                                node_workdir: "",
+                                node_auto_start: true,
+                                node_keep_alive: false,
+                                node_log_on_console: true
+                            };
+                            var script_type = "";
+                            getEntryWindow(tmpObj.node_selected + " arguments ", tmpObj.node_selected, "()", "Continue", function (fargs) {
 
-                        if(dscript['eudk_script_language']=="CPP"){
-                            tmp['node_launch_cmd_line']="chaosRoot --rootopt \"-q " + tmpObj.node_selected + fargs + "\"";
-                            supported=true;
-                            data['instance_name']=best_agent;
-                            script_type="nt_root";
-                        }
+                                if (dscript['eudk_script_language'] == "CPP") {
+                                    fargs.replace("\"", "\\\"");
 
-                        if(supported){
-                            getEntryWindow("Specify Unique Identifier for "+dscript['eudk_script_language']+ " SCript", tmpObj.node_selected, "NONAME_" + tmpObj.node_selected, "Create", function (inst_name) {
-                                tmp['ndk_uid']= inst_name;
-
-                                data.andk_node_associated.push(tmp);
-                                var template = {};
-                                var templ = {
-                                    $ref: "cu.json",
-                                    format: "tabs"
+                                    tmp['node_launch_cmd_line'] = "chaosRoot --rootopt \"-q " + tmpObj.node_selected + fargs + "\"";
+                                    supported = true;
+                                    data['instance_name'] = best_agent;
+                                    script_type = "nt_root";
                                 }
-                                template['ndk_uid'] = inst_name;
-                                template["ndk_parent"] = best_agent;
-                                template['ndk_type']= script_type;
-                                template['cudk_desc']= dscript['script_description'];
-                                template['auto_load']=true;
-                                template['auto_init']=true;
-                                template['auto_start']=true;
-                                template['cudk_thr_sch_delay']=1;
-                                template['control_unit_implementation']=tmp['node_launch_cmd_line'];
-                                template['seq_id']=0;
-                                //editorFn = jchaos.newCuSave;
-                                //jsonEdit(templ, template);
-                                jsonEditWindow("New EU ", templ, template, (json, obj, ok, bad)=>{
-                                    jchaos.node(inst_name,"new",script_type,best_agent,json,ok,bad);
-                                
-                                }, tmpObj, function (ok) {
-                                    var template = {};
-                                    var templ = {
-                                    $ref: "agent.json",
-                                    format: "tabs"
-                                }
-                                    jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (k) {
-                                        instantMessage("Agent save ", " OK", 2000, true);
-        
-                                    }, function (bad) {
-                                        instantMessage("Agent save failed", JSON.stringify(bad), 4000, false);
-        
-                                    });
-        
-                                }, function (bad) {
-                                    instantMessage("EU save failed", bad, 2000, false);
-        
-                                });
-                               /* jchaos.node(inst_name,"new",script_type,best_agent,()=>{
 
-                                    jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
-                                        if(dscript['eudk_script_language']=="CPP"){
-                
+                                if (supported) {
+                                    getEntryWindow("Specify Unique Identifier for " + dscript['eudk_script_language'] + " SCript", tmpObj.node_selected, "NONAME_" + tmpObj.node_selected, "Create", function (inst_name) {
+                                        tmp['ndk_uid'] = inst_name;
+
+                                        data.andk_node_associated.push(tmp);
+                                        var template = {};
+                                        var templ = {
+                                            $ref: "cu.json",
+                                            format: "tabs"
                                         }
-                                        instantMessage("Agent save ", " OK", 2000, true);
-        
-                                    }, function (bad) {
-                                        instantMessage("Agent save failed", bad, 2000, false);
-        
-                                    });
-                            },(bad)=>{
-                                instantMessage("Cannot create container", bad, 5000, false);
+                                        template['ndk_uid'] = inst_name;
+                                        template["ndk_parent"] = best_agent;
+                                        template['ndk_type'] = script_type;
+                                        template['cudk_desc'] = dscript['script_description'];
+                                        template['auto_load'] = true;
+                                        template['auto_init'] = true;
+                                        template['auto_start'] = true;
+                                        template['cudk_thr_sch_delay'] = 1;
+                                        template['control_unit_implementation'] = tmp['node_launch_cmd_line'];
+                                        template['seq_id'] = 0;
+                                        //editorFn = jchaos.newCuSave;
+                                        //jsonEdit(templ, template);
+                                        jsonEditWindow("New EU ", templ, template, (json, obj, ok, bad) => {
+                                            jchaos.node(inst_name, "new", script_type, best_agent, json, ok, bad);
 
-                            });*/
-                                              
-                
+                                        }, tmpObj, function (ok) {
+                                            var template = {};
+                                            var templ = {
+                                                $ref: "agent.json",
+                                                format: "tabs"
+                                            }
+                                            jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (k) {
+                                                instantMessage("Agent save ", " OK", 2000, true);
+
+                                            }, function (bad) {
+                                                instantMessage("Agent save failed", JSON.stringify(bad), 4000, false);
+
+                                            });
+
+                                        }, function (bad) {
+                                            instantMessage("EU save failed", bad, 2000, false);
+
+                                        });
+                                        /* jchaos.node(inst_name,"new",script_type,best_agent,()=>{
+         
+                                             jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, null, function (ok) {
+                                                 if(dscript['eudk_script_language']=="CPP"){
+                         
+                                                 }
+                                                 instantMessage("Agent save ", " OK", 2000, true);
+                 
+                                             }, function (bad) {
+                                                 instantMessage("Agent save failed", bad, 2000, false);
+                 
+                                             });
+                                     },(bad)=>{
+                                         instantMessage("Cannot create container", bad, 5000, false);
+         
+                                     });*/
+
+
+                                    }, "Cancel");
+
+
+                                    //editorFn = agentSave;
+                                    //jsonEdit(templ, data);
+
+
+                                } else {
+                                    alert("association with " + dscript['eudk_script_language'] + " not supported yet");
+                                }
                             }, "Cancel");
-                
-                            
-                            //editorFn = agentSave;
-                            //jsonEdit(templ, data);
-                            
-                           
-                    } else {
-                        alert ("association with "+dscript['eudk_script_language']+ " not supported yet");
-                    }
-                }, "Cancel");
-                    };
+                        };
+                    });
                 });
             });
-        });
 
         });// end associate
         $("#script-save").off('click');
@@ -6394,7 +6727,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 old_ele = t['old_elems'].sort();
             }
 
-            if ((JSON.stringify(new_ele) !== JSON.stringify(old_ele))&&((typeof t['agents'] !== "undefined"))) {
+            if ((JSON.stringify(new_ele) !== JSON.stringify(old_ele)) && ((typeof t['agents'] !== "undefined"))) {
                 updateProcessInterface(t);
                 t['old_elems'] = t['elems'];
 
@@ -6497,11 +6830,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         if (interface != "--Select--" && interface != "ALL") {
             sopt['impl'] = implementation_map[interface];
         }
-        dashboard_settings['search']=search_string;
+        dashboard_settings['search'] = search_string;
         jchaos.search(search_string, what, (alive == "true"), sopt, function (list_cu) {
             var search_query = {
                 search: search_string,
-                type: "cu",
+                type: "ceu",
                 alive: (alive == "true"),
                 opt: { "pagestart": dashboard_settings.current_page, "pagelen": dashboard_settings.maxNodesPerPage }
             }
@@ -6509,7 +6842,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             tmpObj['search_query'] = search_query;
             $(".pageindex").css("visibility", "visible");
             $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
-           
+
             buildCUPage(tmpObj, list_cu.list, implementation_map[interface]);
 
         });
@@ -6549,18 +6882,22 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
     function mainCU(tmpObj) {
         var list_cu = [];
-        var classe = ["powersupply", "scraper", "camera", "BPM"];
+        var classe = ["powersupply", "motor", "camera", "BPM"];
         var $radio = $("input:radio[name=search-alive]");
         if ($radio.is(":checked") === false) {
             $radio.filter("[value=true]").prop('checked', true);
         }
-        var zones = jchaos.search("", "zone", true);
+        var alive = ($("[name=search-alive]:checked").val() == "true");
+
+        var zones = jchaos.search("", "zone", alive);
         element_sel('#zones', zones, 1);
 
 
         $("#zones").click(function () {
-            if ($("#zones option").length == 0) {
-                jchaos.search("", "zone", true, function (zones) {
+            var zone_selected = $("#zones option:selected").val();
+            if (zone_selected == "ALL") {
+                var alive = ($("[name=search-alive]:checked").val() == "true");
+                jchaos.search("", "zone", alive, function (zones) {
                     element_sel('#zones', zones, 1);
                 }, function (error) {
                     stateOutput(error, true);
@@ -6580,22 +6917,21 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 $("#elements").removeAttr('disabled');
             }
             if (zone_selected == "ALL") {
-                var alive = $("[input=search-alive]:checked").val()
-                jchaos.search(search_string, "class", (alive == "true"), function (ll) {
+                jchaos.search(search_string, "class", alive, function (ll) {
                     element_sel('#elements', ll, 1);
                 });
 
             } else {
 
-                jchaos.search(zone_selected, "class", true, function (ll) {
+                jchaos.search(zone_selected, "class", alive, function (ll) {
                     element_sel('#elements', ll, 1);
                 });
             }
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
 
             //   list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-            
+
         });
 
         $("#elements").change(function () {
@@ -6612,13 +6948,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             }
 
             dashboard_settings.current_page = 0;
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
         });
         $("#classe").change(function () {
             dashboard_settings.current_page = 0;
             $("#search-chaos").val("");
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
 
         });
@@ -6627,7 +6963,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 search_string = $(this).val();
                 dashboard_settings.current_page = 0;
 
-                buildInterfaceFromPagedSearch(tmpObj, "cu");
+                buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
             }
             //var tt =prompt('type value');
@@ -6635,8 +6971,16 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         $("input[type=radio][name=search-alive]").change(function (e) {
             dashboard_settings.current_page = 0;
-
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            var alive = ($("[name=search-alive]:checked").val() == "true");
+            jchaos.search("", "zone", alive, function (zones) {
+                element_sel('#zones', zones, 1);
+            }, function (error) {
+                stateOutput(error, true);
+            });
+            jchaos.search(search_string, "class", alive, function (ll) {
+                element_sel('#elements', ll, 1);
+            });
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
         });
         var defzone = "";
@@ -6687,7 +7031,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         }
         if (defzone != "" || defgroup != "" || definterface != "") {
-            buildInterfaceFromPagedSearch(tmpObj, "cu");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
         }
 
@@ -6715,7 +7059,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 tempObj.type = "ALL";
                 $(".pageindex").css("visibility", "visible");
                 $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
-                handler(node.list.filter((val)=>{return (val!="");}));
+                handler(node.list.filter((val) => { return (val != ""); }));
 
             });
 
@@ -6727,8 +7071,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     tempObj['search_query'] = search_query;
                     $(".pageindex").css("visibility", "visible");
                     $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
+                    var filt_list = [];
+                    if (list.list instanceof Array) {
+                        filt_list = list.list.filter((val) => { return (val != "") });
 
-                    handler(list.list.filter((val)=>{return (val!="")}));
+                    }
+                    handler(filt_list);
                 });
 
         }
@@ -6877,11 +7225,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         var node_list = tmpObj['elems'];
         $("#mdl-commands").modal("hide");
         if (tmpObj.node_selected == $(e.currentTarget).attr(tmpObj.type + "-name")) {
-            $(".row_element").removeClass("row_snap_selected");
+            $(".row_element").removeClass("bg-warning");
             tmpObj.node_multi_selected = [];
             tmpObj.node_selected = null;
             tmpObj.last_index_selected = -1;
-            dashboard_settings['selection']=[];
+            dashboard_settings['selection'] = [];
             return;
         }
         tmpObj.node_selected = $(e.currentTarget).attr(tmpObj.type + "-name");
@@ -6889,7 +7237,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         var name = jchaos.encodeName(tmpObj.node_selected);
 
         if (!e.ctrlKey) {
-            $(".row_element").removeClass("row_snap_selected");
+            $(".row_element").removeClass("bg-warning");
             tmpObj.node_multi_selected = [];
             tmpObj.node_multi_selected.push(tmpObj.node_selected);
         } else {
@@ -6898,7 +7246,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             }
 
         }
-        $(e.currentTarget).addClass("row_snap_selected");
+        $(e.currentTarget).addClass("bg-warning");
 
         if (e.shiftKey) {
             var nrows = $(e.currentTarget).index();
@@ -6906,8 +7254,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 tmpObj.node_multi_selected = [];
                 //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
                 if (nrows > tmpObj.last_index_selected) {
-                    //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
-                    $("#" + id + " tr").slice(tmpObj.last_index_selected + 1, nrows + 1).addClass("row_snap_selected");
+                    //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("bg-warning");
+                    $("#" + id + " tr").slice(tmpObj.last_index_selected + 1, nrows + 1).addClass("bg-warning");
                     for (var cnt = tmpObj.last_index_selected; cnt <= nrows; cnt++) {
                         tmpObj.node_multi_selected.push(node_list[cnt]);
 
@@ -6920,7 +7268,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             tmpObj.node_multi_selected.push(node_list[nrows])
         }
         tmpObj.last_index_selected = $(e.currentTarget).index();
-        dashboard_settings['selection']=tmpObj.node_multi_selected;
+        dashboard_settings['selection'] = tmpObj.node_multi_selected;
     }
 
 
@@ -6932,9 +7280,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             cu = tmpObj.elems;
         }
         var template = tmpObj.type;
-        var html = '<div class="row-fluid" z-index=-1 id="table-space">';
-        html += '<div class="box span12">';
-        html += '<div class="box-content span12">';
+        var html = '<div class="row" z-index=-1 id="table-space">';
+        html += '<div class="col-md-12">';
+        html += '<div class="box-content col-md-12">';
         if (cu.length == 0) {
             html += '<p id="no-result-monitoring">No results match</p>';
 
@@ -6943,7 +7291,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         }
 
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name CU</th>';
@@ -7024,7 +7372,15 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             var alarm = tmpObj.data[cindex];
             if (alarm != null && alarm.hasOwnProperty("cu_alarms")) {
-                decodeDeviceAlarm(alarm.cu_alarms);
+                var obj = {};
+                if (alarm.health.nh_lem != "") {
+                    obj = Object.assign({ 'message': alarm.health.nh_lem, 'domain': alarm.health.nh_led }, alarm.cu_alarms);
+                } else {
+                    obj = Object.assign({}, alarm.cu_alarms);
+
+                }
+
+                decodeDeviceAlarm(obj);
             }
         });
     }
@@ -7083,7 +7439,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                         var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
                         $("#" + name_id + "_health_pband").html(band.toFixed(3));
                     }
-                    if (status != "Unload") {
+                    if ((status != "Unload") && (status != "Fatal Error")) {
                         switch (tmpObj.off_line[name_device_db]) {
                             case 1:
                                 status = "Dead";
@@ -7099,34 +7455,27 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
 
                     if (status == 'Start') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">play_arrow</i>');
                     } else if (status == 'Stop') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:orange">stop</i>');
                     } else if (status == 'Calibrating') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons verde">assessment</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">assessment</i>');
                     } else if (status == 'Init') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons giallo">trending_up</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:yellow">trending_up</i>');
 
                     } else if (status == 'Deinit') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons rosso">trending_down</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">trending_down</i>');
 
                     } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
-                        //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
-                        $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
-                        $("#Error-" + name_id).off('click');
-                        $("#Error-" + name_id).on("click", function () {
-                            $("#name-FE-device").html(el.health.ndk_uid);
-                            $("#status_message").html(status);
+                        $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" cuname="' + name_device_db + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
+                        $("#" + name_id + "_health_status").attr('title', "Device status:'" + status + "' " + el.health.nh_lem);
 
-                            $("#error_message").html(el.health.nh_lem);
-                            $("#error_domain").html(el.health.nh_led);
-                        });
                     } else if (status == "Unload") {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons rosso">power</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">power</i>');
 
 
                     } else if (status == "Load") {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons verde">power</i>');
+                        $("#" + name_id + "_health_status").html('<i class="material-icons verde" style="color:green">power</i>');
 
                     } else if (tmpObj.off_line[name_device_db] == 2) {
                         $("#" + name_id + "_health_status").html('<i class="material-icons">update</i>');
@@ -7142,10 +7491,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     var cu_alarm = Number(el.system.cudk_calrm_lvl);
                     if (dev_alarm == 1) {
                         $("#" + name_id + "_system_device_alarm").attr('title', "Device Warning");
-                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
+                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
                     } else if (dev_alarm == 2) {
                         $("#" + name_id + "_system_device_alarm").attr('title', "Device Error");
-                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
+                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
                     } else {
                         $("#" + name_id + "_system_device_alarm").html('');
                     }
@@ -7153,11 +7502,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     if (cu_alarm == 1) {
                         $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
 
-                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
+                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="material-icons" style="color:yellow">error_outline</i></a>');
                     } else if (cu_alarm == 2) {
                         $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
 
-                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
+                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i  class="material-icons" style="color:red">error_outline</i></a>');
                     } else {
                         $("#" + name_id + "_system_cu_alarm").html('');
                     }
@@ -7195,10 +7544,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     if (status == 'Start') {
                         if (updateGenericTableDataset.count & 1) {
                             if (el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
-                                $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
+                                $("#" + name_id + "_health_status").html('<i class="material-icons verde" style="color:green">videocam</i>');
                                 $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
                             } else if (el.system.hasOwnProperty("dsndk_storage_type") && (el.system.dsndk_storage_type & 0x1)) {
-                                $("#" + name_id + "_health_status").html('<i class="material-icons verde">save</i>');
+                                $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">save</i>');
                             }
                         }
                     }
@@ -7208,20 +7557,20 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                     if (busy == 'true') {
                         $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:" + el.system.running_cmd_alias);
                         if (updateGenericTableDataset.count & 1) {
-                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
+                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons" style="color:green">hourglass_empty</i>');
                         } else {
-                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
+                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons" style="color:green">hourglass_full</i>');
                         }
                     } else {
                         $("#" + name_id + "_system_busy").html('');
                     }
                     if (el.system.hasOwnProperty("dp_sys_unit_type") && (el.system.dp_sys_unit_type == "nt_script_eu")) {
                         $("#" + name_id + "_system_bypass").attr('title', "Script EU")
-                        $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">settings</i>');
+                        $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">settings</i>');
                     } else {
                         if (el.system.hasOwnProperty("cudk_bypass_state")) {
                             if (el.system.cudk_bypass_state == false) {
-                                $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
+                                $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">usb</i>');
                                 $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
 
                             } else {
@@ -7231,11 +7580,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                             }
                         } else if (!el.system.hasOwnProperty("dp_sys_unit_type") || (el.system.dp_sys_unit_type != "nt_rt_cu")) {
                             $("#" + name_id + "_system_bypass").attr('title', "Rest CU")
-                            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">http</i>');
+                            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">http</i>');
                         }
                     }
                 }
-                
+
                 /*if (el.hasOwnProperty("output")){
                     var lat=el.output.dpck_mds_ats-el.output.dpck_ats;
                     if(typeof lat === "number"){
@@ -7328,16 +7677,16 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<button type="button" class="close" data-dismiss="modal">×</button>';
         html += '<h3 id="list_graphs">List Graphs</h3>';
 
-        html += '<div class="row-fluid"><label class="span2">Search:</label><input class="input-xlarge focused" id="graph_search" class="span5" type="text" title="Search a graph" value=""></div>';
+        html += '<div class="row"><label class="col-md-2">Search:</label><input class="input-xlarge focused" id="graph_search" class="col-md-5" type="text" title="Search a graph" value=""></div>';
 
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
-        html += '<table class="table table-bordered" id="table_graph">';
+        html += '<table class="table table-striped" id="table_graph">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name</th>';
@@ -7348,7 +7697,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</thead>';
         html += '</table>';
 
-        html += '<table class="table table-bordered" id="table_trace">';
+        html += '<table class="table table-striped" id="table_trace">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name</th>';
@@ -7388,31 +7737,31 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
+        html += '<div class="row">';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Query options</h3>';
 
-        html += '<div id="reportrange-" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
+        html += '<div id="reportrange-" class="col-md-12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
         html += '<i class="fa fa-calendar"></i>&nbsp';
         html += '<span></span> <i class="fa fa-caret-down"></i>';
         html += '</div>';
 
-        html += '<label class="label span3">Start </label>';
-        html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value="">';
-        html += '<label class="label span3">Stop </label>';
-        html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value="NOW">';
+        html += '<label class="label col-md-3">Start </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value="">';
+        html += '<label class="label col-md-3">Stop </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-stop" title="End of the query (empty means: now)" type="text" value="NOW">';
 
-        html += '<label class="label span3">Available Tag</label>';
-        html += '<select class="span9" id="select-tag" title="Existing tags"></select>';
-        html += '<label class="label span3">Tag Name </label>';
-        html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value="">';
+        html += '<label class="label col-md-3">Available Tag</label>';
+        html += '<select class="col-md-9" id="select-tag" title="Existing tags"></select>';
+        html += '<label class="label col-md-3">Tag Name </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-tag" title="Tag Name" type="text" value="">';
 
-        html += '<label class="label span3">Page </label>';
-        html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=30>';
-        html += '<label class="label span3">Query chunk </label>';
-        html += '<input class="input-xlarge focused span9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
+        html += '<label class="label col-md-3">Page </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-page" title="page length" type="number" value=30>';
+        html += '<label class="label col-md-3">Query chunk </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
 
         html += '</div>';
         html += '</div>';
@@ -7441,39 +7790,39 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<h3>Graph options</h3>';
         html += '</div>';
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
+        html += '<div class="row">';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Graph options</h3>';
-        html += '<label class="label span3">Width </label>';
-        html += '<input class="input-xlarge focused span9" id="graph-width" title="Width px" type="number" value="640">';
-        html += '<label class="label span3">High </label>';
-        html += '<input class="input-xlarge focused span9" id="graph-high" title="High px" type="number" value="480">';
+        html += '<label class="label col-md-3">Width </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="graph-width" title="Width px" type="number" value="640">';
+        html += '<label class="label col-md-3">High </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="graph-high" title="High px" type="number" value="480">';
 
-        html += '<label class="label span3" >Graph Type </label>';
-        html += '<select id="graphtype" class="span9">';
+        html += '<label class="label col-md-3" >Graph Type </label>';
+        html += '<select id="graphtype" class="col-md-9">';
         html += '<option value="line" selected="selected">Line</option>';
         html += '<option value="scatter">Scatter</option>';
         html += '<option value="column">Column</option>';
         html += '<option value="histogram">Histogram</option>';
         html += '</select>';
-        html += '<label class="label span3">Graph update (ms) </label>';
-        html += '<input class="input-xlarge span9" id="graph-update" type="number" value="1000">';
+        html += '<label class="label col-md-3">Graph update (ms) </label>';
+        html += '<input class="input-xlarge col-md-9" id="graph-update" type="number" value="1000">';
 
-        html += '<label class="label span3">Graph Scroll </label>';
-        html += '<div class="span3">'
+        html += '<label class="label col-md-3">Graph Scroll </label>';
+        html += '<div class="col-md-3">'
         html += '<label for="graph-shift">enable scroll</label><input class="input-xlarge" id="shift-true" title="ENABLE scroll graph whenever keep seconds are reached" name="graph-shift" type="radio" value="true">';
         html += '</div>'
-        html += '<div class="span3">'
+        html += '<div class="col-md-3">'
         html += '<label for="graph-shift">disable scroll</label><input class="input-xlarge" id="shift-false" title="DISABLE scroll graph whenever keep seconds are reached" name="graph-shift" type="radio" value="false">';
         html += '</div>'
 
-        html += '<label class="label span3">Graph keep seconds (s) </label>';
-        html += '<input class="input-xlarge span9" id="graph-keepseconds" type="number" value="3600">';
+        html += '<label class="label col-md-3">Graph keep seconds (s) </label>';
+        html += '<input class="input-xlarge col-md-9" id="graph-keepseconds" type="number" value="3600">';
 
-        html += '<label class="label span3" >Trace Type </label>';
-        html += '<select id="trace-type" class="span9">';
+        html += '<label class="label col-md-3" >Trace Type </label>';
+        html += '<select id="trace-type" class="col-md-9">';
         html += '<option value="multi" selected="multi">Multiple Independent Traces</option>';
         html += '<option value="single">Single Trace</option>';
         html += '</select>';
@@ -7481,18 +7830,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header" id="X-axis">X-axis Options</h3>';
 
-        html += '<label class="label span3">Name </label>';
-        html += '<input class="input-xlarge focused span9" id="xname" type="text" value="X">';
-        html += '<label class="label span3">Max </label>';
-        html += '<input class="input-xlarge focused span9" id="xmax" title="Max X Scale" type="text" value="Auto">';
-        html += '<label class="label span3">Min </label>';
-        html += '<input class="input-xlarge focused span9" id="xmin" title="Min X Scale" type="text" value="Auto">';
-        html += '<label class="label span3" >Scale </label>';
-        html += '<select id="xtype" class="span9">';
+        html += '<label class="label col-md-3">Name </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="xname" type="text" value="X">';
+        html += '<label class="label col-md-3">Max </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="xmax" title="Max X Scale" type="text" value="Auto">';
+        html += '<label class="label col-md-3">Min </label>';
+        html += '<input class="input-xlarge focused col-md-9" id="xmin" title="Min X Scale" type="text" value="Auto">';
+        html += '<label class="label col-md-3" >Scale </label>';
+        html += '<select id="xtype" class="col-md-9">';
         html += '<option value="linear">Linear scale</option>';
         html += '<option value="logarithmic">Logarithmic</option>';
         html += '<option value="datetime" selected="selected">DateTime</option>';
@@ -7503,18 +7852,18 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Y-axis Options</h3>';
 
-        html += '<label class="label span3">Name </label>';
-        html += '<input class="input-xlarge span9" id="yname" type="text" value="Y">';
-        html += '<label class="label span3">Max </label>';
-        html += '<input class="input-xlarge span9" id="ymax" type="text" title="Max Y Scale" value="Auto">';
-        html += '<label class="label span3">Min </label>';
-        html += '<input class="input-xlarge span9" id="ymin" type="text" title="Min Y Scale" value="Auto">';
-        html += '<label class="label span3" >Scale </label>';
-        html += '<select id="ytype" class="span9">';
+        html += '<label class="label col-md-3">Name </label>';
+        html += '<input class="input-xlarge col-md-9" id="yname" type="text" value="Y">';
+        html += '<label class="label col-md-3">Max </label>';
+        html += '<input class="input-xlarge col-md-9" id="ymax" type="text" title="Max Y Scale" value="Auto">';
+        html += '<label class="label col-md-3">Min </label>';
+        html += '<input class="input-xlarge col-md-9" id="ymin" type="text" title="Min Y Scale" value="Auto">';
+        html += '<label class="label col-md-3" >Scale </label>';
+        html += '<select id="ytype" class="col-md-9">';
         html += '<option value="linear" selected="selected">Linear scale</option>';
         html += '<option value="logarithmic">Logarithmic</option>';
         html += '<option value="datetime">DateTime</option>';
@@ -7525,35 +7874,35 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
         html += '<h3 class="box-header">Trace Options</h3>';
 
-        html += '<label class="label span2">Name </label>';
-        html += '<input class="input-xlarge span10" id="trace-name" title="Name of the trace" type="text" value="">';
+        html += '<label class="label col-md-2">Name </label>';
+        html += '<input class="input-xlarge col-md-10" id="trace-name" title="Name of the trace" type="text" value="">';
 
-        html += '<label class="label span1">X:</label>';
-        html += '<input class="input-xlarge span11" type="text" title="port path to plot on X (timestamp,sequence,fullpath,[-1] all array components)" id="xvar" value="timestamp">';
-        html += '<label class="label span1">Y:</label>';
-        html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y (timestamp,sequence,fullpath,[-1] all array components)" value="">';
-        html += '<label class="label span1">Color:</label>';
-        html += '<input class="input-xlarge span11" type="text" id="trace-color" title="Trace Color (empty = auto)" value="">';
+        html += '<label class="label col-md-1">X:</label>';
+        html += '<input class="input-xlarge col-md-11" type="text" title="port path to plot on X (timestamp,sequence,fullpath,[-1] all array components)" id="xvar" value="timestamp">';
+        html += '<label class="label col-md-1">Y:</label>';
+        html += '<input class="input-xlarge col-md-11" type="text" id="yvar" title="port path to plot on Y (timestamp,sequence,fullpath,[-1] all array components)" value="">';
+        html += '<label class="label col-md-1">Color:</label>';
+        html += '<input class="input-xlarge col-md-11" type="text" id="trace-color" title="Trace Color (empty = auto)" value="">';
 
-        html += '<a href="#" class="btn span2" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
-        html += '<a href="#" class="btn span2" id="trace-replace" title="Replace the following trace to the Graph" >Replace Trace</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-replace" title="Replace the following trace to the Graph" >Replace Trace</a>';
 
-        html += '<a href="#" class="btn span2" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
-        html += '<a href="#" class="btn span2" id="trace-up" title="Move Trace up" >Trace UP</a>';
-        html += '<a href="#" class="btn span2" id="trace-down" title="Move Trace down" >Trace Down</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-up" title="Move Trace up" >Trace UP</a>';
+        html += '<a href="#" class="btn col-md-2" id="trace-down" title="Move Trace down" >Trace Down</a>';
 
 
         html += '</div>';
         html += '</div>';
 
 
-        html += '<div class="box span12">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="table_graph_items">';
+        html += '<table class="table table-striped" id="table_graph_items">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Trace Name</th>';
@@ -8002,8 +8351,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         };
 
     }
-
-    function createQueryDialog(querycb, opencb) {
+    jqccs.createQueryDialog = function (querycb, opencb, opt) {
+        return createQueryDialog(querycb, opencb, opt);
+    }
+    function createQueryDialog(querycb, opencb, gopt) {
         var dstart = new Date();
         dstart.setHours(0, 0, 0, 0);
         if (typeof query_params === "undefined") {
@@ -8027,35 +8378,49 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<div class="modal-body">';
         */
         var html = "";
-        html += '<div class="row-fluid">';
+        html += '<div class="row">';
 
-        html += '<div class="box span12">';
-        html += '<div class="box-content">';
-        html += '<h3 class="box-header">Query options</h3>';
-
-        html += '<div id="reportrange-query" class="span10" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+        html += '<div id="reportrange-query" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
         html += '<i class="fa fa-calendar"></i>&nbsp';
         html += '<span></span> <i class="fa fa-caret-down"></i>';
+        html += '</div></div>';
+        html += '<div class="row">';
+        html += '<label class="label col-sm">Start </label>';
+        html += '<input class="input-xlarge focused col-sm" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
         html += '</div>';
-
-        html += '<label class="label span3">Start </label>';
-        html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms)" type="text" value=' + query_params.start + '>';
-        html += '<label class="label span3">Stop </label>';
-        html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
-
-        html += '<label class="label span3">Available Tag</label>';
-        html += '<select class="span9" id="select-tag" title="Existing tags"></select>';
-        html += '<label class="label span3">Tag Name </label>';
-        html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value=' + query_params.tag + '>';
-
-        html += '<label class="label span3">Page </label>';
-        html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
-        html += '<label class="label span3">Query chunk </label>';
-        html += '<input class="input-xlarge focused span9" id="query-chunk" title="Cut the query in chunk of the given seconds" type="number" value=3600>';
-        html += '<label class="label span3">Data Factor reduction</label>';
-        html += '<input class="input-xlarge focused span9" type="number" id="query-reduction" title="Reduction Factor" value=1>';
+        html += '<div class="row">';
+        html += '<label class="label col-sm">Stop </label>';
+        html += '<input class="input-xlarge focused col-sm" id="query-stop" title="End of the query (empty means: now)" type="text" value=' + query_params.stop + '>';
         html += '</div>';
-        html += '</div>';
+        if (gopt === undefined || (gopt.hasOwnProperty('tag') && gopt.tag)) {
+            html += '<div class="row">';
+            html += '<label class="label col-sm">Available Tag</label>';
+            html += '<select class="col-sm" id="select-tag" title="Existing tags"></select>';
+            html += '</div>';
+
+            html += '<div class="row">';
+            html += '<label class="label col-sm">Tag Name </label>';
+            html += '<input class="input-xlarge focused col-sm" id="query-tag" title="Tag Name" type="text" value=' + query_params.tag + '>';
+            html += '</div>';
+        }
+
+        if (gopt === undefined || (gopt.hasOwnProperty('page') && gopt.page)) {
+
+            html += '<div class="row">';
+            html += '<label class="label col-sm">Page </label>';
+            html += '<input class="input-xlarge focused col-sm" id="query-page" title="page length" type="number" value=' + query_params.page + '>';
+            html += '</div>';
+            html += '<div class="row">';
+
+            html += '<label class="label col-sm">Query chunk </label>';
+            html += '<input class="input-xlarge focused col-sm" id="query-chunk" title="Cut the query in chunk of the given seconds" type="number" value=3600>';
+            html += '</div>';
+            html += '<div class="row">';
+
+            html += '<label class="label col-sm">Data Factor reduction</label>';
+            html += '<input class="input-xlarge focused col-sm" type="number" id="query-reduction" title="Reduction Factor" value=1>';
+            html += '</div>';
+        }
         html += '</div>';
 
         var opt = {
@@ -8079,7 +8444,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             querycb(query_params)
 
-        }, "Cancel", null, function () {
+        }, "Cancel", () => { if (gopt.cancelHandler !== undefined) { gopt.cancelHandler() } }, function () {
             //open handle
             initializeTimePicker(function (ev, picker) {
                 //do something, like clearing an input
@@ -8141,20 +8506,20 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         var idname = gname;
         var html_target = "<div></div>";
         //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
-        html += '<div class="row-fluid" style="height: 100%; width: 100%">';
+        html += '<div class="row" style="height: 100%; width: 100%">';
         //html += '<div id="createGraphDialog-' + id + '" style="height: 100%; width: 100%">';
         if (typeof id === "string") {
             idname = id;
             html_target = "#" + id;
         }
-        html += '<div id="reportrange-' + idname + '" class="span8" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
+        html += '<div id="reportrange-' + idname + '" class="col-md-8" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
         html += '<i class="fa fa-calendar"></i>&nbsp';
         html += '<span></span> <i class="fa fa-caret-down"></i>';
         html += '</div>';
-        html += '<div class="span2">count:</div>'
-        html += '<div id="info-download-' + gname + '" class="span2" />'
+        html += '<div class="col-md-2">count:</div>'
+        html += '<div id="info-download-' + gname + '" class="col-md-2" />'
 
-        html += '<div id="createGraphDialog-' + idname + '" class="span10" style="height: 100%; width: 100%">';
+        html += '<div id="createGraphDialog-' + idname + '" class="col-md-10" style="height: 100%; width: 100%">';
         html += '</div>';
 
         html += '</div>';
@@ -8729,11 +9094,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
-        html += '<table class="table table-bordered" id="table_script">';
+        html += '<table class="table table-striped" id="table_script">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name</th>';
@@ -8773,11 +9138,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
-        html += '<table class="table table-bordered" id="table_snap_nodes">';
+        html += '<table class="table table-striped" id="table_snap_nodes">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Element</th>';
@@ -8786,7 +9151,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</thead>';
         html += '</table>';
 
-        html += '<table class="table table-bordered" id="table_snap">';
+        html += '<table class="table table-striped" id="table_snap">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Date</th>';
@@ -8797,8 +9162,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '</div>';
 
-        html += '<label class="label span3" for="snap_save_name">Snapshot name</label>';
-        html += '<input class="input-xlarge focused span9" id="snap_save_name" type="text" value="name">';
+        html += '<label class="label col-md-3" for="snap_save_name">Snapshot name</label>';
+        html += '<input class="input-xlarge focused col-md-9" id="snap_save_name" type="text" value="name">';
 
         html += '</div>';
         html += '</div>';
@@ -8895,7 +9260,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
         html += '<div class="modal-footer">';
         // html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
-        html += '<a href="#" class="btn btn-primary savetofile icon-save" filename="description" extension="json">Save To File</a>';
+        html += '<a href="#" class="btn btn-primary savetofile glyphicon glyphicon-save" filename="description" extension="json">Save To File</a>';
         html += '<a href="#" class="btn btn-primary" id="description-close">Close</a>';
         html += '</div>';
         html += '</div>';
@@ -8909,11 +9274,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<h3 id="list_logs">List logs</h3>';
         html += '</div>';
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
 
-        html += '<table class="table table-bordered table-fixed" id="table_logs">';
+        html += '<table class="table table-striped table-fixed" id="table_logs">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Date</th>';
@@ -8973,7 +9338,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '</div>';
 
         html += '<div class="modal-body">';
-        html += '<table class="table table-bordered" id="commands_argument_table">';
+        html += '<table class="table table-striped" id="commands_argument_table">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Argument Name</th>';
@@ -9061,7 +9426,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<h3>Error of <span id="name-FE-device"></span></h3>';
         html += '</div>';
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
+        html += '<div class="row">';
         html += '<p><b>Health Status:</b><span id="status_message"></span></p>';
         html += '<p><b>Message:</b><span id="error_message"></span></p>';
         html += '<p><b>Domain:</b><span id="error_domain"></span></p>';
@@ -9077,10 +9442,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<h3>TABLE ALARM of <span id="name-device-alarm"></span></h3>';
         html += '</div>';
         html += '<div class="modal-body">';
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12 red">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12 red">';
         html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="table_device_alarm">';
+        html += '<table class="table table-striped" id="table_device_alarm">';
         html += '<thead class="box-header red">';
         html += '<tr>';
         html += '<th>Description</th>';
@@ -9110,7 +9475,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             html += '<div id="graph-' + cnt + '" style="height: 380px; width: 580px;z-index: 1000;">';
             html += '</div>';
       
-            html +='<div id="reportrange-'+cnt+'" class="span12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
+            html +='<div id="reportrange-'+cnt+'" class="col-md-12" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">';
             html +='<i class="fa fa-calendar"></i>&nbsp';
             html +='<span></span> <i class="fa fa-caret-down"></i>';
             html +='</div>';
@@ -9118,13 +9483,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             */
         }
 
-        html += generateDataSet();
-        html += generateDescription();
-        html += generateSnapshotTable();
+        //  html += generateDataSet();
+        // html += generateDescription();
+        // html += generateSnapshotTable();
         html += generateAlarms();
-        html += generateLog();
+        //   html += generateLog();
         html += generateGraphTable();
-        html += generateGraphList();
+        //   html += generateGraphList();
         //  html += generateQueryTable();
 
 
@@ -9144,30 +9509,30 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         html += '<li class="black">';
         html += '<a href="./configuration.php" role="button" class="show_agent" data-toggle="modal">';
-        html += '<i class="icon-key red"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+        html += '<i class="glyphicon glyphicon-key red"></i><span class="opt-menu hidden-md">Configuration</span>';
         html += '</a>';
         html += '</li>';
 
         html += '<li class="black">';
         html += '<a href="./index.php" role="button" class="show_agent" data-toggle="modal">';
-        html += '<i class="icon-search green"></i><span class="opt-menu hidden-tablet">CU</span>';
+        html += '<i class="glyphicon glyphicon-search green"></i><span class="opt-menu hidden-md">CU</span>';
         html += '</a>';
         html += '</li>';
         html += '<li class="black">';
         html += '<a href="./process.php" role="button" class="show_agent" data-toggle="modal">';
-        html += '<i class="icon-search red"></i><span class="opt-menu hidden-tablet">Process</span>';
+        html += '<i class="glyphicon glyphicon-search red"></i><span class="opt-menu hidden-md">Process</span>';
         html += '</a>';
         html += '</li>';
         /*
             html += '<li class="black">';
             html += '<a href="#">';
-            html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+            html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Configuration</span>';
             html += '</a>'
     
             html += '<ul class="dashboard-list metro">';
             html += '<li class="black">';
             html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
-            html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Node</span>';
+            html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Node</span>';
             html += '</a>';
             html += '</li>';
             html += '</ul>';
@@ -9175,19 +9540,19 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
         html += '<li class="black">';
         html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
-        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Management</span>';
+        html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Management</span>';
         html += '</a>';
         html += '</li>';
 
         html += '<li class="black">';
         html += '<a href="./chaos_jshell.php" role="button" class="show_alog" data-toggle="modal">';
-        html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">ChaosShell</span>';
+        html += '<i class="glyphicon glyphicon-file red"></i><span class="opt-menu hidden-md">ChaosShell</span>';
         html += '</a>';
         html += '</li>';
 
         html += '<li class="black">';
         html += '<a href="./CUgenerator/index.html" role="button" class="show_alog" data-toggle="modal">';
-        html += '<i class="icon-file green"></i><span class="opt-menu hidden-tablet">CUGenerator</span>';
+        html += '<i class="glyphicon glyphicon-file green"></i><span class="opt-menu hidden-md">CUGenerator</span>';
         html += '</a>';
         html += '</li>';
 
@@ -9202,7 +9567,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
 
     function generateActionBox() {
-        var html = '<div class="box black span2">';
+        var html = '<div class="box black col-md-2">';
         html += '<div class="box-header">';
         html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Actions</h2>';
         html += '<div class="box-icon">';
@@ -9213,49 +9578,49 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         html += '<ul class="dashboard-list metro">';
         /*    html += '<li class="green">';
            html += '<a href="#mdl-save" role="button" data-toggle="modal">';
-           html += '<i class="icon-save green"></i><span class="opt-menu hidden-tablet">Save</span>';
+           html += '<i class="glyphicon glyphicon-save green"></i><span class="opt-menu hidden-md">Save</span>';
            html += '</a>';
            html += '</li>';
            html += '<li class="blue">';
            html += '<a href="#" role="button" onclick="reLoad()">';
-           html += '<i class="icon-repeat blue"></i><span class="opt-menu hidden-tablet">Reload</span>';
+           html += '<i class="glyphicon glyphicon-repeat blue"></i><span class="opt-menu hidden-md">Reload</span>';
            html += '</a>';
            html += '</li>';
            html += '<li class="yellow">';
            html += '<a href="#">';
-           html += '<i class="icon-print yellow"></i><span class="opt-menu hidden-tablet">Print</span>';
+           html += '<i class="glyphicon glyphicon-print yellow"></i><span class="opt-menu hidden-md">Print</span>';
            html += '</a>';
            html += '</li>';
            
            */
         html += '<li class="red">';
         html += '<a href="#mdl-snap" role="button" class="show_snapshot" data-toggle="modal">';
-        html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Snapshot</span>';
+        html += '<i class="glyphicon glyphicon-file red"></i><span class="opt-menu hidden-md">Snapshot</span>';
         html += '</a>';
         html += '</li>';
 
         /*
             html += '<li class="green">';
             html += '<a href="#mdl-dataset" role="button" class="show_dataset" data-toggle="modal">';
-            html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Dataset</span>';
+            html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Dataset</span>';
             html += '</a>';
             html += '</li>';
     
             html += '<li class="green">';
             html += '<a href="#mdl-description" role="button" class="show_description" data-toggle="modal">';
-            html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
+            html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Description</span>';
             html += '</a>';
             html += '</li>';
         */
         html += '<li class="green">';
         html += '<a href="#mdl-log" role="button" class="show_log" data-toggle="modal">';
-        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Logging</span>';
+        html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Logging</span>';
         html += '</a>';
         html += '</li>';
 
         html += '<li class="red">';
         html += '<a href="#mdl-graph-list" role="button" class="show_graph" data-toggle="modal">';
-        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Graphs</span>';
+        html += '<i class="glyphicon glyphicon-print green"></i><span class="opt-menu hidden-md">Graphs</span>';
         html += '</a>';
         html += '</li>';
 
@@ -9465,96 +9830,92 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     function generateGenericControl(tmpObj) {
         var template = tmpObj.type;
         var html = "";
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12 box-cmd">';
+        // first row
+        html += '<div class="row green">';
 
-        html += '<div class="box-header green">';
-        html += '<h3 id="h3-generic-cmd">Generic Commands</h3>';
+        html += '<h1 class="col-sm-12">Generic Control</h1>';
         html += '</div>';
-        html += '<div class="box-content">';
 
-        html += '<div class="row-fluid">';
-
-        html += "<div class='span3 statbox'>";
-        html += "<h3 id='scheduling_title'>Scheduling(us)</h3>";
-        html += "<input type='text' class='setSchedule'>";
-        html += "</div>";
-
-        // html += "<div class='span3'>";
-        // html += "</div>";
-
-        html += "<div class='span4 statbox'>";
-        html += "<h3>Available Commands</h3>";
-        html += "<div class='row-fluid' >";
-        html += "<a class='quick-button-small span2 btn-cmd' id='cu_full_commands_send'  title='Send selected command'><i class='material-icons verde'>send</i></a>";
-        html += '<select id="cu_full_commands" class="span8" data-toggle="modal"></select>';
-        html += "</div>";
-
-        html += "<div class='row-fluid' >";
-        html += "<a class='quick-button-small span2 btn-cmd' id='cu_clear_current_cmd' title='Clear current command'><i class='material-icons verde'>clear</i></a>";
-        html += "<a class='quick-button-small span2 btn-cmd' id='cu_clear_queue' title='Clear ALL command queue'><i class='material-icons verde'>layers_clear</i></a>";
-        html += "</div>";
-
-        html += "</div>";
+        // second raw
+        html += '<div class="row box-content">';
 
 
-        html += "<div class='span4'>";
-        html += '<div class="span2">'
-        html += '<label for="live-enable">enable live</label><input class="input-xlarge" id="live-true" title="Enable Live" name="live-enable" type="radio" value="true">';
-        html += '<label for="live-enable">disable live</label><input class="input-xlarge" id="live-false" title="Disable Live" name="live-enable" type="radio" value="false">';
+        html += "<div class='col-sm'>";
+        html += "<div class='row' >";
+
+        html += "<div class='col-sm'>";
+        html += '<p class="row lead">Scheduling(us)</p>';
+
+        html += "<div class='row'>";
+        html += "<p class='col-sm' id='actual_scheduling'></p>";
+        html += "<input type='text' class='setSchedule col-sm'>";
+
+        html += "</div></div>";
+
+        html += '<div class="col-sm offset-md-1">';
+        html += '<p class="row lead">Live</p>';
+        html += '<div class="row"><label for="live-enable">enable</label><input class="input-xlarge" id="live-true" title="Enable Live" name="live-enable" type="radio" value="true"></div>';
+        html += '<div class="row"><label for="live-enable">disable</label><input class="input-xlarge" id="live-false" title="Disable Live" name="live-enable" type="radio" value="false"></div>';
         html += '</div>'
 
-        html += '<div class="span2">'
-        html += '<label for="log-enable">enable log</label><input class="input-xlarge" id="log-true" title="Enable Logging on Grafana " name="log-enable" type="radio" value="true">';
-        html += '<label for="log-enable">disable log</label><input class="input-xlarge" id="log-false" title="Disable Logging on Grafana" name="log-enable" type="radio" value="false">';
+        html += '<div class="col-sm">'
+        html += '<p class="row lead">Log</p>';
+
+        html += '<div class="row"><label for="log-enable">enable</label><input class="input-xlarge" id="log-true" title="Enable Logging on Grafana " name="log-enable" type="radio" value="true"></div>';
+        html += '<div class="row"><label for="log-enable">disable</label><input class="input-xlarge" id="log-false" title="Disable Logging on Grafana" name="log-enable" type="radio" value="false"></div>';
         html += '</div>'
 
-        html += '<div class="span2">'
-        html += '<label for="histo-enable">enable history</label><input class="input-xlarge" id="histo-true" title="Enable History" name="histo-enable" type="radio" value="true">';
-        html += '<label for="histo-enable">disable history</label><input class="input-xlarge" id="histo-false" title="Disable History" name="histo-enable" type="radio" value="false">';
+        html += '<div class="col-sm">'
+        html += '<p class="row lead">History</p>';
+
+        html += '<div class="row"><label for="histo-enable">enable</label><input class="input-xlarge" id="histo-true" title="Enable History" name="histo-enable" type="radio" value="true"></div>';
+        html += '<div class="row"><label for="histo-enable">disable</label><input class="input-xlarge" id="histo-false" title="Disable History" name="histo-enable" type="radio" value="false"></div>';
         html += '</div>'
 
-        html += '<div class="span2">'
-        html += '<label for="restore-enable">restore on init</label><input class="input-xlarge" id="restore-true" title="Enable Restore on init" name="restore-enable" type="radio" value="true">';
-        html += '<label for="restore-enable">disable restore</label><input class="input-xlarge" id="restore-false" title="Disable Restore on init" name="restore-enable" type="radio" value="false">';
-        html += '</div>'
-        html += '<div class="span2">';
-        html += '<label for="restore-type">Restore Type/tagname</label>';
+        html += '<div class="col-sm">'
+        html += '<div class="row">';
+        html += '<p class="lead row">Restore</p>';
         html += '<input id="restore-type" type="text" title="Restore Type/tagname">';
-        html += '</div>';
+        html += '</div>'
+
+        html += '<div class="row"><label for="restore-enable">on init</label><input class="input-xlarge" id="restore-true" title="Enable Restore on init" name="restore-enable" type="radio" value="true"></div>';
+        html += '<div class="row"><label for="restore-enable">disable</label><input class="input-xlarge" id="restore-false" title="Disable Restore on init" name="restore-enable" type="radio" value="false"></div>';
+        html += '</div>'
+
         html += '</div>'
         html += '</div>';
 
+        //first col
 
+        // html += "<div class='col-md-3'>";
+        // html += "</div>";
+        //second col/row
+        html += "<div class='col-sm box offset-md-1'>";
+
+        html += "<p class='row lead justify-content-center'>Commands</p>";
+        html += "<div class='row' >";
+        html += '<select id="cu_full_commands" class="col-sm" data-toggle="modal"></select>';
+        html += "<a class='quick-button-small col-sm btn-cmd' id='cu_full_commands_send'  title='Send selected command'><i class='material-icons verde'>send</i></a>";
+        html += "</div>";
+        html += "<div class='row' >";
+        html += "<a class='quick-button-small col-sm btn-cmd' id='cu_clear_current_cmd' title='Clear current command'><i class='material-icons verde'>clear</i></a>";
+        html += "<a class='quick-button-small col-sm btn-cmd' id='cu_clear_queue' title='Clear ALL command queue'><i class='material-icons verde'>layers_clear</i></a>";
+        html += "</div>";
+        html += '<div class="row">';
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-stop-start'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-init-deinit'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
+
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-recover-error'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-load-unload'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
+        html += "<a class='quick-button-small col-sm btn-cmd cucmdbase' id='cmd-bypass-on-off'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
+        html += "</div>";
 
         html += "</div>";
 
 
 
 
-        html += '<div class="row-fluid">';
-        html += "<div class='span12'>";
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-stop-start'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-init-deinit'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
 
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-recover-error'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-load-unload'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
-        html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-bypass-on-off'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
-
-        // html += "<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-" + ctrlid + "'' onclick='jchaos.setBypass(\"" + cuid + "\",true,null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";
-        //   html += '<div class="statbox purple" onTablet="span2" onDesktop="span3">';
-        //  html += '<h3>Available Commands</h3>';
-        //  html += '<select id="cu_full_commands" data-toggle="modal"> </select>';
-        //   html += '</div>';
-
-
-
-        html += "</div>";
-        html += "</div>";
-        html += "</div>";
-
-
-        html += "</div>";
         html += "</div>";
 
         return html;
@@ -9600,9 +9961,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     function createCustomDialog(opt, html, butyes, yeshandle, cancelText, nohandle, open_handle, close_handle) {
 
         var dlg_opt = {};
-        var id="customdlg-"+(new Date()).getTime();
-        if(opt.hasOwnProperty('_name_')){
-            id=opt['_name_'];
+        var id = "customdlg-" + (new Date()).getTime();
+        if (opt.hasOwnProperty('_name_')) {
+            id = opt['_name_'];
             delete opt['_name_'];
         }
         dlg_opt['buttons'] = [];
@@ -9651,15 +10012,17 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         for (var i in opt) {
             dlg_opt[i] = opt[i];
         }
-        if(typeof html ==="undefined"){
-            html='<div id='+id+'></div>';
+        if (typeof html === "undefined") {
+            html = '<div id=' + id + '></div>';
         }
         $('<div></div>').appendTo('body')
             .html(html)
             .dialog(dlg_opt);
 
     }
-
+    jqccs.getEntryWindow=function(hmsg, msg, def_text, butyes, yeshandle, cancelText){
+        return getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText);
+    }
     function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
         var html = '<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>';
         var opt = {
@@ -9711,7 +10074,9 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         }, cancelText);
 
     }
-
+    jqccs.confirm = function (hmsg, msg, butyes, yeshandle, butno, nohandle) {
+        return confirm(hmsg, msg, butyes, yeshandle, butno, nohandle);
+    }
     function confirm(hmsg, msg, butyes, yeshandle, butno, nohandle) {
         var ret = true;
         var html = '<div><h6>' + msg + '</h6></div>';
@@ -9830,11 +10195,11 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         }
 
         items['edit-' + node_type] = { name: "Edit ..." };
-        items['desc-'+node_type] = {name: "Desc"};
-        items['delete-histo-data'] = {name:"Delete HISTO data"};
-        var associated="";
-        if((typeof node ==="object")&&node.hasOwnProperty('desc')&&node.desc.hasOwnProperty('ndk_parent')){
-            associated=node.desc;
+        items['desc-' + node_type] = { name: "Desc" };
+        items['delete-histo-data'] = { name: "Delete HISTO data" };
+        var associated = "";
+        if ((typeof node === "object") && node.hasOwnProperty('desc') && node.desc.hasOwnProperty('ndk_parent')) {
+            associated = node.desc;
         } else {
             associated = jchaos.node(node_selected, "parent", "us", null, null);
 
@@ -9842,12 +10207,12 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "" && (node_type == "nt_unit_server" || node_type == "nt_root")) {
             items['sep5'] = "---------";
 
-            items['start-node'] = { name: "Start "+ jchaos.nodeTypeToHuman(node_type)+"..." };
-            items['stop-node'] = { name: "Stop "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
-            items['restart-node'] = { name: "Restart "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
-            items['kill-node'] = { name: "Kill "+ jchaos.nodeTypeToHuman(node_type)+" (via agent) ..." };
+            items['start-node'] = { name: "Start " + jchaos.nodeTypeToHuman(node_type) + "..." };
+            items['stop-node'] = { name: "Stop " + jchaos.nodeTypeToHuman(node_type) + " ..." };
+            items['restart-node'] = { name: "Restart " + jchaos.nodeTypeToHuman(node_type) + " ..." };
+            items['kill-node'] = { name: "Kill " + jchaos.nodeTypeToHuman(node_type) + " (via agent) ..." };
 
-            items['console-node'] = { name: "Console "+ jchaos.nodeTypeToHuman(node_type)+" ..." };
+            items['console-node'] = { name: "Console " + jchaos.nodeTypeToHuman(node_type) + " ..." };
 
 
 
@@ -9865,7 +10230,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 items['paste-nt_control_unit'] = { name: "Paste/Move \"" + cu_copied.ndk_uid };
             }
 
-            
+
         } else if (node_type == "nt_root") {
             items['del-' + node_type] = { name: "Del " + node_selected };
             items['copy-' + node_type] = { name: "Copy " + node_selected };
@@ -9939,6 +10304,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
                     items['sep1'] = "---------";
                 } else if (status == 'Fatal Error') {
+                    items['load'] = { name: "Load", icon: "load" };
                     items['deinit'] = { name: "Deinit", icon: "deinit" };
                     items['init'] = { name: "Init", icon: "init" };
                     items['unload'] = { name: "Unload", icon: "unload" };
@@ -9997,10 +10363,13 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         if (tmpObj.node_multi_selected.length == 1) {
 
             items['show-dataset'] = { name: "Show/Set/Plot Dataset" };
+            items['save-default'] = { name: "Save Setpoint as Default" };
+            items['save-readout-default'] = { name: "Save ReadOut as Default" };
+
             items['show-desc'] = { name: "Show Description" };
             items['show-tags'] = { name: "Show Tags info" };
-            items['driver-prop'] = {name: "Edit Driver properties"};
-            items['cu-prop'] = {name: "Edit Node properties"};
+            items['driver-prop'] = { name: "Edit Driver properties" };
+            items['cu-prop'] = { name: "Edit Node properties" };
 
             items['show-picture'] = { name: "Show as Picture.." };
         }
@@ -10045,7 +10414,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             $("#cmd-recover-error").children().remove();
             $("#cmd-bypass-on-off").children().remove();
             */
-            if (status != "Unload") {
+            if ((status != "Unload") && (status != "Fatal Error")) {
                 switch (tmpObj.off_line[encoden]) {
                     case 1:
                         status = "Dead";
@@ -10109,7 +10478,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             }
         }
         if (cu.hasOwnProperty('system') /*&& (tmpObj.off_line[encoden] == 0)*/) { //if el system
-            $("#scheduling_title").html("Actual scheduling (us):" + cu.system.cudk_thr_sch_delay);
+            $("#actual_scheduling").html(cu.system.cudk_thr_sch_delay);
 
             if (cu.system.cudk_bypass_state == false) {
                 $("#cmd-bypass-on-off").html("<i class='material-icons verde'>cached</i><p class='name-cmd'>Bypass</p>");
@@ -10146,10 +10515,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             $("#cu_full_commands").empty();
 
             if (tmpObj.node_name_to_desc[name] == null) {
-                jchaos.getDesc(tmpObj.node_selected, function (desc) {
-                    if (desc[0] != null) {
-                       
-                        tmpObj.node_name_to_desc[name] = desc[0];
+                jchaos.node(tmpObj.node_selected, "desc","all",function (desc) {
+                    if (desc!= null) {
+
+                        tmpObj.node_name_to_desc[name] = desc;
 
                     }
                 });
@@ -10174,10 +10543,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                 $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
             });
             $("#table_snap tbody tr").click(function (e) {
-                $(".row_element").removeClass("row_snap_selected");
+                $(".row_element").removeClass("bg-warning");
                 $("#table_snap_nodes").find("tr:gt(0)").remove();
 
-                $(this).addClass("row_snap_selected");
+                $(this).addClass("bg-warning");
                 snap_selected = $(this).attr("id");
                 var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
                 dataset.forEach(function (elem) {
@@ -10265,10 +10634,10 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
         }
 
         $("#table_graph tbody tr").click(function (e) {
-            $(".row_element").removeClass("row_snap_selected");
+            $(".row_element").removeClass("bg-warning");
             $("#table_trace").find("tr:gt(0)").remove();
 
-            $(this).addClass("row_snap_selected");
+            $(this).addClass("bg-warning");
             graph_selected = $(this).attr("id");
             var html = 'Graph Selected:<a href=/chaos_graph.php?' + graph_selected + '={\"width\":' + high_graphs[graph_selected].width + ',\"height\":' + high_graphs[graph_selected].height + '} target="_blank"><strong>' + graph_selected + '</strong></a>';
             //$(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
@@ -10293,8 +10662,8 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
 
             }
             /*$("#table_trace tbody tr").click(function (e) {
-              $(".row_element").removeClass("row_snap_selected");
-              $(this).addClass("row_snap_selected");
+              $(".row_element").removeClass("bg-warning");
+              $(this).addClass("bg-warning");
               trace_selected = $(this).attr("id");
             });*/
         });
@@ -10429,23 +10798,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
     jqccs.generateScraperTable = function (tmpObj) {
         return generateScraperTable(tmpObj);
     }
-    jqccs.generateAlarmTable = function (dev_alarm) {
-        var html = "";
-        for (var key in dev_alarm) {
-            var value = dev_alarm[key];
-            if (key != "ndk_uid" && key != "dpck_seq_id" && key != "dsndk_storage_type" && key != "dpck_ats" && key != "dpck_mds_ats" && key != "dpck_ds_type" && key != "cudk_run_id") {
-                if (value > 0) {
-                    if (value > 2) {
-                        value = 2;
-                    }
-                    html += '<tr class="errorItem-' + value + '"><td>' + key + '</td></tr>';
-                }
 
-            }
-        }
-
-        return html;
-    }
 
     function initSettings() {
         var sett = localStorage['chaos_dashboard_settings'];
@@ -10539,7 +10892,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
             $("#help-about").on("click", function () {
                 jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
                     //alert("version:"+JSON.stringify(ver));
-                    showJson(null, "VERSION", "version", ver);
+                    showJson("VERSION", ver);
                 }, function () {
                     alert("Cannot retrive version");
                 });
@@ -10553,7 +10906,7 @@ jqccs.jsonEditWindow=function(name, jsontemp, jsonin, editorFn, tmpObj, ok, nok)
                         ver[i]['updated'] = (new Date(Number(tt))).toLocaleString();
                     });
 
-                    showJson(null, "CLIENTS", "Clients", ver);
+                    showJson("CLIENTS", ver);
                 }, function () {
                     alert("Cannot retrive Client List");
                 });

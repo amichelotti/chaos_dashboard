@@ -9,6 +9,11 @@
 		"required": true,
 	    "description":"Unique Identifier"
 	},
+	"ndk_desc": {
+		"type": "string",
+		"format": "textarea",
+		"description": "Unit Server description"
+	},
 	"cu_desc":{
 		"type":"array",
 		"format": "tab",

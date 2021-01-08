@@ -197,15 +197,15 @@ textarea::-webkit-input-placeholder {
 }
 
 .radio.inline,
-.checkbox.inline {
+.checkbox.list-inline {
   display: inline-block;
   padding-top: 5px;
   margin-bottom: 0;
   vertical-align: middle;
 }
 
-.radio.inline + .radio.inline,
-.checkbox.inline + .checkbox.inline {
+.radio.list-inline + .radio.inline,
+.checkbox.list-inline + .checkbox.list-inline {
   margin-left: 10px;
 }
 
@@ -213,7 +213,7 @@ textarea::-webkit-input-placeholder {
   width: 60px;
 }
 
-.input-small {
+.input-sm {
   width: 90px;
 }
 
@@ -221,7 +221,7 @@ textarea::-webkit-input-placeholder {
   width: 150px;
 }
 
-.input-large {
+.input-lg {
   width: 210px;
 }
 
@@ -237,24 +237,24 @@ input[class*="span"],
 select[class*="span"],
 textarea[class*="span"],
 .uneditable-input[class*="span"],
-.row-fluid input[class*="span"],
-.row-fluid select[class*="span"],
-.row-fluid textarea[class*="span"],
-.row-fluid .uneditable-input[class*="span"] {
+.row input[class*="span"],
+.row select[class*="span"],
+.row textarea[class*="span"],
+.row .uneditable-input[class*="span"] {
   float: none;
   margin-left: 0;
 }
 
-.input-append input[class*="span"],
-.input-append .uneditable-input[class*="span"],
-.input-prepend input[class*="span"],
-.input-prepend .uneditable-input[class*="span"],
-.row-fluid input[class*="span"],
-.row-fluid select[class*="span"],
-.row-fluid textarea[class*="span"],
-.row-fluid .uneditable-input[class*="span"],
-.row-fluid .input-prepend [class*="span"],
-.row-fluid .input-append [class*="span"] {
+.input-group input[class*="span"],
+.input-group .uneditable-input[class*="span"],
+.input-group input[class*="span"],
+.input-group .uneditable-input[class*="span"],
+.row input[class*="span"],
+.row select[class*="span"],
+.row textarea[class*="span"],
+.row .uneditable-input[class*="span"],
+.row .input-group [class*="span"],
+.row .input-group [class*="span"] {
   display: inline-block;
 }
 
@@ -270,73 +270,73 @@ textarea,
 
 input.span12,
 textarea.span12,
-.uneditable-input.span12 {
+.uneditable-input.col-md-12 {
   width: 926px;
 }
 
 input.span11,
 textarea.span11,
-.uneditable-input.span11 {
+.uneditable-input.col-md-11 {
   width: 846px;
 }
 
 input.span10,
 textarea.span10,
-.uneditable-input.span10 {
+.uneditable-input.col-md-10 {
   width: 766px;
 }
 
 input.span9,
 textarea.span9,
-.uneditable-input.span9 {
+.uneditable-input.col-md-9 {
   width: 686px;
 }
 
 input.span8,
 textarea.span8,
-.uneditable-input.span8 {
+.uneditable-input.col-md-8 {
   width: 606px;
 }
 
 input.span7,
 textarea.span7,
-.uneditable-input.span7 {
+.uneditable-input.col-md-7 {
   width: 526px;
 }
 
 input.span6,
 textarea.span6,
-.uneditable-input.span6 {
+.uneditable-input.col-md-6 {
   width: 446px;
 }
 
 input.span5,
 textarea.span5,
-.uneditable-input.span5 {
+.uneditable-input.col-md-5 {
   width: 366px;
 }
 
 input.span4,
 textarea.span4,
-.uneditable-input.span4 {
+.uneditable-input.col-md-4 {
   width: 286px;
 }
 
 input.span3,
 textarea.span3,
-.uneditable-input.span3 {
+.uneditable-input.col-md-3 {
   width: 206px;
 }
 
 input.span2,
 textarea.span2,
-.uneditable-input.span2 {
+.uneditable-input.col-md-2 {
   width: 126px;
 }
 
 input.span1,
 textarea.span1,
-.uneditable-input.span1 {
+.uneditable-input.col-md-1 {
   width: 46px;
 }
 
@@ -356,7 +356,7 @@ textarea.span1,
 }
 
 .controls-row [class*="span"],
-.row-fluid .controls-row [class*="span"] {
+.row .controls-row [class*="span"] {
   float: left;
 }
 
@@ -414,8 +414,8 @@ input[type="checkbox"][readonly] {
           box-shadow: none;
 }
 
-.control-group.warning .input-prepend .add-on,
-.control-group.warning .input-append .add-on {
+.control-group.warning .input-group .add-on,
+.control-group.warning .input-group .input-group-addon {
   color: #c09853;
   background-color: #fcf8e3;
   border-color: #c09853;
@@ -453,8 +453,8 @@ input[type="checkbox"][readonly] {
           box-shadow: none;
 }
 
-.control-group.error .input-prepend .add-on,
-.control-group.error .input-append .add-on {
+.control-group.error .input-group .add-on,
+.control-group.error .input-group .input-group-addon {
   color: #b94a48;
   background-color: #f2dede;
   border-color: #b94a48;
@@ -492,8 +492,8 @@ input[type="checkbox"][readonly] {
           box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7aba7b;
 }
 
-.control-group.success .input-prepend .add-on,
-.control-group.success .input-append .add-on {
+.control-group.success .input-group .add-on,
+.control-group.success .input-group .input-group-addon {
   color: #468847;
   background-color: #dff0d8;
   border-color: #468847;
@@ -531,8 +531,8 @@ input[type="checkbox"][readonly] {
           box-shadow: none;
 }
 
-.control-group.info .input-prepend .add-on,
-.control-group.info .input-append .add-on {
+.control-group.info .input-group .add-on,
+.control-group.info .input-group .input-group-addon {
   color: #3a87ad;
   background-color: #d9edf7;
   border-color: #3a87ad;
@@ -593,7 +593,7 @@ select:focus:invalid:focus {
 }
 
 .input-append,
-.input-prepend {
+.input-group {
   display: inline-block;
   margin-bottom: 10px;
   font-size: 0;
@@ -601,25 +601,25 @@ select:focus:invalid:focus {
   vertical-align: middle;
 }
 
-.input-append input,
-.input-prepend input,
-.input-append select,
-.input-prepend select,
-.input-append .uneditable-input,
-.input-prepend .uneditable-input,
-.input-append .dropdown-menu,
-.input-prepend .dropdown-menu,
-.input-append .popover,
-.input-prepend .popover {
+.input-group input,
+.input-group input,
+.input-group select,
+.input-group select,
+.input-group .uneditable-input,
+.input-group .uneditable-input,
+.input-group .dropdown-menu,
+.input-group .dropdown-menu,
+.input-group .popover,
+.input-group .popover {
   font-size: 14px;
 }
 
-.input-append input,
-.input-prepend input,
-.input-append select,
-.input-prepend select,
-.input-append .uneditable-input,
-.input-prepend .uneditable-input {
+.input-group input,
+.input-group input,
+.input-group select,
+.input-group select,
+.input-group .uneditable-input,
+.input-group .uneditable-input {
   position: relative;
   margin-bottom: 0;
   *margin-left: 0;
@@ -629,17 +629,17 @@ select:focus:invalid:focus {
           border-radius: 0px;
 }
 
-.input-append input:focus,
-.input-prepend input:focus,
-.input-append select:focus,
-.input-prepend select:focus,
-.input-append .uneditable-input:focus,
-.input-prepend .uneditable-input:focus {
+.input-group input:focus,
+.input-group input:focus,
+.input-group select:focus,
+.input-group select:focus,
+.input-group .uneditable-input:focus,
+.input-group .uneditable-input:focus {
   z-index: 2;
 }
 
-.input-append .add-on,
-.input-prepend .add-on {
+.input-group .add-on,
+.input-group .input-group-addon {
   display: inline-block;
   width: auto;
   height: 20px;
@@ -654,99 +654,99 @@ select:focus:invalid:focus {
   border: 1px solid #ccc;
 }
 
-.input-append .add-on,
-.input-prepend .add-on,
-.input-append .btn,
-.input-prepend .btn,
-.input-append .btn-group > .dropdown-toggle,
-.input-prepend .btn-group > .dropdown-toggle {
+.input-group .add-on,
+.input-group .add-on,
+.input-group .btn,
+.input-group .btn,
+.input-group .btn-group > .dropdown-toggle,
+.input-group .btn-group > .dropdown-toggle {
   vertical-align: top;
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.input-append .active,
-.input-prepend .active {
+.input-group .active,
+.input-group .active {
   background-color: #a9dba9;
   border-color: #46a546;
 }
 
-.input-prepend .add-on,
-.input-prepend .btn {
+.input-group .add-on,
+.input-group .btn {
   margin-right: -1px;
 }
 
-.input-prepend .add-on:first-child,
-.input-prepend .btn:first-child {
+.input-group .add-on:first-child,
+.input-group .btn:first-child {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.input-append input,
-.input-append select,
-.input-append .uneditable-input {
+.input-group input,
+.input-group select,
+.input-group .uneditable-input {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.input-append input + .btn-group .btn:last-child,
-.input-append select + .btn-group .btn:last-child,
-.input-append .uneditable-input + .btn-group .btn:last-child {
+.input-group input + .btn-group .btn:last-child,
+.input-group select + .btn-group .btn:last-child,
+.input-group .uneditable-input + .btn-group .btn:last-child {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.input-append .add-on,
-.input-append .btn,
-.input-append .btn-group {
+.input-group .add-on,
+.input-group .btn,
+.input-group .btn-group {
   margin-left: -1px;
 }
 
-.input-append .add-on:last-child,
-.input-append .btn:last-child,
-.input-append .btn-group:last-child > .dropdown-toggle {
+.input-group .add-on:last-child,
+.input-group .btn:last-child,
+.input-group .btn-group:last-child > .dropdown-toggle {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.input-prepend.input-append input,
-.input-prepend.input-append select,
-.input-prepend.input-append .uneditable-input {
+.input-group.input-group input,
+.input-group.input-group select,
+.input-group.input-group .uneditable-input {
   -webkit-border-radius: 0;
      -moz-border-radius: 0;
           border-radius: 0;
 }
 
-.input-prepend.input-append input + .btn-group .btn,
-.input-prepend.input-append select + .btn-group .btn,
-.input-prepend.input-append .uneditable-input + .btn-group .btn {
+.input-group.input-group input + .btn-group .btn,
+.input-group.input-group select + .btn-group .btn,
+.input-group.input-group .uneditable-input + .btn-group .btn {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.input-prepend.input-append .add-on:first-child,
-.input-prepend.input-append .btn:first-child {
+.input-group.input-group .add-on:first-child,
+.input-group.input-group .btn:first-child {
   margin-right: -1px;
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.input-prepend.input-append .add-on:last-child,
-.input-prepend.input-append .btn:last-child {
+.input-group.input-group .add-on:last-child,
+.input-group.input-group .btn:last-child {
   margin-left: -1px;
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.input-prepend.input-append .btn-group:first-child {
+.input-group.input-group .btn-group:first-child {
   margin-left: 0;
 }
 
@@ -765,32 +765,32 @@ input.search-query {
 
 /* Allow for input prepend/append in search forms */
 
-.form-search .input-append .search-query,
-.form-search .input-prepend .search-query {
+.form-search .input-group .search-query,
+.form-search .input-group .search-query {
   -webkit-border-radius: 0;
      -moz-border-radius: 0;
           border-radius: 0;
 }
 
-.form-search .input-append .search-query {
+.form-search .input-group .search-query {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.form-search .input-append .btn {
+.form-search .input-group .btn {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.form-search .input-prepend .search-query {
+.form-search .input-group .search-query {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
 
-.form-search .input-prepend .btn {
+.form-search .input-group .btn {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
@@ -816,7 +816,7 @@ input.search-query {
 .form-horizontal .input-prepend,
 .form-search .input-append,
 .form-inline .input-append,
-.form-horizontal .input-append {
+.form-horizontal .input-group {
   display: inline-block;
   *display: inline;
   margin-bottom: 0;
@@ -840,7 +840,7 @@ input.search-query {
 .form-search .input-append,
 .form-inline .input-append,
 .form-search .input-prepend,
-.form-inline .input-prepend {
+.form-inline .input-group {
   margin-bottom: 0;
 }
 
@@ -913,8 +913,8 @@ legend + .control-group {
 .form-horizontal select + .help-block,
 .form-horizontal textarea + .help-block,
 .form-horizontal .uneditable-input + .help-block,
-.form-horizontal .input-prepend + .help-block,
-.form-horizontal .input-append + .help-block {
+.form-horizontal .input-group + .help-block,
+.form-horizontal .input-group + .help-block {
   margin-top: 10px;
 }
 

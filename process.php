@@ -3,10 +3,7 @@
 <?php
 require_once('head.php');
 
-$curr_page = "Home";
-echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.terminal.min.js"></script>';
-echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.mousewheel-min.js"></script>';
-echo '<link href="' .$main_dir. '/js/jquery.terminal/css/jquery.terminal.min.css" type="text/css" rel="stylesheet" />';
+$curr_page = "PROCESS";
 
 ?>
 <body>
@@ -15,39 +12,14 @@ echo '<link href="' .$main_dir. '/js/jquery.terminal/css/jquery.terminal.min.css
 require_once('header.php');
 ?>
 
-	<div class="container-fluid-full fill">
-		<div class="row-fluid">
+		
 			
 			
-			
-			<!-- start: Content -->
-			<div id="chaos_content" class="span12">
-			
-				<ul class="breadcrumb">
-					<li>
-						<i class="icon-home"></i>
-						<a href="<?php echo $index; ?>"><?php echo $curr_page; ?></a> 
-						<i class="icon-angle-right"></i>
-					</li>
-				</ul>
-			
-				<div id="main-dashboard"></div>
+<div id="chaos_content" class="container-fluid-full fill">
+				<div id="main-dashboard" class="container-fluid"></div>
 
-				
-			</div>				
-	
-		</div><!--/fluid-row--> -->
-	</div>
-	
-
-	
-	
+</div>
 	<footer><?php require_once('footer.php');?></footer>
-	
-	
-	
-	
-
 
 <script>
 $('#main-dashboard').chaosDashboard({
