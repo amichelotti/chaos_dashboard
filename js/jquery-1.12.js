@@ -3726,7 +3726,7 @@ jQuery( function() {
 
 		// Support: IE<8
 		// Check if natively block-level elements act like inline-block
-		// elements when setting their display to 'inline' and giving
+		// elements when setting their display to 'list-inline' and giving
 		// them layout
 		div.style.cssText = "display:inline;margin:0;border:0;padding:1px;width:1px;zoom:1";
 
@@ -6893,7 +6893,7 @@ function showHide( elements, show ) {
 		display = elem.style.display;
 		if ( show ) {
 
-			// Reset the inline display of this element to learn if it is
+			// Reset the list-inline display of this element to learn if it is
 			// being hidden by cascaded rules or not
 			if ( !values[ index ] && display === "none" ) {
 				elem.style.display = "";
@@ -7254,7 +7254,7 @@ if ( !support.opacity ) {
 
 			// if setting opacity to 1, and no other filters exist -
 			// attempt to remove filter attribute #6652
-			// if value === "", then remove inline opacity #12685
+			// if value === "", then remove list-inline opacity #12685
 			if ( ( value >= 1 || value === "" ) &&
 					jQuery.trim( filter.replace( ralpha, "" ) ) === "" &&
 					style.removeAttribute ) {
@@ -7265,7 +7265,7 @@ if ( !support.opacity ) {
 				style.removeAttribute( "filter" );
 
 				// if there is no filter style applied in a css rule
-				// or unset inline opacity, we are done
+				// or unset list-inline opacity, we are done
 				if ( value === "" || currentStyle && !currentStyle.filter ) {
 					return;
 				}
@@ -7595,18 +7595,18 @@ function defaultPrefilter( elem, props, opts ) {
 		opts.overflow = [ style.overflow, style.overflowX, style.overflowY ];
 
 		// Set display property to inline-block for height/width
-		// animations on inline elements that are having width/height animated
+		// animations on list-inline elements that are having width/height animated
 		display = jQuery.css( elem, "display" );
 
 		// Test default display if display is currently "none"
 		checkDisplay = display === "none" ?
 			jQuery._data( elem, "olddisplay" ) || defaultDisplay( elem.nodeName ) : display;
 
-		if ( checkDisplay === "inline" && jQuery.css( elem, "float" ) === "none" ) {
+		if ( checkDisplay === "list-inline" && jQuery.css( elem, "float" ) === "none" ) {
 
 			// inline-level elements accept inline-block;
-			// block-level elements need to be inline with layout
-			if ( !support.inlineBlockNeedsLayout || defaultDisplay( elem.nodeName ) === "inline" ) {
+			// block-level elements need to be list-inline with layout
+			if ( !support.inlineBlockNeedsLayout || defaultDisplay( elem.nodeName ) === "list-inline" ) {
 				style.display = "inline-block";
 			} else {
 				style.zoom = 1;
@@ -7689,7 +7689,7 @@ function defaultPrefilter( elem, props, opts ) {
 		}
 
 	// If this is a noop like .hide().hide(), restore an overwritten display value
-	} else if ( ( display === "none" ? defaultDisplay( elem.nodeName ) : display ) === "inline" ) {
+	} else if ( ( display === "none" ? defaultDisplay( elem.nodeName ) : display ) === "list-inline" ) {
 		style.display = display;
 	}
 }
@@ -10570,7 +10570,7 @@ jQuery.parseHTML = function( data, context, keepScripts ) {
 		context = false;
 	}
 
-	// document.implementation stops scripts or inline event handlers from
+	// document.implementation stops scripts or list-inline event handlers from
 	// being executed immediately
 	context = context || ( support.createHTMLDocument ?
 		document.implementation.createHTMLDocument( "" ) :

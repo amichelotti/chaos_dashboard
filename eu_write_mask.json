@@ -1,0 +1,151 @@
+{
+    "title": "EU",
+    "type": "object",
+    "id": "editor-eu",
+    "format": "tab",
+    "options": {
+        "remove_empty_properties": false
+      },
+    "properties": {
+        "zone": {
+            "type": "string",
+            "required": true,
+            "format": "text",
+            "description": "ZONE expressed ZONE1/SUBZONE1... "
+        },
+        "group": {
+            "type": "string",
+            "required": true,
+            "enum": [
+                "GENERIC"
+            ],
+            "description": "Choose an appropriate group/family for the CU"
+        },
+        "id": {
+            "type": "string",
+            "required": true,
+            "format": "text",
+            "description": "EU Identifier"
+        },
+        "ndk_uid": {
+            "type": "string",
+            "required": true,
+            "format": "text",
+            "template": "{{wzone}}/{{wgroup}}/{{wid}}",
+            "description": "EU Unique Identifier ZONE/TYPE/ID",
+            "watch": {
+                "wzone": "zone",
+                "wgroup": "group",
+                "wid": "id"
+              }
+        },
+        "cudk_desc": {
+            "type": "string",
+            "format": "textarea",
+            "required": true,
+            "description": "Control unit description"
+        },
+        "ndk_parent": {
+            "type": "string",
+            "required": true,
+            "enum": [
+                "none"
+            ],
+            "description": "Choose an existing CHAOS Agent"
+        },
+        "control_unit_implementation": {
+            "type": "string",
+            "required": true,
+            "format": "text",
+            "description": "The script name"
+        },
+        "dsndk_storage_type": {
+            "type": "array",
+            "format": "checkbox",
+            "required": true,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "Live",
+                    "History",
+                    "Log"
+                ]
+            }
+        },
+        "cudk_load_param": {
+            "type": "string",
+            "format": "textarea",
+            "required": true,
+            "description": "script arguments"
+        },
+        "auto_load": {
+            "type": "boolean",
+            "default": true,
+            "required": true,
+            "description": "Load automatically on registration"
+        },
+        "auto_init": {
+            "type": "boolean",
+            "default": true,
+            "required": true,
+            "description": "Initialize automatically on registration"
+        },
+        "auto_start": {
+            "type": "boolean",
+            "default": true,
+            "required": true,
+            "description": "start automatically on registration"
+        },
+
+        "cudk_prop": {
+            "type": "array",
+            "format": "table",
+            "title": "CU properties",
+            "description": "Initialization of existing attributes of the CU, does not belong to a dataset",
+            "uniqueItems": true,
+            "headerTemplate": "{{ i1 }} - {{ self.name }} (value {{ self.value }})",
+
+            "items": {
+                "type": "object",
+                "title": "Property",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "cudk_thr_sch_delay": {
+            "type": "integer",
+            "default": 1000000,
+            "required": true,
+            "description": "Default schedule of a EU"
+        },
+        "dsndk_storage_history_ageing": {
+            "type": "integer",
+            "default": 36000,
+            "required": true,
+            "description": "Time in Seconds before the data will be wiped out (0=disabled)"
+        },
+        "dsndk_storage_live_time": {
+            "type": "integer",
+            "default": 0,
+            "required": true,
+            "description": "the time in us that need to pass before store another datapack into the live system"
+        },
+        "attribute_value_descriptions": {
+            "type": "array",
+            "format": "tab",
+            "required": true,
+            "title": "Attribute Description",
+            "items": {
+                "$ref": "cu-attribute.json",
+                "title": "Attributes"
+            }
+        }
+    }
+}

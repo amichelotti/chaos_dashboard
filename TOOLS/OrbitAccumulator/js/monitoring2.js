@@ -78,7 +78,7 @@ $(document).ready(function() {
     function add_element(arr) {
 	      //  $(arr).each(function(i) {
 
-	/*$("#table-space").append("<div class='box span12'><div class='box-content'><table class='table table-bordered' id='main_table_cu'>"+
+	/*$("#table-space").append("<div class='box col-md-12'><div class='box-content'><table class='table table-bordered' id='main_table_cu'>"+
 				 "<thead class='box-header'><tr><th>Name CU</th><th colspan='2'>Status</th><th>Timestamp</th><th>Uptime [hh:mm:ss]</th>"+
 				 "<th>Systemtime [%]</th><th>UserTime [%]</th><th>Alarm Device</th><th>Alarm CU</th></tr></thead>"+
 				 "<tr class='row_element' id='tr_element_" + i + "'><td class='name_element' id='name_element_"+ [i] + "'>" + arr[i]

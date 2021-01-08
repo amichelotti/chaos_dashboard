@@ -50,25 +50,25 @@ $(document).ready(function(){
 			
 	$("#username").focus(function() {
 		
-		$(this).parent(".input-prepend").addClass("input-prepend-focus");
+		$(this).parent(".input-group").addClass("input-prepend-focus");
 	
 	});
 	
 	$("#username").focusout(function() {
 		
-		$(this).parent(".input-prepend").removeClass("input-prepend-focus");
+		$(this).parent(".input-group").removeClass("input-prepend-focus");
 	
 	});
 	
 	$("#password").focus(function() {
 		
-		$(this).parent(".input-prepend").addClass("input-prepend-focus");
+		$(this).parent(".input-group").addClass("input-prepend-focus");
 	
 	});
 	
 	$("#password").focusout(function() {
 		
-		$(this).parent(".input-prepend").removeClass("input-prepend-focus");
+		$(this).parent(".input-group").removeClass("input-prepend-focus");
 	
 	});
 	
@@ -259,13 +259,13 @@ function template_functions(){
 			if($(this).hasClass('icon-check-empty')) {
 				
 				$(this).removeClass('icon-check-empty');
-				$(this).addClass('icon-check');
+				$(this).addClass('glyphicon glyphicon-check');
 				
 				$(this).parent().css('text-decoration','line-through');
 				
 			} else {
 				
-				$(this).removeClass('icon-check');
+				$(this).removeClass('glyphicon glyphicon-check');
 				$(this).addClass('icon-check-empty');
 				
 				$(this).parent().css('text-decoration','none');
@@ -381,7 +381,7 @@ function template_functions(){
 
 	/* ---------- Datable ---------- */
 	$('.datatable').dataTable({
-			"sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span12'i><'span12 center'p>>",
+			"sDom": "<'row'<'col-md-6'l><'col-md-6'f>r>t<'row'<'col-md-12'i><'col-md-12 center'p>>",
 			"sPaginationType": "bootstrap",
 			"oLanguage": {
 			"sLengthMenu": "_MENU_ records per page"
@@ -1684,7 +1684,7 @@ function charts() {
 
 
 
-	 // we use an inline data source in the example, usually data would
+	 // we use an list-inline data source in the example, usually data would
 	// be fetched from a server
 	var data = [], totalPoints = 300;
 	function getRandomData() {
@@ -2101,27 +2101,27 @@ function widthFunctions(e) {
     
 	if (winWidth < 980 && winWidth > 750) {
 		
-		if($("#sidebar-left").hasClass("span2")) {
+		if($("#sidebar-left").hasClass("col-md-2")) {
 			
-			$("#sidebar-left").removeClass("span2");
-			$("#sidebar-left").addClass("span1");
+			$("#sidebar-left").removeClass("col-md-2");
+			$("#sidebar-left").addClass("col-md-1");
 			
 		}
 		
-		if($("#content").hasClass("span10")) {
+		if($("#content").hasClass("col-md-10")) {
 			
-			$("#content").removeClass("span10");
-			$("#content").addClass("span11");
+			$("#content").removeClass("col-md-10");
+			$("#content").addClass("col-md-11");
 			
 		}
 		
 		
 		$("a").each(function(){
 			
-			if($(this).hasClass("quick-button-small span1")) {
+			if($(this).hasClass("quick-button-small col-md-1")) {
 
-				$(this).removeClass("quick-button-small span1");
-				$(this).addClass("quick-button span2 changed");
+				$(this).removeClass("quick-button-small col-md-1");
+				$(this).addClass("quick-button col-md-2 changed");
 			
 			}
 			
@@ -2185,26 +2185,26 @@ function widthFunctions(e) {
 							
 	} else {
 		
-		if($("#sidebar-left").hasClass("span1")) {
+		if($("#sidebar-left").hasClass("col-md-1")) {
 			
-			$("#sidebar-left").removeClass("span1");
-			$("#sidebar-left").addClass("span2");
+			$("#sidebar-left").removeClass("col-md-1");
+			$("#sidebar-left").addClass("col-md-2");
 			
 		}
 		
-		if($("#content").hasClass("span11")) {
+		if($("#content").hasClass("col-md-11")) {
 			
-			$("#content").removeClass("span11");
-			$("#content").addClass("span11");
+			$("#content").removeClass("col-md-11");
+			$("#content").addClass("col-md-11");
 			
 		}
 		
 		$("a").each(function(){
 			
-			if($(this).hasClass("quick-button span2 changed")) {
+			if($(this).hasClass("quick-button col-md-2 changed")) {
 
-				$(this).removeClass("quick-button span2 changed");
-				$(this).addClass("quick-button-small span1");
+				$(this).removeClass("quick-button col-md-2 changed");
+				$(this).addClass("quick-button-small col-md-1");
 			
 			}
 			

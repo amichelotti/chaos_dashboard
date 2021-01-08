@@ -4,13 +4,20 @@
 	"id":"editor-agent",
 	"format":"tab",
     "properties": {
+	"ndk_desc": {
+		"type": "string",
+		"format": "textarea",
+		"description": "Agent description"
+	},
 		"andk_node_associated":{
 			"type":"array",
 			"format": "tab",
-			"title": "Association",
+			"title": "Managed Nodes",
 			"items":{
 				"$ref":"agent-association.json",
-				"title":"Associations"
+				"title":"Nodes",
+				"headerTemplate": "{{ i1 }} - {{ self.ndk_uid }}"
+
 			}
 			}
 	}

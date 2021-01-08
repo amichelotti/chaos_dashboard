@@ -1,0 +1,129 @@
+{
+    "title": "Class Description",
+    "type": "object",
+    "id": "editor-class",
+    "format": "tab",
+    "properties": {
+        "name":{
+            "type":"string",
+            "description": "C++ class that implements the CU",
+            "required": true
+
+        },
+        "info": {
+            "type": "object",
+            "required": true,
+            "format": "tab",
+            "description": "Information of the class",
+            "properties":{
+               
+                "group":{
+                    "type":"array",
+                    "format": "tab",
+                    "title": "Belonging group",
+                    "uniqueItems": true,
+                    "required": true,
+
+                    "items": {
+                      "type": "string",
+                      "title": "Group"
+                    },
+                    "default": ["MOT","CAMERA","DIP","QUAD"],
+                    "description": "Select the group the class belongs to"
+            
+                },
+                "interface":{
+                    "type":"string",
+                    "required": true,
+                    "enum":["motor","powersupply","camera","bpm","import","tdc","qdc","other"],
+                    "description": "Functional interface/View"
+
+                },
+                "system":{
+                    "type":"string",
+                    "enum":["T (Targets)","M","S"],
+                    "description": "System"
+
+                },
+                "desc":{
+                    "type":"string",
+                    "required": true,
+                    "description": "Description of the class"
+                }
+
+            }
+        },
+        
+        "drivers": {
+            "type": "array",
+            "format": "tab",
+            "title": "Driver Description",
+            "required": true,
+            "items": {
+                    "title":"Driver",
+                    "type":"object",
+                    "id":"editor-driver",
+                    "format":"tab",
+                
+                    "properties": {
+                    "cudk_driver_description_name": {
+                        "type": "string",
+                        "required":true,
+                        "description":"Driver Class Name that Abstract the driver"
+                
+                    },
+                    
+                        "cudk_driver_description_version" :{
+                            "type": "string",
+                            "format":"text",
+                            "default":"1.0.0",
+                            "description":"Version of the driver"
+                        },
+                        "cudk_driver_description_init_parameter" :{
+                            "type": "string",
+                            "format":"textarea",
+                            "description":"Initialization String JSON"
+                    },
+                    "cudk_driver_desc" :{
+                            "type": "string",
+                            "format":"textarea",
+                            "description":"a description of the driver"
+                    },
+                        "cudk_driver_prop": {
+                            "type": "array",
+                            "format": "table",
+                            "title": "Driver properties",
+                            "description":"Initialization of existing attributes of the Driver, does not belong to a dataset",
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "object",
+                              "title": "Property",
+                              "properties": {
+                                "name": {
+                                    "type": "string"
+                                  },
+                                "value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                    
+                }
+                
+            }
+        },
+        "attrs": {
+            "type": "array",
+            "format": "tab",
+            "title": "Attribute Description",
+            "required": true,
+
+            "items": {
+                "$ref": "cu-attribute.json",
+                "title": "Attributes"
+            }
+        }
+
+    }
+}

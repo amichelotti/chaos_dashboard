@@ -15,13 +15,13 @@ function getWidget() {
         }        
         var template = tmpObj.type;
     
-        var html = '<table class="table table-bordered" id="graph_table_BPM">';
+        var html = '<table class="table table-striped" id="graph_table_BPM">';
         html += '</table>';
     
-        html += '<div class="row-fluid">';
-        html += '<div class="box span12">';
+        html += '<div class="row">';
+        html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
-        html += '<table class="table table-bordered" id="main_table-' + template + '">';
+        html += '<table class="table table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Element</th>';
@@ -70,38 +70,38 @@ function getWidget() {
         return html;
       },
       cmdFn:function (tmpObj) {
-        var html = '<div class="row-fluid">';
-        html += '<div class="box span12 box-cmd">';
+        var html = '<div class="row">';
+        html += '<div class="box col-md-12 box-cmd">';
         html += '<div class="box-header green">';
         html += '<h3 id="h3-cmd">Commands</h3>';
         html += '</div>';
         html += '<div class="box-content">';
-        html += '<div class="span12 statbox">';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
+        html += '<div class="col-md-12 statbox">';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
         html += '<i class="material-icons verde">trending_down</i>';
         html += '<p class="name-cmd">SlowAcquisition</p>';
         html += '</a>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_da"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":1,\"loops\":-1,\"samples\":1024}>';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="bpm_acquire_da"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":1,\"loops\":-1,\"samples\":1024}>';
         html += '<i class="material-icons verde">trending_up</i>';
         html += '<p class="name-cmd">DataOnDemand</p>';
         html += '</a>';
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_tda"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":257,\"loops\":-1,\"samples\":1024}>';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="bpm_acquire_tda"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":257,\"loops\":-1,\"samples\":1024}>';
         html += '<i class="material-icons verde">timer</i>';
         html += '<p class="name-cmd">DataOnDemand (Triggered)</p>';
         html += '</a>';
-        html += "<div class='span3 statbox'>";
+        html += "<div class='col-md-3 statbox'>";
         html += "<h3>Samples</h3>";
         html += "<input type='number' id='acquire_samples'>";
         html += "</div>";
     
-        html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_stop"  cucmdid="cu_clear_current_cmd" >';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="bpm_acquire_stop"  cucmdid="cu_clear_current_cmd" >';
         html += '<i class="material-icons rosso">pause_circle_outline</i>';
         html += '<p class="name-cmd">Stop Acquisition</p>';
         html += '</a>';
     
     
         html += '</div>';
-        html += '<div class="span12 statbox">';
+        html += '<div class="col-md-12 statbox">';
         html += '<textarea class="form-control" rows="5" id="BPM_STATUS"></textarea>';
     
         //html += '<p id="BPM_STATUS"/>';    
