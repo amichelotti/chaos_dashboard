@@ -841,8 +841,134 @@
 		var items = {};
 		var tree = $('#hier-' + pid).jstree(true);
 		var ID = $(node).attr('id');
+		items['create-graph'] = {
+			"separator_before": false,
+			"separator_after": true,
+			label: "Create Graph",
+			action: function () {
+				var templ = {
+						$ref: "graph.json",
+						format: "tabs"
+					}
+					
+					jqccs.jsonEditWindow("Graph ", templ, {}, (gtsave)=>{
+						jchaos.variable("graphs", "get", function (gphs) {
+							if(gtsave.hasOwnProperty("name") && gtsave['name']!=""){
+							if(typeof gphs !== "object"){
+								gphs={}
 
+								
+							}
+
+							gphs[gtsave.name]=gtsave;
+							gphs[gtsave.name]["time"]=new Date().toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+							jchaos.variable("graphs", "set",gphs, function (gphs) {
+								jqccs.instantMessage("Graph", "Graph " + gtsave.name + " uploaded", 2000, true);
+
+							});
+
+						} else {
+							jqccs.instantMessage("Graph", "Invalid graph name", 5000, false);
+
+						}
+
+
+                    });
+					});
+					
+
+				}
+		}
 		if (node.hasOwnProperty("data")) {
+			items['run-graph'] = {
+			"separator_before": false,
+			"separator_after": true,
+			label: "Run Graph",
+			action: function () {
+				var opt=node.data;
+				var count=(new Date()).getTime();
+				var options = {
+                modal: false,
+                draggable: true,
+                closeOnEscape: false,
+                title: opt.name,
+                width: opt.width,
+                hright: opt.height,
+				height: opt.height,
+				zIndex: 10000,
+                resizable: true,
+                dialogClass: 'no-close'
+            };
+				var gname=opt.name;
+				var id=gname+"_"+count;
+				jqccs.createGraphDialog(gname, null, options);
+
+		}
+	}
+		items['edit-graph'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Edit Graph (WinP)",
+			action: function () {
+				var templ = {
+						$ref: "graph.json",
+						format: "tabs"
+					}
+					jqccs.jsonEditWindow("Graph ", templ, node.data, (gtsave)=>{
+						jchaos.variable("graphs", "get", function (gphs) {
+							if(gtsave.hasOwnProperty("name")){
+							if(typeof gphs !== "object"){
+								gphs={}
+
+								
+							} 
+							gphs[gtsave.name]=gtsave;
+							jchaos.variable("graphs", "set",gphs, function (gphs) {
+								jqccs.instantMessage("Graph", "Graph " + gtsave.name + " uploaded", 2000, true);
+
+							});
+
+						}
+
+
+                    });
+					});
+					
+
+				}
+		
+	}
+	items['remove-graph'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Remove Graph",
+			action: function () {
+				jchaos.variable("graphs", "get", function (gphs) {
+					delete gphs[node.data.name];
+							jchaos.variable("graphs", "set",gphs, function (gphs) {
+								jqccs.instantMessage("Graph", "Graph " + gtsave.name + " removed", 2000, true);
+
+							});
+				});
+
+		}
+	}
+	
+	
+	items['upload-graph'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Upload Graph (WinP)",
+			action: function () {
+		}
+	}
+	items['download-graph'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Download Graph (WinP)",
+			action: function () {
+		}
+	}
 		}
 		return items;
 	}
@@ -850,17 +976,17 @@
 	function handle_graph() {
 		$("body").addClass("loading");
 
-		jqccs.createBrowserWindow("Log browser", (pid) => {
+		jqccs.createBrowserWindow("Graph browser", (pid) => {
 			var jsree_data = [];
 			var node_created = {};
-			jchaos.variable("highcharts", "get", (high_graphs) => {
+			jchaos.variable("graphs", "get", (high_graphs) => {
 
 				for (var g in high_graphs) {
 
-					var dat = new Date(high_graphs[g].time).toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+					//var dat = new Date(high_graphs[g].time).toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
 
 					var name = g;
-					var type = high_graphs[g].highchart_opt.chart.type;
+					var type = high_graphs[g].type;
 					var nodef = jchaos.encodeName(name) + "_" + high_graphs[g].time;
 
 					var dirs = name.split("/");
@@ -912,7 +1038,7 @@
 					var node = {
 						"id": nodef,
 						"parent": jchaos.encodeName(idgroup),
-						"text": dat,
+						"text": ((typeof  high_graphs[g].time==="string")?high_graphs[g].time:name),
 						"icon": icon,
 						"data": high_graphs[g]
 					};
