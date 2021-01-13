@@ -76,7 +76,7 @@ function getWidget() {
         html += '<h3 id="h3-cmd">Commands</h3>';
         html += '</div>';
         html += '<div class="box-content">';
-        html += '<div class="col-md-12 statbox">';
+        html += '<div class="row">';
         html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
         html += '<i class="material-icons verde">trending_down</i>';
         html += '<p class="name-cmd">SlowAcquisition</p>';
@@ -101,7 +101,7 @@ function getWidget() {
     
     
         html += '</div>';
-        html += '<div class="col-md-12 statbox">';
+        html += '<div class="row statbox">';
         html += '<textarea class="form-control" rows="5" id="BPM_STATUS"></textarea>';
     
         //html += '<p id="BPM_STATUS"/>';    
@@ -207,11 +207,11 @@ function getWidget() {
                 tmpObj['graph_table_BPM'][cuname].options.npoints++;
                 if ((elem.output.MODE & 0x1) && (elem.output.hasOwnProperty("SUM_ACQ"))) {
                   var arrv = [];
-                  arrv[0] = convertBinaryToArrays(elem.output.VA_ACQ);
-                  arrv[1] = convertBinaryToArrays(elem.output.VB_ACQ);
-                  arrv[2] = convertBinaryToArrays(elem.output.VC_ACQ);
-                  arrv[3] = convertBinaryToArrays(elem.output.VD_ACQ);
-                  arrv[4] = convertBinaryToArrays(elem.output.SUM_ACQ);
+                  arrv[0] = jqccs.convertBinaryToArrays(elem.output.VA_ACQ);
+                  arrv[1] = jqccs.convertBinaryToArrays(elem.output.VB_ACQ);
+                  arrv[2] = jqccs.convertBinaryToArrays(elem.output.VC_ACQ);
+                  arrv[3] = jqccs.convertBinaryToArrays(elem.output.VD_ACQ);
+                  arrv[4] = jqccs.convertBinaryToArrays(elem.output.SUM_ACQ);
                   for (var i = 0; i < 5; i++) {
                     if (arrv[i] instanceof Array) {
                       var setp = []
