@@ -8213,7 +8213,8 @@
             correlation = true;
         }
         var histdataset = {};
-        $("#info-download-" + gname).html("retrieving data..")
+        var encgname=jchaos.encodeName(gname);
+        $("#info-download-" + encgname).html("retrieving data..")
 
         if (correlation) {
             for (k in tr) {
@@ -8240,9 +8241,9 @@
                                         console.log("X acquiring " + trname + " path:" + tr[k].x.origin + " items:" + data.Y.length);
                                         items += data.Y.length;
                                         if (data.end) {
-                                            $("#info-download-" + gname).html("<b>" + items + "</b>").css('color', 'black');
+                                            $("#info-download-" + encgname).html("<b>" + items + "</b>").css('color', 'black');
                                         } else {
-                                            $("#info-download-" + gname).html(items).css('color', 'green');
+                                            $("#info-download-" + encgname).html(items).css('color', 'green');
                                         }
 
                                         data.Y.forEach(function (ds) {
@@ -8266,9 +8267,9 @@
                                         console.log("Y acquiring " + trname + " path:" + tr[k].y.origin + " items:" + data.Y.length);
                                         items += data.Y.length;
                                         if (data.Y.length < page) {
-                                            $("#info-download-" + gname).html("<b>" + items + "</b>").css('color', 'black');
+                                            $("#info-download-" + encgname).html("<b>" + items + "</b>").css('color', 'black');
                                         } else {
-                                            $("#info-download-" + gname).html(items).css('color', 'green');
+                                            $("#info-download-" + encgname).html(items).css('color', 'green');
                                         }
 
                                         data.Y.forEach(function (ds) {
@@ -8343,9 +8344,9 @@
                                     items += data.Y.length;
                                     var txt = "items:" + data.nitems + " runid:" + data.runid + " done:" + (stop * 100.0 / qstop);
                                     if (data.end && (qstop == stop)) {
-                                        $("#info-download-" + gname).html("<b>" + txt + "</b>").css('color', 'black');
+                                        $("#info-download-" + encgname).html("<b>" + txt + "</b>").css('color', 'black');
                                     } else {
-                                        $("#info-download-" + gname).html(txt).css('color', 'green');
+                                        $("#info-download-" + encgname).html(txt).css('color', 'green');
                                     }
 
                                     var variable = tr[k].y.var;
