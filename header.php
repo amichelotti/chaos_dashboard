@@ -846,37 +846,7 @@
 			"separator_after": true,
 			label: "Create Graph",
 			action: function () {
-				var templ = {
-						$ref: "graph.json",
-						format: "tabs"
-					}
-					
-					jqccs.jsonEditWindow("Graph ", templ, {}, (gtsave)=>{
-						jchaos.variable("graphs", "get", function (gphs) {
-							if(gtsave.hasOwnProperty("name") && gtsave['name']!=""){
-							if(typeof gphs !== "object"){
-								gphs={}
-
-								
-							}
-
-							gphs[gtsave.name]=gtsave;
-							gphs[gtsave.name]["time"]=new Date().toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
-							jchaos.variable("graphs", "set",gphs, function (gphs) {
-								jqccs.instantMessage("Graph", "Graph " + gtsave.name + " uploaded", 2000, true);
-
-							});
-
-						} else {
-							jqccs.instantMessage("Graph", "Invalid graph name", 5000, false);
-
-						}
-
-
-                    });
-					});
-					
-
+				jqccs.createEditGraph();
 				}
 		}
 		if (node.hasOwnProperty("data")) {

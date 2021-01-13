@@ -87,7 +87,9 @@
         }
         return buf.buffer;
     }
-
+    jqccs.convertBinaryToArrays=function(obj){
+        return convertBinaryToArrays(obj);
+    }
     function convertBinaryToArrays(obj) {
 
         if (obj.hasOwnProperty("$binary")) {
@@ -2645,6 +2647,46 @@
             }
         });
     }
+    jqccs.createEditGraph=function(def,cb,bad){
+        var templ = {
+            $ref: "graph.json",
+            format: "tabs"
+        }
+        var d =def;
+        if(d === undefined){
+            d={};
+        }
+        jqccs.jsonEditWindow("Graph ", templ,d, (gtsave)=>{
+            jchaos.variable("graphs", "get", function (gphs) {
+                if(gtsave.hasOwnProperty("name") && gtsave['name']!=""){
+                if(typeof gphs !== "object"){
+                    gphs={}
+
+                    
+                }
+
+                gphs[gtsave.name]=gtsave;
+                gphs[gtsave.name]["time"]=new Date().toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+                jchaos.variable("graphs", "set",gphs, function (gphs) {
+                    if(typeof cb === "function"){
+                        cb(gphs)
+                    }
+                    jqccs.instantMessage("Graph", "Graph " + gtsave.name + " uploaded", 2000, true);
+
+                },bad);
+
+            } else {
+                jqccs.instantMessage("Graph", "Invalid graph name", 5000, false);
+                if(bad!== "undefined"){
+                    bad();
+                }
+            }
+
+
+        },bad);
+        });
+        
+    }
     function jsonEnableDSContext(node_selected) {
         $.contextMenu('destroy', '.json-key');
 
@@ -2656,19 +2698,88 @@
                 var portname = $(e.currentTarget).attr("portname");
                 var portarray = $(e.currentTarget).attr("portarray");
                 cuitem['show-graph'] = { name: "Show Graphs.." };
-                if (portarray == "0") {
-                    cuitem['plot-x'] = { name: "Plot " + portname + " on X" };
-                    cuitem['plot-y'] = { name: "Plot " + portname + " on Y" };
-                    cuitem['plot-histo'] = { name: "Histogram " + portname };
+                var cnt = 0;
+                
+                var subitem = {};
+                if((active_plots !== undefined)&& (typeof active_plots === "object")){
 
-                } else {
+                    for(var k in active_plots){
+                        subitem['graph-'+k] = { name: k,callback: function(key, opt){
+                            jchaos.variable("graphs", "get", (gphs)=>{
 
+                                if(gphs.hasOwnProperty(k)){
+                                    var graph=gphs[k];
+                                    var tr={
+                                        "name":portname,
+                                        "x":"timestamp",
+                                        "y":portname
+                                    }
+                                    if(!(graph['traces'] instanceof Array)){
+                                        graph['traces']=[];
+                                    }
+                                    graph['traces'].push(tr);
 
-                    cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on X" };
-                    cuitem['plot-y'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on Y" };
-                    cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portname + "[] on X" };
+                                }
+                                jqccs.createEditGraph(graph);
 
+                            });
+
+                           /* var tr={
+                                "name":portname,
+                                "x":"timestamp",
+                                "y":portname
+                            }
+                            var graph={};
+                            graph['name']=portname;
+                            graph['traces']=[];
+                            graph['traces'].push(tr);
+
+                            jqccs.createEditGraph(graph);*/
+
+                        }};
+                        cnt++;
+                    }
                 }
+                if(cnt>0){
+                   // if (portarray == "0") {
+                       // cuitem['add-plot-x'] = { name: "Plot " + portname + " on X","items":subitem };
+                        cuitem['add-plot-y'] = { name: "Plot " + portname + " on ","items":subitem };
+                   //     cuitem['add-plot-histo'] = { name: "Histogram " + portname,"items":subitem  };
+    
+                   // } else {
+                      //  cuitem['add-plot-x'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on X","items":subitem  };
+                   //     cuitem['add-plot-y'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on Y","items":subitem  };
+                   //     cuitem['add-plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portname + "[] on X","items":subitem  };
+    
+                   // }
+                } else {
+                    //if (portarray == "0") {
+                        cuitem['new-plot-y'] = { name: "New Plot " + portname + "  ",callback: function(key, opt){
+                            var tr={
+                                "name":portname,
+                                "x":"timestamp",
+                                "y":portname
+                            }
+                            var graph={};
+                            graph['name']=portname;
+                            graph['traces']=[];
+                            graph['traces'].push(tr);
+
+                            jqccs.createEditGraph(graph);
+
+                        }
+                   // };
+                     //   cuitem['new-plot-y'] = { name: "Plot " + portname + " on Y" };
+                     //   cuitem['new-plot-histo'] = { name: "Histogram " + portname,"items":subitem  };
+    
+                    } /*else {
+                        cuitem['new-plot-y'] = { name: "New Plot Array(" + portarray + ") " + portname + "[]  ",callback: function(key, opt){ alert("plotting:"+JSON.stringify(opt));} };
+                      //  cuitem['new-plot-y'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on Y","items":subitem  };
+                     //   cuitem['new-plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portname + "[] on X","items":subitem  };
+    
+                    }*/
+                }
+                
 
 
 
@@ -4563,6 +4674,7 @@
             jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
         } else if ((cutype.indexOf("SCLibera") != -1)) {
             tmpObj.type = "SCLibera";
+            tmpObj.upd_chan = -1;
 
 
         }
@@ -6263,7 +6375,11 @@
         }
 
     }
+  jqccs.makeDynamicGraphTable=function(tmpObj, graph_table_name, highchartOpt, culist) {
+    return makeDynamicGraphTable(tmpObj, graph_table_name, highchartOpt, culist);
 
+}
+  
     function makeDynamicGraphTable(tmpObj, graph_table_name, highchartOpt, culist) {
         var cnt = 0;
         var num_chart = 3;
@@ -8512,6 +8628,7 @@
             idname = id;
             html_target = "#" + id;
         }
+        idname=jchaos.encodeName(idname);
       //  html += '<div id="reportrange-' + idname + '" class="col-md-8" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">';
       //  html += '<i class="fa fa-calendar"></i>&nbsp';
       //  html += '<span></span> <i class="fa fa-caret-down"></i>';
@@ -8590,6 +8707,7 @@
                     var timebuffer = Number(opt['timebuffer']) * 1000;
                     active_plots[gname].start_time = (new Date()).getTime();
                     var refresh = setInterval(function () {
+                        
                         var data = jchaos.getChannel(opt.culist, -1, null);
                         var set = [];
                         var x, y;
@@ -8886,7 +9004,7 @@
                 col = trace_list[cnt].color;
                 seriespec['color'] = col;
             }
-            if (graphtype == "histogram") {
+            if (graphopt.type == "histogram") {
                 var histo_data = {};
 
                 seriespec['xAxis'] = 1;
