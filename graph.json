@@ -1,0 +1,170 @@
+{
+  "title": "Graph Configuration",
+  "type": "object",
+  "id": "editor-graph",
+  "format": "tab",
+  "properties": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "format": "text",
+	    "description":"Graph unique name"
+    },
+    "width": {
+      "type": "integer",
+      "required": true,
+      "default": 640,
+      "description": "Graph width"
+    },
+    "height": {
+      "type": "integer",
+      "required": true,
+      "default": 480,
+      "description": "Graph height"
+    },
+    "update": {
+      "type": "integer",
+      "required": true,
+      "default": 1000,
+      "description": "Graph update"
+    },
+    "tracetype": {
+      "type": "string",
+      "required": true,
+      "enum": ["multi", "single"],
+      "default":"multi",
+      "description":"'multi' every trace is plotted, 'single' every trace is a point of 1 trace"
+    },
+    "type": {
+      "type": "string",
+      "required": true,
+      "enum": ["line", "scatter","histogram"],
+      "default":"line"
+    },
+    "shift": {
+      "type": "boolean",
+      "default": true,
+      "required": true,
+
+      "description": "Scroll enabled"
+    },
+    "timebuffer": {
+      "type": "integer",
+      "required": true,
+      "default": 3600,
+      "description": "Graph keep milliseconds seconds"
+    },
+    "correlate": {
+      "type": "boolean",
+      "required": true,
+      "default": false,
+      "description": "Traces are correlated (experimental)"
+    },
+    "xAxis": {
+      "type": "object",
+      "title": "X Axis",
+      "required": true,
+
+      "properties": {
+          "name": {
+              "type": "string",
+              "required": true,
+              "default":"X",
+              "description": "Axis name"
+
+          },
+          "max": {
+              "type": "string",
+              "default":"Auto",
+              "required": true
+
+          },
+          "min": {
+            "type": "string",
+            "default":"Auto",
+            "required": true
+
+        },
+        "type": {
+          "type": "string",
+          "uniqueItems": true,
+          "required": true,
+          "enum": ["datetime", "linear", "logarithmic","category"],
+          "default":"datetime"
+        }
+      }
+  },
+  "yAxis": {
+    "type": "object",
+    "title": "Y Axis",
+    "required": true,
+
+    "properties": {
+        "name": {
+            "type": "string",
+            "required": true,
+            "default":"Y",
+            "description": "Axis name"
+
+
+        },
+        "max": {
+            "type": "string",
+            "default":"Auto",
+            "required": true
+
+        },
+        "min": {
+          "type": "string",
+          "default":"Auto",
+          "required": true
+
+      },
+      "type": {
+        "type": "string",
+        "uniqueItems": true,
+        "required": true,
+        "enum": ["linear", "logarithmic","category"],
+        "default":"linear"
+      }
+    }
+},
+    "traces": {
+      "type": "array",
+      "format": "tab",
+      "title": "Traces",
+      "required": true,
+
+      "description": "Traces in the graph",
+
+      "items": {
+          "type": "object",
+          "title": "Trace",
+          "format": "tab",
+          "headerTemplate": "{{ i1 }} - {{ self.name }}",
+
+          "properties": {
+              "name": {
+                  "type": "string",
+                  "description": "Name of the trace"
+
+              },
+              "x": {
+                  "type": "string",
+                  "description": "Pathname of the variable | timestamp",
+                  "default":"timestamp"
+              },
+              "y": {
+                "type": "string",
+                "description": "Pathname of the variable | timestamp"
+            },
+            "color": {
+              "type": "string",
+              "description": "color name or empty (auto)"
+          }
+          }
+      }
+  }
+    
+  }
+}
