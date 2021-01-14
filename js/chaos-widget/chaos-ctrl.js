@@ -10721,14 +10721,8 @@
             tmpObj['oldselected'] = tmpObj.node_selected;
             $("#cu_full_commands").empty();
 
-            if (tmpObj.node_name_to_desc[name] == null) {
-                jchaos.node(tmpObj.node_selected, "desc","all",function (desc) {
-                    if (desc!= null) {
-
-                        tmpObj.node_name_to_desc[name] = desc;
-
-                    }
-                });
+            if ((tmpObj.node_name_to_desc[name] == null)||(!tmpObj.node_name_to_desc[name].hasOwnProperty("cudk_ds_desc"))) {
+                tmpObj.node_name_to_desc[name] =jchaos.node(tmpObj.node_selected, "desc","all");
             }
             if (tmpObj.node_selected != null && (tmpObj.node_name_to_desc[name] != null) && tmpObj.node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && tmpObj.node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
                 var desc = tmpObj.node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
