@@ -385,7 +385,7 @@
                             var encoden = jchaos.encodeName(p.script_name);
                             delete p._id;
                             if (p.seq > 0) {
-                                p['date'] = (new Date(p.seq)).toUTCString();
+                                p['date'] = jchaos.getDateTime(p.seq);
                             }
                             var sgroup = "";
                             if ((typeof group === "string") && (p.hasOwnProperty("script_group"))) {
@@ -1170,7 +1170,7 @@
                                 }
                                 last_log_time = r.data.process.last_log_time;
                             } else {
-                                var str = "[" + (new Date()).toString() + "] Cannot retrieve process on " + server;
+                                var str = "[" + jchaos.getDateTime() + "] Cannot retrieve process on " + server;
                                 $('#console-' + pid).terminal().error(str);
 
                             }
@@ -2666,7 +2666,7 @@
                 }
 
                 gphs[gtsave.name]=gtsave;
-                gphs[gtsave.name]["time"]=new Date().toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+                gphs[gtsave.name]["time"]=jchaos.getDateTime();
                 jchaos.variable("graphs", "set",gphs, function (gphs) {
                     if(typeof cb === "function"){
                         cb(gphs)
@@ -4593,6 +4593,11 @@
         tmpObj.last_check = 0;
         tmpObj.updateErrors = 0;
         tmpObj.skip_fetch = 0;
+        if(tmpObj.upd_chan==-4){
+            // completely custom, not setInterval 
+            tmpObj.updateFn(tmpObj);
+
+        } else {
         tmpObj.node_list_interval = setInterval(function () {
             if (tmpObj.skip_fetch > 0) {
                 return;
@@ -4636,7 +4641,7 @@
 
             tmpObj.lastUpdate = now;
         }, tmpObj.refresh_rate, tmpObj.updateTableFn);
-
+    }
     }
 
 
@@ -4666,8 +4671,8 @@
             tmpObj.upd_chan = -1;
         } else if ((cutype.indexOf("RTCamera") != -1)) {
             tmpObj.type = "RTCamera";
-
             tmpObj.upd_chan = -2;
+
             tmpObj.maxCameraCol = dashboard_settings.camera.maxCameraCol;
             tmpObj.cameraPerRow = dashboard_settings.camera.cameraPerRow;
             tmpObj.refresh_rate = dashboard_settings.camera.cameraRefresh;
@@ -4902,8 +4907,8 @@
                         'start': query.start.toString(),
                         'end': query.stop.toString()
                     };
-                    var st = (new Date(query.start)).toDateString();
-                    var en = (new Date(query.start)).toDateString();
+                    var st = jchaos.getDateTime(query.start);
+                    var en = jchaos.getDateTime(query.end);
 
                     jchaos.node(node_selected, "deletedata", "all", null, val, function (data) {
                         instantMessage("Node Data deleted ", "from:" + st + "[" + query.start + "] end:" + en + "[" + query.stop + "]", 4000, true);
@@ -6241,11 +6246,11 @@
             }
             var ptype = tmpObj.data[p].ptype;
 
-            var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toLocaleString();
-            var end_timestamp = (tmpObj.data[p].end_time > 0) ? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString() : "--";
+            var started_timestamp = jchaos.getDateTime(tmpObj.data[p].start_time);
+            var end_timestamp = (tmpObj.data[p].end_time > 0) ? jchaos.getDateTime(Number(tmpObj.data[p].end_time)): "--";
             var last_log = (now - tmpObj.data[p].last_log_time) / 1000;
             var pid = tmpObj.data[p].pid;
-            var timestamp = (new Date(Number(tmpObj.data[p].ts))).toLocaleString();
+            var timestamp = jchaos.getDateTime(Number(tmpObj.data[p].ts));
             var uptime = tmpObj.data[p].uptime;
             var systime = parseFloat(tmpObj.data[p].Psys).toFixed(3);
             var cputime = parseFloat(tmpObj.data[p].Puser).toFixed(3);
@@ -6312,7 +6317,7 @@
                 var list_algo = l['found_script_list'];
                 list_algo.forEach(function (p) {
                     var encoden = jchaos.encodeName(p.script_name);
-                    var date = new Date(p.seq);
+                    var date = jchaos.getDateTime(p.seq);
                     tmpObj.node_name_to_desc[p.script_name] = p;
                     $("#table_script").append('<tr class="row_element" title="' + p.script_description + '" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
                         '<td>' + p.script_name + '</td>' +
@@ -7547,7 +7552,7 @@
                     el.tmUtm = jchaos.toHHMMSS(el.health.nh_upt);
                     status = el.health.nh_status;
                     $("#" + name_id + "_health_uptime").html(el.tmUtm);
-                    $("#" + name_id + "_health_timestamp").html(new Date(el.tmStamp).toLocaleString());
+                    $("#" + name_id + "_health_timestamp").html(jchaos.getDateTime(el.tmStamp));
                     $("#" + name_id + "_health_usertime").html(el.usrTime);
                     $("#" + name_id + "_health_systemtime").html(el.systTime);
                     $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
@@ -8468,9 +8473,21 @@
         };
 
     }
-    jqccs.createQueryDialog = function (querycb, opencb, opt) {
-        return createQueryDialog(querycb, opencb, opt);
+    jqccs.createDialogFromFile=function(url,idname,title,opt){
+        dopt=opt||{modal:false,draggable:true,
+                            closeOnEscape: true,
+                            title:title,
+                            minWidth:$(window).width()/2,
+                            minHeight:$(window).height()/2
+                            
+
+        };
+        $('<div id=' + idname + ' class="chat-modal"></div>').dialog(dopt);
+        $.get(url, function(data) {
+            $("#"+idname).html( data );
+        });
     }
+    
     function createQueryDialog(querycb, opencb, gopt) {
         var dstart = new Date();
         dstart.setHours(0, 0, 0, 0);
@@ -9272,7 +9289,7 @@
         }
 
         high_graphs = jchaos.variable("highcharts", "get", null, null);
-        var tempo = (new Date()).toString();
+        var tempo = jchaos.getDateTime();
         high_graphs[graphname] = {
             name: graphname,
             width: width_,
@@ -10740,7 +10757,7 @@
             var dataset;
             snap_selected = "";
             snaplist.forEach(function (dataset, index) {
-                var date = new Date(dataset.ts);
+                var date = jchaos.getDateTime(dataset.ts);
                 $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
             });
             $("#table_snap tbody tr").click(function (e) {
@@ -10794,7 +10811,7 @@
             if (data.hasOwnProperty("result_list")) {
                 data.result_list.forEach(function (item) {
                     if ((item.mdsndk_nl_ld == logtype) || (logtype == "all")) {
-                        var dat = new Date(item.mdsndk_nl_lts).toString();
+                        var dat = jchaos.getDateTime(item.mdsndk_nl_lts);
                         var nam = item.mdsndk_nl_sid;
                         var msg = item.mdsndk_nl_e_em;
                         var type = item.mdsndk_nl_ld;
@@ -11104,7 +11121,7 @@
                     //alert("version:"+JSON.stringify(ver));
                     ver.forEach(function (ele, i) {
                         var tt = ele.lastConnection / 1000;
-                        ver[i]['updated'] = (new Date(Number(tt))).toLocaleString();
+                        ver[i]['updated'] = jchaos.getDateTime(Number(tt));
                     });
 
                     showJson("CLIENTS", ver);

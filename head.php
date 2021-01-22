@@ -115,6 +115,7 @@
 			echo '<link rel="stylesheet" href="/js/jstree/dist/themes/default/style.min.css" />';
 
 			echo '<script src="'.$main_dir.'/js/jstree/dist/jstree.min.js"></script>';
+			echo '<script src="'.$main_dir.'/js/socket.io.js"></script>';
 
 
 			//<script src="js/plotly-latest.min.js"></script>
@@ -138,13 +139,35 @@
 	
 	
 
+		<div id="chat_incoming_message"></div>
 
         <script>
-                jchaos.setOptions({"uri":location.host+":8081"});
+        jchaos.setOptions({"uri":location.host+":8081","socketio":location.host+":4000"});
 		var url_server =  location.host; //"chaosdev-webui1.chaos.lnf.infn.it";
 		var n_port = "8081";
+		jchaos.ioconnect();
+		jchaos.options.io_onchat=(msg)=>{
+			
+			chat_incoming_message.dispatchEvent(new CustomEvent("chat_incoming_message", {detail:msg}));
+			if(msg.type=="alarm"){
+				alert("ALARM FROM \""+msg.username+"\" MESSAGE:"+msg.msg);
+			}
+		}
+		/*const socket=io("ws://"+url_server+":4000",{transports: ['websocket']});
+		var ws_socket=null;
+		socket.on("connect", () => {
+			ws_socket=socket;
+		});
+		socket.on("connect", () => {
+			ws_socket=socket;
+			console.log("CONNECTED to "+"ws://"+url_server+":4000"+ " client id:"+socket.id);
+		});
+		socket.on("disconnect", () => {
+			ws_socket=null;
+			console.log("DISCONNECTED from "+"ws://"+url_server+":4000"+ " client id:"+socket.id);
 
-	
+		});
+	*/
 	</script>	
 	
 
