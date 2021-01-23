@@ -1,4 +1,16 @@
-
+function avatarFromMessage(value){
+    var avatar="assets/avatar/captainamerica.png";
+                if(value.type=="bug"){
+                    avatar="img/swbug.png";
+                }
+                if(value.type=="alarm"){
+                    avatar="img/alarm.png";
+                }
+                if(value.type=="system"){
+                    avatar="img/logo_chaos_col_xMg_icon.ico";
+                }
+    return avatar;
+}
 const chatService = function() {
     $('#empty-chat').hide();
     $('#group-message-holder').hide();
@@ -43,24 +55,19 @@ const chatService = function() {
             },
             insertMessage:function(t){
                 if(t.username==$('#loggedInUID').val()){
+                    console.log("filter self messages:"+JSON.stringify(t));
                     return;
                 }
                 messageArray.push(t);
                 this.fetchMessages();
+                this.onMessageReceived();
+
             },
         fetchMessages: function() {
-            $.each(messageArray, function(index, value) {
+            messageArray.forEach(function(value) {
                 let messageList;
-                var avatar="assets/avatar/captainamerica.png";
-                if(value.type=="bug"){
-                    avatar="img/swbug.png";
-                }
-                if(value.type=="alarm"){
-                    avatar="img/alarm.png";
-                }
-                if(value.type=="system"){
-                    avatar="img/logo_chaos_col_xMg_icon.ico";
-                }
+                var avatar=avatarFromMessage(value);
+                
                 if (value.username !== $('#loggedInUID').val()) {
                     messageList = `
                     <div class="received-chats old-chats">
@@ -130,13 +137,14 @@ const chatService = function() {
                     </div>                    
                     `
                 } else {
+                    var avatar=avatarFromMessage(value);
                     messageList = `
                     <div class="outgoing-chats old-chats">
                         <div class="outgoing-chats-msg">
                             <p>${value.msg}</p>
                         </div>
                         <div class="outgoing-chats-img">
-                            <img src="assets/avatar/captainamerica.png" alt="" class="avatar">
+                            <img src="${avatar}" alt="" class="avatar">
                         </div>
                     </div>
 `
