@@ -4493,13 +4493,23 @@
         }
         updateGenericTableDataset(tmpObj);
     }
-
+    jqccs.checkLiveCU=function(tmpObj){
+        return checkLiveCU(tmpObj);
+    }
     function checkLiveCU(tmpObj) {
         var node_live_selected = tmpObj.data;
+        if(tmpObj.off_line === undefined){
+            tmpObj['off_line']={};
+        }
+        if( tmpObj.health_time_stamp_old === undefined){
+            tmpObj['health_time_stamp_old']={};
+
+        }
+        var now = (new Date()).getTime();
 
         node_live_selected.forEach(function (elem, index) {
-            var curr_time;
-            var name = "";
+            var curr_time=0;
+            var name ;
             if (elem.hasOwnProperty("dpck_ats")) {
                 curr_time = elem.dpck_ats;
             } else if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("dpck_ats")) {
@@ -4514,9 +4524,10 @@
             } else if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("ndk_uid")) {
                 name = elem.output.ndk_uid;
             }
-            var ename = jchaos.encodeName(name);
 
-            if ((curr_time != null) && (name != null)) {
+            if ((curr_time != null) && (name !== undefined)) {
+                var ename = jchaos.encodeName(name);
+
                 if (tmpObj.health_time_stamp_old.hasOwnProperty(name) && ((tmpObj.health_time_stamp_old[name] == 0) || (tmpObj.health_time_stamp_old[name] == null))) {
                     tmpObj.off_line[name] = 2; // just contacted;
                     tmpObj.health_time_stamp_old[name] = curr_time;
@@ -4524,7 +4535,7 @@
                     $("#" + ename).find('td').css('color', 'orange');
                 } else {
                     var diff = (curr_time - tmpObj.health_time_stamp_old[name]);
-                    if (diff != 0) {
+                    if ((diff != 0)||((now -curr_time)<10000)) {
                         $("#" + ename).css('color', 'green');
                         $("#" + ename).find('td').css('color', 'green');
 
@@ -7559,6 +7570,10 @@
                     if (el.health.hasOwnProperty("cuh_dso_size")) {
                         var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
                         $("#" + name_id + "_health_pband").html(band.toFixed(3));
+                    }
+                    if(tmpObj.off_line === undefined){
+                        tmpObj['off_line']={};
+                        tmpObj['off_line'][name_device_db]=0;
                     }
                     if ((status != "Unload") && (status != "Fatal Error")) {
                         switch (tmpObj.off_line[name_device_db]) {

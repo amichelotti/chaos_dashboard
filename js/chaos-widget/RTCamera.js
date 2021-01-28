@@ -446,8 +446,11 @@ function rebuildCam(tmpObj){
       }
       jchaos.options['io_onmessage']= (ds)=>{
                 
+
         var id = jchaos.encodeName(ds.ndk_uid);
         var start =Date.now();
+        if(ds.dpck_ds_type==0){
+          // output
         if(old_tim[id]){
           if(counter[id]%100==0){
             tcum[id]=0;
@@ -470,7 +473,14 @@ function rebuildCam(tmpObj){
                 $("#info-" + id).html("frame:" + ds.dpck_seq_id+ " Hz:"+freq.toFixed(2));
 
       }
+  } else {
+    tmpObj['data']=[jchaos.chaosDatasetToFullDS(ds)];
+    //console.log("Not output:"+JSON.stringify(tmpObj['data']));
+    jqccs.checkLiveCU(tmpObj);
+    jqccs.updateGenericTableDataset(tmpObj);
+
   }
+}
       jchaos.iosubscribeCU(selectedCams);
 
 
@@ -748,8 +758,6 @@ function rebuildCam(tmpObj){
 
           });
         }
-      }
-
         jchaos.getChannel(tmpObj['elems'], 255, function (selected) {
           tmpObj.data = selected;
 
@@ -757,6 +765,9 @@ function rebuildCam(tmpObj){
         }, function (str) {
           console.log(str);
         });
+      }
+
+        
 
 
       },
