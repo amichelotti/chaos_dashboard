@@ -8503,6 +8503,9 @@
         });
     }
     
+    jqccs.createQueryDialog=function(querycb, opencb, gopt) {
+        return createQueryDialog(querycb, opencb, gopt);
+    }
     function createQueryDialog(querycb, opencb, gopt) {
         var dstart = new Date();
         dstart.setHours(0, 0, 0, 0);

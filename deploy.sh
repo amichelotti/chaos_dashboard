@@ -13,8 +13,9 @@ scp -r ../chaos_dashboard chaos@chaos-webui03.chaos.lnf.infn.it:/usr/local/chaos
 else
 echo "* DEVELOPMENT/PREPRODUCTION"
 echo "   <b><font size="4" color=\"green\">Development/Preproduction</font></b>" > target.html
-scp -r ../chaos_dashboard chaos@chaost-webui01.chaos.lnf.infn.it:/usr/local/chaos/chaos-distrib/html/
-scp -r ../chaos_dashboard chaos@chaost-webui02.chaos.lnf.infn.it:/usr/local/chaos/chaos-distrib/html/
+scp -r ../chaos_dashboard amichelo@chaost-webui01.chaos.lnf.infn.it:
+scp -r ../chaos_dashboard amichelo@chaost-webui02.chaos.lnf.infn.it:
+scp -r ../chaos_dashboard amichelo@chaost-webui03.chaos.lnf.infn.it:
 fi
 
 
