@@ -407,14 +407,13 @@ function rebuildCam(tmpObj){
     }
     html += "</table>";
     $("#cameraTable").html(html);
-    var old_tim={},counter={},tcum={};
 
     selectedCams.forEach(function (key) {
       var encoden = jchaos.encodeName(key);
-      old_tim[encoden]=0;
+   /*   old_tim[encoden]=0;
       counter[encoden]=0;
       tcum[encoden]=0;
-
+*/
       $("#cameraImage-" + encoden).on('click', function () {
         $("#cameraImage-" + encoden).cropper({
           aspectRatio: 1,
@@ -438,54 +437,7 @@ function rebuildCam(tmpObj){
         });
       })
     });
-    if((jchaos.socket!=null)&&(jchaos.socket.connected)){
-      jchaos.options['io_onconnect']=(s)=>{
-        console.log("resubscribe ..")
-
-        jchaos.iosubscribeCU(selectedCams);
-      }
-      jchaos.options['io_onmessage']= (ds)=>{
-                
-
-        var id = jchaos.encodeName(ds.ndk_uid);
-        var start =Date.now();
-        if(ds.dpck_ds_type==0){
-          // output
-        if(old_tim[id]){
-          if(counter[id]%100==0){
-            tcum[id]=0;
-            counter[id]=1;
-          } else {
-            counter[id]++;
-          }  
-          tcum[id]+=(start-old_tim[id]);
-
-        }
-        old_tim[id]=start;
-              
-              
-              // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-              $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
-              const freq=1000.0*counter[id]/tcum[id];
-              if (ds.WIDTH !== undefined) {
-                $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:"+freq.toFixed(2));
-              } else {
-                $("#info-" + id).html("frame:" + ds.dpck_seq_id+ " Hz:"+freq.toFixed(2));
-
-      }
-  } else {
-    tmpObj['data']=[jchaos.chaosDatasetToFullDS(ds)];
-    //console.log("Not output:"+JSON.stringify(tmpObj['data']));
-    jqccs.checkLiveCU(tmpObj);
-    jqccs.updateGenericTableDataset(tmpObj);
-
-  }
-}
-      jchaos.iosubscribeCU(selectedCams);
-
-
-     
-  }
+  
     $.contextMenu('destroy', '.cameraMenu');
 
     $.contextMenu({
@@ -772,6 +724,8 @@ function rebuildCam(tmpObj){
 
       },
       tableFn: function (tmpObj) {
+        var old_tim={},counter={},tcum={};
+
         var cu = tmpObj.elems;
         var template = tmpObj.type;
 
@@ -814,6 +768,9 @@ function rebuildCam(tmpObj){
         html += '</thead> ';
         $(cu).each(function (i) {
           var cuname = jchaos.encodeName(cu[i]);
+          old_tim[cuname]=0;
+      counter[cuname]=0;
+      tcum[cuname]=0;
           html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
           html += '<th scope="row"><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" name="' + cu[i] + '" id="s-' + cuname + '">';
           html += '<label class="custom-control-label" for="s-' + cuname + '">' + cu[i] + '</label></div></th>';
@@ -846,6 +803,55 @@ function rebuildCam(tmpObj){
         html += '</div>';
         html += '</div>';
         html += '</div>';
+
+        if((jchaos.socket!=null)&&(jchaos.socket.connected)){
+          jchaos.options['io_onconnect']=(s)=>{
+            console.log("resubscribe ..")
+    
+            jchaos.iosubscribeCU(cu);
+          }
+          jchaos.options['io_onmessage']= (ds)=>{
+                    
+    
+            var id = jchaos.encodeName(ds.ndk_uid);
+            var start =Date.now();
+            if(ds.dpck_ds_type==0){
+              // output
+            if(old_tim[id]){
+              if(counter[id]%100==0){
+                tcum[id]=0;
+                counter[id]=1;
+              } else {
+                counter[id]++;
+              }  
+              tcum[id]+=(start-old_tim[id]);
+    
+            }
+            old_tim[id]=start;
+                  
+                  
+                  // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
+                  $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+                  const freq=1000.0*counter[id]/tcum[id];
+                  if (ds.WIDTH !== undefined) {
+                    $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:"+freq.toFixed(2));
+                  } else {
+                    $("#info-" + id).html("frame:" + ds.dpck_seq_id+ " Hz:"+freq.toFixed(2));
+    
+          }
+      } else {
+        tmpObj['data']=[jchaos.chaosDatasetToFullDS(ds)];
+        //console.log("Not output:"+JSON.stringify(tmpObj['data']));
+        jqccs.checkLiveCU(tmpObj);
+        jqccs.updateGenericTableDataset(tmpObj);
+    
+      }
+    }
+          jchaos.iosubscribeCU(cu);
+    
+    
+         
+      }
         return html;
       },
       cmdFn: function (tmpObj) {
