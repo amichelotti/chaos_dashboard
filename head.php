@@ -4,6 +4,27 @@
  * User: eliana
  * Date: 21/05/16
  */
+function getUserIP() {
+    $userIP =   '';
+    if(isset($_SERVER['HTTP_CLIENT_IP'])){
+        $userIP =   $_SERVER['HTTP_CLIENT_IP'];
+    }elseif(isset($_SERVER['HTTP_X_FORWARDED_FOR'])){
+        $userIP =   $_SERVER['HTTP_X_FORWARDED_FOR'];
+    }elseif(isset($_SERVER['HTTP_X_FORWARDED'])){
+        $userIP =   $_SERVER['HTTP_X_FORWARDED'];
+    }elseif(isset($_SERVER['HTTP_X_CLUSTER_CLIENT_IP'])){
+        $userIP =   $_SERVER['HTTP_X_CLUSTER_CLIENT_IP'];
+    }elseif(isset($_SERVER['HTTP_FORWARDED_FOR'])){
+        $userIP =   $_SERVER['HTTP_FORWARDED_FOR'];
+    }elseif(isset($_SERVER['HTTP_FORWARDED'])){
+        $userIP =   $_SERVER['HTTP_FORWARDED'];
+    }elseif(isset($_SERVER['REMOTE_ADDR'])){
+        $userIP =   $_SERVER['REMOTE_ADDR'];
+    }else{
+        $userIP =   'UNKNOWN';
+    }
+	return $userIP;
+}
 ?>
 <head>
 
@@ -142,10 +163,16 @@
 		<div id="chat_incoming_message"></div>
 
         <script>
+		var myip="<?php echo getUserIP(); ?>";
+		if(localStorage['chaos_browser_uuid_cookie'] === undefined){
+		//	alert();
+		
+			localStorage['chaos_browser_uuid_cookie']=jchaos.generateUID();
+		}
         jchaos.setOptions({"uri":location.host+":8081","socketio":location.host+":4000"});
 		var url_server =  location.host; //"chaosdev-webui1.chaos.lnf.infn.it";
 		var n_port = "8081";
-		jchaos.ioconnect();
+		jchaos.ioconnect(location.host+":4000",{query: {"client_uid": localStorage['chaos_browser_uuid_cookie']}});
 		jchaos.options.io_onchat=(msg)=>{
 			
 			chat_incoming_message.dispatchEvent(new CustomEvent("chat_incoming_message", {detail:msg}));
