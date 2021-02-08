@@ -1297,7 +1297,11 @@ require_once('header.php');
 				}
 				return;
 			}
-			jchaos.node(nodes, "desc", "all", (d) => {
+			//patch for empty names...
+			var filtered = nodes.filter(function (el) {
+  				return el != "";
+		});
+			jchaos.node(filtered, "desc", "all", (d) => {
 				// add before agents and us
 
 				d.forEach(edesc => {
