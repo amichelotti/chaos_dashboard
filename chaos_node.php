@@ -492,6 +492,25 @@ require_once('header.php');
 				var selected_node = node.data.ndk_uid;
 				var type = node.data.ndk_type;
 
+				if((type == "nt_control_unit")&&node.data.hasOwnProperty('instance_description') && (node.data.instance_description.hasOwnProperty('control_unit_implementation'))){
+					items['control'] = {
+						"separator_before": true,
+						"separator_after": true,
+						label: "Control..",
+						action: function () {
+							var opt={
+								node_selected:selected_node,
+								elems:[selected_node],
+								node_multi_selected:[selected_node],
+								template:jchaos.encodeName(selected_node),
+								check_interval: 5000
+
+							};
+							jqccs.openControl("Control "+selected_node,opt,node.data.instance_description.control_unit_implementation,1000);
+							return;
+						}
+					};
+				}
 				if ((type == "nt_control_unit") || (type == "nt_root")) {
 					var uid
 					items['edit'] = {
@@ -1278,7 +1297,11 @@ require_once('header.php');
 				}
 				return;
 			}
-			jchaos.node(nodes, "desc", "all", (d) => {
+			//patch for empty names...
+			var filtered = nodes.filter(function (el) {
+  				return el != "";
+		});
+			jchaos.node(filtered, "desc", "all", (d) => {
 				// add before agents and us
 
 				d.forEach(edesc => {

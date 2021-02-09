@@ -231,12 +231,21 @@
             }]
         });
     }
+    jqccs.openControl=function (msg, tmpObj, cutype, refresh) {
+        
+        tmpObj['elems']=[tmpObj['node_selected']];
+        tmpObj['node_multi_selected']=[tmpObj['node_selected']];
+        tmpObj['template']=jchaos.encodeName(tmpObj['node_selected']);
+        tmpObj['check_interval']=tmpObj.check_interval || 5000;
+        tmpObj['checkLiveFn'] = tmpObj.checkLiveFn || checkLiveCU;
+
+        return openControl(msg, tmpObj, cutype, refresh);
+    }
 
     function openControl(msg, tmpObj, cutype, refresh) {
         var newObj = Object.assign({}, tmpObj);
-        var html = '<div><div id="specific-table-ctrl"></div>';
-        html += '<div id="specific-control-ctrl"></div></div>';
-        newObj.template = "ctrl";
+        var html = '<div><div id="specific-table-'+tmpObj.template+'"></div>';
+        html += '<div id="specific-control-'+tmpObj.template+'"></div></div>';
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
         changeView(newObj, cutype, function (newObj) {
@@ -385,7 +394,7 @@
                             var encoden = jchaos.encodeName(p.script_name);
                             delete p._id;
                             if (p.seq > 0) {
-                                p['date'] = (new Date(p.seq)).toUTCString();
+                                p['date'] = jchaos.getDateTime(p.seq);
                             }
                             var sgroup = "";
                             if ((typeof group === "string") && (p.hasOwnProperty("script_group"))) {
@@ -464,6 +473,7 @@
    }*/
     function showDataset(msghead, cuname, refresh, tmpObj) {
         var update;
+        var options={};
         var started = 0;
         var stop_update = false;
         var showformat = 0;
@@ -1170,7 +1180,7 @@
                                 }
                                 last_log_time = r.data.process.last_log_time;
                             } else {
-                                var str = "[" + (new Date()).toString() + "] Cannot retrieve process on " + server;
+                                var str = "[" + jchaos.getDateTime() + "] Cannot retrieve process on " + server;
                                 $('#console-' + pid).terminal().error(str);
 
                             }
@@ -1401,7 +1411,9 @@
         var arglist = [];
         var node_selected = tmpObj.node_selected;
         if (node_selected == null) {
-            return arglist;
+            instantMessage("Command Aborted", "You must select the Node", 3000, false);
+
+            return null;
         }
         //var name = jchaos.encodeName(tmpObj.node_selected);
         var name = tmpObj.node_selected;
@@ -2666,7 +2678,7 @@
                 }
 
                 gphs[gtsave.name]=gtsave;
-                gphs[gtsave.name]["time"]=new Date().toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+                gphs[gtsave.name]["time"]=jchaos.getDateTime();
                 jchaos.variable("graphs", "set",gphs, function (gphs) {
                     if(typeof cb === "function"){
                         cb(gphs)
@@ -2926,8 +2938,7 @@
      */
 
 
-    function jsonSetup(dom, tmpObj) {
-        var collapsed = options.collapsed;
+    function jsonSetup(dom, tmpObj,options) {
         var node_selected = "none";
         if (tmpObj != null && tmpObj.hasOwnProperty("node_selected")) {
             node_selected = tmpObj.node_selected;
@@ -3403,6 +3414,7 @@
             var alias = $(this).attr("cucmdid");
             var parvalue = $(this).attr("cucmdvalue");
             var mult = $(this).attr("cucmdvalueMult");
+            var template=$(this).attr("cutemplate");
             var complete_command = false;
             var cmdparam = {};
             var cuselection;
@@ -3445,10 +3457,18 @@
                 var arglist;
                 var arguments = {};
                 arglist = retriveCurrentCmdArguments(tmpObj, alias);
+                if(arglist==null){
+                    return;
+                }
                 arglist.forEach(function (item, index) {
                     // search for values
                     if (parvalue == null) {
-                        parvalue = $("#" + alias + "_" + item['name']).val();
+                        if(template){
+                            parvalue = $("#"+template+"-" + alias + "_" + item['name']).val();
+                        } else {
+                            parvalue = $("#"+alias + "_" + item['name']).val();
+
+                        }
                     }
                     if ((parvalue == null) && (item['optional'] == false)) {
                         alert("argument '" + item['name'] + "' is required in command:'" + alias + "'");
@@ -4493,13 +4513,23 @@
         }
         updateGenericTableDataset(tmpObj);
     }
-
+    jqccs.checkLiveCU=function(tmpObj){
+        return checkLiveCU(tmpObj);
+    }
     function checkLiveCU(tmpObj) {
         var node_live_selected = tmpObj.data;
+        if(tmpObj.off_line === undefined){
+            tmpObj['off_line']={};
+        }
+        if( tmpObj.health_time_stamp_old === undefined){
+            tmpObj['health_time_stamp_old']={};
+
+        }
+        var now = (new Date()).getTime();
 
         node_live_selected.forEach(function (elem, index) {
-            var curr_time;
-            var name = "";
+            var curr_time=0;
+            var name ;
             if (elem.hasOwnProperty("dpck_ats")) {
                 curr_time = elem.dpck_ats;
             } else if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("dpck_ats")) {
@@ -4514,9 +4544,10 @@
             } else if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("ndk_uid")) {
                 name = elem.output.ndk_uid;
             }
-            var ename = jchaos.encodeName(name);
 
-            if ((curr_time != null) && (name != null)) {
+            if ((curr_time != null) && (name !== undefined)) {
+                var ename = jchaos.encodeName(name);
+
                 if (tmpObj.health_time_stamp_old.hasOwnProperty(name) && ((tmpObj.health_time_stamp_old[name] == 0) || (tmpObj.health_time_stamp_old[name] == null))) {
                     tmpObj.off_line[name] = 2; // just contacted;
                     tmpObj.health_time_stamp_old[name] = curr_time;
@@ -4524,7 +4555,7 @@
                     $("#" + ename).find('td').css('color', 'orange');
                 } else {
                     var diff = (curr_time - tmpObj.health_time_stamp_old[name]);
-                    if (diff != 0) {
+                    if ((diff != 0)||((now -curr_time)<10000)) {
                         $("#" + ename).css('color', 'green');
                         $("#" + ename).find('td').css('color', 'green');
 
@@ -4569,9 +4600,14 @@
                 node_list = cuids;
             }
         }
+        tmpObj['health_time_stamp_old']={};
+        tmpObj['off_line']= {};
+        tmpObj['node_name_to_index']={};
+        tmpObj['node_name_to_desc']= {};
+
         node_list.forEach(function (elem, id) {
-            tmpObj.index = -1;
-            tmpObj.health_time_stamp_old[elem] = 0;
+            tmpObj['index'] = -1;
+            tmpObj['health_time_stamp_old'][elem] = 0;
             tmpObj.off_line[elem] = 2;
             tmpObj.node_name_to_index[elem] = id;
         });
@@ -4593,6 +4629,11 @@
         tmpObj.last_check = 0;
         tmpObj.updateErrors = 0;
         tmpObj.skip_fetch = 0;
+        if(tmpObj.upd_chan==-4){
+            // completely custom, not setInterval 
+            tmpObj.updateFn(tmpObj);
+
+        } else {
         tmpObj.node_list_interval = setInterval(function () {
             if (tmpObj.skip_fetch > 0) {
                 return;
@@ -4636,7 +4677,7 @@
 
             tmpObj.lastUpdate = now;
         }, tmpObj.refresh_rate, tmpObj.updateTableFn);
-
+    }
     }
 
 
@@ -4645,14 +4686,14 @@
      */
     function changeView(tmpObj, cutype, handler) {
 
-        tmpObj.upd_chan = 255;
-        tmpObj.type = "cu";
+        tmpObj['upd_chan'] = 255;
+        tmpObj['type'] = "cu";
 
-        tmpObj.generateTableFn = generateGenericTable;
-        tmpObj.generateCmdFn = generateGenericControl;
-        tmpObj.updateFn = updateGenericCU;
-        tmpObj.refresh_rate = dashboard_settings.generalRefresh;
-        tmpObj.updateInterfaceFn = updateInterfaceCU;
+        tmpObj['generateTableFn'] = generateGenericTable;
+        tmpObj['generateCmdFn'] = generateGenericControl;
+        tmpObj['updateFn'] = updateGenericCU;
+        tmpObj['refresh_rate'] = dashboard_settings.generalRefresh;
+        tmpObj['updateInterfaceFn'] = updateInterfaceCU;
 
         if ((cutype.indexOf("SCPowerSupply") != -1)) {
             tmpObj.upd_chan = -1;
@@ -4666,11 +4707,11 @@
             tmpObj.upd_chan = -1;
         } else if ((cutype.indexOf("RTCamera") != -1)) {
             tmpObj.type = "RTCamera";
-
             tmpObj.upd_chan = -2;
-            tmpObj.maxCameraCol = dashboard_settings.camera.maxCameraCol;
-            tmpObj.cameraPerRow = dashboard_settings.camera.cameraPerRow;
-            tmpObj.refresh_rate = dashboard_settings.camera.cameraRefresh;
+
+            tmpObj['maxCameraCol'] = dashboard_settings.camera.maxCameraCol;
+            tmpObj['cameraPerRow'] = dashboard_settings.camera.cameraPerRow;
+            tmpObj['refresh_rate'] = dashboard_settings.camera.cameraRefresh;
             jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
         } else if ((cutype.indexOf("SCLibera") != -1)) {
             tmpObj.type = "SCLibera";
@@ -4680,16 +4721,16 @@
         }
         $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function (data, textStatus, jqxhr) {
             var w = getWidget();
-            tmpObj.htmlFn = w.dsFn;
-            tmpObj.generateTableFn = w.tableFn;
+            tmpObj['htmlFn'] = w.dsFn;
+            tmpObj['generateTableFn'] = w.tableFn;
             if (w.hasOwnProperty('cmdFn')) {
-                tmpObj.generateCmdFn = w.cmdFn;
+                tmpObj['generateCmdFn'] = w.cmdFn;
             }
             if (w.hasOwnProperty('updateFn')) {
-                tmpObj.updateFn = w.updateFn;
+                tmpObj['updateFn'] = w.updateFn;
             }
             if (w.hasOwnProperty('updateInterfaceFn')) {
-                tmpObj.updateInterfaceFn = w.updateInterfaceFn;
+                tmpObj['updateInterfaceFn'] = w.updateInterfaceFn;
             }
             if (w.hasOwnProperty('tableClickFn')) {
                 tmpObj['tableClickFn'] = w.tableClickFn;
@@ -4902,8 +4943,8 @@
                         'start': query.start.toString(),
                         'end': query.stop.toString()
                     };
-                    var st = (new Date(query.start)).toDateString();
-                    var en = (new Date(query.start)).toDateString();
+                    var st = jchaos.getDateTime(query.start);
+                    var en = jchaos.getDateTime(query.end);
 
                     jchaos.node(node_selected, "deletedata", "all", null, val, function (data) {
                         instantMessage("Node Data deleted ", "from:" + st + "[" + query.start + "] end:" + en + "[" + query.stop + "]", 4000, true);
@@ -6241,11 +6282,11 @@
             }
             var ptype = tmpObj.data[p].ptype;
 
-            var started_timestamp = (new Date(Number(tmpObj.data[p].start_time))).toLocaleString();
-            var end_timestamp = (tmpObj.data[p].end_time > 0) ? (new Date(Number(tmpObj.data[p].end_time))).toLocaleString() : "--";
+            var started_timestamp = jchaos.getDateTime(tmpObj.data[p].start_time);
+            var end_timestamp = (tmpObj.data[p].end_time > 0) ? jchaos.getDateTime(Number(tmpObj.data[p].end_time)): "--";
             var last_log = (now - tmpObj.data[p].last_log_time) / 1000;
             var pid = tmpObj.data[p].pid;
-            var timestamp = (new Date(Number(tmpObj.data[p].ts))).toLocaleString();
+            var timestamp = jchaos.getDateTime(Number(tmpObj.data[p].ts));
             var uptime = tmpObj.data[p].uptime;
             var systime = parseFloat(tmpObj.data[p].Psys).toFixed(3);
             var cputime = parseFloat(tmpObj.data[p].Puser).toFixed(3);
@@ -6312,7 +6353,7 @@
                 var list_algo = l['found_script_list'];
                 list_algo.forEach(function (p) {
                     var encoden = jchaos.encodeName(p.script_name);
-                    var date = new Date(p.seq);
+                    var date = jchaos.getDateTime(p.seq);
                     tmpObj.node_name_to_desc[p.script_name] = p;
                     $("#table_script").append('<tr class="row_element" title="' + p.script_description + '" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
                         '<td>' + p.script_name + '</td>' +
@@ -7547,13 +7588,17 @@
                     el.tmUtm = jchaos.toHHMMSS(el.health.nh_upt);
                     status = el.health.nh_status;
                     $("#" + name_id + "_health_uptime").html(el.tmUtm);
-                    $("#" + name_id + "_health_timestamp").html(new Date(el.tmStamp).toLocaleString());
+                    $("#" + name_id + "_health_timestamp").html(jchaos.getDateTime(el.tmStamp));
                     $("#" + name_id + "_health_usertime").html(el.usrTime);
                     $("#" + name_id + "_health_systemtime").html(el.systTime);
                     $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
                     if (el.health.hasOwnProperty("cuh_dso_size")) {
                         var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
                         $("#" + name_id + "_health_pband").html(band.toFixed(3));
+                    }
+                    if(tmpObj.off_line === undefined){
+                        tmpObj['off_line']={};
+                        tmpObj['off_line'][name_device_db]=0;
                     }
                     if ((status != "Unload") && (status != "Fatal Error")) {
                         switch (tmpObj.off_line[name_device_db]) {
@@ -8468,8 +8513,23 @@
         };
 
     }
-    jqccs.createQueryDialog = function (querycb, opencb, opt) {
-        return createQueryDialog(querycb, opencb, opt);
+    jqccs.createDialogFromFile=function(url,idname,title,opt){
+        dopt=opt||{modal:false,draggable:true,
+                            closeOnEscape: true,
+                            title:title,
+                            minWidth:$(window).width()/2,
+                            minHeight:$(window).height()/2
+                            
+
+        };
+        $('<div id=' + idname + ' class="chat-modal"></div>').dialog(dopt);
+        $.get(url, function(data) {
+            $("#"+idname).html( data );
+        });
+    }
+    
+    jqccs.createQueryDialog=function(querycb, opencb, gopt) {
+        return createQueryDialog(querycb, opencb, gopt);
     }
     function createQueryDialog(querycb, opencb, gopt) {
         var dstart = new Date();
@@ -9272,7 +9332,7 @@
         }
 
         high_graphs = jchaos.variable("highcharts", "get", null, null);
-        var tempo = (new Date()).toString();
+        var tempo = jchaos.getDateTime();
         high_graphs[graphname] = {
             name: graphname,
             width: width_,
@@ -9587,6 +9647,7 @@
                     var cuselection;
                     var cmdselected = $("#cu_full_commands option:selected").val();
                     var arguments = retriveCurrentCmdArguments(tmpObj, cmdselected);
+                    if(arguments==null) return;
                     var force = $("#cmd-force option:selected").val();
 
                     arguments.forEach(function (item, index) {
@@ -10740,7 +10801,7 @@
             var dataset;
             snap_selected = "";
             snaplist.forEach(function (dataset, index) {
-                var date = new Date(dataset.ts);
+                var date = jchaos.getDateTime(dataset.ts);
                 $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
             });
             $("#table_snap tbody tr").click(function (e) {
@@ -10794,7 +10855,7 @@
             if (data.hasOwnProperty("result_list")) {
                 data.result_list.forEach(function (item) {
                     if ((item.mdsndk_nl_ld == logtype) || (logtype == "all")) {
-                        var dat = new Date(item.mdsndk_nl_lts).toString();
+                        var dat = jchaos.getDateTime(item.mdsndk_nl_lts);
                         var nam = item.mdsndk_nl_sid;
                         var msg = item.mdsndk_nl_e_em;
                         var type = item.mdsndk_nl_ld;
@@ -11104,7 +11165,7 @@
                     //alert("version:"+JSON.stringify(ver));
                     ver.forEach(function (ele, i) {
                         var tt = ele.lastConnection / 1000;
-                        ver[i]['updated'] = (new Date(Number(tt))).toLocaleString();
+                        ver[i]['updated'] = jchaos.getDateTime(Number(tt));
                     });
 
                     showJson("CLIENTS", ver);

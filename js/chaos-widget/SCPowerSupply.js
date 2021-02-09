@@ -89,23 +89,23 @@ function getWidget() {
         html += '</div>';
         html += '<div class="box-content">';
         html += '<div class="row">';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSbuttON" cucmdid="mode" title="Powersupply Operational" cucmdvalue=1>';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSbuttON" cutemplate="'+tmpObj.template+'" cucmdid="mode" title="Powersupply Operational" cucmdvalue=1>';
         html += '<i class="material-icons" style="color:green">trending_down</i>';
         html += '<p class="name-cmd">On</p>';
         html += '</a>';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSbuttOFF" cucmdid="mode" title="Powersupply STBY" cucmdvalue=0>';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSbuttOFF" cutemplate="'+tmpObj.template+'" cucmdid="mode" title="Powersupply STBY" cucmdvalue=0>';
         html += '<i class="material-icons" style="color:red">pause_circle_outline</i>';
         html += '<p class="name-cmd">Standby</p>';
         html += '</a>';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSreset_alarm" title="Reset Powersupply Alarms" cucmdid="rset">';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="PSreset_alarm" title="Reset Powersupply Alarms" cutemplate="'+tmpObj.template+'" cucmdid="rset">';
         html += '<i class="material-icons" style="color:red">error</i>';
         html += '<p class="name-cmd">Reset</p>';
         html += '</a>';
         html += '<div class="col-md-3 box-cmd col-md-offset-1" id="input-value-mag">';
-        html += '<input class="input" type="number" id="sett_sett_cur" name="setCurrent" title="current setpoint in Ampere" type="text" value="">';
+        html += '<input class="input" type="number" id="'+tmpObj.template+'-sett_sett_cur" name="setCurrent" title="current setpoint in Ampere" type="text" value="">';
         html += '</div>';
     
-        html += '<a class="quick-button-small col-md-1 btn-value cucmd" cucmdid="sett" id="PSapply_current" >';
+        html += '<a class="quick-button-small col-md-1 btn-value cucmd" cutemplate="'+tmpObj.template+'" cucmdid="sett" id="PSapply_current" >';
         html += '<p>Apply</p>';
         html += '</a>';
         html += '</div>';
