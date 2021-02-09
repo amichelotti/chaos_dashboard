@@ -1,0 +1,98 @@
+<div class="chat-app-wrapper">
+    <nav class="chatnav">
+        <div class="nav-left-section">
+            <img src="img/logo_chaos_col_xMg_icon.ico" class="logo">
+            <span id="title">Chat</span>
+        </div>
+        <div class="nav-right-section">
+            <span class="welcome-messsage" id="loggedInUsername">System</span>
+            <img id="loggedInUserAvatar" src="assets/avatar/captainamerica.png" class="avatar">
+        </div>
+    </nav>
+    <div class="chat">
+        <div class="chat_container">
+            <div class="msg-header">
+                <div class="active">
+                    <h5>
+                        #Chaos
+                    </h5>
+                </div>
+            </div>
+            <div class="chat-page">
+                <div class="msg-inbox">
+                    <div class="chats" id="chats">
+                        <div class="msg-page" id="msg-page">
+                            <div class="loading-message-chat_container" id="loading-message-chat_container">
+                                <div class="spinner">
+                                        <svg width="100" height="100" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" stroke="#003">
+                                            <g fill="none" fill-rule="evenodd">
+                                              <g transform="translate(1 1)" stroke-width="2">
+                                                <circle stroke-opacity=".5" cx="18" cy="18" r="18"/>
+                                                <path d="M36 18c0-9.94-8.06-18-18-18">
+                                                  <animateTransform
+                                                  attributeName="transform"
+                                                  type="rotate"
+                                                  from="0 18 18"
+                                                  to="360 18 18"
+                                                  dur="1s"
+                                                  repeatCount="indefinite"/>
+                                                </path>
+                                              </g>
+                                            </g>
+                                          </svg>
+                                </div>  
+                            </div>
+                            <div id="empty-chat" class="text-center img-fluid empty-chat">
+                                <div class="empty-chat-holder">
+                                    <img src="img/notchaos.png" class="img-res" alt="empty chat image">
+                                </div>
+                                <div>
+                                    <h2>No new message?</h2>
+                                    <h6 class="empty-chat-sub-title">Send your first message below.</h6>
+                                </div>
+                            </div>
+                            <div>
+                                <div id="group-message-holder">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="msg-bottom">
+                        <form class="message-form" id="message-form">
+                            <div class="chat-input-group row">
+                                <textarea id="input-text" class="form-control message-input col-md-9" placeholder="Type something" required></textarea>
+                                <a class="quick-button-small col-md-1 btn-value" title="IM" id="send-message">Msg</a>
+
+                                <a class="quick-button-small col-md-1 btn-value" title="Broadcast an Alarm on All connected Terminal" id="send-alarm">Alarm</a>
+                                <a class="quick-button-small col-md-1 btn-value" title="Signal a bug" id="send-bug">Bug</a>
+                               <!--  <div id="send-message-spinner" class="spinner col-md-1">
+                                        <svg width="30" height="30" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" stroke="#003">
+                                            <g fill="none" fill-rule="evenodd">
+                                              <g transform="translate(1 1)" stroke-width="2">
+                                                <circle stroke-opacity=".5" cx="18" cy="18" r="18"/>
+                                                <path d="M36 18c0-9.94-8.06-18-18-18">
+                                                  <animateTransform
+                                                  attributeName="transform"
+                                                  type="rotate"
+                                                  from="0 18 18"
+                                                  to="360 18 18"
+                                                  dur="1s"
+                                                  repeatCount="indefinite"/>
+                                                </path>
+                                              </g>
+                                            </g>
+                                          </svg>
+                                </div> --> 
+                                <input id="loggedInUID" type="hidden"/>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="js/chatService.js"></script>
+<script src="js/chat_scripts.js"></script>
+<link href="css/chat_css.css" type="text/css" rel="stylesheet"/>

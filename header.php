@@ -37,6 +37,8 @@
 										class="halflings-icon tag"></i> Snapshot</a>
 								<a class="dropdown-item" href="javascript:handle_log()" id="hlog"><i
 										class="halflings-icon list"></i>Log</a>
+								<a class="dropdown-item" href="javascript:handle_chat()" id="hchat"><i
+										class="halflings-icon list"></i>Message chat</a>
 
 							</div>
 						</li>
@@ -384,7 +386,7 @@
 						var encoden = jchaos.encodeName(p.script_name) + "_" + p.seq;
 						delete p._id;
 						if (p.seq > 0) {
-							p['date'] = (new Date(p.seq)).toUTCString();
+							p['date'] = jchaos.getDateTime(p.seq);
 						}
 						var dirs = group_name.split("/");
 						var group = "";
@@ -607,7 +609,7 @@
 					var parent="#";
 					var encoden = jchaos.encodeName(name);
 					if (p.ts !== undefined) {
-						p.ts = (new Date(p.ts)).toLocaleString();
+						p.ts = jchaos.getDateTime(p.ts);
 					}
 					if(dirs.length>1){
 						dirs.forEach((ele, index) => {
@@ -701,7 +703,37 @@
 		}
 		return items;
 	}
+	function handle_chat(){
+		jqccs.createDialogFromFile("chat_dialog.html","chaosim","Chaos IM",{
+			modal:false,draggable:true,
+                            closeOnEscape: true,
+                            title:"Chaos Instant Messaging",
+                            minWidth:$(window).width()/2,
+							minHeight:$(window).height()/2,
+							buttons: [{
+                    id: "close",
+                    text: "Close",
+                    click: function (e) {
+                        $(this).dialog("close");
+                    }
+                }],
+			open:function(){
+				/*chatService.initializeApp();
 
+				// Send message
+				$('#message-form').submit(function(e) {    
+					e.preventDefault(); 
+
+					$('.old-chats').remove();
+					chatService.sendMessage();
+
+
+					$('#message-form').trigger('reset');
+				});*/
+			}
+		});
+		
+	}
 	function handle_log() {
 		//$("body").addClass("loading");
 		jqccs.createQueryDialog(query => {
@@ -721,9 +753,9 @@
 							var name = item.mdsndk_nl_sid;
 							var nodef = jchaos.encodeName(name) + "_" + item.mdsndk_nl_lts;
 
-							var dat = new Date(item.mdsndk_nl_lts).toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+							var dat = jchaos.getDateTime(item.mdsndk_nl_lts);
 
-							item.mdsndk_nl_lts = new Date(item.mdsndk_nl_lts).toLocaleString('it-IT');
+							item.mdsndk_nl_lts = dat;
 							var msg = item.mdsndk_nl_e_em;
 							var type = item.mdsndk_nl_ld;
 							if ((item.mdsndk_nl_l_ld !== undefined) && (item.mdsndk_nl_l_ld == "Error")) {
@@ -846,10 +878,12 @@
 			"separator_after": true,
 			label: "Create Graph",
 			action: function () {
-				jqccs.createEditGraph();
+				jqccs.createEditGraph({},(ok)=>{				
+					$("#refresh-"+pid).trigger("click");
+});
 				}
 		}
-		if (node.hasOwnProperty("data")) {
+		if (node.hasOwnProperty("data")&&node.data.hasOwnProperty('name')) {
 			items['run-graph'] = {
 			"separator_before": false,
 			"separator_after": true,
@@ -892,9 +926,11 @@
 
 								
 							} 
+							gtsave['time']=jchaos.getDateTime();
 							gphs[gtsave.name]=gtsave;
 							jchaos.variable("graphs", "set",gphs, function (gphs) {
 								jqccs.instantMessage("Graph", "Graph " + gtsave.name + " uploaded", 2000, true);
+								$("#refresh-"+pid).trigger("click");
 
 							});
 
@@ -919,6 +955,7 @@
 								jqccs.instantMessage("Graph", "Graph " + gtsave.name + " removed", 2000, true);
 
 							});
+				$("#refresh-"+pid).trigger("click");
 				});
 
 		}
@@ -952,9 +989,6 @@
 			jchaos.variable("graphs", "get", (high_graphs) => {
 
 				for (var g in high_graphs) {
-
-					//var dat = new Date(high_graphs[g].time).toLocaleString('it-IT', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
-
 					var name = g;
 					var type = high_graphs[g].type;
 					var nodef = jchaos.encodeName(name) + "_" + high_graphs[g].time;
