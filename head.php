@@ -56,6 +56,8 @@ function getUserIP() {
 			//echo '<link id="bootstrap-style" href="' .$main_dir. '/bootstrap-3.4.1-dist/css/bootstrap.min.css" rel="stylesheet">';
 			//echo '<script src="'.$main_dir.'/bootstrap-3.4.1-dist/js/bootstrap.min.js"></script>';
 			//echo '<script src="'.$main_dir.'/js/jquery-1.9.1.min.js"></script>';
+			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-ctrl.css" type="text/css" rel="stylesheet" />';;
+
 			echo '<link id="base-style" href="' .$main_dir. '/css/style.css" rel="stylesheet">';
 			echo '<script src="'.$main_dir.'/js/jquery-3.5.1.min.js"></script>';
 			//		echo '<script src="'.$main_dir.'/js/jquery-migrate-1.0.0.min.js"></script>';
@@ -77,7 +79,6 @@ function getUserIP() {
 			echo '<link href="' .$main_dir. '/css/jquery.contextMenu.min.css" rel="stylesheet">';
 			
 			
-			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-ctrl.css" type="text/css" rel="stylesheet" />';;
 			
 			//link script
 			

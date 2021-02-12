@@ -368,7 +368,13 @@ function rebuildCam(tmpObj){
       var hostHeight = $(window).height();
       var maxwidth=Math.trunc(hostWidth/tmpObj.maxCameraCol);
       var maxheight=Math.trunc(hostHeight/tmpObj.cameraPerRow);
-      
+      var pe=$("#push_enable").is(":checked");
+
+      if(pe&&(jchaos.socket!=null)&&(jchaos.socket.connected)){
+        jchaos.iosubscribeCU(tmpObj.elems,false,["o"]);
+        jchaos.iosubscribeCU(selectedCams,true,["o"]);
+
+      }
       selectedCams.forEach(function (key) {
         if (cnt < tmpObj.maxCameraCol) {
           var encoden = jchaos.encodeName(key);
@@ -654,7 +660,9 @@ function rebuildCam(tmpObj){
         if (tmpObj['elems'] instanceof Array) {
           cu = tmpObj.elems;
         }
-        if(jchaos.socket==null || jchaos.socket.connected==false){
+        var pe=$("#push_enable").is(":checked");
+
+        if((pe == false) || jchaos.socket==null || jchaos.socket.connected==false){
 
         if (tmpObj.node_multi_selected instanceof Array) {
 
@@ -737,7 +745,7 @@ function rebuildCam(tmpObj){
 
         var cu = tmpObj.elems;
         var template = tmpObj.type;
-        html += '<div class="row" z-index=-1 id="table-space">';
+        html += '<div class="row" id="table-space">';
         html += '<div class="box col-md-12">';
         html += '<div class="box-content col-md-12">';
         if (cu.length == 0) {
@@ -803,12 +811,14 @@ function rebuildCam(tmpObj){
         html += '</div>';
         html += '</div>';
         html += '</div>';
-
-        if((jchaos.socket!=null)&&(jchaos.socket.connected)){
+        var pe=$("#push_enable").is(":checked");
+        if(pe&&(jchaos.socket!=null)&&(jchaos.socket.connected)){
           jchaos.options['io_onconnect']=(s)=>{
             console.log("resubscribe ..")
-    
-            jchaos.iosubscribeCU(cu);
+            
+            jchaos.iosubscribeCU(cu,true,["i","healt","a","w","s"]);
+            jchaos.iosubscribeCU(selectedCams,true,["o"]);
+
           }
           jchaos.options['io_onmessage']= (ds)=>{
                     
@@ -818,7 +828,7 @@ function rebuildCam(tmpObj){
             if(ds.dpck_ds_type==0){
               // output
             if(old_tim[id]){
-              if(counter[id]%100==0){
+              if((counter[id]%1000)==0){
                 tcum[id]=0;
                 counter[id]=1;
               } else {
@@ -832,11 +842,12 @@ function rebuildCam(tmpObj){
                   
                   // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
                   $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
-                  const freq=1000.0*counter[id]/tcum[id];
+                  let freq=1000.0*counter[id]/tcum[id];
+                  let lat=start-ds.dpck_ats;
                   if (ds.WIDTH !== undefined) {
-                    $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:"+freq.toFixed(2));
+                    $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:"+freq.toFixed(2)+ " lat:"+lat);
                   } else {
-                    $("#info-" + id).html("frame:" + ds.dpck_seq_id+ " Hz:"+freq.toFixed(2));
+                    $("#info-" + id).html("frame:" + ds.dpck_seq_id+ " Hz:"+freq.toFixed(2)+ " lat:"+lat);
     
           }
       } else {
@@ -847,7 +858,7 @@ function rebuildCam(tmpObj){
     
       }
     }
-          jchaos.iosubscribeCU(cu);
+    jchaos.iosubscribeCU(cu,true,["i","healt","a","w","s"]);
     
     
          

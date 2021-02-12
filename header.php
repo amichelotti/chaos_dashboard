@@ -64,15 +64,23 @@
 						<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
 					</form> -->
 				</div>
-				<a class="navbar-brand col-sm" href="#">
+				
+				<a class="navbar-brand col-sm-8" href="#">
 					<div class="row">
-						<h2 class="display2 col-sm">!CHAOS
+						<h2 class="display2 col-sm align-items-left">!CHAOS
 							Dashboard</h2>
 						<div class="col-sm">
 							<?php echo file_get_contents("target.html");echo file_get_contents("version.html");?>
 						</div>
+						
 					</div>
 				</a>
+				<div class="col-sm-1 align-items-right">
+
+						<label class="checkbox-inline">
+  <input type="checkbox" id="push_enable" data-toggle="toggle"> push/poll
+</label>
+</div>
 
 			</nav>
 
