@@ -31,7 +31,7 @@
     var graph_selected;
     var search_string;
     var notupdate_dataset = 1;
-    var implementation_map = { "powersupply": "SCPowerSupply", "motor": "SCActuator", "camera": "RTCamera", "BPM": "SCLibera" };
+    var implementation_map = { "powersupply": ["SCPowerSupply"], "motor": ["SCActuator"], "camera": ["RTCamera","cameraGFIT"], "BPM": ["SCLibera"] };
     var hostWidth = 640;
     var hostHeight = 640;
     function GetURLParameter(sParam) {
@@ -49,9 +49,12 @@
     }
     function getInterfaceFromClass(impl_class) {
         for (var key in implementation_map) {
-            if (impl_class.includes(implementation_map[key])) {
-                return key;
-            }
+            implementation_map[key].forEach(ele=>{
+                if (impl_class.includes(ele)) {
+                    return key;
+                }
+            });
+           
         };
         return null;
     }
@@ -1576,9 +1579,12 @@
             } else if( (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") )){
                 impl=node_name_to_desc[name].instance_description.control_unit_implementation;
             }
-            if( (impl.indexOf(interface) != -1)) {
-                retlist.push(name);
-            }
+            interface.forEach(ele=>{
+                if( (impl.indexOf(ele) != -1)) {
+                    retlist.push(name);
+                }
+            });
+            
         });
 
 
@@ -7041,7 +7047,12 @@
 
         var sopt = { "pagestart": dashboard_settings.current_page, "pagelen": dashboard_settings.maxNodesPerPage };
         if (interface != "--Select--" && interface != "ALL") {
-            sopt['impl'] = implementation_map[interface];
+            if(implementation_map[interface].length==1){
+                sopt['impl']=implementation_map[interface][0];
+            } else {
+                sopt['impl']="";
+            }
+            
         }
         dashboard_settings['search'] = search_string;
         jchaos.search(search_string, what, (alive == "true"), sopt, function (list_cu) {
