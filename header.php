@@ -725,6 +725,11 @@
                         $(this).dialog("close");
                     }
                 }],
+			close:function(){
+				console.log("delete chat service");
+			//	delete chatService;
+				$(this).dialog('destroy');
+			},
 			open:function(){
 				/*chatService.initializeApp();
 
