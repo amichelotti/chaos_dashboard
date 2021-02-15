@@ -178,7 +178,7 @@ function getUserIP() {
 			
 			chat_incoming_message.dispatchEvent(new CustomEvent("chat_incoming_message", {detail:msg}));
 			if(msg.type=="alarm"){
-				alert("ALARM FROM \""+msg.username+"\" MESSAGE:"+msg.msg);
+				alert(msg.date+" ALARM FROM \""+msg.username+"\" MESSAGE:"+msg.msg);
 			}
 		}
 		/*const socket=io("ws://"+url_server+":4000",{transports: ['websocket']});

@@ -64,6 +64,8 @@ const chatService = function() {
 
             },
         fetchMessages: function() {
+            var now=jchaos.getDateTime();
+
             messageArray.forEach(function(value) {
                 let messageList;
                 var avatar=avatarFromMessage(value);
@@ -77,7 +79,7 @@ const chatService = function() {
                     <div class="received-msg">
                         <div class="received-msg-inbox">
                             <p>
-                                <span id="message-sender-id">${value.username}</span><br />
+                                <span id="message-sender-id">${value.username} ${value.date}</span><br />
                                 ${value.msg}
                             </p>
                         </div>
@@ -87,11 +89,11 @@ const chatService = function() {
                 } else {
                     messageList = `
                     <div class="outgoing-chats old-chats">
-                        <div class="outgoing-chats-msg">
+                        <div class="outgoing-chats-msg">${now}
                             <p>${value.msg}</p>
                         </div>
                         <div class="outgoing-chats-img">
-                            <img src=${avatar} alt="" class="avatar">
+                            <img src=${avatar}alt="" class="avatar">
                         </div>
                     </div>
 `
@@ -107,7 +109,8 @@ const chatService = function() {
             let receiverType = "test";
             $('#message-form').trigger('reset');
             messageArray = [...messageArray, message];
-            
+            var now=jchaos.getDateTime();
+
             jchaos.iomessage(message);
             $.each(messageArray, function(index, value) {
                 let messageList;
@@ -129,7 +132,7 @@ const chatService = function() {
                         <div class="received-msg">
                             <div class="received-msg-inbox">
                                 <p>
-                                    <span id="message-sender-id">${value.username}</span><br />
+                                    <span id="message-sender-id">${value.username} ${value.date}</span><br />
                                     ${value.msg}
                                 </p>
                             </div>
@@ -138,9 +141,10 @@ const chatService = function() {
                     `
                 } else {
                     var avatar=avatarFromMessage(value);
+
                     messageList = `
                     <div class="outgoing-chats old-chats">
-                        <div class="outgoing-chats-msg">
+                        <div class="outgoing-chats-msg">${now}
                             <p>${value.msg}</p>
                         </div>
                         <div class="outgoing-chats-img">
