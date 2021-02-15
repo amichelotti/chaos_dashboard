@@ -86,7 +86,7 @@ const chatService = function() {
                     </div>
                 </div>                    
                     `
-                } else {
+                } /*else {
                     messageList = `
                     <div class="outgoing-chats old-chats">
                         <div class="outgoing-chats-msg">${now}
@@ -97,7 +97,7 @@ const chatService = function() {
                         </div>
                     </div>
 `
-                }
+                }*/
                 $('#group-message-holder').append(messageList);
             });
             this.scrollToBottom();
