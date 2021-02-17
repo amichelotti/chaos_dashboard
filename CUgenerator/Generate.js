@@ -2543,7 +2543,7 @@ function GenerateCUCode() {
    driver.file(InterfaceH[0],InterfaceH[1]);
    AddCheckBox(InterfaceH[2]); 
    //alert (InterfaceH[0]+"\n\n"+InterfaceH[1]);
-   var InterfaceCPP = CreateInterfaceSource();
+   var InterfaceCPP = CreateInterfaceSourceNew();
    driver.file(InterfaceCPP[0],InterfaceCPP[1]);
    AddCheckBox(InterfaceCPP[2]); 
    //alert (InterfaceCPP[0]+"\n\n"+InterfaceCPP[1]);
