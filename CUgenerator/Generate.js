@@ -714,7 +714,7 @@ function GenerateSCCUHeader()
     return rett;
 
 }
-
+//Uguale a quella che Michelotti chiama Driver nella new version 
 function CreateAbstractClassHeader() {
     try
     {
@@ -897,7 +897,111 @@ function CalculateInterfaceParamStruct() {
 }
 
 
+//BIG CHANGES
+function CreateInterfaceHeaderNew() {
+    var writer;
+    try
+    {
+        var currentCU=localStorage.getItem('controlUnit');
+        if (currentCU==null)
+            return "";
+        var CU =CUcreate(JSON.parse(currentCU));
+        var  ClassName="Chaos"+CU.Name+ "Interface";
+        var relativeDriver=CU.OffsetFromDriver;
+        var completefilename="driver/"+CU.OffsetFromDriver+CU.Name+"/core/"+ClassName+".h";
+        writer=new FileWriter("",ClassName+".h");
+        PrintHeaderFile(writer,ClassName+".h");
+        writer.WriteLine("#ifndef __"+ClassName+"__");
+        writer.WriteLine("#define __"+ClassName+"__");
+        writer.WriteLine(DEFINES.INTDEFAULTINCLUDES);
+        writer.WriteLine("#include <driver/"+relativeDriver+CU.Name+"/core/Chaos"+CU.Name+"DD.h>" );
+        writer.WriteLine("namespace chaos_driver=::chaos::cu::driver_manager::driver;" );
+        writer.WriteLine("namespace chaos {"); writer.addIndent();
+        writer.WriteLine("namespace driver {"); writer.addIndent();
+        writer.WriteLine("#define MAX_STR_SIZE 256");
+        writer.WriteLine("namespace "+CU.getNameSpace()+" {" ); writer.addIndent();
+        writer.WriteLine("typedef enum {" );writer.addIndent();
+        var lastCmd = CU.Commands[CU.Commands.length - 1];
 
+        for (var  iCmd in CU.Commands)
+        {
+            var cmd=CU.Commands[iCmd];
+            if (cmd.Default)
+                continue;
+            writer.Write(getOpCode(cmd));
+            if (cmd.Name != lastCmd.Name)
+                writer.WriteLineNoInd(",");
+            else
+                writer.WriteLineNoInd("");
+        }
+        writer.delIndent();writer.WriteLine("} Chaos"+CU.Name+"Opcode;");
+        if (ptIparamInterface.length>0)
+        {
+            writer.WriteLine("typedef struct {" ); writer.addIndent();
+            for (var  Iparam in ptIparamInterface)
+            {
+                var param=ptIparamInterface[Iparam];
+                
+                var  tmp=param.replace('&',' ');
+                 if (tmp.includes("string")|| tmp.startsWith("vector<"))
+                    writer.WriteLine("std::" +tmp+";");
+                else
+                    writer.WriteLine(tmp+";" );
+                //alert("orig param is "+param+ " while tmp "+tmp)
+            }
+            writer.delIndent();writer.WriteLine("} "+CU.getNameSpace() +"_iparams_t;");
+        }
+        if (ptOparamInterface.length>0)
+        {
+            writer.WriteLine("typedef struct {" ); writer.addIndent();
+            for (var  p in ptOparamInterface)
+            {
+                var param=ptOparamInterface[p];
+                var  tmp=param.replace('&',' ');
+                tmp = tmp.replace('*', ' ');
+                if (tmp.includes("string") || tmp.startsWith("vector<"))
+                    writer.WriteLine("std::" +tmp+";");
+                else
+                    writer.WriteLine(tmp+";" );
+                //alert("orig OUT param is "+param+ " while tmp "+tmp)
+            }
+            writer.delIndent();writer.WriteLine("} "+CU.getNameSpace() +"_oparams_t;");
+        }
+        //wrapper interface
+        writer.WriteLine("//wrapper interface");
+        writer.WriteLine("class "+ClassName +":public ::common::"+ CU.getNameSpace()+"::Abstract"+CU.Name+ " {"); writer.addIndent();
+        writer.WriteLine("protected:" );
+        writer.WriteLine("chaos_driver::DrvMsg message;");
+        writer.WriteLine("std::string owner;");
+        writer.WriteLine("public: " );
+        writer.WriteLine(ClassName +"(chaos_driver::DriverAccessor*_accessor,const std::string& _owner = \"\"):owner(_owner),accessor(_accessor){" );
+        writer.addIndent();
+        writer.WriteLine("impl = (Chaos"+CU.Name+"DD*)_accessor->getImpl();");
+        writer.delIndent(); writer.WriteLine("}");
+        writer.WriteLine("chaos_driver::DriverAccessor* accessor;" );
+        writer.WriteLine("uint64_t setGeneralAccessorTimeout(uint64_t timeo_ms); ");
+        writer.WriteLine("uint64_t getGeneralAccessorTimeout(); ");
+        writer.WriteLine("Chaos"+CU.Name+"DD* impl;")
+        for (var  icmd in CU.Commands)
+        {
+            var cmd=CMDcreate( CU.Commands[icmd] );
+            if (cmd.Default)
+                continue;
+            writer.WriteLine(cmd.CreateFunctionPrototype()+";" );
+        }
+        writer.delIndent();writer.WriteLine("};");
+        writer.delIndent();writer.WriteLine("}");
+        writer.delIndent();writer.WriteLine("}//driver");
+        writer.delIndent();writer.WriteLine("}//chaos");
+        writer.WriteLine("namespace chaos_"+CU.getNameSpace()+"_dd = chaos::driver::"+CU.getNameSpace()+";" );
+        writer.WriteLine("#endif");
+    }
+    catch(e) {alert("IntfEXC "+e);}
+    var toRet=writer.getFileContent();
+    var flName=writer.FileName;
+    var rett=[flName,toRet,completefilename];
+    return rett;
+}
 function CreateInterfaceHeader() {
     var writer;
     try
@@ -997,7 +1101,62 @@ function CreateInterfaceHeader() {
     var rett=[flName,toRet,completefilename];
     return rett;
 }
+function CreateInterfaceSourceNew() {
+    var writer;
+    try
+    {
+        var currentCU=localStorage.getItem('controlUnit');
+        if (currentCU==null)
+            return "";
+        var CU =CUcreate(JSON.parse(currentCU));
+        var  ClassName="Chaos"+CU.Name+ "Interface";
+        writer=new FileWriter("",ClassName+".cpp");
+        var completefilename="driver/"+CU.OffsetFromDriver+CU.Name+"/core/"+ClassName+".cpp";
+        PrintHeaderFile(writer,ClassName+".cpp");
+        writer.WriteLine("#include \""+ClassName+".h\"" );
+        writer.WriteLine("using namespace chaos::driver::"+ CU.getNameSpace()+";" );
+        CU.PrintStandardPrepareInterfaceMacro(writer);
+        writer.WriteLine("#define WRITE_OP_TIM(op,timeout) \\");
+        writer.WriteLine("PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \\");
+        writer.WriteLine("accessor->send(&message);\\");
+        writer.WriteLine("return ret.result;\n");
+        CU.PrintInterfaceMacros(writer);
 
+               
+        writer.WriteLine("#define INTERFACE_STD_TIMEOUT 4999");
+        writer.WriteLine("uint64_t GeneralTimeout = INTERFACE_STD_TIMEOUT;");
+        writer.WriteLine( "uint64_t "+ClassName+"::getGeneralAccessorTimeout() {return GeneralTimeout;};" );
+        writer.WriteLine( "uint64_t "+ClassName+"::setGeneralAccessorTimeout(uint64_t timeo_ms) {GeneralTimeout=timeo_ms;return GeneralTimeout;};" );
+        for (var  icmd in CU.Commands)
+        {
+            var cmd=CMDcreate(CU.Commands[icmd]);
+            if (cmd.Default)
+                continue;
+            writer.WriteLine(cmd.CreateFunctionPrototype(ClassName) + " {");
+            writer.addIndent();
+            writer.Write("impl->"+cmd.Name+"(");
+            var first=true;
+            for (var   ipar in cmd.Parameters)
+            {
+                var par=CPARcreate(cmd.Parameters[ipar]);
+                if (!first)
+                    writer.WriteNoInd(",");
+                else
+                    first = false;
+                writer.WriteNoInd(par.Name)
+            }
+            writer.WriteLineNoInd(");")
+            writer.delIndent(); writer.WriteLine("}");
+
+            
+        }
+    }
+    catch(e) {alert("EXC "+e);}
+    var toRet=writer.getFileContent();
+    var flName=writer.FileName;
+    var rett=[flName,toRet,completefilename];
+    return rett;
+}
 function CreateInterfaceSource() {
     var writer;
     try
@@ -1110,7 +1269,6 @@ function CreateInterfaceSource() {
     var rett=[flName,toRet,completefilename];
     return rett;
 }
-
 function CreateAbstractCommandHeader(){
     var writer;
     var completefilename;
@@ -1300,7 +1458,61 @@ function CreateConstantFile() {
     var rett=[flName,toRet,completefilename];
     return rett;
 }
-
+//Aggiunta derivazione da classe astratta AbstractAutoGenerated.h
+//Aggiunta lista prototipi
+function CreateDeviceDriverHeaderNew() {
+    var writer;
+    try
+    {
+        var currentCU=localStorage.getItem('controlUnit');
+        if (currentCU==null)
+            return "";
+        var CU =CUcreate(JSON.parse(currentCU));
+        var ClassName="Chaos"+CU.Name+ "DD";
+        var  relativeCommon=CU.OffsetFromCommon;
+        var completefilename="driver/"+CU.OffsetFromDriver+CU.Name+"/core/"+ClassName+".h";
+        writer=new FileWriter("",ClassName+".h");
+        PrintHeaderFile(writer,ClassName+".h");
+        writer.WriteLine("#ifndef __driver_"+ClassName+"_h__" );
+        writer.WriteLine("#define __driver_"+ClassName+"_h__" );
+        writer.WriteLine("#include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>" );
+        writer.WriteLine("#include <common/"+relativeCommon+CU.Name+"/core/Abstract"+CU.Name+".h>" );
+        writer.WriteLine("DEFINE_CU_DRIVER_DEFINITION_PROTOTYPE("+ClassName+")" );
+        writer.WriteLine("namespace cu_driver = chaos::cu::driver_manager::driver;" );
+        writer.WriteLine("namespace chaos {" ); writer.addIndent();
+        writer.WriteLine("namespace driver {" ); writer.addIndent();
+        writer.WriteLine("namespace "+CU.getNameSpace() + " {" ); writer.addIndent();
+        writer.WriteLine("    /*         driver definition            */ " );
+        writer.WriteLine("class "+ClassName+": ADD_CU_DRIVER_PLUGIN_SUPERCLASS,public ::common::"+CU.getNameSpace()+"::Abstract"+CU.Name+" {" ); 
+        writer.WriteLine("protected: ");writer.addIndent();
+        writer.WriteLine("::common::"+CU.getNameSpace()+"::Abstract"+CU.Name+"* devicedriver;" );
+        writer.delIndent();
+        writer.WriteLine("public: ");writer.addIndent();
+        writer.WriteLine(ClassName+"();" );
+        writer.WriteLine("~"+ClassName+"();" );
+        writer.WriteLine(" //! Execute a command");
+        writer.WriteLine("cu_driver::MsgManagmentResultType::MsgManagmentResult execOpcode(cu_driver::DrvMsgPtr cmd);" );
+        writer.WriteLine("void driverDeinit();" );
+         for (var  icmd in CU.Commands)
+        {
+            var cmd=CMDcreate( CU.Commands[icmd] );
+            if (cmd.Default)
+                continue;
+            writer.WriteLine(cmd.CreateFunctionPrototype()+";" );
+        }
+        writer.delIndent(); writer.WriteLine("}; //"+ClassName);
+        writer.delIndent(); writer.WriteLine("} //"+CU.getNameSpace() );
+        writer.delIndent(); writer.WriteLine("}" );
+        writer.delIndent(); writer.WriteLine("}" );
+        writer.WriteLine("#endif");
+        
+    }
+    catch(e) {alert("EXC "+e);}
+    var toRet=writer.getFileContent();
+    var flName=writer.FileName;
+    var rett=[flName,toRet,completefilename];
+    return rett;
+}
 function CreateDeviceDriverHeader() {
     var writer;
     try
@@ -1347,6 +1559,134 @@ function CreateDeviceDriverHeader() {
     var rett=[flName,toRet,completefilename];
     return rett;
 }
+function CreateDeviceDriverSourceNew() {
+    var writer;
+    try
+    {
+        var currentCU=localStorage.getItem('controlUnit');
+        if (currentCU==null)
+            return "";
+        var CU =CUcreate(JSON.parse(currentCU));
+        var ClassName="Chaos"+CU.Name+ "DD";
+        var relative=CU.OffsetFromDriver;
+        var completefilename="driver/"+CU.OffsetFromDriver+CU.Name+"/core/"+ClassName+".cpp";
+        writer=new FileWriter("",ClassName+".cpp");
+        PrintHeaderFile(writer,ClassName+".cpp");
+        writer.WriteLine( "#include \""+ClassName+".h\"");
+        writer.WriteLine( DEFINES.DD_DEFAULTINCLUDES );
+        writer.WriteLine( "// including interface" );
+        writer.WriteLine( "#include \"driver/"+relative+CU.Name+"/core/Chaos"+CU.Name+"Interface.h\"" );
+        writer.WriteLine( "#define ACLAPP	LAPP_ << \"[Chaos"+CU.Name+"DD] \"" );
+        writer.WriteLine( "#define ACDBG	LDBG_ << \"[Chaos"+CU.Name+"DD] \"" );
+        writer.WriteLine( "#define ACERR	LERR_ << \"[Chaos"+CU.Name+"DD] \"" );
+        writer.WriteLine( "using namespace chaos::driver::"+CU.getNameSpace()+";" );
+        writer.WriteLine( "//default constructor definition" );
+        writer.WriteLine( "DEFAULT_CU_DRIVER_PLUGIN_CONSTRUCTOR_WITH_NS(chaos::driver::"+CU.getNameSpace()+", "+ClassName+") {" );
+        writer.addIndent();
+        writer.WriteLine( "devicedriver = NULL;" );
+        writer.delIndent(); writer.WriteLine( "}" );
+        writer.WriteLine( ClassName +"::~"+ClassName+"() {" );
+        writer.WriteLine( "}" );
+        writer.WriteLine( "void "+ClassName+"::driverDeinit() {" ); writer.addIndent();
+        writer.WriteLine( " if(devicedriver) {" ); writer.addIndent();
+        writer.WriteLine( "delete devicedriver;");
+        writer.delIndent(); writer.WriteLine( "}" );
+        writer.WriteLine( "devicedriver = NULL;" );
+        writer.delIndent(); writer.WriteLine( "}" );
+        writer.WriteLine( "cu_driver::MsgManagmentResultType::MsgManagmentResult "+ClassName+"::execOpcode(cu_driver::DrvMsgPtr cmd){" );
+        writer.addIndent();
+        writer.WriteLine( " cu_driver::MsgManagmentResultType::MsgManagmentResult result = cu_driver::MsgManagmentResultType::MMR_EXECUTED;" );
+        writer.WriteLine( CU.getNameSpace()+"_iparams_t *in = ("+CU.getNameSpace()+"_iparams_t *)cmd->inputData;" );
+        writer.WriteLine( CU.getNameSpace()+"_oparams_t *out = ("+CU.getNameSpace()+"_oparams_t *)cmd->resultData;" );
+        if (CU.Commands.length>0)
+        {
+            writer.WriteLine("switch(cmd->opcode){" );
+            writer.addIndent();
+        }
+        for (var icmd in CU.Commands)
+        {
+            var cmd=CMDcreate(CU.Commands[icmd]);
+            if (cmd.Default)
+                continue;
+            var counterType=0;
+            writer.WriteLine("case "+getOpCode(cmd)+": {" ); writer.addIndent();
+            //writer.WriteLine("ACDBG << \"Received "+getOpCode(cmd)+"\";");
+            writer.Write("out->result=devicedriver->"+cmd.Name+"(");
+            var first=true;
+            var  lastParType="";
+            for (var   ipar in cmd.Parameters)
+            {
+                var par=CPARcreate(cmd.Parameters[ipar]);
+                if (lastParType != par.Type)
+                    counterType=0;
+                
+               // if (par.Type=="int32_t")
+                 //   alert(cmd.Name + "----" +par.Name);
+                var needed=CU.getNumberOfNeededInterfaceVariable(par.Type,par.isOutput(),ptNeededOPar,ptNeededIPar);
+                if (needed == 0)
+                    alert("Warning. No variable of type "+par.Type,"Error");
+                if (!first)
+                    writer.WriteNoInd(",");
+                else
+                    first = false;
+                if (par.isOutput())
+                {
+                    if (par.isPointer())
+                        writer.WriteNoInd("&out->");
+                    else
+                        writer.WriteNoInd("out->");
+                    writer.WriteNoInd(getInterfaceVariable(par.Type,true, counterType));
+                }
+                else
+                {
+                    writer.WriteNoInd("in->");
+                    writer.WriteNoInd(getInterfaceVariable(par.Type,false,counterType));
+                }
+                if (needed > counterType+1)
+					counterType++;
+				else
+				    counterType=0;
+				lastParType=par.Type;
+			}
+            writer.WriteLineNoInd( ");");
+            writer.WriteLine("ACDBG << \"Sent to driver command "+cmd.Name+" result is \" << out->result;");
+    		writer.WriteLine("} break;" ); writer.delIndent();
+        }
+        writer.delIndent(); writer.WriteLine("}");
+        writer.WriteLine("return result;");
+        writer.delIndent(); writer.WriteLine("}");
+        //Commands 
+        for (var icmd in CU.Commands)
+        {
+            var cmd=CMDcreate(CU.Commands[icmd]);
+            if (cmd.Default)
+                continue;
+            writer.WriteLine(cmd.CreateFunctionPrototype(ClassName) + " {");
+            
+            writer.addIndent();
+            writer.Write("return devicedriver->"+cmd.Name+"(");
+            var first=true;
+            for (var   ipar in cmd.Parameters)
+            {
+                var par=CPARcreate(cmd.Parameters[ipar]);
+                if (!first)
+                    writer.WriteNoInd(",");
+                else
+                    first = false;
+                writer.WriteNoInd(par.Name)
+            }
+            writer.WriteLineNoInd(");")
+            writer.delIndent(); writer.WriteLine("}");
+        }
+         
+    }
+    catch(e) {alert("EXC "+e);}
+    var toRet=writer.getFileContent();
+    var flName=writer.FileName;
+    var rett=[flName,toRet,completefilename];
+    return rett;
+}
+
 function CreateDeviceDriverSource() {
     var writer;
     try
@@ -1646,7 +1986,61 @@ function CreateCMakeLists() {
     var rett=[flName,toRet,completefilename];
     return rett;
 }
+//ATTUALMENTE NON CHIAMATA
+function CreateDriverConnectionHeaderNew(){
+    var wr;
+    try
+    {
+        var currentCU=localStorage.getItem('controlUnit');
+        if (currentCU==null)
+            return "";
+        var CU =CUcreate(JSON.parse(currentCU));
+        var ClassName=CU.DriverName+"DD";
+        var relative = CU.OffsetFromDriver;
+        var completefilename="driver/"+CU.OffsetFromDriver+CU.Name+"/models/"+CU.DriverName+"/"+ClassName+".h";
+        wr=new FileWriter("",ClassName+".h");
+        PrintHeaderFile(wr,ClassName+".h");
+        wr.WriteLine("#ifndef __driver_" + ClassName + "_h__");
+        wr.WriteLine("#define __driver_" + ClassName + "_h__");
+        wr.WriteLine("#ifndef DRLAPP");
+        wr.WriteLine("#define DRLAPP LAPP_ << \"["+ClassName+"]\"" );
+        wr.WriteLine("#endif" );
+        wr.WriteLine("#include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>");
+        wr.WriteLine("#include <driver/"+relative+CU.Name+"/core/Chaos"+CU.Name+"DD.h>");
+        wr.WriteLine("DEFINE_CU_DRIVER_DEFINITION_PROTOTYPE(" + ClassName + ")");
+        wr.WriteLine("namespace cu_driver = chaos::cu::driver_manager::driver;");
+        wr.WriteLine("namespace chaos {"); wr.addIndent();
+        wr.WriteLine("namespace driver {");wr.addIndent();
+        wr.WriteLine("namespace "+ CU.getNameSpace()+ "{");wr.addIndent();
+        wr.WriteLine("class " + ClassName + ": public Chaos" + CU.Name + "DD{"); wr.addIndent();
+        wr.WriteLine("void driverInit(const char *initParameter);");
+        wr.WriteLine("void driverInit(const chaos::common::data::CDataWrapper& json);");
+        wr.delIndent(); wr.WriteLine("public:");wr.addIndent();
+        wr.WriteLine(ClassName + "();");
+        wr.WriteLine("~"+ ClassName + "();");
+        for (var  iCmd in CU.Commands)
+        {
+            var Cmd=CMDcreate(CU.Commands[iCmd]);
+            if (Cmd.Default)
+            {
+                continue;
+            }
+            wr.Write(Cmd.CreateFunctionPrototype());
+            wr.WriteLineNoInd(";");
+        }
+        wr.delIndent(); wr.WriteLine("};//end class");
+        wr.delIndent(); wr.WriteLine("} //namespace " + CU.getNameSpace());
+        wr.delIndent(); wr.WriteLine("} //namespace driver");
+        wr.delIndent(); wr.WriteLine("} //namespace chaos");
+        wr.WriteLine("#endif");
 
+    }
+    catch(e) {alert("EXC "+e);}
+    var toRet=wr.getFileContent();
+    var flName=wr.FileName;
+    var rett=[flName,toRet,completefilename];
+    return rett;
+}
 function CreateDriverConnectionHeader(){
     var wr;
     try
@@ -2142,13 +2536,14 @@ function GenerateCUCode() {
    //alert (SCCUFileCPP[0]+"\n\n"+SCCUFileCPP[1]);
    var AbstractClassH = CreateAbstractClassHeader();
    commonCore.file(AbstractClassH[0],AbstractClassH[1]);
-   AddCheckBox(AbstractClassH[2]); 
+   AddCheckBox(AbstractClassH[2]);
+   //FIN QUI CODICE UGUALE 
   //alert (AbstractClassH[0]+"\n\n"+AbstractClassH[1]);
-   var InterfaceH = CreateInterfaceHeader();
+   var InterfaceH = CreateInterfaceHeaderNew();
    driver.file(InterfaceH[0],InterfaceH[1]);
    AddCheckBox(InterfaceH[2]); 
    //alert (InterfaceH[0]+"\n\n"+InterfaceH[1]);
-   var InterfaceCPP = CreateInterfaceSource();
+   var InterfaceCPP = CreateInterfaceSourceNew();
    driver.file(InterfaceCPP[0],InterfaceCPP[1]);
    AddCheckBox(InterfaceCPP[2]); 
    //alert (InterfaceCPP[0]+"\n\n"+InterfaceCPP[1]);
@@ -2164,11 +2559,11 @@ function GenerateCUCode() {
    driver.file(ConstantH[0],ConstantH[1]);
    AddCheckBox(ConstantH[2]); 
    //alert (ConstantH[0]+"\n\n"+ConstantH[1]);
-   var ChaosDDH=CreateDeviceDriverHeader();
+   var ChaosDDH=CreateDeviceDriverHeaderNew();
    driver.file(ChaosDDH[0],ChaosDDH[1]);
    AddCheckBox(ChaosDDH[2]); 
    //alert (ChaosDDH[0]+"\n\n"+ChaosDDH[1]);
-   var ChaosDDCPP=CreateDeviceDriverSource();
+   var ChaosDDCPP=CreateDeviceDriverSourceNew();
    //alert (ChaosDDCPP[0]+"\n\n"+ChaosDDCPP[1]);
    driver.file(ChaosDDCPP[0],ChaosDDCPP[1]);
    AddCheckBox(ChaosDDCPP[2]); 

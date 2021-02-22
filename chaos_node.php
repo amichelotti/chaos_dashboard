@@ -218,20 +218,34 @@ require_once('header.php');
 								list_us.push(us);
 							}
 						});
-						templ['properties']['ndk_parent'].enum = list_us;
+						if(list_us.length>0){
+							templ['properties']['ndk_parent'].enum = list_us;
+						} else {
+							
+							templ['properties']['ndk_parent']= {
+								"type": "string",
+								"format": "text",
+								"required": true,
+								"description": "US owner"
+
+							};
+
+						}
 						var list_impl = [];
 
 						var impl = "";
 						if (obj.control_unit_implementation !== undefined) {
 							impl = obj.control_unit_implementation;
 						}
+						var glist = [];
+
 						if (impl != "") {
 							list_impl.push(impl);
 							if ((cudb[impl] !== undefined) && (cudb[impl].info !== undefined)) {
-								templ['properties']['group'].enum = cudb[impl].group;
+								//templ['properties']['group'].enum = cudb[impl].group;
+								glist=cudb[impl].group;
 							}
 						} else {
-							var glist = [];
 							for (var k in cudb) {
 								if (cudb[k].info !== undefined) {
 									if (cudb[k].info.group !== undefined) {
@@ -240,15 +254,26 @@ require_once('header.php');
 								}
 
 							}
-							templ['properties']['group'].enum = glist;
+					//		templ['properties']['group'].enum = glist;
 
+						}
+						if(glist.length>0){
+							templ['properties']['group']=glist;
+						} else {
+							templ['properties']['group']= {
+								"type": "string",
+								"format": "text",
+								"required": true,
+								"description": "CU Group"
+
+							};
 						}
 						for (var k in cudb) {
 							if (k != impl) {
 								list_impl.push(k);
 							}
 						}
-						if (ob.ndk_uid !== "undefined") {
+						if ((ob.ndk_uid !==undefined) && (typeof ob.ndk_uid == "string")) {
 							if (jchaos.pathToZoneGroupId(ob.ndk_uid) != null) {
 								//valid path change 
 								templ['properties']['ndk_uid'] = {
@@ -262,12 +287,21 @@ require_once('header.php');
 
 							}
 						}
-						list_impl.push("CUSTOM");
+						//list_impl.push("CUSTOM");
 						if ((obj.ndk_type !== undefined) && (obj.ndk_type == "nt_root")) {
 							list_impl = jchaos.findScriptByType("", "CPP");
 						}
+						if(list_impl.size>0){
+							templ['properties']['control_unit_implementation'].enum = list_impl;
+						} else {
+							templ['properties']['control_unit_implementation']= {
+								"type": "string",
+								"format": "text",
+								"required": true,
+								"description": "CU C++ implementation"
 
-						templ['properties']['control_unit_implementation'].enum = list_impl;
+							};
+						}
 						var drv_impl = obj.cudk_driver_description;
 						var list_drivers = [];
 
@@ -379,12 +413,56 @@ require_once('header.php');
 		var items = {};
 		var tree = $('#hier_view').jstree(true);
 		var ID = $(node).attr('id');
+		var menu_str="";
 		if (node.hasOwnProperty("data")) {
+			if(node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type == "nt_agent")){
+					menu_str="associated";
+			}
+			items['new-us'] = {
+						"separator_before": true,
+						"separator_after": false,
+						label: "New "+menu_str+" US ",
+						action: function () {
+							var templ = {
+								$ref: "us.json",
+								format: "tabs"
+							}
+							jqccs.jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, null, function (ok) {
+								if((node.data.ndk_type == "nt_agent")){
+
+								jchaos.agentAssociateNode(selected_node, ok['ndk_uid'], "", "UnitServer", okk => {
+									jqccs.instantMessage("Unit server created and associated ", " OK", 2000, true);
+									
+
+								}, (badd) => {
+									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
+
+								});
+							}
+							var newnode = {
+										"id": jchaos.encodeName(ok.ndk_uid),
+										"parent": ID,
+										"icon": "/img/devices/nt_unit_server.png",
+										"text": ok.ndk_uid,
+										"data": ok
+									};
+									tree.create_node(node, newnode);
+								}, function (bad) {
+									jqccs.instantMessage("Unit creation server failed:", JSON.stringify(bad), 4000, false);
+								}
+
+							);
+						}
+					};
 			if (node.data.hasOwnProperty('zone') || (node.data.ndk_type == "nt_unit_server")) {
+				if(node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type == "nt_unit_server")){
+					menu_str="Add ";
+				}
+				
 				items['new-cu'] = {
 					"separator_before": false,
 					"separator_after": false,
-					label: "New CU",
+					label: menu_str+"New CU",
 					action: function () {
 						var cu = {};
 						//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
@@ -562,13 +640,13 @@ require_once('header.php');
 					items['save'] = {
 						"separator_before": false,
 						"separator_after": false,
-						label: "Save locally",
+						label: "Download Config",
 						action: function () {
 							jchaos.node(selected_node, "get", "cu", function (data) {
 								if (data != null) {
 									if (data instanceof Object) {
-										var tmp = { cu_desc: data };
-										var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
+										//var tmp = { cu_desc: data };
+										var blob = new Blob([JSON.stringify(data)], { type: "json;charset=utf-8" });
 										saveAs(blob, selected_node + ".json");
 									}
 								}
@@ -617,37 +695,7 @@ require_once('header.php');
 							});
 						}
 					};
-					items['new-us'] = {
-						"separator_before": true,
-						"separator_after": false,
-						label: "New US",
-						action: function () {
-							var templ = {
-								$ref: "us.json",
-								format: "tabs"
-							}
-							jqccs.jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, null, function (ok) {
-								jchaos.agentAssociateNode(selected_node, ok['ndk_uid'], "", "UnitServer", okk => {
-									jqccs.instantMessage("Unit server save ", " OK", 2000, true);
-									var newnode = {
-										"id": jchaos.encodeName(ok.ndk_uid),
-										"parent": ID,
-										"icon": "/img/devices/nt_unit_server.png",
-										"text": ok.ndk_uid,
-										"data": ok
-									};
-									tree.create_node(node, newnode);
-
-								}, (badd) => {
-									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
-
-								}), function (bad) {
-									jqccs.instantMessage("Unit creation server failed:", JSON.stringify(bad), 4000, false);
-								}
-
-							});
-						}
-					};
+					
 					if ((cu_copied != null) && (typeof cu_copied === "object")) {
 						if (cu_copied.ndk_type == "nt_root") {
 							items['paste-root'] = {

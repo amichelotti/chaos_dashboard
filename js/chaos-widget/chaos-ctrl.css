@@ -375,4 +375,14 @@ p {
 input[type="range"] {
   vertical-align: middle;
 }
+
+.ui-dialog {
+  z-index: 1000;
+}
+.dialog-front {
+  z-index: 9999 !important;
+}
+.dialog-back {
+  z-index: 1 ;
+}
 /** histo*/
