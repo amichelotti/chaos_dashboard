@@ -388,10 +388,10 @@ function rebuildCam(tmpObj) {
         //   html += '<div><b>'+key+'</b>';
         html += '<div>';
         if (selectedCams.length > 1) {
-          html += '<img class="chaos_image mw-100 mh-100" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
+          html += '<img class="chaos_image mw-100 mh-100" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
           //   html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
         } else {
-          html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
+          html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
 
         }
         //                html += '<div class="row">';
