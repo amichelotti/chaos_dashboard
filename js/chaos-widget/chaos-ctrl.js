@@ -700,7 +700,7 @@
                         jchaos.getChannel(cuname, chnum, function (imdata) {
                             last_dataset=imdata;
 
-                            updateDataSetFormat(cuname,imdata[0],showdataset,tmpObj);
+                            updateDataSetFormat(cuname,(vardir!=""?(cuname+"/"+vardir):cuname),imdata[0],showdataset,tmpObj);
                         }, function (err) {
                             console.log(err);
                         });
