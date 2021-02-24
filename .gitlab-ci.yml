@@ -11,7 +11,7 @@ before_script:
   - eval export `cat /etc/*-release|grep -e "^VERSION_ID="|tr -d "\" "`
   - eval export `cat /etc/*-release|grep -e "^ID="|tr -d "\" "`
   - export REV_POSTFIX=$CI_COMMIT_REF_NAME-$ID-$VERSION_ID-$ARCH
-  - export DISTRIB_NAME=chaos-web-distrib-$TAR_NAME_POSTFIX
+  - export DISTRIB_NAME=chaos_dashboard-$TAR_NAME_POSTFIX
   - export DISTRIB_PREFIX=/usr/local/chaos/chaos-distrib
   - export INSTALL_DIR=$DISTRIB_PREFIX
   - export CHAOS_MDS=localhost:5000
@@ -37,7 +37,7 @@ deploy-chaos-web:
       - ssh chaosweb@opensource.lnf.infn.it "ln -sf /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/$DISTRIB_NAME.tar.gz  /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/latest.tar.gz"
 
     artifacts:
-      name: ".tar.gz"
+      name: "chaos_dashboard.tar.gz"
       paths:
       - ./*.tar.gz
       expire_in: 3 day
