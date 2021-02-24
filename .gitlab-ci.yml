@@ -37,7 +37,7 @@ deploy-ubuntu1404:
     artifacts:
       name: ".tar.gz"
       paths:
-      - ../*.tar.gz
+      - ./*.tar.gz
       expire_in: 3 day
       when: always
         
