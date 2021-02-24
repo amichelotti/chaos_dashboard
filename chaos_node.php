@@ -213,24 +213,27 @@ require_once('header.php');
 						if (par != "") {
 							list_us.push(par);
 						}
-						uslist.forEach((us) => {
-							if (us != par) {
-								list_us.push(us);
-							}
-						});
-						if(list_us.length>0){
-							templ['properties']['ndk_parent'].enum = list_us;
-						} else {
-							
-							templ['properties']['ndk_parent']= {
-								"type": "string",
-								"format": "text",
-								"required": true,
-								"description": "US owner"
+						if((obj.ndk_type !== undefined)&&(obj.ndk_type=="nt_control_unit")){
 
-							};
-
+							uslist.forEach((us) => {
+								if (us != par) {
+									list_us.push(us);
+								}
+							});
 						}
+							if(list_us.length>0){
+								templ['properties']['ndk_parent'].enum = list_us;
+							} else {
+								
+								templ['properties']['ndk_parent']= {
+									"type": "string",
+									"format": "text",
+									"required": true,
+									"description": "US owner"
+
+								};
+							}
+						
 						var list_impl = [];
 
 						var impl = "";
@@ -418,6 +421,44 @@ require_once('header.php');
 			if(node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type == "nt_agent")){
 					menu_str="associated";
 			}
+			items['new-us'] = {
+						"separator_before": true,
+						"separator_after": false,
+						label: "New "+menu_str+" US ",
+						action: function () {
+							var templ = {
+								$ref: "us.json",
+								format: "tabs"
+							}
+							jqccs.jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, null, function (ok) {
+								if((node.data.ndk_type == "nt_agent")){
+
+								jchaos.agentAssociateNode(selected_node, ok['ndk_uid'], "", "UnitServer", okk => {
+									jqccs.instantMessage("Unit server created and associated ", " OK", 2000, true);
+									
+
+								}, (badd) => {
+									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
+
+								});
+							}
+							var newnode = {
+										"id": jchaos.encodeName(ok.ndk_uid),
+										"parent": ID,
+										"icon": "/img/devices/nt_unit_server.png",
+										"text": ok.ndk_uid,
+										"data": ok
+									};
+									tree.create_node(node, newnode);
+									triggerRefreshEdit();
+
+								}, function (bad) {
+									jqccs.instantMessage("Unit creation server failed:", JSON.stringify(bad), 4000, false);
+								}
+
+							);
+						}
+					};
 			if ((cu_copied != null) && (typeof cu_copied === "object")) {
 					if ((cu_copied.ndk_type == "nt_unit_server")){
 						items['associate-us'] = {
@@ -436,6 +477,7 @@ require_once('header.php');
 										"data": cu_copied
 									};
 									tree.create_node(node, newnode);
+									triggerRefreshEdit();
 							}, (badd) => {
 									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
 
@@ -482,6 +524,8 @@ require_once('header.php');
 									};
 
 									tree.create_node(node, newnode);
+									triggerRefreshEdit();
+
 
 								}
 							}, function (bad) {
@@ -544,6 +588,8 @@ require_once('header.php');
 												};
 
 												tree.create_node(node, newnode);
+												triggerRefreshEdit();
+
 
 											}
 										}, function (bad) {
@@ -687,6 +733,7 @@ require_once('header.php');
 									jqccs.jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, opt,
 										() => {
 											jqccs.instantMessage("Agent saved " + selected_node, " OK", 2000, true);
+											triggerRefreshEdit();
 
 										}, (bad) => {
 											jqccs.instantMessage("Agent  " + selected_node, "Save Error:" + JSON.stringify(bad), 4000, false);
@@ -786,6 +833,8 @@ require_once('header.php');
 									}, (bad) => { });
 								}
 								tree.delete_node(node);
+								triggerRefreshEdit();
+
 
 							}, function (err) {
 								jqccs.instantMessage("cannot delete " + selected_node, JSON.stringify(err), 2000, false);
@@ -1624,6 +1673,8 @@ require_once('header.php');
 		$("#" + iname).removeClass("text-danger");
 		$("#" + iname).removeClass("text-muted");
 	}
+
+	
 </script>
 
 

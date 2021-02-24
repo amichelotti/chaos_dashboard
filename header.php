@@ -255,7 +255,7 @@
 									obj['control_unit_implementation'] = eu['script_name'];
 									jqccs.jsonEditWindow("EU Editor", templ, obj, jchaos.cuSave, null, (ok) => {
 										jqccs.instantMessage("Created ", "OK", 2000, true);
-
+										triggerRefreshEdit();
 									}, (bad) => {
 										alert(" Cannot create node err:" + JSON.stringify(bad));
 									});
@@ -1100,5 +1100,10 @@
 				$("body").removeClass("loading");
 			});
 		});
+	}
+	function triggerRefreshEdit(){
+		$("input[type=radio][name=search-alive]:checked").val(false);
+		$("input[type=radio][name=search-alive]").trigger("change");
+
 	}
 </script>
