@@ -24,7 +24,7 @@ require_once('header.php');
 
 	<div class="row">
 		<div class="statbox purple col-md-3">
-			<h3>Node Type</h3>
+			<h3>Node View</h3>
 			<select id="View" size="auto">
 				<option value="byzone" selected="selected">By Zone</option>
 				<option value="bydevice">By Type</option>
@@ -418,42 +418,36 @@ require_once('header.php');
 			if(node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type == "nt_agent")){
 					menu_str="associated";
 			}
-			items['new-us'] = {
+			if ((cu_copied != null) && (typeof cu_copied === "object")) {
+					if ((cu_copied.ndk_type == "nt_unit_server")){
+						items['associate-us'] = {
 						"separator_before": true,
 						"separator_after": false,
-						label: "New "+menu_str+" US ",
+						label: "Associate US "+cu_copied.ndk_uid,
 						action: function () {
-							var templ = {
-								$ref: "us.json",
-								format: "tabs"
-							}
-							jqccs.jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, null, function (ok) {
-								if((node.data.ndk_type == "nt_agent")){
-
-								jchaos.agentAssociateNode(selected_node, ok['ndk_uid'], "", "UnitServer", okk => {
+							jchaos.agentAssociateNode(selected_node, cu_copied.ndk_uid, "", "UnitServer", okk => {
 									jqccs.instantMessage("Unit server created and associated ", " OK", 2000, true);
 									
-
-								}, (badd) => {
-									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
-
-								});
-							}
-							var newnode = {
-										"id": jchaos.encodeName(ok.ndk_uid),
+									var newnode = {
+										"id": jchaos.encodeName(cu_copied.ndk_uid),
 										"parent": ID,
 										"icon": "/img/devices/nt_unit_server.png",
-										"text": ok.ndk_uid,
-										"data": ok
+										"text": cu_copied.ndk_uid,
+										"data": cu_copied
 									};
 									tree.create_node(node, newnode);
-								}, function (bad) {
-									jqccs.instantMessage("Unit creation server failed:", JSON.stringify(bad), 4000, false);
-								}
+							}, (badd) => {
+									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
 
-							);
+							});
+							
 						}
-					};
+					}
+				} else if(cu_copied.ndk_type == "nt_root") {
+				}
+						
+						
+			}
 			if (node.data.hasOwnProperty('zone') || (node.data.ndk_type == "nt_unit_server")) {
 				if(node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type == "nt_unit_server")){
 					menu_str="Add ";
@@ -569,6 +563,35 @@ require_once('header.php');
 			if (node.data.hasOwnProperty("ndk_type") && node.data.hasOwnProperty("ndk_uid")) {
 				var selected_node = node.data.ndk_uid;
 				var type = node.data.ndk_type;
+				items['copy'] = {
+						"separator_before": false,
+						"separator_after": false,
+						label: "Copy "+jchaos.nodeTypeToHuman(type),
+						action: function () {
+							if(type == "nt_unit_server" ){
+										jqccs.instantMessage("Copied US " + selected_node, " you can paste it into an AGENT", 4000, true);
+										copyToClipboard(JSON.stringify(node.data));
+										cu_copied = node.data;
+
+								return;
+							}
+							jchaos.node(selected_node, "get", "cu", function (data) {
+								if (data != null) {
+									cu_copied = data;
+									if (type == "nt_root") {
+										jqccs.instantMessage("Copied EU " + selected_node, " you can paste it into an AGENT", 4000, true);
+
+									} else if (type == "nt_control_unit" ){
+										jqccs.instantMessage("Copied CU " + selected_node, " you can paste it into an US", 4000, true);
+									}  else {
+										return;
+									}
+
+									copyToClipboard(JSON.stringify(data));
+								}
+							});
+						}
+					};
 
 				if((type == "nt_control_unit")&&node.data.hasOwnProperty('instance_description') && (node.data.instance_description.hasOwnProperty('control_unit_implementation'))){
 					items['control'] = {
@@ -616,27 +639,7 @@ require_once('header.php');
 							return;
 						}
 					};
-					items['copy'] = {
-						"separator_before": false,
-						"separator_after": false,
-						label: "Copy",
-						action: function () {
-							jchaos.node(selected_node, "get", "cu", function (data) {
-								if (data != null) {
-									cu_copied = data;
-									if (type == "nt_root") {
-										jqccs.instantMessage("Copied EU " + selected_node, " you can paste it into an AGENT", 4000, true);
-
-									} else {
-										jqccs.instantMessage("Copied CU " + selected_node, " you can paste it into an US", 4000, true);
-									}
-
-									copyToClipboard(JSON.stringify(data));
-								}
-							});
-						}
-					};
-
+	
 					items['save'] = {
 						"separator_before": false,
 						"separator_after": false,

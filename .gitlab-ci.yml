@@ -11,7 +11,7 @@ before_script:
   - eval export `cat /etc/*-release|grep -e "^VERSION_ID="|tr -d "\" "`
   - eval export `cat /etc/*-release|grep -e "^ID="|tr -d "\" "`
   - export REV_POSTFIX=$CI_COMMIT_REF_NAME-$ID-$VERSION_ID-$ARCH
-  - export DISTRIB_NAME=chaos-distrib-$REV_POSTFIX
+  - export DISTRIB_NAME=chaos-web-distrib-$TAR_NAME_POSTFIX
   - export DISTRIB_PREFIX=/usr/local/chaos/chaos-distrib
   - export INSTALL_DIR=$DISTRIB_PREFIX
   - export CHAOS_MDS=localhost:5000
@@ -26,12 +26,19 @@ before_script:
 
 deploy-ubuntu1404:
     tags:
-      - chaos
+      - lnf
     stage: deploy
     image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
     script:
       - ver=`git log --pretty=format:'%h' -n 1`
       - echo "<font size="4">  ($ver)</font>" > version.html
-      - if [ -n "$DEPLOY" ]; then if [ $CI_COMMIT_REF_NAME == "development" ] || [ "$DEPLOY" == "ALL" ];then echo "   <b><font size="4" color=\"green\">Development/Preproduction</font></b>" > target.html;scp -r * chaos@chaost-webui1.chaos.lnf.infn.it:/var/www/html/chaos/chaos_dashboard;scp -r * chaos@chaost-webui2.chaos.lnf.infn.it:/var/www/html/chaos/chaos_dashboard;fi;if [ $CI_COMMIT_REF_NAME == "master" ] || [ "$DEPLOY" == "ALL" ];then echo "   <b><font size="4" color=\"red\">Production</font></b>" > target.html;scp -r * chaos@chaos-webui01.chaos.lnf.infn.it:/usr/local/chaos/chaos-distrib/html//chaos_dashboard;scp -r * chaos@chaos-webui02.chaos.lnf.infn.it:/usr/local/chaos/chaos-distrib/html/chaos_dashboard;scp -r * chaos@chaos-webui03.chaos.lnf.infn.it:/usr/local/chaos/chaos-distrib/html/chaos_dashboard;scp -r * chaos@chaos-webui1.chaos.lnf.infn.it:/var/www/html/chaos/chaos_dashboard;scp -r * chaos@chaos-webui2.chaos.lnf.infn.it:/var/www/html/chaos/chaos_dashboard;fi;fi
+      - tar cfz ../$DISTRIB_NAME.tar.gz -C ..  chaos_dashboard
+      - scp ../$DISTRIB_NAME.tar.gz  chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/
+artifacts:
+    name: ".tar.gz"
+    paths:
+    - ../*.tar.gz
+    expire_in: 3 day
+    when: always
       
   
