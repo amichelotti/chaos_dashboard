@@ -34,11 +34,11 @@ deploy-ubuntu1404:
       - echo "<font size="4">  ($ver)</font>" > version.html
       - tar cfz ../$DISTRIB_NAME.tar.gz -C ..  chaos_dashboard
       - scp ../$DISTRIB_NAME.tar.gz  chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/
-artifacts:
-    name: ".tar.gz"
-    paths:
-    - ../*.tar.gz
-    expire_in: 3 day
-    when: always
-      
+    artifacts:
+      name: ".tar.gz"
+      paths:
+      - ../*.tar.gz
+      expire_in: 3 day
+      when: always
+        
   
