@@ -24,7 +24,7 @@ before_script:
   - git config --global user.name amichelo
   - git config --global color.ui true
 
-deploy-ubuntu1404:
+deploy-chaos-web:
     tags:
       - lnf
     stage: deploy
