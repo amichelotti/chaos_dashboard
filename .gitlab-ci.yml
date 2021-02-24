@@ -32,7 +32,7 @@ deploy-ubuntu1404:
     script:
       - ver=`git log --pretty=format:'%h' -n 1`
       - echo "<font size="4">  ($ver)</font>" > version.html
-      - tar cfz $DISTRIB_NAME.tar.gz -X $DISTRIB_NAME.tar.gz . 
+      - tar cfz $DISTRIB_NAME.tar.gz --exclude='*.tar.gz' . 
       - scp $DISTRIB_NAME.tar.gz  chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/
     artifacts:
       name: ".tar.gz"
