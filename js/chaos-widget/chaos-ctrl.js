@@ -881,10 +881,11 @@
      * @param {string} msgHead Title of the window
      * @param {function} nodeFn function that creates node, menu and handlers 
      */
-    jqccs.createBrowserWindow = function (msgHead, opt, nodeFn) {
+    jqccs.createBrowserWindow = function (msgHead, opt, nodeFn,id) {
         var width = $(window).width() / 2;
         var height = $(window).height() / 2;
         if (typeof opt === "function") {
+            id=nodeFn;
             nodeFn = opt;
         } else if (opt !== undefined) {
             if (opt['width'] !== undefined) {
@@ -895,7 +896,8 @@
             }
         }
 
-        var pid = (new Date()).getTime();
+        var pid;
+        pid=id||(new Date()).getTime();
         var hier = "hier-" + pid;
         var desc = "desc-" + pid;
         var html = '<div class="row"><div id="' + hier + '" class="col-md-6"></div><div id="' + desc + '" class="col-md-6"></div></div>';
@@ -926,14 +928,14 @@
                     click: function (e) {
                         // var interval=$(this).attr("refresh_time");
                         //    $('#console-' + pid).terminal().exit();
-                        $(this).dialog("close");
+                        $(this).dialog('destroy');
                     }
 
                 }
             ],
             close: function (event, ui) {
                 //    $('#console-' + pid).terminal().exit();
-                $(this).dialog("close");
+                $(this).remove();
 
             },
 
@@ -2068,10 +2070,10 @@
         });
     }
 
-    jqccs.algoSave = function (json) {
-        return algoSave(json);
+    jqccs.algoSave = function (json,ok) {
+        return algoSave(json,ok);
     }
-    function algoSave(json) {
+    function algoSave(json,ok) {
         console.log("newScript :" + JSON.stringify(json));
         var proc = {};
         if (json.script_name == null || json.script_name == "") {
@@ -2106,7 +2108,9 @@
                 jchaos.saveScript(json, function (data) {
                     console.log("Saving script:" + JSON.stringify(json));
                     instantMessage("Script " + json.script_name, " Saved", 1000, null, null, true)
-
+                    if(typeof ok === "function"){
+                        ok(json);
+                    }
                 }, (bad) => {
                     instantMessage("Error Saving Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
@@ -2119,7 +2123,9 @@
                             console.log(cnt + "] Updating script:" + json.script_name + " with seq:" + json.seq, " content:" + JSON.stringify(json));
                             jchaos.saveScript(json, function (data) {
                                 instantMessage("Updated Script " + json.script_name, "Saved", 2000, null, null, true)
-
+                                if(typeof ok === "function"){
+                                    ok(json);
+                                }
                             }, (bad) => {
                                 instantMessage("Error updating Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
@@ -2137,7 +2143,9 @@
                                     jchaos.saveScript(json, function (data) {
                                         console.log("Replacing script:" + json.script_name);
                                         instantMessage("Replacing Script " + json.script_name, "Saved", 1000, null, null, true)
-
+                                        if(typeof ok === "function"){
+                                            ok(json);
+                                        }
                                     });
                                 }
                             }, (bad) => {
@@ -2330,7 +2338,7 @@
                                 if (err.hasOwnProperty('error_status')) {
                                     instantMessage("Error ", err.error_status, 4000, false);
                                 } else {
-                                    instantMessage("Error ", JSON.stringify(err), 4000, false);
+                                    instantMessage("Error ", err, 4000, false);
 
                                 }
                             } else {

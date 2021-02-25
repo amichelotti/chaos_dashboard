@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <?php
 require_once('head.php');
@@ -18,7 +18,6 @@ require_once('header.php');
 
 
 
-			<!-- start: Content -->
 <div id="chaos_content" class="col-md-12">
 
 
@@ -72,10 +71,6 @@ require_once('header.php');
 
 </div>
 </div>
-<!-- <div id="hier_view"></div> -->
-
-
-<!-- <div class="clearfix"></div> -->
 
 <footer><?php require_once('footer.php');?></footer>
 
@@ -801,6 +796,9 @@ require_once('header.php');
 								if (data.hasOwnProperty("us_desc")) {
 									//    editorFn = unitServerSave;
 									//    jsonEdit(templ, data.us_desc);
+									if(data.hasOwnProperty("ndk_desc")){
+										data.us_desc["ndk_desc"]=data["ndk_desc"];
+									}
 									jqccs.jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, null, function (ok) {
 										jqccs.instantMessage("Unit server save ", " OK", 2000, true);
 
@@ -1680,4 +1678,4 @@ require_once('header.php');
 
 </body>
 
-</html> -->
+</html>

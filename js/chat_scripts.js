@@ -225,6 +225,10 @@ $(document).ready(function() {
                 platform[k]=JSON.stringify(navigator[k]);
             }
             t['platform']=platform;
+            if(type=="bug"){
+                t['last_ops']=jchaos['ops_list'];
+
+            }
         }
         chatService.sendMessage(t);
         $('#message-form').trigger('reset');
