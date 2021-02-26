@@ -35,14 +35,15 @@ deploy-chaos-web:
     stage: deploy
     image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
     script:
-      - buildstr="$CI_COMMIT_REF_NAME-$NOWS-$ver-$CI_PIPELINE_ID"
+      - buildstr_short="$NOWS-$ver-$CI_PIPELINE_ID"
+      - buildstr="$CI_COMMIT_REF_NAME-$buildstr_short"
       - echo "<script>const VERSION=\"$buildstr\";</script>" > version.html
-      - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then echo "   <b><font size=\"4\" color=\"red\">Production</font></b><font size=\"1\"> $buildstr</font>" >> version.html; else echo "   <b><font size=\"4\" color=\"green\">$CI_COMMIT_REF_NAME</font></b><font size=\"1\"> $buildstr</font>" >> version.html;fi
+      - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then echo "   <b><font size=\"4\" color=\"red\">Production</font></b><font size=\"1\"> $buildstr_short</font>" >> version.html; else echo "   <b><font size=\"4\" color=\"green\">$CI_COMMIT_REF_NAME</font></b><font size=\"1\"> $buildstr_short</font>" >> version.html;fi
       - tar cfz $DEPLOY_NAME.tar.gz *
       - scp $DEPLOY_NAME.tar.gz  chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/
       - ssh chaosweb@opensource.lnf.infn.it "ln -sf /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/$DEPLOY_NAME.tar.gz  /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/latest.tar.gz"
       - echo "DEPLOYED $DEPLOY_NAME.tar.gz"
-      
+
     artifacts:
       name: "$DEPLOY_NAME.tar.gz"
       paths:
