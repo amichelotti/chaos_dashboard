@@ -67,7 +67,7 @@
 						<h2 class="display2 col-sm align-items-left">!CHAOS
 							Dashboard</h2>
 						<div class="col-sm">
-							<?php echo file_get_contents("target.html");echo file_get_contents("version.html");?>
+							<?php echo file_get_contents("version.html");?>
 						</div>
 						
 					</div>
