@@ -1,8 +1,8 @@
 stages:
     - deploy
     - publish
-variables:
-  GIT_SUBMODULE_STRATEGY: recursive
+#variables:
+#  GIT_SUBMODULE_STRATEGY: recursive
 
     
 before_script:
@@ -30,6 +30,8 @@ before_script:
   - git config --global user.email andrea.michelotti@lnf.infn.it
   - git config --global user.name amichelo
   - git config --global color.ui true
+  - git submodule sync --recursive
+  - git submodule update --init --recursive
   
 deploy-chaos-web:
     tags:
