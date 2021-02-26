@@ -16,6 +16,7 @@ before_script:
   - eval export `cat /etc/*-release|grep -e "^ID="|tr -d "\" "`
   - export REV_POSTFIX=$CI_COMMIT_REF_NAME-$ID-$VERSION_ID-$ARCH
   - export DISTRIB_NAME=chaos_dashboard-$TAR_NAME_POSTFIX
+  - export DEPLOY_NAME=chaos_dashboard-$NOWS-$CI_PIPELINE_ID
   - export DISTRIB_PREFIX=/usr/local/chaos/chaos-distrib
   - export INSTALL_DIR=$DISTRIB_PREFIX
   - export CHAOS_MDS=localhost:5000
@@ -37,12 +38,13 @@ deploy-chaos-web:
       - buildstr="$CI_COMMIT_REF_NAME-$NOWS-$ver-$CI_PIPELINE_ID"
       - echo "<script>const VERSION=\"$buildstr\";</script>" > version.html
       - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then echo "   <b><font size=\"4\" color=\"red\">Production</font></b><font size=\"1\"> $buildstr</font>" >> version.html; else echo "   <b><font size=\"4\" color=\"green\">$CI_COMMIT_REF_NAME</font></b><font size=\"1\"> $buildstr</font>" >> version.html;fi
-      - tar cfz $DISTRIB_NAME.tar.gz *
-      - scp $DISTRIB_NAME.tar.gz  chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/
-      - ssh chaosweb@opensource.lnf.infn.it "ln -sf /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/$DISTRIB_NAME.tar.gz  /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/latest.tar.gz"
-
+      - tar cfz $DEPLOY_NAME.tar.gz *
+      - scp $DEPLOY_NAME.tar.gz  chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/
+      - ssh chaosweb@opensource.lnf.infn.it "ln -sf /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/$DEPLOY_NAME.tar.gz  /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/latest.tar.gz"
+      - echo "DEPLOYED $DEPLOY_NAME.tar.gz"
+      
     artifacts:
-      name: "$DISTRIB_NAME.tar.gz"
+      name: "$DEPLOY_NAME.tar.gz"
       paths:
       - ./*.tar.gz
       expire_in: 3 day
@@ -57,7 +59,7 @@ pages:
     - deploy-chaos-web
   image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
   script:
-    - mkdir chaos_dashboard;tar xvfz $DISTRIB_NAME.tar.gz -C chaos_dashboard
+    - mkdir chaos_dashboard;tar xvfz $DEPLOY_NAME.tar.gz -C chaos_dashboard
     
   allow_failure: true
   artifacts:
