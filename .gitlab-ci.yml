@@ -42,7 +42,7 @@ deploy-chaos-web:
       - ssh chaosweb@opensource.lnf.infn.it "ln -sf /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/$DISTRIB_NAME.tar.gz  /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/latest.tar.gz"
 
     artifacts:
-      name: "chaos_dashboard.tar.gz"
+      name: "$DISTRIB_NAME.tar.gz"
       paths:
       - ./*.tar.gz
       expire_in: 3 day
