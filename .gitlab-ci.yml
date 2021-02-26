@@ -1,6 +1,8 @@
 stages:
     - deploy
     - publish
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
 
     
 before_script:
@@ -28,7 +30,7 @@ before_script:
   - git config --global user.email andrea.michelotti@lnf.infn.it
   - git config --global user.name amichelo
   - git config --global color.ui true
-
+  
 deploy-chaos-web:
     tags:
       - lnf
