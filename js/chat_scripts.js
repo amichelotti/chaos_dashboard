@@ -224,7 +224,13 @@ $(document).ready(function() {
             for(var k in navigator ){
                 platform[k]=JSON.stringify(navigator[k]);
             }
+            let ver=VERSION||"unknown";
+            t['dashboard_ver']=ver;
             t['platform']=platform;
+            if(type=="bug"){
+                t['last_ops']=jchaos['ops_list'];
+
+            }
         }
         chatService.sendMessage(t);
         $('#message-form').trigger('reset');

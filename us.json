@@ -14,6 +14,11 @@
 		"format": "textarea",
 		"description": "Unit Server description"
 	},
+	"ndk_parent": {
+		"type": "string",
+		"format": "string",
+		"description": "Unit Server Parent (controlling Agent)"
+	},
 	"cu_desc":{
 		"type":"array",
 		"format": "tab",
