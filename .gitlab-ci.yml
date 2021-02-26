@@ -3,6 +3,7 @@ stages:
     
 before_script:
   - export NOW=$(date +"%Y%m%d-%H%M%S")
+  - export NOWS=$(date +"%Y%m%d")
   - export TAR_NAME_POSTFIX=$NOW
   - export SYS=`uname -s`
   - if [ "$SYS" == "Linux" ];then export NPROC=`nproc`;else export NPROC=4;fi
@@ -31,9 +32,9 @@ deploy-chaos-web:
     image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
     script:
       - ver=`git log --pretty=format:'%h' -n 1`
-      - buildstr="$CI_COMMIT_REF_NAME-$NOW-$CI_JOB_ID"
+      - buildstr="$CI_COMMIT_REF_NAME-$NOWS-$ver-$CI_JOB_ID"
       - echo "<script>const VERSION=\"$buildstr\";</script>" > version.html
-      - if [ "$CI_COMMIT_REF_NAME" == "master" ];then echo "   <b><font size="4" color=\"red\">Production</font></b><font size="2">  ($buildstr)</font" >> version.html; else echo "   <b><font size="4" color=\"green\">$CI_COMMIT_REF_NAME</font></b><font size="2">  ($buildstr)</font" >> version.html;fi
+      - if [ "$CI_COMMIT_REF_NAME" == "master" ];then echo "   <b><font size="4" color=\"red\">Production</font></b><font size="1"> build: $buildstr</font" >> version.html; else echo "   <b><font size="4" color=\"green\">$CI_COMMIT_REF_NAME</font></b><font size="2">  ($buildstr)</font" >> version.html;fi
       - tar cfz $DISTRIB_NAME.tar.gz *
       - scp $DISTRIB_NAME.tar.gz  chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/
       - ssh chaosweb@opensource.lnf.infn.it "ln -sf /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/$DISTRIB_NAME.tar.gz  /var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch/latest.tar.gz"
