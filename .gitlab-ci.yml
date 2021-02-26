@@ -1,5 +1,7 @@
 stages:
     - deploy
+    - publish
+
     
 before_script:
   - export NOW=$(date +"%Y%m%d-%H%M%S")
@@ -46,4 +48,18 @@ deploy-chaos-web:
       expire_in: 3 day
       when: always
         
+  
+pages:
+  stage: publish
+  dependencies:
+    - deploy-chaos-web
+  image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
+  script:
+    - mkdir chaos_dashboard;tar xvfz $DISTRIB_NAME.tar.gz -C chaos_dashboard
+    
+  allow_failure: true
+  artifacts:
+    paths:
+    - 'chaos_dashboard'
+    expire_in: 3 day
   
