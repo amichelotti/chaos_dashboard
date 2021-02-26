@@ -4,9 +4,10 @@ stages:
 
     
 before_script:
+  - ver=`git log --pretty=format:'%h' -n 1`
   - export NOW=$(date +"%Y%m%d-%H%M%S")
   - export NOWS=$(date +"%Y%m%d")
-  - export TAR_NAME_POSTFIX=$NOW
+  - export TAR_NAME_POSTFIX=$CI_COMMIT_REF_NAME-$NOWS-$ver-$CI_PIPELINE_ID
   - export SYS=`uname -s`
   - if [ "$SYS" == "Linux" ];then export NPROC=`nproc`;else export NPROC=4;fi
   - echo "[$CI_RUNNER_DESCRIPTION] $SYS $CI_JOB_NAME Working directory:$PWD tag $CI_COMMIT_REF_NAME CPUS:$NPROC"
@@ -33,8 +34,7 @@ deploy-chaos-web:
     stage: deploy
     image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
     script:
-      - ver=`git log --pretty=format:'%h' -n 1`
-      - buildstr="$CI_COMMIT_REF_NAME-$NOWS-$ver-$CI_JOB_ID"
+      - buildstr="$CI_COMMIT_REF_NAME-$NOWS-$ver-$CI_PIPELINE_ID"
       - echo "<script>const VERSION=\"$buildstr\";</script>" > version.html
       - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then echo "   <b><font size=\"4\" color=\"red\">Production</font></b><font size=\"1\"> $buildstr</font>" >> version.html; else echo "   <b><font size=\"4\" color=\"green\">$CI_COMMIT_REF_NAME</font></b><font size=\"1\"> $buildstr</font>" >> version.html;fi
       - tar cfz $DISTRIB_NAME.tar.gz *
