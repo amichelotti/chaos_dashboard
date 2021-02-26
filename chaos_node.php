@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <?php
 require_once('head.php');
@@ -18,13 +18,12 @@ require_once('header.php');
 
 
 
-			<!-- start: Content -->
 <div id="chaos_content" class="col-md-12">
 
 
 	<div class="row">
 		<div class="statbox purple col-md-3">
-			<h3>Node Type</h3>
+			<h3>Node View</h3>
 			<select id="View" size="auto">
 				<option value="byzone" selected="selected">By Zone</option>
 				<option value="bydevice">By Type</option>
@@ -72,10 +71,6 @@ require_once('header.php');
 
 </div>
 </div>
-<!-- <div id="hier_view"></div> -->
-
-
-<!-- <div class="clearfix"></div> -->
 
 <footer><?php require_once('footer.php');?></footer>
 
@@ -213,25 +208,42 @@ require_once('header.php');
 						if (par != "") {
 							list_us.push(par);
 						}
-						uslist.forEach((us) => {
-							if (us != par) {
-								list_us.push(us);
+						if((obj.ndk_type !== undefined)&&(obj.ndk_type=="nt_control_unit")){
+
+							uslist.forEach((us) => {
+								if (us != par) {
+									list_us.push(us);
+								}
+							});
+						}
+							if(list_us.length>0){
+								templ['properties']['ndk_parent'].enum = list_us;
+							} else {
+								
+								templ['properties']['ndk_parent']= {
+									"type": "string",
+									"format": "text",
+									"required": true,
+									"description": "US owner"
+
+								};
 							}
-						});
-						templ['properties']['ndk_parent'].enum = list_us;
+						
 						var list_impl = [];
 
 						var impl = "";
 						if (obj.control_unit_implementation !== undefined) {
 							impl = obj.control_unit_implementation;
 						}
+						var glist = [];
+
 						if (impl != "") {
 							list_impl.push(impl);
 							if ((cudb[impl] !== undefined) && (cudb[impl].info !== undefined)) {
-								templ['properties']['group'].enum = cudb[impl].group;
+								//templ['properties']['group'].enum = cudb[impl].group;
+								glist=cudb[impl].group;
 							}
 						} else {
-							var glist = [];
 							for (var k in cudb) {
 								if (cudb[k].info !== undefined) {
 									if (cudb[k].info.group !== undefined) {
@@ -240,15 +252,26 @@ require_once('header.php');
 								}
 
 							}
-							templ['properties']['group'].enum = glist;
+					//		templ['properties']['group'].enum = glist;
 
+						}
+						if(glist.length>0){
+							templ['properties']['group']=glist;
+						} else {
+							templ['properties']['group']= {
+								"type": "string",
+								"format": "text",
+								"required": true,
+								"description": "CU Group"
+
+							};
 						}
 						for (var k in cudb) {
 							if (k != impl) {
 								list_impl.push(k);
 							}
 						}
-						if (ob.ndk_uid !== "undefined") {
+						if ((ob.ndk_uid !==undefined) && (typeof ob.ndk_uid == "string")) {
 							if (jchaos.pathToZoneGroupId(ob.ndk_uid) != null) {
 								//valid path change 
 								templ['properties']['ndk_uid'] = {
@@ -262,12 +285,21 @@ require_once('header.php');
 
 							}
 						}
-						list_impl.push("CUSTOM");
+						//list_impl.push("CUSTOM");
 						if ((obj.ndk_type !== undefined) && (obj.ndk_type == "nt_root")) {
 							list_impl = jchaos.findScriptByType("", "CPP");
 						}
+						if(list_impl.size>0){
+							templ['properties']['control_unit_implementation'].enum = list_impl;
+						} else {
+							templ['properties']['control_unit_implementation']= {
+								"type": "string",
+								"format": "text",
+								"required": true,
+								"description": "CU C++ implementation"
 
-						templ['properties']['control_unit_implementation'].enum = list_impl;
+							};
+						}
 						var drv_impl = obj.cudk_driver_description;
 						var list_drivers = [];
 
@@ -379,12 +411,89 @@ require_once('header.php');
 		var items = {};
 		var tree = $('#hier_view').jstree(true);
 		var ID = $(node).attr('id');
+		var menu_str="";
 		if (node.hasOwnProperty("data")) {
+			if(node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type == "nt_agent")){
+					menu_str="associated";
+			}
+			items['new-us'] = {
+						"separator_before": true,
+						"separator_after": false,
+						label: "New "+menu_str+" US ",
+						action: function () {
+							var templ = {
+								$ref: "us.json",
+								format: "tabs"
+							}
+							jqccs.jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, null, function (ok) {
+								if((node.data.ndk_type == "nt_agent")){
+
+								jchaos.agentAssociateNode(selected_node, ok['ndk_uid'], "", "UnitServer", okk => {
+									jqccs.instantMessage("Unit server created and associated ", " OK", 2000, true);
+									
+
+								}, (badd) => {
+									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
+
+								});
+							}
+							var newnode = {
+										"id": jchaos.encodeName(ok.ndk_uid),
+										"parent": ID,
+										"icon": "/img/devices/nt_unit_server.png",
+										"text": ok.ndk_uid,
+										"data": ok
+									};
+									tree.create_node(node, newnode);
+									triggerRefreshEdit();
+
+								}, function (bad) {
+									jqccs.instantMessage("Unit creation server failed:", JSON.stringify(bad), 4000, false);
+								}
+
+							);
+						}
+					};
+			if ((cu_copied != null) && (typeof cu_copied === "object")) {
+					if ((cu_copied.ndk_type == "nt_unit_server")){
+						items['associate-us'] = {
+						"separator_before": true,
+						"separator_after": false,
+						label: "Associate US "+cu_copied.ndk_uid,
+						action: function () {
+							jchaos.agentAssociateNode(selected_node, cu_copied.ndk_uid, "", "UnitServer", okk => {
+									jqccs.instantMessage("Unit server created and associated ", " OK", 2000, true);
+									
+									var newnode = {
+										"id": jchaos.encodeName(cu_copied.ndk_uid),
+										"parent": ID,
+										"icon": "/img/devices/nt_unit_server.png",
+										"text": cu_copied.ndk_uid,
+										"data": cu_copied
+									};
+									tree.create_node(node, newnode);
+									triggerRefreshEdit();
+							}, (badd) => {
+									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
+
+							});
+							
+						}
+					}
+				} else if(cu_copied.ndk_type == "nt_root") {
+				}
+						
+						
+			}
 			if (node.data.hasOwnProperty('zone') || (node.data.ndk_type == "nt_unit_server")) {
+				if(node.data.hasOwnProperty("ndk_type")&&(node.data.ndk_type == "nt_unit_server")){
+					menu_str="Add ";
+				}
+				
 				items['new-cu'] = {
 					"separator_before": false,
 					"separator_after": false,
-					label: "New CU",
+					label: menu_str+"New CU",
 					action: function () {
 						var cu = {};
 						//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
@@ -410,6 +519,8 @@ require_once('header.php');
 									};
 
 									tree.create_node(node, newnode);
+									triggerRefreshEdit();
+
 
 								}
 							}, function (bad) {
@@ -472,6 +583,8 @@ require_once('header.php');
 												};
 
 												tree.create_node(node, newnode);
+												triggerRefreshEdit();
+
 
 											}
 										}, function (bad) {
@@ -491,6 +604,35 @@ require_once('header.php');
 			if (node.data.hasOwnProperty("ndk_type") && node.data.hasOwnProperty("ndk_uid")) {
 				var selected_node = node.data.ndk_uid;
 				var type = node.data.ndk_type;
+				items['copy'] = {
+						"separator_before": false,
+						"separator_after": false,
+						label: "Copy "+jchaos.nodeTypeToHuman(type),
+						action: function () {
+							if(type == "nt_unit_server" ){
+										jqccs.instantMessage("Copied US " + selected_node, " you can paste it into an AGENT", 4000, true);
+										copyToClipboard(JSON.stringify(node.data));
+										cu_copied = node.data;
+
+								return;
+							}
+							jchaos.node(selected_node, "get", "cu", function (data) {
+								if (data != null) {
+									cu_copied = data;
+									if (type == "nt_root") {
+										jqccs.instantMessage("Copied EU " + selected_node, " you can paste it into an AGENT", 4000, true);
+
+									} else if (type == "nt_control_unit" ){
+										jqccs.instantMessage("Copied CU " + selected_node, " you can paste it into an US", 4000, true);
+									}  else {
+										return;
+									}
+
+									copyToClipboard(JSON.stringify(data));
+								}
+							});
+						}
+					};
 
 				if((type == "nt_control_unit")&&node.data.hasOwnProperty('instance_description') && (node.data.instance_description.hasOwnProperty('control_unit_implementation'))){
 					items['control'] = {
@@ -538,37 +680,17 @@ require_once('header.php');
 							return;
 						}
 					};
-					items['copy'] = {
-						"separator_before": false,
-						"separator_after": false,
-						label: "Copy",
-						action: function () {
-							jchaos.node(selected_node, "get", "cu", function (data) {
-								if (data != null) {
-									cu_copied = data;
-									if (type == "nt_root") {
-										jqccs.instantMessage("Copied EU " + selected_node, " you can paste it into an AGENT", 4000, true);
-
-									} else {
-										jqccs.instantMessage("Copied CU " + selected_node, " you can paste it into an US", 4000, true);
-									}
-
-									copyToClipboard(JSON.stringify(data));
-								}
-							});
-						}
-					};
-
+	
 					items['save'] = {
 						"separator_before": false,
 						"separator_after": false,
-						label: "Save locally",
+						label: "Download Config",
 						action: function () {
 							jchaos.node(selected_node, "get", "cu", function (data) {
 								if (data != null) {
 									if (data instanceof Object) {
-										var tmp = { cu_desc: data };
-										var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
+										//var tmp = { cu_desc: data };
+										var blob = new Blob([JSON.stringify(data)], { type: "json;charset=utf-8" });
 										saveAs(blob, selected_node + ".json");
 									}
 								}
@@ -606,6 +728,7 @@ require_once('header.php');
 									jqccs.jsonEditWindow("Agent Editor", templ, data, jchaos.agentSave, opt,
 										() => {
 											jqccs.instantMessage("Agent saved " + selected_node, " OK", 2000, true);
+											triggerRefreshEdit();
 
 										}, (bad) => {
 											jqccs.instantMessage("Agent  " + selected_node, "Save Error:" + JSON.stringify(bad), 4000, false);
@@ -617,37 +740,7 @@ require_once('header.php');
 							});
 						}
 					};
-					items['new-us'] = {
-						"separator_before": true,
-						"separator_after": false,
-						label: "New US",
-						action: function () {
-							var templ = {
-								$ref: "us.json",
-								format: "tabs"
-							}
-							jqccs.jsonEditWindow("US Editor", templ, null, jchaos.unitServerSave, null, function (ok) {
-								jchaos.agentAssociateNode(selected_node, ok['ndk_uid'], "", "UnitServer", okk => {
-									jqccs.instantMessage("Unit server save ", " OK", 2000, true);
-									var newnode = {
-										"id": jchaos.encodeName(ok.ndk_uid),
-										"parent": ID,
-										"icon": "/img/devices/nt_unit_server.png",
-										"text": ok.ndk_uid,
-										"data": ok
-									};
-									tree.create_node(node, newnode);
-
-								}, (badd) => {
-									jqccs.instantMessage("Unit Server Association Failed:", JSON.stringify(badd), 4000, false);
-
-								}), function (bad) {
-									jqccs.instantMessage("Unit creation server failed:", JSON.stringify(bad), 4000, false);
-								}
-
-							});
-						}
-					};
+					
 					if ((cu_copied != null) && (typeof cu_copied === "object")) {
 						if (cu_copied.ndk_type == "nt_root") {
 							items['paste-root'] = {
@@ -703,6 +796,9 @@ require_once('header.php');
 								if (data.hasOwnProperty("us_desc")) {
 									//    editorFn = unitServerSave;
 									//    jsonEdit(templ, data.us_desc);
+									if(data.hasOwnProperty("ndk_desc")){
+										data.us_desc["ndk_desc"]=data["ndk_desc"];
+									}
 									jqccs.jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, null, function (ok) {
 										jqccs.instantMessage("Unit server save ", " OK", 2000, true);
 
@@ -735,6 +831,8 @@ require_once('header.php');
 									}, (bad) => { });
 								}
 								tree.delete_node(node);
+								triggerRefreshEdit();
+
 
 							}, function (err) {
 								jqccs.instantMessage("cannot delete " + selected_node, JSON.stringify(err), 2000, false);
@@ -1573,9 +1671,11 @@ require_once('header.php');
 		$("#" + iname).removeClass("text-danger");
 		$("#" + iname).removeClass("text-muted");
 	}
+
+	
 </script>
 
 
 </body>
 
-</html> -->
+</html>

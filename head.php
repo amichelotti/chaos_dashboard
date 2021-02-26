@@ -29,18 +29,11 @@ function getUserIP() {
 <head>
 
 	
-	<!-- start: Meta -->
 	<meta charset="utf-8">
 	<title>!CHAOS Dashboard</title>
 	
-	<!-- start: Mobile Specific -->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- end: Mobile Specific -->
 	
-	<!-- start: CSS -->
-	<!--link id="bootstrap-style" href="./css/bootstrap.min.css" rel="stylesheet">
-	<link href="./css/bootstrap-responsive.min.css" rel="stylesheet"-->
-		
 		<?php
 			global $main_dir;
 #			$main_dir="chaos_dashboard";
@@ -56,6 +49,8 @@ function getUserIP() {
 			//echo '<link id="bootstrap-style" href="' .$main_dir. '/bootstrap-3.4.1-dist/css/bootstrap.min.css" rel="stylesheet">';
 			//echo '<script src="'.$main_dir.'/bootstrap-3.4.1-dist/js/bootstrap.min.js"></script>';
 			//echo '<script src="'.$main_dir.'/js/jquery-1.9.1.min.js"></script>';
+			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-ctrl.css" type="text/css" rel="stylesheet" />';;
+
 			echo '<link id="base-style" href="' .$main_dir. '/css/style.css" rel="stylesheet">';
 			echo '<script src="'.$main_dir.'/js/jquery-3.5.1.min.js"></script>';
 			//		echo '<script src="'.$main_dir.'/js/jquery-migrate-1.0.0.min.js"></script>';
@@ -77,7 +72,6 @@ function getUserIP() {
 			echo '<link href="' .$main_dir. '/css/jquery.contextMenu.min.css" rel="stylesheet">';
 			
 			
-			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-ctrl.css" type="text/css" rel="stylesheet" />';;
 			
 			//link script
 			
@@ -145,39 +139,25 @@ function getUserIP() {
 
 
 		?>
-
-	<!--link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet"-->
-
-	<!--link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&subset=latin,cyrillic-ext,latin-ext' rel='stylesheet' type='text/css'-->
-	<!-- The HTML5 shim, for IE6-8 support of HTML5 elements -->
-	<!--[if lt IE 9]>
-	  	<!--script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script-->
-	<![endif]-->
-		
-	<!-- start: Favicon -->
+	
 	<link rel="shortcut icon" href="./img/logo_chaos_col_xMg_icon.ico">
-	<!-- end: Favicon -->
 	
-	
-
 		<div id="chat_incoming_message"></div>
 
         <script>
 		var myip="<?php echo getUserIP(); ?>";
 		if(localStorage['chaos_browser_uuid_cookie'] === undefined){
-		//	alert();
-		
 			localStorage['chaos_browser_uuid_cookie']=jchaos.generateUID();
 		}
         jchaos.setOptions({"uri":location.host+":8081","socketio":location.host+":4000"});
 		var url_server =  location.host; //"chaosdev-webui1.chaos.lnf.infn.it";
 		var n_port = "8081";
-		jchaos.ioconnect(location.host+":4000",{query: {"client_uid": localStorage['chaos_browser_uuid_cookie']}});
+		jchaos.ioconnect(location.host+":4000",{query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":9000}});
 		jchaos.options.io_onchat=(msg)=>{
 			
 			chat_incoming_message.dispatchEvent(new CustomEvent("chat_incoming_message", {detail:msg}));
 			if(msg.type=="alarm"){
-				alert("ALARM FROM \""+msg.username+"\" MESSAGE:"+msg.msg);
+				alert(msg.date+" ALARM FROM \""+msg.username+"\" MESSAGE:"+msg.msg);
 			}
 		}
 		/*const socket=io("ws://"+url_server+":4000",{transports: ['websocket']});
@@ -201,5 +181,4 @@ function getUserIP() {
 
 
 </head>
-	<!-- end: JavaScript-->
 	

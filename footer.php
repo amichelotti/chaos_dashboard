@@ -45,6 +45,9 @@
           <li>
             <a href="http://chaos-grafana01.chaos.lnf.infn.it:3000/login">Grafana production</a>
           </li>
+          <li>
+            <a href="CUgenerator/index.html">CU generator</a>
+          </li>
         </ul>
 
       </div>

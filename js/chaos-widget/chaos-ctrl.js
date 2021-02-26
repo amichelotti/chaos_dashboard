@@ -31,7 +31,7 @@
     var graph_selected;
     var search_string;
     var notupdate_dataset = 1;
-    var implementation_map = { "powersupply": "SCPowerSupply", "motor": "SCActuator", "camera": "RTCamera", "BPM": "SCLibera" };
+    var implementation_map = { "powersupply": ["SCPowerSupply"], "motor": ["SCActuator"], "camera": ["RTCamera","cameraGFIT"], "BPM": ["SCLibera"] };
     var hostWidth = 640;
     var hostHeight = 640;
     function GetURLParameter(sParam) {
@@ -49,9 +49,12 @@
     }
     function getInterfaceFromClass(impl_class) {
         for (var key in implementation_map) {
-            if (impl_class.includes(implementation_map[key])) {
-                return key;
-            }
+            implementation_map[key].forEach(ele=>{
+                if (impl_class.includes(ele)) {
+                    return key;
+                }
+            });
+           
         };
         return null;
     }
@@ -471,6 +474,38 @@
            
        });
    }*/
+    function updateDataSetFormat(cuname,path,last_dataset,showformat,tmpObj){
+        let options={collapsed:false};
+        let name = jchaos.encodeName(cuname);
+
+                            if (showformat == 1) {
+                                options["format"] = 10 + 0x100;
+                            } else if (showformat == 2) {
+                                options["format"] = 16;
+                            } else if (showformat == 3) {
+                                options["format"] = 2;
+                            } else {
+                                options["format"] = 10;
+                            }
+                            let converted = convertBinaryToArrays(last_dataset);
+
+                            var jsonhtml = json2html(converted, options, path);
+                            if (jchaos.isCollapsable(converted)) {
+                                jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                            }
+                            var html = "";
+                            var lat = last_dataset.dpck_ts_diff / 1000.0;
+                            html = "<label>CU-MDS Latency(ms):" + lat + "</label>";
+
+                            html += jsonhtml;
+                            $("#dataset-" + name).html(html);
+                           
+                            jsonSetup($("#dataset-" + name), tmpObj);
+                            $("#dataset-" + name).before($("#dataset-" + name).parent().find('.ui-dialog-buttonpane'));
+                            jsonEnableDSContext(cuname);
+
+
+    }
     function showDataset(msghead, cuname, refresh, tmpObj) {
         var update;
         var options={};
@@ -504,6 +539,8 @@
 
                     }
                     // $(instant).dialog("close");
+                    jsonSetup($(this), tmpObj);
+
                 }
             }, {
                 text: "Dataset",
@@ -564,7 +601,19 @@
                             vardir = "output";
 
                     }
+                    let chnum = showdataset;
+                    if (showdataset == 7) {
+                        chnum = 128;
+                    } else if (chnum > 7) {
+                        chnum = -1;
+                    }
 
+                    jchaos.getChannel(cuname, chnum, function (imdata) {
+                        
+                        updateDataSetFormat(cuname,(vardir!=""?(cuname+"/"+vardir):cuname),imdata[0],showformat,tmpObj);
+                    }, function (err) {
+                        console.log(err);
+                    });
                     // $(instant).dialog("close");
                 }
             },
@@ -591,14 +640,27 @@
                             showformat = 0;
                             $(e.target).text("Dec(s)");
                     }
+                    let chnum = showdataset;
+                    if (showdataset == 7) {
+                        chnum = 128;
+                    } else if (chnum > 7) {
+                        chnum = -1;
+                    }
 
+                    jchaos.getChannel(cuname, chnum, function (imdata) {
+                        last_dataset=imdata;
+                        updateDataSetFormat(cuname,(vardir!=""?(cuname+"/"+vardir):cuname),imdata[0],showformat,tmpObj);
+                    }, function (err) {
+                        console.log(err);
+                    });
                     // $(instant).dialog("close");
                 }
             }, {
                 text: "save",
                 click: function (e) {
                     var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
-                    saveAs(blob, name + ".json");
+                    var fname=(vardir!=""?(cuname+"/"+vardir):cuname)
+                    saveAs(blob, jchaos.encodeName(fname) + ".json");
                 }
             },
             {
@@ -636,48 +698,23 @@
                         }
 
                         jchaos.getChannel(cuname, chnum, function (imdata) {
-                            last_dataset = imdata[0];
-                            if (showformat == 1) {
-                                options["format"] = 10 + 0x100;
-                            } else if (showformat == 2) {
-                                options["format"] = 16;
-                            } else if (showformat == 3) {
-                                options["format"] = 2;
-                            } else {
-                                options["format"] = 10;
-                            }
-                            var converted = {};
-                            if (vardir != "") {
-                                converted[vardir] = convertBinaryToArrays(imdata[0]);
-                            } else {
-                                converted = convertBinaryToArrays(imdata[0]);
-                            }
-                            var jsonhtml = json2html(converted, options, cuname);
-                            if (jchaos.isCollapsable(converted)) {
-                                jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
-                            }
-                            var html = "";
-                            var lat = imdata[0].dpck_ts_diff / 1000.0;
-                            html = "<label>CU-MDS Latency(ms):" + lat + "</label>";
+                            last_dataset=imdata;
 
-                            html += jsonhtml;
-                            $("#dataset-" + name).html(html);
-                            if (started == 0) {
-                                started = 1;
-                                stop_update = true;
-                                //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
-                                //target.toggle();
-                                $(".json-toggle").trigger("click");
-                                jsonEnableDSContext(cuname);
-                            }
+                            updateDataSetFormat(cuname,(vardir!=""?(cuname+"/"+vardir):cuname),imdata[0],showdataset,tmpObj);
                         }, function (err) {
                             console.log(err);
                         });
+                        if (started == 0) {
+                            started = 1;
+                            stop_update = true;
+                            //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
+                            //target.toggle();
+                            $(".json-toggle").trigger("click");
+                        }
                     }
 
                 }, refresh);
 
-                jsonSetup($(this), tmpObj);
                 $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
             }
@@ -844,10 +881,11 @@
      * @param {string} msgHead Title of the window
      * @param {function} nodeFn function that creates node, menu and handlers 
      */
-    jqccs.createBrowserWindow = function (msgHead, opt, nodeFn) {
+    jqccs.createBrowserWindow = function (msgHead, opt, nodeFn,id) {
         var width = $(window).width() / 2;
         var height = $(window).height() / 2;
         if (typeof opt === "function") {
+            id=nodeFn;
             nodeFn = opt;
         } else if (opt !== undefined) {
             if (opt['width'] !== undefined) {
@@ -858,7 +896,8 @@
             }
         }
 
-        var pid = (new Date()).getTime();
+        var pid;
+        pid=id||(new Date()).getTime();
         var hier = "hier-" + pid;
         var desc = "desc-" + pid;
         var html = '<div class="row"><div id="' + hier + '" class="col-md-6"></div><div id="' + desc + '" class="col-md-6"></div></div>';
@@ -889,14 +928,14 @@
                     click: function (e) {
                         // var interval=$(this).attr("refresh_time");
                         //    $('#console-' + pid).terminal().exit();
-                        $(this).dialog("close");
+                        $(this).dialog('destroy');
                     }
 
                 }
             ],
             close: function (event, ui) {
                 //    $('#console-' + pid).terminal().exit();
-                $(this).dialog("close");
+                $(this).remove();
 
             },
 
@@ -1542,9 +1581,12 @@
             } else if( (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") )){
                 impl=node_name_to_desc[name].instance_description.control_unit_implementation;
             }
-            if( (impl.indexOf(interface) != -1)) {
-                retlist.push(name);
-            }
+            interface.forEach(ele=>{
+                if( (impl.indexOf(ele) != -1)) {
+                    retlist.push(name);
+                }
+            });
+            
         });
 
 
@@ -2028,10 +2070,10 @@
         });
     }
 
-    jqccs.algoSave = function (json) {
-        return algoSave(json);
+    jqccs.algoSave = function (json,ok) {
+        return algoSave(json,ok);
     }
-    function algoSave(json) {
+    function algoSave(json,ok) {
         console.log("newScript :" + JSON.stringify(json));
         var proc = {};
         if (json.script_name == null || json.script_name == "") {
@@ -2066,7 +2108,9 @@
                 jchaos.saveScript(json, function (data) {
                     console.log("Saving script:" + JSON.stringify(json));
                     instantMessage("Script " + json.script_name, " Saved", 1000, null, null, true)
-
+                    if(typeof ok === "function"){
+                        ok(json);
+                    }
                 }, (bad) => {
                     instantMessage("Error Saving Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
@@ -2079,7 +2123,9 @@
                             console.log(cnt + "] Updating script:" + json.script_name + " with seq:" + json.seq, " content:" + JSON.stringify(json));
                             jchaos.saveScript(json, function (data) {
                                 instantMessage("Updated Script " + json.script_name, "Saved", 2000, null, null, true)
-
+                                if(typeof ok === "function"){
+                                    ok(json);
+                                }
                             }, (bad) => {
                                 instantMessage("Error updating Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
@@ -2097,7 +2143,9 @@
                                     jchaos.saveScript(json, function (data) {
                                         console.log("Replacing script:" + json.script_name);
                                         instantMessage("Replacing Script " + json.script_name, "Saved", 1000, null, null, true)
-
+                                        if(typeof ok === "function"){
+                                            ok(json);
+                                        }
                                     });
                                 }
                             }, (bad) => {
@@ -2290,7 +2338,7 @@
                                 if (err.hasOwnProperty('error_status')) {
                                     instantMessage("Error ", err.error_status, 4000, false);
                                 } else {
-                                    instantMessage("Error ", JSON.stringify(err), 4000, false);
+                                    instantMessage("Error ", err, 4000, false);
 
                                 }
                             } else {
@@ -2325,7 +2373,10 @@
                     getFile("Upload", "upload the json", function (obj) {
                         $("#edit-temp").dialog('close');
                         console.log("uploaded:" + JSON.stringify(obj));
-                        jsonEditWindow(name, jsontemp, obj, editorFn, tmpObj);
+                        if(jsonin.hasOwnProperty('ndk_parent')&&obj.hasOwnProperty('ndk_parent')){
+                            obj['ndk_parent']=jsonin['ndk_parent'];
+                        }
+                        jsonEditWindow(name, {}/*jsontemp*/, obj, editorFn, tmpObj);
                         $(this).remove();
                     });
 
@@ -3920,6 +3971,28 @@
 
         } else if (cmd == "show-dataset") {
             showDataset(currsel, currsel, 1000, tmpObj);
+            /*jchaos.getChannel(currsel, -1, function (imdata) {
+
+            jqccs.editJSON("Dataset Prop " + currsel, imdata, (json, fupdate) => {
+
+                var changed = {};
+                for (var key in json) {
+
+                    if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
+                        changed[key] = json[key];
+
+                    }
+                }
+                console.log("sending changed:" + JSON.stringify(changed));
+
+                }, (bad) => {
+                    instantMessage("Error Setting Dataset prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: " + JSON.stringify(bad), 5000, false);
+
+                });
+
+            });*/
+        
+
         } else if(cmd== "save-default"){
             jchaos.saveSetPointAsDefault(currsel,1,(ok)=>{
                 instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
@@ -6985,7 +7058,12 @@
 
         var sopt = { "pagestart": dashboard_settings.current_page, "pagelen": dashboard_settings.maxNodesPerPage };
         if (interface != "--Select--" && interface != "ALL") {
-            sopt['impl'] = implementation_map[interface];
+            if(implementation_map[interface].length==1){
+                sopt['impl']=implementation_map[interface][0];
+            } else {
+                sopt['impl']="";
+            }
+            
         }
         dashboard_settings['search'] = search_string;
         jchaos.search(search_string, what, (alive == "true"), sopt, function (list_cu) {
@@ -7125,7 +7203,16 @@
             }
             //var tt =prompt('type value');
         });
-
+        $("#push_enable").change(function (e) {
+            var pe=$("#push_enable").is(":checked");
+            if(pe==false){
+                // unsubscribe all
+                jchaos.ioclose();
+    
+            }
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
+            //var tt =prompt('type value');
+        });
         $("input[type=radio][name=search-alive]").change(function (e) {
             dashboard_settings.current_page = 0;
             var alive = ($("[name=search-alive]:checked").val() == "true");
@@ -8683,7 +8770,7 @@
         var idname = gname;
         var html_target = "<div></div>";
         //html += '<div id="graph-' + id + '" style="height: 380px; width: 580px;z-index: 1000;">';
-        html += '<div class="row" style="height: 100%; width: 100%">';
+        html += '<div class="row graphdialog" style="height: 100%; width: 100%;z-index: 1000">';
         //html += '<div id="createGraphDialog-' + id + '" style="height: 100%; width: 100%">';
         if (typeof id === "string") {
             idname = id;
@@ -8715,6 +8802,18 @@
         var chart ={};
         dlg_opt = {
             open: function () {
+                $(this).on('mousedown', function(event) { 
+                   // $(".ui-widget-overlay").css("zIndex", (9999));
+                   // $(this).parent().css("zIndex", (10000));
+                //    $('.ui-front').removeClass("ui-dialog");
+                 //   $('.ui-dialog').addClass("dialog-back");
+                   // $('.graphdialog').removeClass('ui-dialog');
+                   // $( this ).addClass("ui-dialog");
+                   $( this ).dialog( "moveToTop" );
+                   // $( this ).dialog( "close" );
+                   // $(this).addClass("ui-front");
+                    console.log("change level front");
+                });
                 initializeTimePicker(function (ev, picker) {
                     //do something, like clearing an input
                     // $('#daterange').val('');
@@ -9015,6 +9114,14 @@
         } else {
             $(html_target).dialog(dlg_opt);
         }
+        
+   
+   /*     $('.ui-dialog').on('mousedown', function(event) { 
+            //$('.ui-dialog').css('z-index','1');
+            //$( this ).css('z-index','1000');
+            $( this ).moveToTop()
+            console.log("change level");
+        });*/
     }
     jqccs.graphOpt2highchart=function(graphopt){
         var hc=graphopt;
@@ -9904,6 +10011,15 @@
 
         $(dom).off('click');
         $(dom).off('keypress');
+        $(dom).on("click", "span.json-key", function (e) {
+            var id = $(e.currentTarget).attr("portname");
+            var enc = jchaos.encodeName(id);
+            $("#attr-" + enc).toggle();
+            if (typeof clickHandler === "function") {
+                clickHandler(e);
+            }
+            return false;
+        });
 
         $(dom).on("click", "a.json-toggle", function () {
             var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
@@ -9918,16 +10034,7 @@
             return false;
         });
 
-        $(dom).on("click", "span.json-key", function (e) {
-            var id = $(e.currentTarget).attr("portname");
-            var enc = jchaos.encodeName(id);
-            $("#attr-" + enc).toggle();
-            if (typeof clickHandler === "function") {
-                clickHandler(e);
-            }
-            return false;
-        });
-
+       
         //$("input.json-keyinput").keypress(function (e) {
         $(dom).on("keypress", "input.json-keyinput", function (e) {
             if (typeof editHandler === "function") {
@@ -10038,8 +10145,7 @@
                             keyclass = "json-key";
                         }
 
-                        var keyRepr = options.withQuotes ?
-                            '<span class="' + keyclass + '" portname="' + id + '" portarray="' + portarray + '">"' + key + '"</span>' : key;
+                        var keyRepr = '<span class="' + keyclass + '" portname="' + id + '" portarray="' + portarray + '">"' + key + '"</span>';
 
                         /*  var keyRepr = options.withQuotes ?
                           '<span class="' + keyclass + '" id=' + enc+ ' portname="' + id + '" portarray="' + portarray + '">"' + key + '"</span>' : key;
@@ -11266,6 +11372,8 @@
             $("#query-page").val(dashboard_settings.defaultPage);
             $("#query-chunk").val(dashboard_settings.defaultChunk);
 
+
+            
             //   initializeTimePicker();
 
             //jsonSetup($(this));

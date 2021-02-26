@@ -59,25 +59,27 @@
 							</div>
 						</li>
 					</ul>
-					<!-- <form class="form-inline my-2 my-lg-0">
-						<input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-						<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-					</form> -->
+				
 				</div>
-				<a class="navbar-brand col-sm" href="#">
+				
+				<a class="navbar-brand col-sm-8" href="#">
 					<div class="row">
-						<h2 class="display2 col-sm">!CHAOS
+						<h2 class="display2 col-sm align-items-left">!CHAOS
 							Dashboard</h2>
 						<div class="col-sm">
-							<?php echo file_get_contents("target.html");echo file_get_contents("version.html");?>
+							<?php echo file_get_contents("version.html");?>
 						</div>
+						
 					</div>
 				</a>
+				<div class="col-sm-1 align-items-right">
+
+						<label class="checkbox-inline">
+  <input type="checkbox" id="push_enable" data-toggle="toggle"> push/poll
+</label>
+</div>
 
 			</nav>
-
-			<!-- start: Header Menu -->
-
 
 		</div>
 	</div>
@@ -153,22 +155,14 @@
 						$ref: "algo.json",
 						format: "tabs"
 					}
-					jqccs.jsonEditWindow("Loaded", templ, scriptTmp, jqccs.algoSave);
-					/*$.get('algo.json', function (d) {
-						var templ = JSON.parse(d);
-						jchaos.search("", "zone", false, function (zon) {
-							var zone = ["ALL",group].concat(zon);
-							templ['properties']['script_group']['enum'] = zone;
-							jqccs.jsonEditWindow("Loaded", templ, scriptTmp, jqccs.algoSave);
-						}, (bad) => {
-							jqccs.instantMessage("cannot identify zones", "error:" + JSON.stringify(bad), 5000, false);
-		
-						});
-					}, 'text');
-					*/
-
-				})
-			}
+					jqccs.jsonEditWindow("Loaded", templ, scriptTmp, (obj)=>{
+						jqccs.algoSave(obj,()=>{refresh_script(pid);});
+						
+				
+			});
+					
+			});
+		}
 		};
 
 		if (node.hasOwnProperty("data")) {
@@ -247,7 +241,7 @@
 									obj['control_unit_implementation'] = eu['script_name'];
 									jqccs.jsonEditWindow("EU Editor", templ, obj, jchaos.cuSave, null, (ok) => {
 										jqccs.instantMessage("Created ", "OK", 2000, true);
-
+										triggerRefreshEdit();
 									}, (bad) => {
 										alert(" Cannot create node err:" + JSON.stringify(bad));
 									});
@@ -284,43 +278,15 @@
 							}
 							data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
 							delete data['_id'];
-							jqccs.jsonEditWindow("Loaded", templ, data, jqccs.algoSave);
+							jqccs.jsonEditWindow("Loaded", templ, data, (obj)=>{
+						jqccs.algoSave(obj,()=>{refresh_script(pid);});
+						
+				
+			});
 
-							/*	$.get('algo.json', function (d) {
-								var templ = JSON.parse(d);
-								jchaos.search("", "zone", false, function (zon) {
-									var zone = ["ALL"].concat(zon);
-									templ['properties']['script_group']['enum'] = zone;
-									jqccs.jsonEditWindow("Loaded", templ, data, jqccs.algoSave);
-								});
-							}, 'text');
-							*/
+						
 						});
-						/*cu2editor(cu, (edit_templ, editobj) => {
-
-							jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
-								jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
-								decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
-								var icon_name = "/img/devices/" + decoded["group"] + ".png";
-
-								if (decoded) {
-									json['group'] = decoded["group"];
-									var newnode = {
-										"id": jchaos.encodeName(json.ndk_uid),
-										"parent": node.id,
-										"icon": icon_name,
-										"text": decoded["id"],
-										"data": json
-									};
-
-									tree.create_node(node, newnode);
-
-								}
-							}, function (bad) {
-								jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
-
-							});
-						});*/
+						
 
 					}
 				};
@@ -365,15 +331,12 @@
 		return items;
 	}
 
-
-	function handle_script() {
-		$("body").addClass("loading");
-
-		jqccs.createBrowserWindow("Script browser", (pid) => {
+	function refresh_script(pid){
+			var jsree_data = [];
+			var scripts = {};
+			var node_created = {};
 			jchaos.search("", "script", false, function (l) {
-				var jsree_data = [];
-				var scripts = {};
-				var node_created = {};
+				
 
 				var scripts_flat = {}
 				if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
@@ -439,6 +402,19 @@
 						jsree_data.push(node);
 
 					});
+				} else {
+					var node = {
+							"id": "EMPTY",
+							"parent":"#",
+							"text": "EMPTY",
+							"data": ""
+						};
+						if (!node_created.hasOwnProperty("EMPTY")) {
+								node_created["EMPTY"] = true;
+								jsree_data.push(node);
+
+							}
+
 				}
 				//$("#desc-"+pid).html(jqccs.json2html(p));
 				//jqccs.jsonSetup($("#desc-"+pid), function (e) {
@@ -477,8 +453,10 @@
 				//addListeners();    
 			});
 		}
-		);
+	function handle_script() {
+		$("body").addClass("loading");
 
+		jqccs.createBrowserWindow("Script browser", refresh_script);
 	}
 
 
@@ -512,7 +490,7 @@
 			}
 		};
 
-		if (node.hasOwnProperty("data")) {
+		if (node.hasOwnProperty("data")&&(node.data!=null)) {
 			items['snap-apply'] = {
 				"separator_before": false,
 				"separator_after": true,
@@ -654,7 +632,19 @@
 					}
 				});
 
+				if(l.length==0){
+					var node = {
+							"id": "EMPTY",
+							"parent":"#",
+							"text": "EMPTY",
+							"data": null
+						};
+						if (!node_created.hasOwnProperty("EMPTY")) {
+								node_created["EMPTY"] = true;
+								jsree_data.push(node);
 
+							}
+				}
 
 				$("#hier-" + pid).jstree("destroy");
 
@@ -717,6 +707,11 @@
                         $(this).dialog("close");
                     }
                 }],
+			close:function(){
+				console.log("delete chat service");
+			//	delete chatService;
+				$(this).dialog('destroy');
+			},
 			open:function(){
 				/*chatService.initializeApp();
 
@@ -987,7 +982,7 @@
 			var jsree_data = [];
 			var node_created = {};
 			jchaos.variable("graphs", "get", (high_graphs) => {
-
+				var cnt=0;
 				for (var g in high_graphs) {
 					var name = g;
 					var type = high_graphs[g].type;
@@ -995,6 +990,7 @@
 
 					var dirs = name.split("/");
 					var group = "";
+					cnt++;
 					dirs.forEach((ele, index) => {
 						var node_group;
 						if (index == 0) {
@@ -1052,7 +1048,19 @@
 						jsree_data.push(node);
 					}
 				}
+				if(cnt==0){
+					var node = {
+							"id": "EMPTY",
+							"parent":"#",
+							"text": "EMPTY",
+							"data": ""
+						};
+						if (!node_created.hasOwnProperty("EMPTY")) {
+								node_created["EMPTY"] = true;
+								jsree_data.push(node);
 
+							}
+				}
 
 
 				$("#hier-" + pid).jstree("destroy");
@@ -1087,5 +1095,10 @@
 				$("body").removeClass("loading");
 			});
 		});
+	}
+	function triggerRefreshEdit(){
+		$("input[type=radio][name=search-alive]:checked").val(false);
+		$("input[type=radio][name=search-alive]").trigger("change");
+
 	}
 </script>
