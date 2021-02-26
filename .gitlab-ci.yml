@@ -51,6 +51,8 @@ deploy-chaos-web:
   
 pages:
   stage: publish
+  tags:
+      - shared
   dependencies:
     - deploy-chaos-web
   image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
