@@ -15,8 +15,8 @@ before_script:
   - eval export `cat /etc/*-release|grep -e "^VERSION_ID="|tr -d "\" "`
   - eval export `cat /etc/*-release|grep -e "^ID="|tr -d "\" "`
   - export REV_POSTFIX=$CI_COMMIT_REF_NAME-$ID-$VERSION_ID-$ARCH
-  - export DISTRIB_NAME=chaos_dashboard-$TAR_NAME_POSTFIX
-  - export DEPLOY_NAME=chaos_dashboard-$NOWS-$CI_PIPELINE_ID
+  - export DISTRIB_NAME=chaos_dashboard.$TAR_NAME_POSTFIX
+  - export DEPLOY_NAME=chaos_dashboard.$NOWS-$CI_PIPELINE_ID
   - export DISTRIB_PREFIX=/usr/local/chaos/chaos-distrib
   - export INSTALL_DIR=$DISTRIB_PREFIX
   - export CHAOS_MDS=localhost:5000
