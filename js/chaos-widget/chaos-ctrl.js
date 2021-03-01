@@ -7061,7 +7061,7 @@
             if(implementation_map[interface].length==1){
                 sopt['impl']=implementation_map[interface][0];
             } else {
-                sopt['impl']="";
+                sopt['impl']=interface;
             }
             
         }

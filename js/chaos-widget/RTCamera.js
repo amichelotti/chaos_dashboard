@@ -820,7 +820,7 @@ function getWidget() {
 
           jchaos.iosubscribeCU(cu, true, ["i", "healt", "a", "w", "s"]);
           jchaos.iosubscribeCU(selectedCams, true, ["o"]);
-
+          onConnectServer();
         }
         jchaos.options['io_onmessage'] = (ds) => {
 
