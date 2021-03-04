@@ -75,7 +75,7 @@
 				<div class="col-sm-1 align-items-right">
 
 						<label class="checkbox-inline">
-  <input type="checkbox" id="push_enable" data-toggle="toggle"> push/poll
+  <input type="checkbox" id="push_enable" data-toggle="toggle"> push
 </label>
 <div class="row align-items-start">
   <div class="col-sm-1"> 
@@ -102,13 +102,19 @@
 </div>
 <script>
 	jqccs.initSettings();
+	$("#push_enable").prop('disabled',true);
+
 	function onConnectServer(){
 		$("#server-connection-status").removeClass("indicator-nok");
 		$("#server-connection-status").addClass("indicator-ok");
+		$("#push_enable").prop('disabled',false);
+
 	}
 	function onDisconnectServer(){
 		$("#server-connection-status").removeClass("indicator-ok");
 		$("#server-connection-status").addClass("indicator-nok");
+		$("#push_enable").prop('disabled',true);
+
 	}
 	$("#client-connection-id").html("<font size=\"1\">"+localStorage['chaos_browser_uuid_cookie'].substr(localStorage['chaos_browser_uuid_cookie'].length - 5) +"</font>");
 	jchaos.options['io_onconnect'] = (s) => {

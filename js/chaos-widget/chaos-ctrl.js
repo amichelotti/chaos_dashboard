@@ -2373,10 +2373,8 @@
                     getFile("Upload", "upload the json", function (obj) {
                         $("#edit-temp").dialog('close');
                         console.log("uploaded:" + JSON.stringify(obj));
-                        if(jsonin.hasOwnProperty('ndk_parent')&&obj.hasOwnProperty('ndk_parent')){
-                            obj['ndk_parent']=jsonin['ndk_parent'];
-                        }
-                        jsonEditWindow(name, {}/*jsontemp*/, obj, editorFn, tmpObj);
+                       
+                        jsonEditWindow(name, {}/*jsontemp*/, obj, editorFn, tmpObj,ok,nok,eventFn);
                         $(this).remove();
                     });
 
