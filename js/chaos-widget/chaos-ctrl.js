@@ -31,7 +31,7 @@
     var graph_selected;
     var search_string;
     var notupdate_dataset = 1;
-    var implementation_map = { "powersupply": ["SCPowerSupply"], "motor": ["SCActuator"], "camera": ["RTCamera","cameraGFIT"], "BPM": ["SCLibera"] };
+    var implementation_map = { "powersupply": ["SCPowerSupply","RTMG1PowerSupply"], "motor": ["SCActuator"], "camera": ["RTCamera","cameraGFIT"], "BPM": ["SCLibera"] };
     var hostWidth = 640;
     var hostHeight = 640;
     function GetURLParameter(sParam) {
@@ -2373,7 +2373,9 @@
                     getFile("Upload", "upload the json", function (obj) {
                         $("#edit-temp").dialog('close');
                         console.log("uploaded:" + JSON.stringify(obj));
-                       
+                        if(obj.hasOwnProperty('ndk_parent')&&(obj.ndk_parent=="")&&jsonin.hasOwnProperty('ndk_parent')){
+                            obj['ndk_parent']=jsonin['ndk_parent'];
+                        }
                         jsonEditWindow(name, {}/*jsontemp*/, obj, editorFn, tmpObj,ok,nok,eventFn);
                         $(this).remove();
                     });
