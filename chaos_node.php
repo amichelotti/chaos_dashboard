@@ -178,9 +178,13 @@ require_once('header.php');
 					} else {
 						var uid = node_list[index];
 						var iname = jchaos.encodeName(uid);
-						removeTextClasses(iname);
-						$("#" + iname).addClass("text-dark");
-						$("#" + iname).attr('title', uid + ": DEAD no info");
+						if(iname==""){
+							console.error("NO NAME at index:"+index+ " UID:"+uid);
+						} else {
+							removeTextClasses(iname);
+							$("#" + iname).addClass("text-dark");
+							$("#" + iname).attr('title', uid + ": DEAD no info");
+					}
 
 
 					}
