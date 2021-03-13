@@ -109,7 +109,49 @@ require_once('header.php');
 
 					run_info.forEach((elem, index) => {
 						var isalive = false;
+						if ((elem.system !== undefined) && (elem.system.ndk_uid !== undefined)){
+							var dev_alarm = Number(elem.system.cudk_dalrm_lvl);
+							var cu_alarm = Number(elem.system.cudk_calrm_lvl);
+							var name_id = jchaos.encodeName(elem.system.ndk_uid);
+							var name_device_db=elem.system.ndk_uid;
 
+							if(dev_alarm>0){
+								if (dev_alarm == 1) {
+									$("#" + name_id + "_devalarm").attr('title', "Device Warning");
+									$("#" + name_id + "_devalarm").html('<img src="img/warning.png" alt="Warning">');
+
+									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
+								} else if (dev_alarm == 2) {
+									$("#" + name_id + "_devalarm").attr('title', "Device Error");
+									$("#" + name_id + "_devalarm").html('<img src="img/error.png" alt="Error">');
+
+									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
+								} else {
+									$("#" + name_id + "_devalarm").html('');
+								}
+
+							}
+							if(cu_alarm>0){
+								if (cu_alarm == 1) {
+									$("#" + name_id + "_cualarm").attr('title', "CU Warning");
+								//	$("#" + name_id + "_cualarm").css('background-image', 'url(img/warning.png)');
+								$("#" + name_id + "_cualarm").html('<img src="img/warning.png" alt="Warning">');
+
+								//	$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
+								} else if (cu_alarm == 2) {
+									$("#" + name_id + "_cualarm").attr('title', "CU Error");
+									//$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
+									//$("#" + name_id + "_cualarm").css('background-image', 'url(img/error.png)');
+									$("#" + name_id + "_cualarm").html('<img src="img/error.png" alt="Error">');
+
+								} else {
+								//	$("#" + name_id + "_cualarm").html('');
+								//	$("#" + name_id + "_cualarm").css('background-image', '');
+									$("#" + name_id + "_cualarm").html('');
+								}
+
+							}
+						}
 						if ((elem.health !== undefined) && (elem.health.ndk_uid !== undefined)) {
 							var healt = elem.health;
 							var uid = healt.ndk_uid;
@@ -1001,7 +1043,15 @@ require_once('header.php');
 						}
 					}
 					if (node.data.ndk_type !== undefined && ((node.data.ndk_type == "nt_root") || (node.data.ndk_type == "nt_control_unit"))) {
+						items['show-dataset'] = {
+							"separator_before": true,
+							"separator_after": false,
+							label: "Show Dataset",
+							action: function () {
+								jqccs.showDataset(node.data.ndk_uid, node.data.ndk_uid, 1000);
 
+							}
+						}
 						items['start'] = {
 							"separator_before": true,
 							"separator_after": false,
@@ -1607,6 +1657,8 @@ require_once('header.php');
 										}
 										node['id'] = uname;
 										node['cid'] = elem.ndk_uid;
+										node['text']="<span>"+p+"</span>"+'<span id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></span>'+'<span id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></span>';
+										//'<div class="row"><div class="col-sm">'+p+'</div><div class="col-sm" id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></div><div class="col-sm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></div></div>';
 
 									}
 									if (!node_created.hasOwnProperty(node['id'])) {

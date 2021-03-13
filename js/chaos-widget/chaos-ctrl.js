@@ -347,6 +347,10 @@
             }
         });
     }
+    jqccs.showDataset =function (msghead, cuname, refresh){
+        
+        return showDataset(msghead, cuname, refresh, {});
+    }
     jqccs.showScript = function (msghead, group, type, handler, actions) {
         return showScript(msghead, group, type, handler, actions);
     }
@@ -518,6 +522,8 @@
         var name = jchaos.encodeName(cuname);
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
+       
+
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -688,6 +694,8 @@
                     var isediting = false;
                     if (tmpObj.hasOwnProperty('json_editing')) {
                         isediting = tmpObj.json_editing;
+                    } else {
+                        tmpObj['json_editing']=isediting;
                     }
                     if ((!stop_update) && (isediting == false)) {
                         var chnum = showdataset;
