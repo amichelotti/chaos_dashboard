@@ -43,6 +43,18 @@
 			"default":"0",
 			"description":"Offset to apply on sets"
 		}
+		,
+		"cudk_ds_attr_wrn_thr" : {
+			"type": "string",
+			"default":"",
+			"description":"Set/readout warning threshold in %"
+		}
+		,
+		"cudk_ds_attr_err_thr" : {
+			"type": "string",
+			"default":"",
+			"description":"Set/readout warning threshold in %"
+		}
 	} 
 }
     

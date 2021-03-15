@@ -385,4 +385,17 @@ input[type="range"] {
 .dialog-back {
   z-index: 1 ;
 }
+
+.indicator-ok {
+  width: 10px;
+  height: 10px;
+  background-color: green
+  ;
+}
+.indicator-nok {
+  width: 10px;
+  height: 10px;
+  background-color: red
+  ;
+}
 /** histo*/

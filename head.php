@@ -29,18 +29,11 @@ function getUserIP() {
 <head>
 
 	
-	<!-- start: Meta -->
 	<meta charset="utf-8">
 	<title>!CHAOS Dashboard</title>
 	
-	<!-- start: Mobile Specific -->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- end: Mobile Specific -->
 	
-	<!-- start: CSS -->
-	<!--link id="bootstrap-style" href="./css/bootstrap.min.css" rel="stylesheet">
-	<link href="./css/bootstrap-responsive.min.css" rel="stylesheet"-->
-		
 		<?php
 			global $main_dir;
 #			$main_dir="chaos_dashboard";
@@ -146,28 +139,14 @@ function getUserIP() {
 
 
 		?>
-
-	<!--link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet"-->
-
-	<!--link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&subset=latin,cyrillic-ext,latin-ext' rel='stylesheet' type='text/css'-->
-	<!-- The HTML5 shim, for IE6-8 support of HTML5 elements -->
-	<!--[if lt IE 9]>
-	  	<!--script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script-->
-	<![endif]-->
-		
-	<!-- start: Favicon -->
+	
 	<link rel="shortcut icon" href="./img/logo_chaos_col_xMg_icon.ico">
-	<!-- end: Favicon -->
 	
-	
-
 		<div id="chat_incoming_message"></div>
 
         <script>
 		var myip="<?php echo getUserIP(); ?>";
 		if(localStorage['chaos_browser_uuid_cookie'] === undefined){
-		//	alert();
-		
 			localStorage['chaos_browser_uuid_cookie']=jchaos.generateUID();
 		}
         jchaos.setOptions({"uri":location.host+":8081","socketio":location.host+":4000"});
@@ -202,5 +181,4 @@ function getUserIP() {
 
 
 </head>
-	<!-- end: JavaScript-->
 	

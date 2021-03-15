@@ -1,5 +1,5 @@
 {
-    "title": "CU",
+    "title": "CU/EU",
     "type": "object",
     "id": "editor-cu",
     "format": "tab",
@@ -124,7 +124,7 @@
             "type": "integer",
             "default": 1000000,
             "required": true,
-            "description": "Default schedule of a CU"
+            "description": "Default schedule of a CU/EU (us)"
         },
         "dsndk_storage_history_ageing": {
             "type": "integer",

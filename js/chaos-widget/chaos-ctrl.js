@@ -31,7 +31,7 @@
     var graph_selected;
     var search_string;
     var notupdate_dataset = 1;
-    var implementation_map = { "powersupply": ["SCPowerSupply"], "motor": ["SCActuator"], "camera": ["RTCamera","cameraGFIT"], "BPM": ["SCLibera"] };
+    var implementation_map = { "powersupply": ["SCPowerSupply","RTMG1PowerSupply"], "motor": ["SCActuator"], "camera": ["RTCamera","cameraGFIT"], "BPM": ["SCLibera"] };
     var hostWidth = 640;
     var hostHeight = 640;
     function GetURLParameter(sParam) {
@@ -347,6 +347,10 @@
             }
         });
     }
+    jqccs.showDataset =function (msghead, cuname, refresh){
+        
+        return showDataset(msghead, cuname, refresh, {});
+    }
     jqccs.showScript = function (msghead, group, type, handler, actions) {
         return showScript(msghead, group, type, handler, actions);
     }
@@ -518,6 +522,8 @@
         var name = jchaos.encodeName(cuname);
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
+       
+
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -688,6 +694,8 @@
                     var isediting = false;
                     if (tmpObj.hasOwnProperty('json_editing')) {
                         isediting = tmpObj.json_editing;
+                    } else {
+                        tmpObj['json_editing']=isediting;
                     }
                     if ((!stop_update) && (isediting == false)) {
                         var chnum = showdataset;
@@ -700,7 +708,7 @@
                         jchaos.getChannel(cuname, chnum, function (imdata) {
                             last_dataset=imdata;
 
-                            updateDataSetFormat(cuname,imdata[0],showdataset,tmpObj);
+                            updateDataSetFormat(cuname,(vardir!=""?(cuname+"/"+vardir):cuname),imdata[0],showdataset,tmpObj);
                         }, function (err) {
                             console.log(err);
                         });
@@ -881,10 +889,11 @@
      * @param {string} msgHead Title of the window
      * @param {function} nodeFn function that creates node, menu and handlers 
      */
-    jqccs.createBrowserWindow = function (msgHead, opt, nodeFn) {
+    jqccs.createBrowserWindow = function (msgHead, opt, nodeFn,id) {
         var width = $(window).width() / 2;
         var height = $(window).height() / 2;
         if (typeof opt === "function") {
+            id=nodeFn;
             nodeFn = opt;
         } else if (opt !== undefined) {
             if (opt['width'] !== undefined) {
@@ -895,7 +904,8 @@
             }
         }
 
-        var pid = (new Date()).getTime();
+        var pid;
+        pid=id||(new Date()).getTime();
         var hier = "hier-" + pid;
         var desc = "desc-" + pid;
         var html = '<div class="row"><div id="' + hier + '" class="col-md-6"></div><div id="' + desc + '" class="col-md-6"></div></div>';
@@ -926,14 +936,14 @@
                     click: function (e) {
                         // var interval=$(this).attr("refresh_time");
                         //    $('#console-' + pid).terminal().exit();
-                        $(this).dialog("close");
+                        $(this).dialog('destroy');
                     }
 
                 }
             ],
             close: function (event, ui) {
                 //    $('#console-' + pid).terminal().exit();
-                $(this).dialog("close");
+                $(this).remove();
 
             },
 
@@ -2068,10 +2078,10 @@
         });
     }
 
-    jqccs.algoSave = function (json) {
-        return algoSave(json);
+    jqccs.algoSave = function (json,ok) {
+        return algoSave(json,ok);
     }
-    function algoSave(json) {
+    function algoSave(json,ok) {
         console.log("newScript :" + JSON.stringify(json));
         var proc = {};
         if (json.script_name == null || json.script_name == "") {
@@ -2106,7 +2116,9 @@
                 jchaos.saveScript(json, function (data) {
                     console.log("Saving script:" + JSON.stringify(json));
                     instantMessage("Script " + json.script_name, " Saved", 1000, null, null, true)
-
+                    if(typeof ok === "function"){
+                        ok(json);
+                    }
                 }, (bad) => {
                     instantMessage("Error Saving Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
@@ -2119,7 +2131,9 @@
                             console.log(cnt + "] Updating script:" + json.script_name + " with seq:" + json.seq, " content:" + JSON.stringify(json));
                             jchaos.saveScript(json, function (data) {
                                 instantMessage("Updated Script " + json.script_name, "Saved", 2000, null, null, true)
-
+                                if(typeof ok === "function"){
+                                    ok(json);
+                                }
                             }, (bad) => {
                                 instantMessage("Error updating Script " + json.script_name, JSON.stringify(bad), 4000, null, null, false)
 
@@ -2137,7 +2151,9 @@
                                     jchaos.saveScript(json, function (data) {
                                         console.log("Replacing script:" + json.script_name);
                                         instantMessage("Replacing Script " + json.script_name, "Saved", 1000, null, null, true)
-
+                                        if(typeof ok === "function"){
+                                            ok(json);
+                                        }
                                     });
                                 }
                             }, (bad) => {
@@ -2330,7 +2346,7 @@
                                 if (err.hasOwnProperty('error_status')) {
                                     instantMessage("Error ", err.error_status, 4000, false);
                                 } else {
-                                    instantMessage("Error ", JSON.stringify(err), 4000, false);
+                                    instantMessage("Error ", err, 4000, false);
 
                                 }
                             } else {
@@ -2365,7 +2381,10 @@
                     getFile("Upload", "upload the json", function (obj) {
                         $("#edit-temp").dialog('close');
                         console.log("uploaded:" + JSON.stringify(obj));
-                        jsonEditWindow(name, jsontemp, obj, editorFn, tmpObj);
+                        if(obj.hasOwnProperty('ndk_parent')&&(obj.ndk_parent=="")&&jsonin.hasOwnProperty('ndk_parent')){
+                            obj['ndk_parent']=jsonin['ndk_parent'];
+                        }
+                        jsonEditWindow(name, {}/*jsontemp*/, obj, editorFn, tmpObj,ok,nok,eventFn);
                         $(this).remove();
                     });
 
@@ -7050,7 +7069,7 @@
             if(implementation_map[interface].length==1){
                 sopt['impl']=implementation_map[interface][0];
             } else {
-                sopt['impl']="";
+                sopt['impl']=interface;
             }
             
         }
