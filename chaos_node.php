@@ -118,13 +118,13 @@ require_once('header.php');
 
 							if(dev_alarm>0){
 								if (dev_alarm == 1) {
-									$("#" + name_id + "_devalarm").attr('title', "Device Warning");
-									$("#" + name_id + "_devalarm").html('<img src="img/warning.png" alt="Warning" >');
+									$("#" + name_id + "_devalarm").attr('title', "Device Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
+									$("#" + name_id + "_devalarm").html('<img src="img/warning.png">');
 
 									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
 								} else {
-									$("#" + name_id + "_devalarm").attr('title', "Device Error");
-									$("#" + name_id + "_devalarm").html('<img src="img/error.png" alt="Error">');
+									$("#" + name_id + "_devalarm").attr('title',"Device Error:"+JSON.stringify(jchaos.filterAlarmObject(elem._alarms,false)));
+									$("#" + name_id + "_devalarm").html('<img src="img/error.png">');
 
 									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
 								} 
@@ -134,16 +134,16 @@ require_once('header.php');
 							}
 							if(cu_alarm>0){
 								if (cu_alarm == 1) {
-									$("#" + name_id + "_cualarm").attr('title', "CU Warning");
+									$("#" + name_id + "_cualarm").attr('title', "CU Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
 								//	$("#" + name_id + "_cualarm").css('background-image', 'url(img/warning.png)');
-								$("#" + name_id + "_cualarm").html('<img src="img/warning.png" alt="Warning">');
+								$("#" + name_id + "_cualarm").html('<img src="img/warning.png">');
 
 								//	$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
 								} else {
-									$("#" + name_id + "_cualarm").attr('title', "CU Error");
+									$("#" + name_id + "_cualarm").attr('title', "CU Error:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
 									//$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
 									//$("#" + name_id + "_cualarm").css('background-image', 'url(img/error.png)');
-									$("#" + name_id + "_cualarm").html('<img src="img/error.png" alt="Error">');
+									$("#" + name_id + "_cualarm").html('<img src="img/error.png">');
 
 								} 
 
