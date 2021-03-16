@@ -85,6 +85,7 @@ require_once('header.php');
 
 
 	<script>
+	
 		var cu_copied = null;
 		var synoptic = {};
 		var node_list = [];
@@ -118,18 +119,18 @@ require_once('header.php');
 							if(dev_alarm>0){
 								if (dev_alarm == 1) {
 									$("#" + name_id + "_devalarm").attr('title', "Device Warning");
-									$("#" + name_id + "_devalarm").html('<img src="img/warning.png" alt="Warning">');
+									$("#" + name_id + "_devalarm").html('<img src="img/warning.png" alt="Warning" >');
 
 									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
-								} else if (dev_alarm == 2) {
+								} else {
 									$("#" + name_id + "_devalarm").attr('title', "Device Error");
 									$("#" + name_id + "_devalarm").html('<img src="img/error.png" alt="Error">');
 
 									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
-								} else {
-									$("#" + name_id + "_devalarm").html('');
-								}
+								} 
 
+							} else {
+									$("#" + name_id + "_devalarm").html('');
 							}
 							if(cu_alarm>0){
 								if (cu_alarm == 1) {
@@ -138,19 +139,19 @@ require_once('header.php');
 								$("#" + name_id + "_cualarm").html('<img src="img/warning.png" alt="Warning">');
 
 								//	$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
-								} else if (cu_alarm == 2) {
+								} else {
 									$("#" + name_id + "_cualarm").attr('title', "CU Error");
 									//$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
 									//$("#" + name_id + "_cualarm").css('background-image', 'url(img/error.png)');
 									$("#" + name_id + "_cualarm").html('<img src="img/error.png" alt="Error">');
 
-								} else {
+								} 
+
+							} else {
 								//	$("#" + name_id + "_cualarm").html('');
 								//	$("#" + name_id + "_cualarm").css('background-image', '');
 									$("#" + name_id + "_cualarm").html('');
 								}
-
-							}
 						}
 						if ((elem.health !== undefined) && (elem.health.ndk_uid !== undefined)) {
 							var healt = elem.health;
@@ -165,7 +166,7 @@ require_once('header.php');
 								if ((Math.abs(healt.dpck_ats - now) < 10000)) {
 									isalive = true;
 								} else if (node_old_state[uid] !== undefined && node_state[uid] !== undefined) {
-									if (node_state[uid].health.dpck_ats !== undefined && node_old_state[uid].health.dpck_ats !== undefined) {
+									if ((node_state[uid].health.dpck_ats !== undefined) && (node_old_state[uid].health.dpck_ats !== undefined)) {
 										if (node_state[uid].health.dpck_ats > node_old_state[uid].health.dpck_ats) {
 											isalive = true;
 										}
@@ -178,20 +179,12 @@ require_once('header.php');
 
 
 								if (isalive) {
-									if (!$("#" + iname).hasClass("text-success")) {
-										removeTextClasses(iname);
-										$("#" + iname).addClass("text-success");
-									}
+									setTextClasses(iname,"text-success");
 									elem['lives'] = true;
 
 									node_state[uid]['lives'] = true;
 								} else {
-									if (!$("#" + iname).hasClass("text-muted")) {
-										removeTextClasses(iname);
-
-										$("#" + iname).addClass("text-muted");
-									}
-
+									setTextClasses(iname,"text-muted");
 								}
 								if (healt.hasOwnProperty("nh_status")) {
 									var title = uid + ":" + new Date(healt.dpck_ats).toLocaleString() + " Status:'" + healt.nh_status + "' Uptime:'" + jchaos.toHHMMSS(healt.nh_upt);
@@ -203,21 +196,22 @@ require_once('header.php');
 											title += ", in :" + healt.nh_led;
 
 										}
-										if ((elem['lives']) && (!$("#" + iname).hasClass("text-danger"))) {
-											removeTextClasses(iname);
+										if (elem['lives']){
+											setTextClasses(iname,"text-danger");
 
-											$("#" + iname).addClass("text-danger");
 										}
 
-									} else if ((elem['lives']) && (healt.nh_status != 'Start')) {
-										removeTextClasses(iname);
+									} else if (elem['lives']) {
+										if(healt.nh_status != 'Start'){
+											setTextClasses(iname,"text-warning");
 
-										$("#" + iname).addClass("text-warning");
-									}
+										}
+									} 
 									$("#" + iname).attr('title', title);
 
 								}
 							} else {
+								console.error("no timestamp key on "+uid);
 								removeTextClasses(iname);
 
 							}
@@ -228,8 +222,7 @@ require_once('header.php');
 							if (iname == "") {
 								console.error("NO NAME at index:" + index + " UID:" + uid);
 							} else {
-								removeTextClasses(iname);
-								$("#" + iname).addClass("text-dark");
+								setTextClasses(iname,"text-dark");
 								$("#" + iname).attr('title', uid + ": DEAD no info");
 							}
 
@@ -1052,6 +1045,84 @@ require_once('header.php');
 
 							}
 						}
+						items['show-alarms'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Show/Set Alarms",
+							action: function () {
+								jchaos.getChannel(node.data.ndk_uid, 255, function (run_info) {
+									var obj = Object.assign({}, run_info[0].cu_alarms, run_info[0].device_alarms);
+									tmp={
+
+										handler:function(e){
+											if (e.keyCode == 13) {
+
+												var val = parseInt(e.target.value);
+												var attrname = e.target.name;
+												var desc = jchaos.decodeCUPath(attrname);
+												console.log("value:"+e.target.value+" name:"+desc.var);
+												var alrm={
+													name:desc.var,
+													value:val
+												}
+												jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm","act_msg":alrm }, function (data) {
+													jqccs.instantMessage(node.data.ndk_uid, "Set Alarm: " + desc.var+"="+val+" on "+node.data.ndk_uid, 4000, true);
+
+												},function(bad){
+													jqccs.instantMessage(node.data.ndk_uid, "Error Setting Alarm " + JSON.stringify(bad), 4000, true);
+
+												});
+
+
+										}
+									}
+								}
+									jqccs.showJson("Alarms " + node.data.ndk_uid, jchaos.filterAlarmObject(obj),tmp);
+
+								});
+
+
+							}
+						}
+						items['mask-alarms'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Mask Alarms",
+							action: function () {
+								jchaos.getChannel(node.data.ndk_uid, 255, function (run_info) {
+									var obj = Object.assign({}, run_info[0].cu_alarms, run_info[0].device_alarms);
+									tmp={
+
+										handler:function(e){
+											if (e.keyCode == 13) {
+
+												var val = parseInt(e.target.value);
+												var attrname = e.target.name;
+												var desc = jchaos.decodeCUPath(attrname);
+												console.log("value:"+e.target.value+" name:"+desc.var);
+												var alrm={
+													name:desc.var,
+													mask:val
+												}
+												jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm","act_msg":alrm }, function (data) {
+													jqccs.instantMessage(node.data.ndk_uid, "Set Mask of "+ desc.var +"="+val+" on "+ node.data.ndk_uid, 4000, true);
+
+												},function(bad){
+													jqccs.instantMessage(node.data.ndk_uid, "Error Setting Mask of " +desc.var +" "+ JSON.stringify(bad), 4000, true);
+
+												});
+
+
+										}
+									}
+								}
+									jqccs.showJson("Mask Alarms (0x0 mask, 0xFF no mask)" + node.data.ndk_uid, jchaos.filterAlarmObject(obj),tmp);
+
+								});
+
+
+							}
+						}
 						items['start'] = {
 							"separator_before": true,
 							"separator_after": false,
@@ -1291,7 +1362,7 @@ require_once('header.php');
 			}
 		}
 		function addListeners() {
-
+			
 			$('#hier_view').on('move_node.jstree', function (e, data) {
 				var i, j, r = [];
 				var node_data = data.instance.get_node(data.selected[0]).data;
@@ -1487,7 +1558,8 @@ require_once('header.php');
 								"id": idname,
 								"parent": jchaos.encodeName(cu.ndk_parent),
 								"icon": icon_name,
-								"text": name,
+								"text": "<span>"+name+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_devalarm"></span>',
+
 								"data": cu
 							};
 							if (!node_created.hasOwnProperty(idname)) {
@@ -1657,7 +1729,7 @@ require_once('header.php');
 										}
 										node['id'] = uname;
 										node['cid'] = elem.ndk_uid;
-										node['text']="<span>"+p+"</span>"+'<span id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></span>'+'<span id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></span>';
+										node['text']="<span>"+p+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></span>';
 										//'<div class="row"><div class="col-sm">'+p+'</div><div class="col-sm" id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></div><div class="col-sm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></div></div>';
 
 									}
@@ -1747,7 +1819,8 @@ require_once('header.php');
 								"id": id,
 								"parent": device,
 								"icon": icon_name,
-								"text": elem,
+								"text": "<span>"+elem+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_devalarm"></span>',
+
 								"data": desc[index]
 							};
 							node.data['group'] = device;
@@ -1812,8 +1885,17 @@ require_once('header.php');
 			$("#" + iname).removeClass("text-dark");
 			$("#" + iname).removeClass("text-danger");
 			$("#" + iname).removeClass("text-muted");
-		}
+			$("#" + iname).removeClass("text-warning");
 
+		}
+		function setTextClasses(iname,classname) {
+			if(!$("#" + iname).hasClass(classname)){
+				removeTextClasses(iname);
+				$("#" + iname).addClass(classname);
+
+			}
+			
+		}
 
 	</script>
 

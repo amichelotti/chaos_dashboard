@@ -301,6 +301,9 @@
             });
         });
     }
+    jqccs.showJson=function (msg, json, tmpObj) {
+        return showJson(msg, json, tmpObj);
+    }
 
     function showJson(msg, json, tmpObj) {
         var name = jchaos.encodeName(msg);
@@ -340,7 +343,12 @@
                     jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
                 }
                 $("#desc-" + name).html(jsonhtml);
-                jsonSetup($(this), tmpObj);
+                if(tmpObj && tmpObj.hasOwnProperty('handler')&&(typeof tmpObj.handler ==="function")){
+
+                    jqccs.jsonSetup($(this),tmpObj.handler,tmpObj.handler);
+                } else {
+                    jsonSetup($(this), tmpObj);
+                }
                 $(".json-toggle").trigger("click");
                 $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
@@ -1647,22 +1655,12 @@
 
 
 
-    function show_dev_alarm(id) {
-        var dataset = node_live_selected[node_name_to_index[jchaos.encodeName(id)]];
-        if ((dataset != null) && (dataset.hasOwnProperty("device_alarms"))) {
-            decodeDeviceAlarm(dataset.device_alarms);
-        }
+    jqccs.decodeDeviceAlarm=function(dev_alarm,all) {
+        return decodeDeviceAlarm(dev_alarm,all);
     }
-
-    function show_cu_alarm(id) {
-        var dataset = node_live_selected[node_name_to_index[jchaos.encodeName(id)]];
-        if (dataset.hasOwnProperty("cu_alarms")) {
-            decodeDeviceAlarm(dataset.cu_alarms);
-        }
-    }
-
-    function decodeDeviceAlarm(dev_alarm) {
-        showJson("Alarm " + dev_alarm.ndk_uid, jchaos.filterAlarmObject(dev_alarm));
+    
+    function decodeDeviceAlarm(dev_alarm,all) {
+        showJson("Alarm " + dev_alarm.ndk_uid, jchaos.filterAlarmObject(dev_alarm,all));
         //$("#name-device-alarm").html(dev_alarm.ndk_uid);
         //$("#table_device_alarm").html(jqccs.generateAlarmTable(dev_alarm));
     }
@@ -3999,6 +3997,40 @@
                 });
 
             });*/
+        
+
+        } else if (cmd == "mask-alarms") {
+            jchaos.getChannel(node_multi_selected[0], 255, function (run_info) {
+                var obj = Object.assign({}, run_info[0].cu_alarms, run_info[0].device_alarms);
+                tmp={
+
+                    handler:function(e){
+                        if (e.keyCode == 13) {
+
+                            var val = parseInt(e.target.value);
+                            var attrname = e.target.name;
+                            var desc = jchaos.decodeCUPath(attrname);
+                            console.log("mask:"+val+" name:"+desc.var);
+                            var alrm={
+                                name:desc.var,
+                                mask:val
+                            }
+                            node_multi_selected.forEach(ele=>{
+                            jchaos.command(ele, { "act_name": "cu_set_alarm","act_msg":alrm }, function (data) {
+
+                            },function(bad){
+                                jqccs.instantMessage(ele, "Error Masking Alarm " + JSON.stringify(bad), 4000, true);
+
+                            });
+                        })
+
+
+                    }
+                }
+            }
+                jqccs.showJson("Alarms ", jchaos.filterAlarmObject(obj),tmp);
+
+            });
         
 
         } else if(cmd== "save-default"){
@@ -7612,7 +7644,7 @@
             var alarm = tmpObj.data[cindex];
 
             if (alarm != null && alarm.hasOwnProperty("device_alarms")) {
-                decodeDeviceAlarm(alarm.device_alarms);
+                decodeDeviceAlarm(alarm.device_alarms,false);
             }
         });
         $("a.cu-alarm").off();
@@ -7632,7 +7664,7 @@
 
                 }
 
-                decodeDeviceAlarm(obj);
+                decodeDeviceAlarm(obj,false);
             }
         });
     }
@@ -10742,9 +10774,12 @@
                 items['open-ctrl'] = { name: "Open control:" + tt };
             }
         }
+        items['mask-alarms'] = { name: "Mask alarms Dataset" };
+
         if (tmpObj.node_multi_selected.length == 1) {
 
             items['show-dataset'] = { name: "Show/Set/Plot Dataset" };
+
             items['save-default'] = { name: "Save Setpoint as Default" };
             items['save-readout-default'] = { name: "Save ReadOut as Default" };
 
