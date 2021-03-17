@@ -1105,8 +1105,14 @@
                     console.log("getConsoleByUid->" + JSON.stringify(data));
                     jchaos.node(d.ndk_parent,"desc","all",(dd)=>{
                     var server = dd.ndk_host_name + ":" + dd.ndk_rest_port;
-                    getConsole(msghead, data.association_uid, server, 2, 1, 1000);
-                    });
+                    if(data.node_log_on_console){
+                        getConsole(msghead, data.association_uid, server, 2, 1, 1000);
+                    } else {
+                        instantMessage("Remote Console log disabled ", "Please enable on agent association:"+d.ndk_parent, 4000, null, null, false);
+
+                    }
+                        });
+                        
                 });
             }
         });
@@ -4317,19 +4323,36 @@
         html += '<select id="classe"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple row col-sm-3 align-items-center">'
-        html += '<div class="col-sm-3">'
-        html += '<label for="search-alive">Search: All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
-        html += '</div>'
-        html += '<div class="col-sm-3">'
+        html += '<div class="statbox purple col-sm-4">'
+
+        html += '<div class="row">';
+        html += '<div class="col-sm">' 
+        html += '<h3>Live</h3>';
+        html += '<label for="search-alive">All  </label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '<label for="search-alive">Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
         html += '</div>'
-        // html += '<h3 class="col-md-3">Search</h3>';
+        
+        html += '<div class="col-sm">'
+        html += '<h3>Search</h3>';
+        html += '<input class="input-xlarge focused" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '</div>';
+      
+        html += '<div class="col-sm">'
+        html += '<h3>Status</h3>';
+        html += '<select id="errorState">';
+        html += '<option value="All">All</option>';
+        html += '<option value="Ok">OK</option>';
+        html += '<option value="Error">Error</option>';
+        html += '<option value="Warning">Warning</option>';
+        html += '<option value="NotStart">No Running</option></select>';
+        html += '</div>'
 
-        html += '<input class="input-xlarge focused col-sm-6" id="search-chaos" title="Free form Search" type="text" value="">';
+        // html += '<h3 class="col-md-3">Search</h3>';
+       
         html += '</div>';
+
         // html += generateActionBox();
-        html += '</div>';
+        html += '</div></div>';
         html += generateModalActions();
 
         html += '<div class="chaosrow pageindex">';
@@ -4418,7 +4441,17 @@
             }
             //var tt =prompt('type value');
         });
+        $("#errorState").off('change');
 
+        $("#errorState").change(function (e) {
+            dashboard_settings.current_page = 0;
+
+            interface2NodeList(tempObj, function (list_cu) {
+                tempObj['elems'] = list_cu;
+                updateInterface(tempObj);
+            });
+
+        });
         $("input[type=radio][name=search-alive]").change(function (e) {
             dashboard_settings.current_page = 0;
 
@@ -4428,7 +4461,6 @@
             });
 
         });
-
 
     }
 
@@ -7061,6 +7093,7 @@
         var interface = $("#classe option:selected").val();
         var element_selected = $("#elements option:selected").val();
         var zone_selected = $("#zones option:selected").val();
+        var state = $("#errorState option:selected").val();
 
         dashboard_settings['last_alive'] = alive;
         dashboard_settings['last_interface'] = interface;
@@ -7105,6 +7138,10 @@
             }
             
         }
+        if(state!="All"){
+            sopt['state']=state;
+        }
+
         dashboard_settings['search'] = search_string;
         jchaos.search(search_string, what, (alive == "true"), sopt, function (list_cu) {
             var search_query = {
@@ -7233,6 +7270,13 @@
 
 
         });
+        $("#errorState").change(function () {
+            dashboard_settings.current_page = 0;
+            $("#search-chaos").val("");
+            buildInterfaceFromPagedSearch(tmpObj, "ceu");
+
+
+        });
         $("#search-chaos").keypress(function (e) {
             if (e.keyCode == 13) {
                 search_string = $(this).val();
@@ -7326,12 +7370,14 @@
         var inter = $("#classe").val();
         var search_string = $("#search-chaos").val();
         var alive = $("input[type=radio][name=search-alive]:checked").val();
+        var sstate = $("#errorState").val();
 
         var tmp = [];
         var sopt = { "pagestart": dashboard_settings.current_page, "pagelen": dashboard_settings.maxNodesPerPage };
         var search_query = {
             search: search_string,
             type: inter,
+            state:sstate,
             alive: (alive == "true"),
             opt: { "pagestart": dashboard_settings.current_page, "pagelen": dashboard_settings.maxNodesPerPage }
         }
@@ -7343,6 +7389,7 @@
                 tempObj.type = "ALL";
                 $(".pageindex").css("visibility", "visible");
                 $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
+
                 handler(node.list.filter((val) => { return (val != ""); }));
 
             });

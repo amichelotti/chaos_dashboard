@@ -893,31 +893,44 @@ require_once('header.php');
 						label: "Delete Node",
 						action: function (obj) {
 							if(type == "nt_unit_server"){
-								jchaos.node(selected_node, "get", "us", function (desc) {
-									if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
-										var list = desc.us_desc.cu_desc;
-										let cnt=list.length;
-										jqccs.confirm("Delete US "+selected_node, "Your are deleting : " + list.length + " CUs", "Ok", function () {
-											list.forEach(ele=>{
-												jchaos.node(ele.ndk_uid, "deletenode", "all", function () {
-													console.log("deleting CU "+ele.ndk_uid);
-													cnt--;
-													if(cnt==0){
-														jchaos.node(selected_node, "deletenode", "all", function () {
-															console.log("deleting US "+selected_node);
-															tree.delete_node(node);
-															triggerRefreshEdit();
+								jchaos.search(selected_node, "server", true, (nodes) => {
+									if(nodes[0]==selected_node){
+										jqccs.instantMessage("Cannot remove a node that is alive:" + selected_node, "Kill before", 2000, false);
 
-														});
+									} else{
+									jchaos.node(selected_node, "get", "us", function (desc) {
+										if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
+											var list = desc.us_desc.cu_desc;
+											let cnt=list.length;
+											jqccs.confirm("Delete US "+selected_node, "Your are deleting : " + list.length + " CUs", "Ok", function () {
+												list.forEach(ele=>{
+													jchaos.node(ele.ndk_uid, "deletenode", "all", function () {
+														console.log("deleting CU "+ele.ndk_uid);
+														cnt--;
+														if(cnt==0){
+															jchaos.node(selected_node, "deletenode", "all", function () {
+																console.log("deleting US "+selected_node);
+																tree.delete_node(node);
+																triggerRefreshEdit();
 
-													}
+															});
+
+														}
+													});
 												});
-											});
-										}, "Cancel");
+											}, "Cancel");
 
-									}
-								});
+										}
+									});
+								}
+							});
 							} else {
+								jchaos.search(selected_node, "ceu", true, (nodes) => {
+									if(nodes[0]==selected_node){
+										jqccs.instantMessage("Cannot remove a node that is alive:" + selected_node, "Kill before", 2000, false);
+
+									} else{
+
 							jqccs.confirm("Delete Node", "Your are deleting : " + selected_node, "Ok", function () {
 								jchaos.node(selected_node, "deletenode", "all", function () {
 									jqccs.instantMessage("Node deleted " + selected_node, " OK", 2000, true);
@@ -939,7 +952,8 @@ require_once('header.php');
 									jqccs.instantMessage("cannot delete " + selected_node, JSON.stringify(err), 2000, false);
 
 								});
-							}, "Cancel");
+							}, "Cancel");}
+						});
 						}
 
 						}
@@ -971,16 +985,20 @@ require_once('header.php');
 												server.replace(/:\d+/g, '');
 											}
 											var uid = "";
+											var enconsole=false;
 											data.andk_node_associated.forEach(ele => {
 												if (ele.ndk_uid == node.data.ndk_uid) {
 													uid = ele.association_uid;
+													enconsole=ele.node_log_on_console;
 												}
 											});
-											if (uid != "") {
-												jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
-											} else {
-												jqccs.instantMessage(node.data.ndk_uid, "Cannot open console, uid not found for " + node.data.ndk_uid, 4000, false);
+											if(enconsole){
+												if (uid != "") {
+													jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
+												} else {
+													jqccs.instantMessage(node.data.ndk_uid, "Cannot open console, uid not found for " + node.data.ndk_uid, 4000, false);
 
+												}
 											}
 										});
 
