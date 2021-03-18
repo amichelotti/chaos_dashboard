@@ -32,7 +32,6 @@ require_once('header.php');
 					</div>
 
 					<div class="statbox purple col-md-3">
-
 						<div class="row align-items-center">
 							<div class="col-sm">
 								<label for="search-alive">All</label><input class="input-xlarge" id="search-alive-false"
@@ -51,9 +50,8 @@ require_once('header.php');
 							</div>
 						</div>
 
-
 					</div>
-				</div>
+ 				</div>
 				<div class="box-content">
 
 					<div class="box row">

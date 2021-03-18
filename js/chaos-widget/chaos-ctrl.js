@@ -235,14 +235,27 @@
         });
     }
     jqccs.openControl=function (msg, tmpObj, cutype, refresh) {
-        
-        tmpObj['elems']=[tmpObj['node_selected']];
-        tmpObj['node_multi_selected']=[tmpObj['node_selected']];
-        tmpObj['template']=jchaos.encodeName(tmpObj['node_selected']);
-        tmpObj['check_interval']=tmpObj.check_interval || 5000;
-        tmpObj['checkLiveFn'] = tmpObj.checkLiveFn || checkLiveCU;
+        if(typeof tmpObj === "string"){
+            // nameof the cu
+            jchaos.node(tmpObj, "get", "cu", function (data) {
+                var opt={};
+                opt['elems']=[tmpObj];
+                opt['node_multi_selected']=[tmpObj];
+                opt['template']=jchaos.encodeName(tmpObj);
+                opt['check_interval']=5000;
+                opt['checkLiveFn'] = checkLiveCU;
+                return openControl(msg, opt, data.control_unit_implementation, 1000);
 
-        return openControl(msg, tmpObj, cutype, refresh);
+            });
+        } else {
+            tmpObj['elems']=[tmpObj['node_selected']];
+            tmpObj['node_multi_selected']=[tmpObj['node_selected']];
+            tmpObj['template']=jchaos.encodeName(tmpObj['node_selected']);
+            tmpObj['check_interval']=tmpObj.check_interval || 5000;
+            tmpObj['checkLiveFn'] = tmpObj.checkLiveFn || checkLiveCU;
+
+            return openControl(msg, tmpObj, cutype, refresh);
+        }
     }
 
     function openControl(msg, tmpObj, cutype, refresh) {
@@ -291,7 +304,7 @@
                 open: function () {
                     nintervals = setInterval(function () { }, 100000); // Get a reference to the last
                     // interval +1
-                    orginal_list = node_list;
+                   // orginal_list = node_list;
                     console.log(name + " OPEN control interval:" + nintervals);
                     newObj.elems = newObj.node_multi_selected;
                     newObj.node_list_interval = null;
@@ -4323,10 +4336,11 @@
         html += '<select id="classe"></select>';
         html += '</div>';
 
-        html += '<div class="statbox purple col-sm-4">'
-
+        html += '<div class="statbox purple col-sm-6">'
+       
         html += '<div class="row">';
-        html += '<div class="col-sm">' 
+       
+        html += '<div class="col-sm">'; 
         html += '<h3>Live</h3>';
         html += '<label for="search-alive">All  </label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
         html += '<label for="search-alive">Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
@@ -4337,7 +4351,7 @@
         html += '<input class="input-xlarge focused" id="search-chaos" title="Free form Search" type="text" value="">';
         html += '</div>';
       
-        html += '<div class="col-sm">'
+        html += '<div class="col-sm">';
         html += '<h3>Status</h3>';
         html += '<select id="errorState">';
         html += '<option value="All">All</option>';
@@ -4345,14 +4359,15 @@
         html += '<option value="Error">Error</option>';
         html += '<option value="Warning">Warning</option>';
         html += '<option value="NotStart">No Running</option></select>';
-        html += '</div>'
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
 
         // html += '<h3 class="col-md-3">Search</h3>';
        
-        html += '</div>';
 
         // html += generateActionBox();
-        html += '</div></div>';
+        html += '</div>';
         html += generateModalActions();
 
         html += '<div class="chaosrow pageindex">';
