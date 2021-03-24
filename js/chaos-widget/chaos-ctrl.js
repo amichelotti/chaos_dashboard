@@ -4852,7 +4852,12 @@
         tmpObj['generateTableFn'] = generateGenericTable;
         tmpObj['generateCmdFn'] = generateGenericControl;
         tmpObj['updateFn'] = updateGenericCU;
-        tmpObj['refresh_rate'] = dashboard_settings.generalRefresh || 1000;
+        if(dashboard_settings !== null && dashboard_settings.hasOwnProperty("generalRefresh")){
+            tmpObj['refresh_rate'] = dashboard_settings.generalRefresh;
+        } else {
+            tmpObj['refresh_rate'] =  1000;
+
+        }
         tmpObj['updateInterfaceFn'] = updateInterfaceCU;
 
         if ((cutype.indexOf("SCPowerSupply") != -1)) {
