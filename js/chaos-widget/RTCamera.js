@@ -466,10 +466,9 @@ function rebuildCam(tmpObj) {
         }
 
       }
-      if (desc.ndk_type == "nt_root") {
-        cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+      cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
 
-      }
+      
       cuitem['histo-image'] = { name: "Histogram", cu: name };
 
       cuitem['exit-crop'] = { name: "Exit cropping", cu: name };
