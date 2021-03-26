@@ -22,7 +22,7 @@ require_once('header.php');
 
 
 				<div class="row">
-					<div class="statbox purple col-md-3">
+					<div class="statbox purple col-sm-3">
 						<h3>Node View</h3>
 						<select id="View" size="auto">
 							<option value="byzone" selected="selected">By Zone</option>
@@ -31,6 +31,44 @@ require_once('header.php');
 						</select>
 					</div>
 
+		<div class="statbox purple col-sm-2">
+		<h3>Interface</h3>
+		<select id="classe">
+		<option value="All">All</option>
+        <option value="powersupply">powersupply</option>
+        <option value="motor">motor</option>
+        <option value="camera">camera</option>
+        <option value="BPM">BPM</option>
+		</select>
+		</div>
+				
+		<div class="statbox purple col-sm-6">
+       
+	   <div class="row">
+	  
+	   <div class="col-sm"> 
+	   <h3>Live</h3>
+	   <label for="search-alive">All  </label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>
+	   <label for="search-alive">Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true checked>
+	   </div>
+	   
+	   <div class="col-sm">
+	   <h3>Search</h3>
+	   <input class="input-xlarge focused" id="search-chaos" title="Free form Search" type="text" value="">
+	   </div>
+	 
+	   <div class="col-sm">
+	   <h3>Status</h3>
+	   <select id="errorState">
+	   <option value="All">All</option>
+	   <option value="Ok">OK</option>
+	   <option value="Error">Error</option>
+	   <option value="Warning">Warning</option>
+	   <option value="NotStart">No Running</option></select>
+	   </div>
+	   </div>
+	   </div>
+<!-- 
 					<div class="statbox purple col-md-3">
 						<div class="row align-items-center">
 							<div class="col-sm">
@@ -51,7 +89,7 @@ require_once('header.php');
 						</div>
 
 					</div>
- 				</div>
+ --> 				</div>
 				<div class="box-content">
 
 					<div class="box row">
@@ -117,12 +155,12 @@ require_once('header.php');
 							if(dev_alarm>0){
 								if (dev_alarm == 1) {
 									$("#" + name_id + "_devalarm").attr('title', "Device Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
-									$("#" + name_id + "_devalarm").html('<img src="img/warning.png">');
+									$("#" + name_id + "_devalarm").html('<img src="img/icon/warning.png">');
 
 									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
 								} else {
 									$("#" + name_id + "_devalarm").attr('title',"Device Error:"+JSON.stringify(jchaos.filterAlarmObject(elem._alarms,false)));
-									$("#" + name_id + "_devalarm").html('<img src="img/error.png">');
+									$("#" + name_id + "_devalarm").html('<img src="img/icon/error.png">');
 
 									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
 								} 
@@ -134,14 +172,14 @@ require_once('header.php');
 								if (cu_alarm == 1) {
 									$("#" + name_id + "_cualarm").attr('title', "CU Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
 								//	$("#" + name_id + "_cualarm").css('background-image', 'url(img/warning.png)');
-								$("#" + name_id + "_cualarm").html('<img src="img/warning.png">');
+								$("#" + name_id + "_cualarm").html('<img src="img/icon/warning.png">');
 
 								//	$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
 								} else {
 									$("#" + name_id + "_cualarm").attr('title', "CU Error:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
 									//$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
 									//$("#" + name_id + "_cualarm").css('background-image', 'url(img/error.png)');
-									$("#" + name_id + "_cualarm").html('<img src="img/error.png">');
+									$("#" + name_id + "_cualarm").html('<img src="img/icon/error.png">');
 
 								} 
 
@@ -158,7 +196,10 @@ require_once('header.php');
 
 							node_state[uid] = elem;
 							var iname = jchaos.encodeName(uid);
+							if(elem.health.hasOwnProperty("cuh_alarm_msk")&&(elem.health.cuh_alarm_msk>0)){
+								$("#" + iname + "_maskalarm").html('<img src="img/icon/silent.png">');
 
+							}
 							if ((healt.dpck_ats !== undefined)) {
 
 								if ((Math.abs(healt.dpck_ats - now) < 10000)) {
@@ -712,15 +753,8 @@ require_once('header.php');
 							"separator_after": true,
 							label: "Control..",
 							action: function () {
-								var opt = {
-									node_selected: selected_node,
-									elems: [selected_node],
-									node_multi_selected: [selected_node],
-									template: jchaos.encodeName(selected_node),
-									check_interval: 5000
-
-								};
-								jqccs.openControl("Control " + selected_node, opt, node.data.instance_description.control_unit_implementation, 1000);
+								
+								jqccs.openControl("Control " + selected_node, selected_node);
 								return;
 							}
 						};
@@ -1105,6 +1139,8 @@ require_once('header.php');
 							"separator_after": false,
 							label: "Mask Alarms",
 							action: function () {
+								var objects = tree.get_selected(true)
+
 								jchaos.getChannel(node.data.ndk_uid, 255, function (run_info) {
 									var obj = Object.assign({}, run_info[0].cu_alarms, run_info[0].device_alarms);
 									tmp={
@@ -1120,6 +1156,17 @@ require_once('header.php');
 													name:desc.var,
 													mask:val
 												}
+												if(objects instanceof Array){
+													objects.forEach(ele=>{
+														jchaos.command(ele.data.ndk_uid, { "act_name": "cu_set_alarm","act_msg":alrm }, function (data) {
+															jqccs.instantMessage(ele.data.ndk_uid, "Set Mask of "+ desc.var +"="+val+" on "+ ele.data.ndk_uid, 4000, true);
+		
+														},function(bad){
+															jqccs.instantMessage(ele.data.ndk_uid, "Error Setting Mask of " +desc.var +" "+ JSON.stringify(bad), 4000, true);
+		
+														});
+													})
+												} else {
 												jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm","act_msg":alrm }, function (data) {
 													jqccs.instantMessage(node.data.ndk_uid, "Set Mask of "+ desc.var +"="+val+" on "+ node.data.ndk_uid, 4000, true);
 
@@ -1127,6 +1174,7 @@ require_once('header.php');
 													jqccs.instantMessage(node.data.ndk_uid, "Error Setting Mask of " +desc.var +" "+ JSON.stringify(bad), 4000, true);
 
 												});
+											}
 
 
 										}
@@ -1574,7 +1622,7 @@ require_once('header.php');
 								"id": idname,
 								"parent": jchaos.encodeName(cu.ndk_parent),
 								"icon": icon_name,
-								"text": "<span>"+name+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_devalarm"></span>',
+								"text": "<span>"+name+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(name)+'_maskalarm"></span>',
 
 								"data": cu
 							};
@@ -1683,11 +1731,23 @@ require_once('header.php');
 		function createJSTreeByZone(filter, alive, handler) {
 			var jsree_data = [];
 			var node_created = {};
-			jchaos.search(filter, "cu", alive, (culist) => {
-				var roots = jchaos.search(filter, "root", alive);
+
+			var state = $("#errorState option:selected").val();
+			var interface = $("#classe option:selected").val();
+
+			sopt={};
+			if(state!="All"){
+				sopt['state']=state;
+			}
+			if(interface!="All"){
+				sopt['interface']=interface;
+
+			}
+			jchaos.search(filter, "ceu", alive, sopt,(culist) => {
+				/*var roots = jchaos.search(filter, "root", alive);
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
-				}
+				}*/
 				if ((culist.length == 0) && (typeof handler === "function")) {
 					handler(jsree_data);
 				}
@@ -1745,8 +1805,7 @@ require_once('header.php');
 										}
 										node['id'] = uname;
 										node['cid'] = elem.ndk_uid;
-										node['text']="<span>"+p+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></span>';
-										//'<div class="row"><div class="col-sm">'+p+'</div><div class="col-sm" id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></div><div class="col-sm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></div></div>';
+										node['text']="<span>"+p+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(elem.ndk_uid)+'_maskalarm"></span>';
 
 									}
 									if (!node_created.hasOwnProperty(node['id'])) {
@@ -1788,11 +1847,22 @@ require_once('header.php');
 		function createJSTreeByDevice(filter, alive, handler) {
 			var jsree_data = [];
 			var node_created = {};
-			jchaos.search(filter, "cu", alive, (culist) => {
-				var roots = jchaos.search(filter, "root", alive);
+			var state = $("#errorState option:selected").val();
+			var interface = $("#classe option:selected").val();
+
+			sopt={};
+			if(state!="All"){
+				sopt['state']=state;
+			}
+			if(interface!="All"){
+				sopt['interface']=interface;
+
+			}
+			jchaos.search(filter, "ceu", alive, sopt,(culist) => {
+				/*var roots = jchaos.search(filter, "root", alive);
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
-				}
+				}*/
 				if ((culist.length == 0)) {
 					alert("No nodes found");
 					if (typeof handler === "function") {
@@ -1835,7 +1905,7 @@ require_once('header.php');
 								"id": id,
 								"parent": device,
 								"icon": icon_name,
-								"text": "<span>"+elem+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_devalarm"></span>',
+								"text": "<span>"+elem+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(elem)+'_maskalarm"></span>',
 
 								"data": desc[index]
 							};
@@ -1875,6 +1945,19 @@ require_once('header.php');
 			var alive = $("input[type=radio][name=search-alive]:checked").val();
 			updateJST($("#View").val(), search, alive);
 
+		});
+		$("#errorState").on('change', (e) => {
+
+			var search = $("#search-chaos").val();
+			var alive = $("input[type=radio][name=search-alive]:checked").val();
+			updateJST($("#View").val(), search, alive);
+
+		});
+		$("#classe").on('change', (e) => {
+
+			var search = $("#search-chaos").val();
+			var alive = $("input[type=radio][name=search-alive]:checked").val();
+			updateJST($("#View").val(), search, alive);
 
 		});
 		$("#search-chaos").keypress(function (e) {

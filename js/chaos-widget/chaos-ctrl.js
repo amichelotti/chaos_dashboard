@@ -31,7 +31,6 @@
     var graph_selected;
     var search_string;
     var notupdate_dataset = 1;
-    var implementation_map = { "powersupply": ["SCPowerSupply","RTMG1PowerSupply"], "motor": ["SCActuator"], "camera": ["RTCamera","cameraGFIT"], "BPM": ["SCLibera"] };
     var hostWidth = 640;
     var hostHeight = 640;
     function GetURLParameter(sParam) {
@@ -47,17 +46,7 @@
     jqccs.getSettings = function () {
         return dashboard_settings;
     }
-    function getInterfaceFromClass(impl_class) {
-        for (var key in implementation_map) {
-            implementation_map[key].forEach(ele=>{
-                if (impl_class.includes(ele)) {
-                    return key;
-                }
-            });
-           
-        };
-        return null;
-    }
+    
 
     function removeElementByName(name, tlist) {
         for (var cnt = 0; cnt < tlist.length; cnt++) {
@@ -244,7 +233,10 @@
                 opt['template']=jchaos.encodeName(tmpObj);
                 opt['check_interval']=5000;
                 opt['checkLiveFn'] = checkLiveCU;
-                return openControl(msg, opt, data.control_unit_implementation, 1000);
+                var tt=jchaos.getInterfaceFromClass(data.control_unit_implementation);
+                if(tt!=null){
+                    return openControl(msg, opt, tt, 1000);
+                }
 
             });
         } else {
@@ -1735,24 +1727,7 @@
         items['delete-instance'] = { name: "Delete Instance", icon: "Delete" };
         return items;
     }
-    /*
-      function buildAlgoBody() {
-        var html = '<div class="row">';
-  
-        html += '<div class="statbox purple row" onTablet="col-md-4" onDesktop="col-md-8">'
-        html += '<div class="col-md-6">'
-        html += '<label for="search-alive">Search All Alghoritm</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
-        html += '</div>'
-        html += '<div class="col-md-6">'
-        html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
-        html += '</div>'
-        // html += '<h3 class="col-md-3">Search</h3>';
-  
-        html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
-        html += '</div>';
-        html += '</div>';
-        return html;
-      }*/
+    
     function generateAlgoTable(cu, interface, template) {
         var html = '<div class="row" id="table-space">';
 
@@ -3969,8 +3944,10 @@
             });
         } else if (cmd == "open-ctrl") {
             var desc = tmpObj.node_name_to_desc[currsel];
-            var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
-            openControl("Control ", tmpObj, desc.instance_description.control_unit_implementation, 1000);
+            var tt = jchaos.getInterfaceFromClass(desc.instance_description.control_unit_implementation);
+            if(tt!=null){
+                openControl("Control ", tmpObj, tt, 1000);
+            }
 
 
         } else if (cmd == "live-cu-disable") {
@@ -4860,25 +4837,25 @@
         }
         tmpObj['updateInterfaceFn'] = updateInterfaceCU;
 
-        if ((cutype.indexOf("SCPowerSupply") != -1)) {
+        if ((cutype.indexOf("powersupply") != -1)) {
             tmpObj.upd_chan = -1;
-            tmpObj.type = "SCPowerSupply";
+            tmpObj.type = "powersupply";
 
 
             //   tmpObj.htmlFn=$.getScript( "/js/chaos-widget/"+tmpObj.type +".js");
 
-        } else if ((cutype.indexOf("SCActuator") != -1)) {
-            tmpObj.type = "SCActuator";
+        } else if ((cutype.indexOf("motor") != -1)) {
+            tmpObj.type = "motor";
             tmpObj.upd_chan = -1;
-        } else if ((cutype.indexOf("RTCamera") != -1)) {
-            tmpObj.type = "RTCamera";
+        } else if ((cutype.indexOf("camera") != -1)) {
+            tmpObj.type = "camera";
             tmpObj.upd_chan = -2;
 
             tmpObj['maxCameraCol'] = dashboard_settings.camera.maxCameraCol;
             tmpObj['cameraPerRow'] = dashboard_settings.camera.cameraPerRow;
             tmpObj['refresh_rate'] = dashboard_settings.camera.cameraRefresh;
             jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
-        } else if ((cutype.indexOf("SCLibera") != -1)) {
+        } else if ((cutype.indexOf("bpm") != -1)) {
             tmpObj.type = "SCLibera";
             tmpObj.upd_chan = -1;
 
@@ -4908,7 +4885,7 @@
         
     }
 
-    function buildCUPage(tmpObj, cuids, cutype) {
+    function buildCUPage(tmpObj, cuids, interface) {
         var node_list = [];
         if (cuids != null) {
             if (cuids instanceof Array) {
@@ -4918,13 +4895,13 @@
             }
         }
 
-        if (cutype == null) {
+        /*if (cutype == null) {
             cutype = "cu";
-        }
+        }*/
 
-        if ((cutype != "cu") && (cutype != "all") && (cutype != "ALL")) {
+        /*if ((cutype != "cu") && (cutype != "all") && (cutype != "ALL")) {
             node_list = cusWithInterface(tmpObj, node_list, cutype);
-        }
+        }*/
         tmpObj['elems'] = node_list;
         /*****
          * 
@@ -4933,7 +4910,7 @@
         /**
          * fixed part
          */
-        changeView(tmpObj, cutype, updateInterface);
+        changeView(tmpObj, interface, updateInterface);
 
 
     }
@@ -5199,7 +5176,7 @@
                 var driver = null;
                 if (typeof cu === "object") {
                     if (typeof cu['control_unit_implementation'] === "string") {
-                        if (((impl = getInterfaceFromClass(cu['control_unit_implementation'])) == null)) {
+                        if (((impl = jchaos.getInterfaceFromClass(cu['control_unit_implementation'])) == null)) {
                             impl = cu['control_unit_implementation'];
                         }
 
@@ -7151,11 +7128,7 @@
 
         var sopt = { "pagestart": dashboard_settings.current_page, "pagelen": dashboard_settings.maxNodesPerPage };
         if (interface != "--Select--" && interface != "ALL") {
-            if(implementation_map[interface].length==1){
-                sopt['impl']=implementation_map[interface][0];
-            } else {
-                sopt['impl']=interface;
-            }
+            sopt['interface']=interface;
             
         }
         if(state!="All"){
@@ -7175,7 +7148,7 @@
             $(".pageindex").css("visibility", "visible");
             $("#page_number").html((dashboard_settings.current_page + 1) + "/" + dashboard_settings.pages);
 
-            buildCUPage(tmpObj, list_cu.list, implementation_map[interface]);
+            buildCUPage(tmpObj, list_cu.list, interface);
 
         });
         $(".previous_page").off('click');
@@ -7214,7 +7187,7 @@
 
     function mainCU(tmpObj) {
         var list_cu = [];
-        var classe = ["powersupply", "motor", "camera", "BPM"];
+        var classe = ["powersupply", "motor", "camera", "bpm"];
         var $radio = $("input:radio[name=search-alive]");
         if ($radio.is(":checked") === false) {
             $radio.filter("[value=true]").prop('checked', true);
@@ -10835,7 +10808,7 @@
 
         //
         if (desc != null && desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("control_unit_implementation")) {
-            var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
+            var tt = jchaos.getInterfaceFromClass(desc.instance_description.control_unit_implementation);
 
             if (tt != null) {
                 items['open-ctrl'] = { name: "Open control:" + tt };
