@@ -101,7 +101,6 @@
 </div>
 </div>
 <script>
-	jqccs.initSettings();
 	$("#push_enable").prop('disabled',true);
 
 	function onConnectServer(){
@@ -120,10 +119,14 @@
 	jchaos.options['io_onconnect'] = (s) => {
 		onConnectServer();
     }
-	jchaos['io_disconnect']=(sock)=> {
+	jchaos.options['io_disconnect']=(sock)=> {
 		onDisconnectServer();
 	};
+	jchaos.options['on_restTimeout']=(e)=> {
+		alert("Timeout on server:"+JSON.stringify(e));
+		jqccs.busyWindow(false);
 
+	};
 	$( <?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
 	function addMenuScriptItems(pid, node) {
 		var items = {};
@@ -1129,4 +1132,30 @@
 		$("input[type=radio][name=search-alive]").trigger("change");
 
 	}
+	jqccs.initSettings();
+
+	$("#config-settings").on("click", function () {
+                var templ = {
+                    $ref: "dashboard-settings.json",
+                    format: "tabs"
+                }
+                var def = JSON.parse(localStorage['chaos_dashboard_settings']);
+                jqccs.jsonEditWindow("Config", templ, def, function (d) {
+                    localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
+                    var e = jQuery.Event('keypress');
+                    e.which = 13;
+                    e.keyCode = 13;
+                    if(d.hasOwnProperty("defaultRestTimeout")){
+                        jchaos.setOptions({ "timeout": d.defaultRestTimeout });
+                    } else {
+                        jchaos.setOptions({ "timeout": 5000 });
+
+                    }
+					jqccs.initSettings();
+
+                    $("#search-chaos").trigger(e);
+                }, null);
+
+            });
+
 </script>

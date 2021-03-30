@@ -6109,13 +6109,21 @@
                 var zipname = node_selected + ".zip";
                 var binary_string = atob(r.data.base64);
                 saveAsBinary(binary_string, zipname);
-                jchaos.setOptions({ "timeout": 5000 });
+                if(dashboard_settings.hasOwnProperty("defaultRestTimeout")){
+                    jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
+                } else {
+                    jchaos.setOptions({ "timeout": 5000 });
 
+                }
 
             }, function (bad) {
                 instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent:" + bad.errmsg, 5000, false);
-                jchaos.setOptions({ "timeout": 5000 });
+                if(dashboard_settings.hasOwnProperty("defaultRestTimeout")){
+                    jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
+                } else {
+                    jchaos.setOptions({ "timeout": 5000 });
 
+                }
             });
         } else if (cmd == "kill-process") {
             confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
@@ -7193,9 +7201,10 @@
             $radio.filter("[value=true]").prop('checked', true);
         }
         var alive = ($("[name=search-alive]:checked").val() == "true");
+        jchaos.search("", "zone", alive,(zon)=>{
+            element_sel('#zones', zon, 1);
 
-        var zones = jchaos.search("", "zone", alive);
-        element_sel('#zones', zones, 1);
+        });
 
 
         $("#zones").click(function () {
@@ -7340,11 +7349,12 @@
 
         }
         if (defgroup != "") {
-            var cl = jchaos.search((defzone == "ALL") ? "" : defzone, "class", true);
+            jchaos.search((defzone == "ALL") ? "" : defzone, "class", true,(cl)=>{
 
-            element_sel('#elements', cl, 1);
+                element_sel('#elements', cl, 1);
 
-            $("#elements option[value=\"" + defgroup + "\"]").prop('selected', true);
+                $("#elements option[value=\"" + defgroup + "\"]").prop('selected', true);
+            });
         }
         if (definterface != "") {
             $("#classe option[value=\"" + definterface + "\"]").prop('selected', true);
@@ -10398,8 +10408,12 @@
                 close: function (event, ui) {
                     clearInterval(updateLogInterval);
                     $(this).remove();
-                    jchaos.setOptions({ "timeout": 5000 });
+                    if(dashboard_settings.hasOwnProperty("defaultRestTimeout")){
+                        jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
+                    } else {
+                        jchaos.setOptions({ "timeout": 5000 });
 
+                    }
                 },
                 open: function (event, ui) {
                     updateLogInterval = setInterval(function () {
@@ -11362,32 +11376,17 @@
                     alert("Cannot retrive Client List");
                 });
             });
-            $("#config-settings").on("click", function () {
-                var templ = {
-                    $ref: "dashboard-settings.json",
-                    format: "tabs"
-                }
-                var def = JSON.parse(localStorage['chaos_dashboard_settings']);
-                jsonEditWindow("Config", templ, def, function (d) {
-                    dashboard_settings = d;
-                    localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
-                    var e = jQuery.Event('keypress');
-                    e.which = 13;
-                    e.keyCode = 13;
-                    jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
-                    templateObj.check_interval = dashboard_settings.checkLive;
-                    templateObj.refresh_rate = dashboard_settings.generalRefresh;
-
-                    $("#search-chaos").trigger(e);
-                }, null);
-
-            });
+          
             /* Transform to HTML */
             // var html = chaosCtrl2html(cu, options, '');
             templateObj.check_interval = dashboard_settings.checkLive;
             templateObj.refresh_rate = dashboard_settings.generalRefresh;
-            jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
+            if(dashboard_settings.hasOwnProperty("defaultRestTimeout")){
+                jchaos.setOptions({ "timeout": dashboard_settings.defaultRestTimeout });
+            } else {
+                jchaos.setOptions({ "timeout": 5000 });
 
+            }
             if (options.template == "cu") {
                 templateObj.buildInterfaceFn = buildCUInterface; /* build the skeleton*/
                 templateObj.setupInterfaceFn = setupCU; /*create and setup table*/

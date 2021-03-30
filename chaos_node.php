@@ -137,16 +137,12 @@ require_once('header.php');
 		setInterval(function () {
 			var now = (new Date()).getTime();
 			if (node_list.length > 0) {
-				node_list.forEach((d) => {
-					var iname = jchaos.encodeName(d);
-
-
-				});
-				jchaos.getChannel(node_list, 255, function (run_info) {
+				
+				jchaos.node(node_list, "health","", function (run_info) {
 
 					run_info.forEach((elem, index) => {
 						var isalive = false;
-						if ((elem.system !== undefined) && (elem.system.ndk_uid !== undefined)){
+					/*	if ((elem.system !== undefined) && (elem.system.ndk_uid !== undefined)){
 							var dev_alarm = Number(elem.system.cudk_dalrm_lvl);
 							var cu_alarm = Number(elem.system.cudk_calrm_lvl);
 							var name_id = jchaos.encodeName(elem.system.ndk_uid);
@@ -188,25 +184,42 @@ require_once('header.php');
 								//	$("#" + name_id + "_cualarm").css('background-image', '');
 									$("#" + name_id + "_cualarm").html('');
 								}
-						}
-						if ((elem.health !== undefined) && (elem.health.ndk_uid !== undefined)) {
+						}*/
+						if ((elem.health.ndk_uid !== undefined)) {
 							var healt = elem.health;
 							var uid = healt.ndk_uid;
 							elem['lives'] = false;
+							var alarm = Number(healt.cuh_alarm_lvl);
 
 							node_state[uid] = elem;
 							var iname = jchaos.encodeName(uid);
-							if(elem.health.hasOwnProperty("cuh_alarm_msk")&&(elem.health.cuh_alarm_msk>0)){
+							if(healt.hasOwnProperty("cuh_alarm_msk")&&(healt.cuh_alarm_msk>0)){
 								$("#" + iname + "_maskalarm").html('<img src="img/icon/silent.png">');
 
+							}
+							if(alarm>0){
+								if (alarm == 1) {
+								//	$("#" + name_id + "_devalarm").attr('title', "Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
+									$("#" + iname + "_devalarm").html('<img src="img/icon/warning.png">');
+
+									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
+								} else {
+								//	$("#" + name_id + "_devalarm").attr('title',"Error:"+JSON.stringify(jchaos.filterAlarmObject(elem._alarms,false)));
+									$("#" + iname + "_devalarm").html('<img src="img/icon/error.png">');
+
+									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
+								} 
+
+							} else {
+									$("#" + iname + "_devalarm").html('');
 							}
 							if ((healt.dpck_ats !== undefined)) {
 
 								if ((Math.abs(healt.dpck_ats - now) < 10000)) {
 									isalive = true;
 								} else if (node_old_state[uid] !== undefined && node_state[uid] !== undefined) {
-									if ((node_state[uid].health.dpck_ats !== undefined) && (node_old_state[uid].health.dpck_ats !== undefined)) {
-										if (node_state[uid].health.dpck_ats > node_old_state[uid].health.dpck_ats) {
+									if ((node_state[uid].dpck_ats !== undefined) && (node_old_state[uid].dpck_ats !== undefined)) {
+										if (node_state[uid].dpck_ats > node_old_state[uid].dpck_ats) {
 											isalive = true;
 										}
 
@@ -250,7 +263,7 @@ require_once('header.php');
 
 								}
 							} else {
-								console.error("no timestamp key on "+uid);
+								console.error("no timestamp key on "+uid+" :"<<JSON.stringify(elem.health));
 								removeTextClasses(iname);
 
 							}
@@ -269,6 +282,13 @@ require_once('header.php');
 						}
 					});
 
+				},(bad)=>{
+					node_list.forEach((d) => {
+					var iname = jchaos.encodeName(d);
+					setTextClasses(iname,"text-muted");
+
+
+				});
 				});
 			}
 		}, 5000);
@@ -1370,8 +1390,29 @@ require_once('header.php');
 							jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
 								//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
 								//node_data = Object.assign(bi, node_data);
+								
 								var nd = Object.assign({}, { build: bi }, { state: bruninfo[0] }, { info: node_data });
+								var elem=bruninfo[0];
+								if ((elem.system !== undefined) && (elem.system.ndk_uid !== undefined)){
+									var dev_alarm = Number(elem.system.cudk_dalrm_lvl);
+									var cu_alarm = Number(elem.system.cudk_calrm_lvl);
+									var name_id = jchaos.encodeName(elem.system.ndk_uid);
+									var name_device_db=elem.system.ndk_uid;
+									var alarms={};
+									if(dev_alarm>0){
+										alarms['DEVICE']=jchaos.filterAlarmObject(elem.device_alarms,false);
+									}
+									if(cu_alarm>0){
+										alarms['CU']=jchaos.filterAlarmObject(elem.cu_alarms,false);
 
+									}
+									if(cu_alarm>0 || dev_alarm>0){
+										$("#" + name_id + "_devalarm").attr('title', "ALARMS:"+JSON.stringify(alarms));
+										nd = Object.assign(nd, { ALARMS: alarms });
+
+									}
+								
+									}
 
 								$('#desc_view').html(jqccs.json2html(nd));
 								jqccs.jsonSetup($('#desc_view'), function (e) {
@@ -1622,7 +1663,7 @@ require_once('header.php');
 								"id": idname,
 								"parent": jchaos.encodeName(cu.ndk_parent),
 								"icon": icon_name,
-								"text": "<span>"+name+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(name)+'_maskalarm"></span>',
+								"text": "<span>"+name+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(name)+'_maskalarm"></span>',
 
 								"data": cu
 							};
@@ -1751,20 +1792,10 @@ require_once('header.php');
 				if ((culist.length == 0) && (typeof handler === "function")) {
 					handler(jsree_data);
 				}
-				let cnt = culist.length;
-				culist.forEach(cui => {
-					if (cui == "" || cui == null) {
-						alert("Node with empty/null uid");
-						cnt--;
-						if (cnt == 0) {
+				if(culist.length>0){
+					jchaos.node(culist, "desc", "all", (e) => {
+						e.forEach( elem=>{
 
-							if (typeof handler === "function") {
-								handler(jsree_data);
-							}
-						}
-					} else {
-						jchaos.node(cui, "desc", "all", (elem) => {
-							cnt--;
 							//	var desc = jchaos.getDesc(elem, null);
 							var decoded = jchaos.pathToZoneGroupId(elem.ndk_uid);
 							if (decoded != null) {
@@ -1805,7 +1836,7 @@ require_once('header.php');
 										}
 										node['id'] = uname;
 										node['cid'] = elem.ndk_uid;
-										node['text']="<span>"+p+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(elem.ndk_uid)+'_maskalarm"></span>';
+										node['text']="<span>"+p+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(elem.ndk_uid)+'_maskalarm"></span>';
 
 									}
 									if (!node_created.hasOwnProperty(node['id'])) {
@@ -1818,32 +1849,28 @@ require_once('header.php');
 
 
 
-							}
-							if (cnt == 0) {
+							}});
 								if (typeof handler === "function") {
 									handler(jsree_data);
 								}
-							}
+							
 						}, () => {
-							cnt--;
-							console.error(cnt + "] retrieving status of:" + cui);
-							if (cnt == 0) {
+							console.error("retrieving descriptions");
 
 								if (typeof handler === "function") {
 									handler(jsree_data);
 								}
-							}
+							
 						})
-					}
-				});
-			}
-				, () => { //search of C
+				} else {
 					if (typeof handler === "function") {
-						handler(jsree_data);
-					}
-				});
+									handler(jsree_data);
+								}
+				}
+				
 
-		}
+		});
+	}
 		function createJSTreeByDevice(filter, alive, handler) {
 			var jsree_data = [];
 			var node_created = {};
@@ -1905,7 +1932,7 @@ require_once('header.php');
 								"id": id,
 								"parent": device,
 								"icon": icon_name,
-								"text": "<span>"+elem+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(elem)+'_maskalarm"></span>',
+								"text": "<span>"+elem+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(elem)+'_maskalarm"></span>',
 
 								"data": desc[index]
 							};

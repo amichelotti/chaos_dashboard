@@ -110,7 +110,6 @@ function newWindow(id, name,sizex,sizey) {
 	methods.forEach(function(elem){
 		methods_full.push("ChaosNode."+elem);
 	 });*/
-	 jqccs.initSettings();
 
 	  $('#terminal').terminal(function(command) {
         if (command !== '') {
