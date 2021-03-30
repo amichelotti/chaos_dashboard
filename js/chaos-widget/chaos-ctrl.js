@@ -11354,28 +11354,6 @@
             };
             initSettings();
 
-            $("#help-about").on("click", function () {
-                jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
-                    //alert("version:"+JSON.stringify(ver));
-                    showJson("VERSION", ver);
-                }, function () {
-                    alert("Cannot retrive version");
-                });
-            });
-
-            $("#help-clients").on("click", function () {
-                jchaos.basicPost("clients", "", function (ver) {
-                    //alert("version:"+JSON.stringify(ver));
-                    ver.forEach(function (ele, i) {
-                        var tt = ele.lastConnection / 1000;
-                        ver[i]['updated'] = jchaos.getDateTime(Number(tt));
-                    });
-
-                    showJson("CLIENTS", ver);
-                }, function () {
-                    alert("Cannot retrive Client List");
-                });
-            });
           
             /* Transform to HTML */
             // var html = chaosCtrl2html(cu, options, '');
