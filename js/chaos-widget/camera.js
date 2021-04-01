@@ -581,7 +581,12 @@ function setRoi(cu, width, height, x, y, func) {
     setTimeout(() => {
       jchaos.setAttribute(cu, "OFFSETY", "0", function () {
         setTimeout(() => {
+          console.log("setting WIDTH:" + String(width));
+
           jchaos.setAttribute(cu, "WIDTH", String(width), function () {
+            setTimeout(() => {
+              console.log("setting HEIGHT:" + String(height));
+
             jchaos.setAttribute(cu, "HEIGHT", String(height), function () {
               setTimeout(() => {
                 console.log("setting OFFSETX:" + x);
@@ -599,6 +604,7 @@ function setRoi(cu, width, height, x, y, func) {
                 });
               }, 200);
             });
+          },200);
           });
         }, 200);
       });

@@ -1133,7 +1133,27 @@
 
 	}
 	jqccs.initSettings();
+	$("#help-about").on("click", function () {
+                jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
+                    //alert("version:"+JSON.stringify(ver));
+                    jqccs.showJson("VERSION", ver);
+                }, function () {
+                    alert("Cannot retrive version");
+                });
+			});
+			$("#help-clients").on("click", function () {
+                jchaos.basicPost("clients", "", function (ver) {
+                    //alert("version:"+JSON.stringify(ver));
+                    ver.forEach(function (ele, i) {
+                        var tt = ele.lastConnection / 1000;
+                        ver[i]['updated'] = jchaos.getDateTime(Number(tt));
+                    });
 
+                    jqccs.showJson("CLIENTS", ver);
+                }, function () {
+                    alert("Cannot retrive Client List");
+                });
+            });
 	$("#config-settings").on("click", function () {
                 var templ = {
                     $ref: "dashboard-settings.json",
