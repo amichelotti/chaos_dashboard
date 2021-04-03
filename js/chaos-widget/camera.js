@@ -879,6 +879,18 @@ function getWidget() {
   }
   return chaos;
 }
+function setReference(cu,x,y,width,height){
+  jchaos.setAttribute(cu, "REFX", String(x.toFixed()), function () {
+    jchaos.setAttribute(cu, "REFY", String(y.toFixed()), function () {
+      jchaos.setAttribute(cu, "REFSX", String(width.toFixed()), function () {
+        jchaos.setAttribute(cu, "REFSY", String(height.toFixed()), function () {
+          jqccs.instantMessage("SET REFERENCE " + cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+
+        });
+      });
+    });
+  });
+}
 function executeCameraMenuCmd(tmpObj, cmd, opt) {
   if (cmd == 'set-reference') {
     var crop_opt = opt.items[cmd].crop_opt;
@@ -887,17 +899,8 @@ function executeCameraMenuCmd(tmpObj, cmd, opt) {
     var height = crop_opt.height / 2;
     var x = crop_opt.x + width;
     var y = crop_opt.y + height;
-
-    jchaos.setAttribute(crop_opt.cu, "REFX", String(x.toFixed()), function () {
-      jchaos.setAttribute(crop_opt.cu, "REFY", String(y.toFixed()), function () {
-        jchaos.setAttribute(crop_opt.cu, "REFSX", String(width.toFixed()), function () {
-          jchaos.setAttribute(crop_opt.cu, "REFSY", String(height.toFixed()), function () {
-            jqccs.instantMessage("SET REFERENCE " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
-
-          });
-        });
-      });
-    });
+    setReference(crop_opt.cu,x,y,width,height);
+  
   } else if (cmd == 'set-roi') {
     var crop_opt = opt.items[cmd].crop_opt;
     var encoden = jchaos.encodeName(crop_opt.cu);
@@ -944,6 +947,7 @@ function executeCameraMenuCmd(tmpObj, cmd, opt) {
   } else if (cmd == "reset-roi") {
     // big value means maximum.
     setRoi(opt.items[cmd].cu, 1000000, 1000000, 0, 0, () => { $("#cameraImage-" + encoden).cropper('destroy'); });
+    setReference(opt.items[cmd].cu,0,0,0,0);
 
   } else if (cmd == "histo-image") {
     showHisto("Histogram " + opt.items[cmd].cu, opt.items[cmd].cu, 1000, 0);
