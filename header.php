@@ -1168,7 +1168,7 @@
                     if(d.hasOwnProperty("defaultRestTimeout")){
                         jchaos.setOptions({ "timeout": d.defaultRestTimeout });
                     } else {
-                        jchaos.setOptions({ "timeout": 5000 });
+                        jchaos.setOptions({ "timeout": 10000 });
 
                     }
 					jqccs.initSettings();
