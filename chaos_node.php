@@ -2091,7 +2091,7 @@ require_once('header.php');
 			cu2editor(cu, (edit_templ, editobj, cudb) => {
 
 				jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
-					jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
+					jqccs.instantMessage("CU saved " + json.ndk_uid, " OK", 2000, true);
 					var decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
 					var icon_name = "/img/devices/" + decoded["group"] + ".png";
 

@@ -53,7 +53,7 @@
 		"cudk_ds_attr_err_thr" : {
 			"type": "string",
 			"default":"",
-			"description":"Set/readout warning threshold in %"
+			"description":"Set/readout error threshold in %"
 		}
 	} 
 }

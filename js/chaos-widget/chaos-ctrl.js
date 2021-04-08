@@ -3704,7 +3704,7 @@
             generateCmdModal(tmpObj, cmdselected, curr_cu_selected);
 
         });
-        $.contextMenu('destroy', '.cuMenu');
+        $.contextMenu('destroy','.cuMenu');
 
         $.contextMenu({
             selector: '.cuMenu',
