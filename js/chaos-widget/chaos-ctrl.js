@@ -10754,6 +10754,42 @@
                 
                             });
                         }
+                    },
+                    'node-prop-save': {
+                        name: "Save CU/EU properties as Default",
+                        callback: function (itemKey, opt, e) {
+                            jchaos.command(currsel, { "act_name": "ndk_get_prop" }, function (data) {
+
+                                jqccs.editJSON("Save CU/EU Properties " + currsel, data, (json, fupdate) => {
+                                    
+                                    var props = [];
+                                    for (var key in json) {
+                                        props.push({name:key,value:json[key].value});
+                                    }
+                                    jchaos.node(currsel, "get", "cu", function (data) {
+                                        if (data != null) {
+                                            if(data.hasOwnProperty('cudk_prop')){
+                                                data['cudk_prop']=props;
+                                                jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data,(okk)=>{
+                                                    instantMessage("Saved CU/EU properties:" + tmpObj.node_multi_selected, "OK", 5000, true);
+
+                                                },(bad)=>{
+                                                    instantMessage("Saving CU/EU properties:" + tmpObj.node_multi_selected, "Error:"+JSON.stringify(bad), 5000, false);
+
+                                                });
+
+                                            }
+                                        }
+                                    })
+                
+                                });
+                
+                            }, function (data) {
+                                instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
+                                //   $('.context-menu-list').trigger('contextmenu:hide')
+                
+                            });
+                        }
                     }
                 }
 
@@ -10848,7 +10884,7 @@
                             jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function (data) {
 
                                 var origin_json = JSON.parse(JSON.stringify(data[0])); // not reference
-                                jqccs.editJSON("Driver Prop " + currsel, data[0], (json, fupdate) => {
+                                jqccs.editJSON("Driver Properties " + currsel, data[0], (json, fupdate) => {
                 
                                     var changed = {};
                                     for (var key in json) {

@@ -498,14 +498,15 @@ require_once('header.php');
 
 							var list_prop = [];
 							if (obj.cudk_prop !== undefined) {
-								try {
+								list_prop=obj.cudk_prop;
+								/*try {
 									var par = JSON.parse(list_prop);
 									for (var k in par) {
 										list_prop.push({ k: par(k) });
 									}
 								} catch (e) {
 
-								}
+								}*/
 
 							}
 							obj['cudk_prop'] = list_prop;
@@ -513,14 +514,7 @@ require_once('header.php');
 								obj.cudk_driver_description.forEach((ele, index) => {
 									var list_prop = [];
 									if (ele.cudk_driver_prop !== undefined) {
-										try {
-											var par = JSON.parse(ele.cudk_driver_prop);
-											for (var k in par) {
-												list_prop.push({ k: par(k) });
-											}
-										} catch (e) {
-
-										}
+										list_prop=ele.cudk_driver_prop;
 									}
 
 									obj.cudk_driver_description[index]['cudk_driver_prop'] = list_prop;
