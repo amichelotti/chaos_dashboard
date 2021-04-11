@@ -1705,29 +1705,31 @@ require_once('header.php');
 					if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
 						var list = desc.us_desc.cu_desc;
 						list.forEach(cu => {
-							var name = cu.ndk_uid;
-							var regex = /(.*)\/(.*)\/(.*)$/;
-							var match = regex.exec(name);
-							var icon_name = "";
-							if ((match != null) && (typeof match[2] !== "undefined")) {
-								icon_name = "/img/devices/" + match[2] + ".png";
-								cu["zone"] = match[1];
-								cu["group"] = match[2];
-							}
-							var idname = jchaos.encodeName(name);
+							if(cu.hasOwnProperty("ndk_uid")){
+								var name = cu.ndk_uid;
+								var regex = /(.*)\/(.*)\/(.*)$/;
+								var match = regex.exec(name);
+								var icon_name = "";
+								if ((match != null) && (typeof match[2] !== "undefined")) {
+									icon_name = "/img/devices/" + match[2] + ".png";
+									cu["zone"] = match[1];
+									cu["group"] = match[2];
+								}
+								var idname = jchaos.encodeName(name);
 
-							var node = {
-								"id": idname,
-								"parent": jchaos.encodeName(cu.ndk_parent),
-								"icon": icon_name,
-								"text": "<span>" + name + "</span>" + '<span class="decodeAlarm" id="' + jchaos.encodeName(name) + '_devalarm"></span>' + '<span id="' + jchaos.encodeName(name) + '_maskalarm"></span>',
+								var node = {
+									"id": idname,
+									"parent": jchaos.encodeName(cu.ndk_parent),
+									"icon": icon_name,
+									"text": "<span>" + name + "</span>" + '<span class="decodeAlarm" id="' + jchaos.encodeName(name) + '_devalarm"></span>' + '<span id="' + jchaos.encodeName(name) + '_maskalarm"></span>',
 
-								"data": cu
-							};
-							if (!node_created.hasOwnProperty(idname)) {
-								jsree_data.push(node);
-								node_created[idname] = true;
-							}
+									"data": cu
+								};
+								if (!node_created.hasOwnProperty(idname)) {
+									jsree_data.push(node);
+									node_created[idname] = true;
+								}
+						}
 						});
 					}
 				}
@@ -1912,8 +1914,8 @@ require_once('header.php');
 							handler(jsree_data);
 						}
 
-					}, () => {
-						console.error("retrieving descriptions");
+					}, (bad) => {
+						console.error("retrieving descriptions:"+JSON.stringify(bad));
 
 						if (typeof handler === "function") {
 							handler(jsree_data);
