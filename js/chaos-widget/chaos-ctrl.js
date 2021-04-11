@@ -10768,24 +10768,23 @@
                                     }
                                     jchaos.node(currsel, "get", "cu", function (data) {
                                         if (data != null) {
-                                            if(data.hasOwnProperty('cudk_prop')){
-                                                data['cudk_prop']=props;
-                                                jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data,(okk)=>{
-                                                    instantMessage("Saved CU/EU properties:" + tmpObj.node_multi_selected, "OK", 5000, true);
+                                            data['cudk_prop']=props;
+                                            jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data,(okk)=>{
+                                                instantMessage("Saved CU/EU properties:" + tmpObj.node_multi_selected, "OK", 5000, true);
 
-                                                },(bad)=>{
-                                                    instantMessage("Saving CU/EU properties:" + tmpObj.node_multi_selected, "Error:"+JSON.stringify(bad), 5000, false);
+                                            },(bad)=>{
+                                                instantMessage("Saving CU/EU properties:" + tmpObj.node_multi_selected, "Error:"+JSON.stringify(bad), 5000, false);
 
-                                                });
+                                            });
 
-                                            }
+                                            
                                         }
                                     })
                 
                                 });
                 
                             }, function (data) {
-                                instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
+                                instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Error :" + JSON.stringify(data), 5000, false);
                                 //   $('.context-menu-list').trigger('contextmenu:hide')
                 
                             });
@@ -10900,21 +10899,21 @@
                                     };
                                     console.log("sending changed:" + JSON.stringify(changed));
                                     jchaos.command(tmpObj.node_multi_selected, msg, function (data) {
-                                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+                                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "OK", 5000, true);
                                         jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function (dd) {
                                             //read back
                                             fupdate(dd[0]);
                                         });
                 
                                     }, (bad) => {
-                                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: " + JSON.stringify(bad), 5000, false);
+                                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Error: " + JSON.stringify(bad), 5000, false);
                 
                                     });
                 
                                 });
                 
                             }, function (data) {
-                                instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
+                                instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Error:"+ JSON.stringify(data), 5000, false);
                                 //   $('.context-menu-list').trigger('contextmenu:hide')
                 
                             });
@@ -10942,16 +10941,16 @@
                                     };
                                     console.log("sending changed:" + JSON.stringify(changed));
                                     jchaos.command(tmpObj.node_multi_selected, msg, function (data) {
-                                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, true);
+                                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "OK", 5000, true);
                 
                                     }, (bad) => {
-                                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: " + JSON.stringify(bad), 5000, false);
+                                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Error: " + JSON.stringify(bad), 5000, false);
                 
                                     });
                 
                                 });
                             }, function (data) {
-                                instantMessage("Getting Node prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent", 5000, false);
+                                instantMessage("Getting Node prop:" + tmpObj.node_multi_selected, "Error:"+JSON.stringify(data), 5000, false);
                                 //   $('.context-menu-list').trigger('contextmenu:hide')
                 
                             });
