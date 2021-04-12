@@ -277,7 +277,9 @@ require_once('header.php');
 								}
 							} else {
 								//console.error("no timestamp key on "+uid+" :"<<JSON.stringify(elem.health));
-								removeTextClasses(iname);
+								setTextClasses(iname, "text-dark");
+								$("#" + iname).attr('title', uid + ": DEAD no timestamp info");
+
 
 							}
 
@@ -288,7 +290,7 @@ require_once('header.php');
 								console.error("NO NAME at index:" + index + " UID:" + uid);
 							} else {
 								setTextClasses(iname, "text-dark");
-								$("#" + iname).attr('title', uid + ": DEAD no info");
+								$("#" + iname).attr('title', uid + ": DEAD no health info");
 							}
 
 
