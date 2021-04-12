@@ -1668,17 +1668,25 @@ require_once('header.php');
 				data.push(obj);
 			}
 		}
-
 		function addUSOrRoot(jsree_data, node_created, edesc, without_parent) {
-			if (edesc.ndk_type == "nt_unit_server" || (edesc.ndk_type == "nt_root")) {
-				var parent = "#";
-				var desc;
-				if (edesc.ndk_type == "nt_unit_server") {
-					desc = jchaos.node(edesc.ndk_uid, "get", "us");
-				} else {
-					desc = edesc;
+			var idname = jchaos.encodeName(edesc.ndk_uid);
 
-				}
+			if (node_created.hasOwnProperty(idname)) {
+				return;
+			}
+
+			if(edesc.ndk_type == "nt_unit_server"){
+				dus=jchaos.node(edesc.ndk_uid, "get", "us");
+
+				addUSOrRoot_int(jsree_data, node_created, dus, without_parent);
+				
+
+			} else {
+				addUSOrRoot_int(jsree_data, node_created, edesc, without_parent);
+			}
+		}
+		function addUSOrRoot_int(jsree_data, node_created, desc, without_parent) {
+				var parent = "#";
 				var icon_name = "";
 				var parent = "#";
 				icon_name = "/img/devices/" + desc.ndk_type + ".png";
@@ -1736,7 +1744,7 @@ require_once('header.php');
 					}
 				}
 
-			}
+			
 		}
 		function createJSTreeByServer(filter, alive, handler) {
 			var jsree_data = [];
@@ -1791,7 +1799,7 @@ require_once('header.php');
 										if (!found) {
 											//	console.log(edesc.ndk_uid+" looking among NOT live for:"+ass.ndk_uid)
 
-											var nn = jchaos.node(ass.ndk_uid, "desc", "all");
+											jchaos.node(ass.ndk_uid, "desc", "all",(nn)=>{
 											if (nn != null && nn.hasOwnProperty('ndk_uid')) {
 												addUSOrRoot(jsree_data, node_created, nn, false);
 
@@ -1800,6 +1808,7 @@ require_once('header.php');
 
 												alert("Agent " + edesc.ndk_uid + " is associated to a non valid node:" + ass.ndk_uid + " please remove it from associations")
 											}
+										});
 										}
 
 									});
@@ -1809,6 +1818,7 @@ require_once('header.php');
 					});
 					d.forEach(edesc => {
 						addUSOrRoot(jsree_data, node_created, edesc, true);
+
 					});
 					if (typeof handler === "function") {
 						handler(jsree_data);

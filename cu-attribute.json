@@ -10,7 +10,8 @@
 		},
 		"cudk_default_value" : {
 			"type": "string",
-			"description":"Default Value"
+			"format":"textarea",
+			"description":"Default Value (applied on Init)"
 		},
 		"cudk_ds_max_range" : {
 			"type": "string",

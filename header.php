@@ -123,11 +123,24 @@
 		onDisconnectServer();
 	};
 	jchaos.options['on_restTimeout']=(e)=> {
-		alert("Timeout on server:"+JSON.stringify(e));
+		var now = (new Date()).getTime();
+
+		if(jchaos.hasOwnProperty('last_timeout')){
+			if((now-jchaos.last_timeout)>2*jchaos.options.timeout){
+				alert("Timeout on server:"+JSON.stringify(e));
+			}
+
+		}
+		jchaos['last_timeout']=now;
 		jqccs.busyWindow(false);
 
 	};
 	$( <?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
+	function triggerRefreshEdit(){
+		$("input[type=radio][name=search-alive]:checked").val(false);
+		$("input[type=radio][name=search-alive]").trigger("change");
+
+	}
 	function addMenuScriptItems(pid, node) {
 		var items = {};
 		var tree = $('#hier-' + pid).jstree(true);
@@ -1127,11 +1140,7 @@
 			});
 		});
 	}
-	function triggerRefreshEdit(){
-		$("input[type=radio][name=search-alive]:checked").val(false);
-		$("input[type=radio][name=search-alive]").trigger("change");
-
-	}
+	
 	jqccs.initSettings();
 	$("#help-about").on("click", function () {
                 jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
