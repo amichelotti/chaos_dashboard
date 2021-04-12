@@ -1685,30 +1685,6 @@
     }
 
 
-
-    function buildAlgoBody() {
-        var html = '<div class="row">';
-        /*html += '<div class="statbox purple" onTablet="col-md-4" onDesktop="col-md-3">'
-    html += '<h3>Algorithm Type</h3>';
-    html += '<select id="classe" size="auto"></select>';
-    html += '</div>';
-*/
-        html += '<div class="statbox purple row" onTablet="col-md-8" onDesktop="col-md-6">'
-        html += '<div class="col-md-6">'
-        html += '<label for="search-algo">Search Algorithms</label><input class="input-xlarge" id="search-algo" title="Search Algorithms" name="search-algo" type="radio" value=true>';
-        html += '</div>'
-        html += '<div class="col-md-6">'
-        html += '<label for="search-algo">Search Instanced</label><input class="input-xlarge" id="search-instance" title="Search Instanced Algorithms" name="search-algo" type="radio" value=false>';
-        html += '</div>'
-        // html += '<h3 class="col-md-3">Search</h3>';
-
-        html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
-        html += '</div>';
-        html += '</div>';
-
-        return html;
-    }
-
     function updateAlgoMenu(cu, name) {
         var items = {};
         items['edit-algo'] = { name: "Edit..", icon: "Edit" };
@@ -4183,8 +4159,8 @@
         html += '</div>'
 
         html += '<div class="col-sm">'
-        html += '<h3>Search</h3>';
-        html += '<input class="input-xlarge focused" id="search-chaos" title="Free form Search" type="text" value="">';
+        html += '<h3>Regex Search</h3>';
+        html += '<input class="input-xlarge focused" id="search-chaos" title="Free form Regex Search" type="text" value="">';
         html += '</div>';
 
         html += '<div class="col-sm">';
@@ -11516,23 +11492,7 @@
 
 
             }
-            /*else if (options.template == "ctrl") {
-                   var html = "";
-                   html += '<div class="specific-table-ctrl"></div>';
-                   html += '<div class="specific-control-ctrl"></div>';
-                   $(this).html(html);
-                   buildCUPage(options.cu, implementation_map[options.interface], options.template);
-
-                 } else if (options.template == "algo") {
-                   var html = "";
-                   html += buildAlgoBody();
-                   html += '<div class="specific-table-algo"></div>';
-                   html += '<div class="specific-control-algo"></div>';
-
-                   $(this).html(html);
-                   mainAlgo(options.template);
-                 }
-                 */
+            
             $(this).html(templateObj.buildInterfaceFn(templateObj));
             templateObj.setupInterfaceFn(templateObj)
             var htmlt, htmlc;

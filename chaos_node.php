@@ -57,8 +57,8 @@ require_once('header.php');
 							</div>
 
 							<div class="col-sm">
-								<h3>Search</h3>
-								<input class="input-xlarge focused" id="search-chaos" title="Free form Search"
+								<h3>Regex Search</h3>
+								<input class="input-xlarge focused" id="search-chaos" title="Free form Regex Search"
 									type="text" value="">
 							</div>
 
@@ -74,28 +74,7 @@ require_once('header.php');
 							</div>
 						</div>
 					</div>
-					<!-- 
-					<div class="statbox purple col-md-3">
-						<div class="row align-items-center">
-							<div class="col-sm">
-								<label for="search-alive">All</label><input class="input-xlarge" id="search-alive-false"
-									title="Search Alive and not Alive nodes" name="search-alive" type="radio"
-									value=false>
-							</div>
-							<div class="col-sm">
-								<label for="search-alive">Alive</label><input class="input-xlarge"
-									id="search-alive-true" title="Search just alive nodes" name="search-alive"
-									type="radio" value=true checked>
-							</div>
-							<div class="col-sm">
-								<label for="search-chaos">Search</label>
-								<input class="input-xlarge focused" id="search-chaos" title="Free form Search"
-									type="text" value="">
-							</div>
-						</div>
-
-					</div>
- -->
+				
 				</div>
 				<div class="box-content">
 
@@ -849,6 +828,10 @@ require_once('header.php');
 									if (data != null) {
 										//editorFn = cuSave;
 										//jsonEdit(templ, data);
+										//!! TODO: check why?
+										if(!data.hasOwnProperty("ndk_type")){
+											data['ndk_type']=type;
+										}
 										cu2editor(data, (edit_templ, editobj) => {
 											jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (ok) {
 												jqccs.instantMessage("CU/EU saved " + selected_node, " OK", 2000, true);
