@@ -75,7 +75,7 @@
 				<div class="col-sm-1 align-items-right">
 
 						<label class="checkbox-inline">
-  <input type="checkbox" id="push_enable" data-toggle="toggle"> push/poll
+  <input type="checkbox" id="push_enable" data-toggle="toggle"> push
 </label>
 <div class="row align-items-start">
   <div class="col-sm-1"> 
@@ -101,24 +101,46 @@
 </div>
 </div>
 <script>
-	jqccs.initSettings();
+	$("#push_enable").prop('disabled',true);
+
 	function onConnectServer(){
 		$("#server-connection-status").removeClass("indicator-nok");
 		$("#server-connection-status").addClass("indicator-ok");
+		$("#push_enable").prop('disabled',false);
+
 	}
 	function onDisconnectServer(){
 		$("#server-connection-status").removeClass("indicator-ok");
 		$("#server-connection-status").addClass("indicator-nok");
+		$("#push_enable").prop('disabled',true);
+
 	}
 	$("#client-connection-id").html("<font size=\"1\">"+localStorage['chaos_browser_uuid_cookie'].substr(localStorage['chaos_browser_uuid_cookie'].length - 5) +"</font>");
 	jchaos.options['io_onconnect'] = (s) => {
 		onConnectServer();
     }
-	jchaos['io_disconnect']=(sock)=> {
+	jchaos.options['io_disconnect']=(sock)=> {
 		onDisconnectServer();
 	};
+	jchaos.options['on_restTimeout']=(e)=> {
+		var now = (new Date()).getTime();
 
+		if(jchaos.hasOwnProperty('last_timeout')){
+			if((now-jchaos.last_timeout)>2*jchaos.options.timeout){
+				alert("Timeout on server:"+JSON.stringify(e));
+			}
+
+		}
+		jchaos['last_timeout']=now;
+		jqccs.busyWindow(false);
+
+	};
 	$( <?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
+	function triggerRefreshEdit(){
+		$("input[type=radio][name=search-alive]:checked").val(false);
+		$("input[type=radio][name=search-alive]").trigger("change");
+
+	}
 	function addMenuScriptItems(pid, node) {
 		var items = {};
 		var tree = $('#hier-' + pid).jstree(true);
@@ -1118,9 +1140,51 @@
 			});
 		});
 	}
-	function triggerRefreshEdit(){
-		$("input[type=radio][name=search-alive]:checked").val(false);
-		$("input[type=radio][name=search-alive]").trigger("change");
+	
+	jqccs.initSettings();
+	$("#help-about").on("click", function () {
+                jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
+                    //alert("version:"+JSON.stringify(ver));
+                    jqccs.showJson("VERSION", ver);
+                }, function () {
+                    alert("Cannot retrive version");
+                });
+			});
+			$("#help-clients").on("click", function () {
+                jchaos.basicPost("clients", "", function (ver) {
+                    //alert("version:"+JSON.stringify(ver));
+                    ver.forEach(function (ele, i) {
+                        var tt = ele.lastConnection / 1000;
+                        ver[i]['updated'] = jchaos.getDateTime(Number(tt));
+                    });
 
-	}
+                    jqccs.showJson("CLIENTS", ver);
+                }, function () {
+                    alert("Cannot retrive Client List");
+                });
+            });
+	$("#config-settings").on("click", function () {
+                var templ = {
+                    $ref: "dashboard-settings.json",
+                    format: "tabs"
+                }
+                var def = JSON.parse(localStorage['chaos_dashboard_settings']);
+                jqccs.jsonEditWindow("Config", templ, def, function (d) {
+                    localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
+                    var e = jQuery.Event('keypress');
+                    e.which = 13;
+                    e.keyCode = 13;
+                    if(d.hasOwnProperty("defaultRestTimeout")){
+                        jchaos.setOptions({ "timeout": d.defaultRestTimeout });
+                    } else {
+                        jchaos.setOptions({ "timeout": 10000 });
+
+                    }
+					jqccs.initSettings();
+
+                    $("#search-chaos").trigger(e);
+                }, null);
+
+            });
+
 </script>

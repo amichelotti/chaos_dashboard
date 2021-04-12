@@ -466,10 +466,9 @@ function rebuildCam(tmpObj) {
         }
 
       }
-      if (desc.ndk_type == "nt_root") {
-        cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
+      cuitem['set-reference'] = { name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj };
 
-      }
+      
       cuitem['histo-image'] = { name: "Histogram", cu: name };
 
       cuitem['exit-crop'] = { name: "Exit cropping", cu: name };
@@ -582,7 +581,12 @@ function setRoi(cu, width, height, x, y, func) {
     setTimeout(() => {
       jchaos.setAttribute(cu, "OFFSETY", "0", function () {
         setTimeout(() => {
+          console.log("setting WIDTH:" + String(width));
+
           jchaos.setAttribute(cu, "WIDTH", String(width), function () {
+            setTimeout(() => {
+              console.log("setting HEIGHT:" + String(height));
+
             jchaos.setAttribute(cu, "HEIGHT", String(height), function () {
               setTimeout(() => {
                 console.log("setting OFFSETX:" + x);
@@ -600,6 +604,7 @@ function setRoi(cu, width, height, x, y, func) {
                 });
               }, 200);
             });
+          },200);
           });
         }, 200);
       });
@@ -874,6 +879,18 @@ function getWidget() {
   }
   return chaos;
 }
+function setReference(cu,x,y,width,height){
+  jchaos.setAttribute(cu, "REFX", String(x.toFixed()), function () {
+    jchaos.setAttribute(cu, "REFY", String(y.toFixed()), function () {
+      jchaos.setAttribute(cu, "REFSX", String(width.toFixed()), function () {
+        jchaos.setAttribute(cu, "REFSY", String(height.toFixed()), function () {
+          jqccs.instantMessage("SET REFERENCE " + cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
+
+        });
+      });
+    });
+  });
+}
 function executeCameraMenuCmd(tmpObj, cmd, opt) {
   if (cmd == 'set-reference') {
     var crop_opt = opt.items[cmd].crop_opt;
@@ -882,17 +899,8 @@ function executeCameraMenuCmd(tmpObj, cmd, opt) {
     var height = crop_opt.height / 2;
     var x = crop_opt.x + width;
     var y = crop_opt.y + height;
-
-    jchaos.setAttribute(crop_opt.cu, "REFX", String(x.toFixed()), function () {
-      jchaos.setAttribute(crop_opt.cu, "REFY", String(y.toFixed()), function () {
-        jchaos.setAttribute(crop_opt.cu, "REFSX", String(width.toFixed()), function () {
-          jchaos.setAttribute(crop_opt.cu, "REFSY", String(height.toFixed()), function () {
-            jqccs.instantMessage("SET REFERENCE " + crop_opt.cu, "(" + x + "," + y + ") " + width + "x" + height, 3000, true);
-
-          });
-        });
-      });
-    });
+    setReference(crop_opt.cu,x,y,width,height);
+  
   } else if (cmd == 'set-roi') {
     var crop_opt = opt.items[cmd].crop_opt;
     var encoden = jchaos.encodeName(crop_opt.cu);
@@ -939,6 +947,7 @@ function executeCameraMenuCmd(tmpObj, cmd, opt) {
   } else if (cmd == "reset-roi") {
     // big value means maximum.
     setRoi(opt.items[cmd].cu, 1000000, 1000000, 0, 0, () => { $("#cameraImage-" + encoden).cropper('destroy'); });
+    setReference(opt.items[cmd].cu,0,0,0,0);
 
   } else if (cmd == "histo-image") {
     showHisto("Histogram " + opt.items[cmd].cu, opt.items[cmd].cu, 1000, 0);
