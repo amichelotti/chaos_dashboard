@@ -1709,7 +1709,9 @@ require_once('header.php');
 									cu["group"] = match[2];
 								}
 								var idname = jchaos.encodeName(name);
-
+								if(!cu.hasOwnProperty('ndk_type')){
+									cu['ndk_type']="nt_control_unit";
+								}
 								var node = {
 									"id": idname,
 									"parent": jchaos.encodeName(cu.ndk_parent),
