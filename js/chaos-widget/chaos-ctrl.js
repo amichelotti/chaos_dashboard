@@ -10850,7 +10850,7 @@
 
             };
 
-            items['fold2'] = {
+            items['fold3'] = {
                 "name": "Properties",
                 "items": {
                     'driver-prop': {
