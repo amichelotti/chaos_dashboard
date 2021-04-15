@@ -604,11 +604,16 @@
 
                             break;
                         case 7:
+                                $(e.target).text("Last Log");
+                                vardir = "log";
+    
+                                break;
+                        case 8:
                             $(e.target).text("Stat");
                             vardir = "stat";
 
                             break;
-                        case 8:
+                        case 9:
                             $(e.target).text("All");
                             vardir = "";
 
@@ -621,9 +626,9 @@
 
                     }
                     let chnum = showdataset;
-                    if (showdataset == 7) {
+                    if (showdataset == 8) {
                         chnum = 128;
-                    } else if (chnum > 7) {
+                    } else if (chnum > 8) {
                         chnum = -1;
                     }
 
