@@ -8,7 +8,7 @@
     // library jquery chaos control studio
     var jqccs = {};
     var json_editor;
-    var dashboard_settings = null;
+    var dashboard_settings = initSettings();
     var interface;
     var cu_copied = {};
     var us_copied = {};
@@ -11361,31 +11361,64 @@
     jqccs.generateScraperTable = function (tmpObj) {
         return generateScraperTable(tmpObj);
     }
+    jqccs.parseDefaultConfig=function(name){
+        return parseDefaultConfig(name);
+    }
+    
+    function parseDefaultConfig(name){
+        var config={}
+        
+        jQuery.ajax({
+            url: name,
+            success: function(json) {
+                
+                for(var k in json.properties){
+                    if(json.properties[k].hasOwnProperty("$ref")){
+                        config[k]=jqccs.parseDefaultConfig(json.properties[k]["$ref"]);
+                    } else if(json.properties[k].hasOwnProperty('default')){
+                        config[k]=json.properties[k].default;
+                    }
 
-
-    function initSettings() {
-        var sett = localStorage['chaos_dashboard_settings'];
-        if (!sett || sett == "null") {
-            $.getJSON("dashboard-settings-def.json", function (json) {
-                console.log("Default Settings: " + JSON.stringify(json));
-                localStorage['chaos_dashboard_settings'] = JSON.stringify(json);
-                dashboard_settings = json;
-            });
-            dashboard_settings['current_page'] = 0;
-        } else {
-            dashboard_settings = JSON.parse(sett);
-            $.getJSON("dashboard-settings-def.json", function (json) {
-                dashboard_settings = addNewKeys(dashboard_settings, json);
-                localStorage['chaos_dashboard_settings'] = JSON.stringify(dashboard_settings);
-            });
+                }                
+            },
+            async:false
+          });
+          return config;
+    }
+    function parseDefaultConfig(name){
+    }
+    function initSettings(setname,defaultconf) {
+        var dashboard_settings={};
+        if(setname == undefined){
+            setname='chaos_dashboard_settings';
         }
-        dashboard_settings['current_page'] = 0;
-
+        if(defaultconf == undefined){
+            defaultconf="dashboard-settings.json";
+        }
+        var sett = localStorage[setname];
+        if (!sett || sett == "null") {
+            dashboard_settings=parseDefaultConfig(defaultconf);
+            localStorage[setname] = JSON.stringify(dashboard_settings);
+  
+        } else {
+            
+            dashboard_settings = JSON.parse(sett);
+            // check if there is some new property
+            var defconf=parseDefaultConfig(defaultconf);
+            for(var k in defconf){
+                if(!dashboard_settings.hasOwnProperty(k)){
+                    
+                    dashboard_settings[k]=defconf[k];
+                }
+            }
+            localStorage[setname] = JSON.stringify(dashboard_settings);            
+        }
+        return dashboard_settings;
 
     }
 
-    jqccs.initSettings = function () {
-        initSettings();
+    jqccs.initSettings = function (setname,defaultconf) {
+        return initSettings(setname,defaultconf);
     }
     $.fn.chaosDashboard = function (opt) {
         main_dom = this;
@@ -11450,7 +11483,6 @@
                     'custom': {}
                 }
             };
-            initSettings();
 
 
             /* Transform to HTML */

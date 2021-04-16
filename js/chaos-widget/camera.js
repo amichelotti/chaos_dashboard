@@ -1,6 +1,145 @@
 
 var selectedCams = [];
 var stateObj = {};
+function buildSelected(list,sel){
+  var selopt='<option value="NOCAMERA" selected="selected">No camera</option>';
+  
+  list.forEach((ele,index)=>{
+  /*if(index==sel){
+    selopt+= '<option value="'+ele+'" selected="selected">'+ele+'</option>';
+
+  } else*/ {
+    selopt+= '<option value="'+ele+'">'+ele+'</option>';
+  }
+  });
+  return selopt;
+}
+var mapcamera={};
+var mappedcamera={};
+
+function buildCameraArray(id,row,col){
+  var tablename = id;
+
+  var tmpObj={
+    maxCameraCol:col || 2,
+    cameraPerRow:row || 2
+  };
+  var html = '<table class="table table-striped" id="' + tablename + '">';
+    var hostWidth = $(window).width();
+    var hostHeight = $(window).height();
+    var maxwidth = Math.trunc(hostWidth / tmpObj.maxCameraCol);
+    var maxheight = Math.trunc(hostHeight / tmpObj.cameraPerRow);
+    var pe = $("#push_enable").is(":checked");
+    var list_cu=jchaos.search("", "ceu", true, {'interface':"camera"});
+    var cnt=0;
+    for(var r=0;r<row;r++){
+      html += '<tr class="row_element" height="' + maxheight + 'px" id=camera-"' + r  +'">';
+
+      for(var c=0;c<col;c++,cnt++){
+        var encoden=r+"_"+c;
+        html += '<td class="cameraMenu" width="' + maxwidth + 'px" id="camera-' + encoden+'">';
+        html += '<div>';
+        html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/logo_chaos_col_xMg_icon.ico" />';
+        html += '</div>';
+        html += '<div id="info-' + encoden + '"></div>';
+
+        html += '<div>';
+
+        html += '<select class="camselect" id="select-'+encoden+'" vid="'+encoden+'">';
+        html +=buildSelected(list_cu,cnt);
+        html += '</select>';
+
+        html += '</div></td>';
+      }
+      html += "</tr>";
+
+  }
+  html += "</table>";
+
+  return html;
+}
+
+var cameralist=[],cameralistold=[];
+
+$.fn.buildCameraArray=function(row,col){
+  this.html(buildCameraArray("table-"+this.attr('id'),row,col));
+  var old_tim = {}, counter = {}, tcum = {};
+
+  $(".camselect").on("change",(ev)=>{
+    var vid=ev.currentTarget.id.split('-');
+    console.log("change "+vid[1]+" :"+ev.currentTarget.value);
+    $("#cameraImage-" + vid[1]).attr("src", "/../img/chaos_wait_big.gif");
+
+    if(ev.currentTarget.value=="NOCAMERA"){
+      delete mappedcamera[mapcamera[vid[1]]];
+      delete mapcamera[vid[1]];
+      $("#cameraImage-" + vid[1]).attr("src", "/../img/logo_chaos_col_xMg_icon.ico");
+
+    } else {
+      mapcamera[vid[1]]=ev.currentTarget.value;
+      mappedcamera[ev.currentTarget.value]=vid[1];
+     // console.log(JSON.stringify(mapcamera));
+    }
+    cameralist=[];
+    for(var k in mappedcamera){
+      var id = mappedcamera[k];
+
+      cameralist.push(k);
+      old_tim[id]=0;
+      counter[id]=0;
+      tcum[id]=0;
+
+    }
+    if(cameralist.length){
+
+    if ((jchaos.socket != null) && (jchaos.socket.connected)) {
+      if(cameralistold.length){
+        jchaos.iosubscribeCU(cameralistold, false, ["o"]);
+      }
+      jchaos.iosubscribeCU(cameralist, true, ["o"]);
+      cameralistold=cameralist;
+      jchaos.options['io_onconnect'] = (s) => {
+          console.log("resubscribe ..")
+
+          jchaos.iosubscribeCU(cameralist, true, ["o"]);
+        }
+        jchaos.options['io_onmessage'] = (ds) => {
+
+
+          var id = mappedcamera[ds.ndk_uid];
+          var start = Date.now();
+          if (ds.dpck_ds_type == 0) {
+            // output
+            if (old_tim[id]) {
+              if ((counter[id] % 1000) == 0) {
+                tcum[id] = 0;
+                counter[id] = 1;
+              } else {
+                counter[id]++;
+              }
+              tcum[id] += (start - old_tim[id]);
+
+            }
+            old_tim[id] = start;
+
+
+            // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
+            $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+            let freq = 1000.0 * counter[id] / tcum[id];
+            let lat = start - ds.dpck_ats;
+            if (ds.WIDTH !== undefined) {
+              $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
+            } else {
+              $("#info-" + id).html("frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
+
+            }
+          } 
+        }
+
+    }
+    }
+  });
+}
 
 function showHisto(msghead, cuname, refresh, channel) {
   var update;

@@ -7,56 +7,9 @@
 				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
 					<ul class="navbar-nav mr-auto">
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Chaos</a>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="./index.php"><i class="halflings-icon home"></i>
-									CU/EU</a>
-								<a class="dropdown-item" href="./chaos_jshell.php"><i class="halflings-icon edit"></i>
-									Control Shell</a>
-								<a class="dropdown-item" href="./process.php"><i class="halflings-icon cog"></i>
-									Process
-									View</a>
-								<a class="dropdown-item" href="./chaos_node.php"><i class="halflings-icon wrench"></i>
-									Node Management(Experimental)</a>
-								<a class="dropdown-item" href="./chaos_node_table.php"><i
-										class="halflings-icon pencil"></i> Node Management</a>
-								<a class="dropdown-item" href="./configuration.php"><i
-										class=" halflings-icon cloud"></i> Configuration</a>
-							</div>
-						</li>
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tools</a>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="javascript:handle_script()" id="hscript-management"><i
-										class="halflings-icon cog"></i> Scripts</a>
-								<a class="dropdown-item" href="javascript:handle_graph()" id="hgraph"><i
-										class="halflings-icon stats-bar"></i> Graph</a>
-								<a class="dropdown-item" href="javascript:handle_snap()" id="hsnap-management"><i
-										class="halflings-icon tag"></i> Snapshot</a>
-								<a class="dropdown-item" href="javascript:handle_log()" id="hlog"><i
-										class="halflings-icon list"></i>Log</a>
-								<a class="dropdown-item" href="javascript:handle_chat()" id="hchat"><i
-										class="halflings-icon list"></i>Message chat</a>
-
-							</div>
-						</li>
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
+							<a class="nav-link dropdown-toggle" id="app-setting"
 								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</a>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="login.html"><i class="halflings-icon off"></i>
-									Login</a>
-								<a class="dropdown-item" id="config-settings"><i class="halflings-icon off"></i>
-									Config..</a>
-								<a class="dropdown-item" id="help-clients"><i class="halflings-icon off"></i>
-									Client
-									List..</a>
-								<a class="dropdown-item" id="help-about"><i class="halflings-icon off"></i>
-									About..</a>
-
-							</div>
+							
 						</li>
 					</ul>
 				
@@ -64,10 +17,9 @@
 				
 				<a class="navbar-brand col-sm-8" href="#">
 					<div class="row">
-						<h2 class="display2 col-sm align-items-left">!CHAOS
-							Dashboard</h2>
+						<h2 class="display2 col-sm align-items-left" id="app-name"></h2>
 						<div class="col-sm">
-							<?php echo file_get_contents("version.html");?>
+							<?php echo file_get_contents("../version.html");?>
 						</div>
 						
 					</div>
@@ -90,15 +42,7 @@
 		</div>
 	</div>
 </div>
-<div class="btn-group btn-breadcrumb">
-	<a href="./index.php" class="btn btn-default"><i class="glyphicon glyphicon-home"></i></a>
-	<a href="./index.php" id="CUEU" class="btn btn-default">CU/EU</a>
-	<a href="./chaos_jshell.php" id="SHELL" class="btn btn-default">Control Shell</a>
-	<a href="./process.php" id="PROCESS" class="btn btn-default">Process</a>
-	<a href="./chaos_node.php" id="NODE" class="btn btn-default">Node Management</a>
-	<a href="./configuration.php" id="CONFIG" class="btn btn-default">Configuration</a>
 
-</div>
 </div>
 <script>
 	$("#push_enable").prop('disabled',true);
@@ -1141,11 +1085,7 @@
 		});
 	}
 	
-	var dashboard_settings=jqccs.initSettings();
-	dashboard_settings['current_page'] = 0;
-
-	jqccs['dashboard_settings']=dashboard_settings;
-
+	jqccs.initSettings();
 	$("#help-about").on("click", function () {
                 jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
                     //alert("version:"+JSON.stringify(ver));
@@ -1167,30 +1107,5 @@
                     alert("Cannot retrive Client List");
                 });
             });
-	$("#config-settings").on("click", function () {
-                var templ = {
-                    $ref: "dashboard-settings.json",
-                    format: "tabs"
-                }
-				var def={}
-				jqccs.initSettings();
-
-                var def = JSON.parse(localStorage['chaos_dashboard_settings']);
-                jqccs.jsonEditWindow("Config", templ, def, function (d) {
-                    localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
-                    var e = jQuery.Event('keypress');
-                    e.which = 13;
-                    e.keyCode = 13;
-                    if(d.hasOwnProperty("defaultRestTimeout")){
-                        jchaos.setOptions({ "timeout": d.defaultRestTimeout });
-                    } else {
-                        jchaos.setOptions({ "timeout": 10000 });
-
-                    }
-
-                    $("#search-chaos").trigger(e);
-                }, null);
-
-            });
-
+	
 </script>
