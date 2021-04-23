@@ -1153,7 +1153,9 @@ require_once('header.php');
 							"separator_after": false,
 							label: "Show Dataset",
 							action: function () {
-								jqccs.showDataset(node.data.ndk_uid, node.data.ndk_uid, 1000);
+								var dashboard_settings=jqccs.initSettings();
+
+								jqccs.showDataset(node.data.ndk_uid, node.data.ndk_uid, dashboard_settings['generalRefresh']);
 
 							}
 						}

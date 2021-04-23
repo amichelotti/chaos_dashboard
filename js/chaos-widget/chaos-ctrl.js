@@ -10780,7 +10780,9 @@
                     'show-dataset': {
                         name: "Show/Set/Plot Dataset",
                         callback: function (itemKey, opt, e) {
-                            showDataset(currsel, currsel, 1000, tmpObj);
+                            var dashboard_settings=jqccs.initSettings();
+
+                            showDataset(currsel, currsel, dashboard_settings['generalRefresh'], tmpObj);
                         }
                     },
                     'show-desc': {

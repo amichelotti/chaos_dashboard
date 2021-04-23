@@ -1178,7 +1178,8 @@
                 var def = JSON.parse(localStorage['chaos_dashboard_settings']);
                 jqccs.jsonEditWindow("Config", templ, def, function (d) {
                     localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
-                    var e = jQuery.Event('keypress');
+                    console.log("Save settings:"+ocalStorage['chaos_dashboard_settings']);
+					var e = jQuery.Event('keypress');
                     e.which = 13;
                     e.keyCode = 13;
                     if(d.hasOwnProperty("defaultRestTimeout")){
