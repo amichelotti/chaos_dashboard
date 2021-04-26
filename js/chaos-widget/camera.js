@@ -94,22 +94,23 @@ $.fn.buildCameraArray=function(row,col){
 
     if ((jchaos.socket != null) && (jchaos.socket.connected)) {
       if(cameralistold.length){
-        jchaos.iosubscribeCU(cameralistold, false, ["o"]);
+        jchaos.iosubscribeCU(cameralistold, false);
       }
-      jchaos.iosubscribeCU(cameralist, true, ["o"]);
+      jchaos.iosubscribeCU(cameralist, true);
       cameralistold=cameralist;
       jchaos.options['io_onconnect'] = (s) => {
           console.log("resubscribe ..")
 
-          jchaos.iosubscribeCU(cameralist, true, ["o"]);
+          jchaos.iosubscribeCU(cameralist, true);
         }
         jchaos.options['io_onmessage'] = (ds) => {
 
 
-          var id = mappedcamera[ds.ndk_uid];
-          var start = Date.now();
+          
           if (ds.dpck_ds_type == 0) {
             // output
+            var id = mappedcamera[ds.ndk_uid];
+          var start = Date.now();
             if (old_tim[id]) {
               if ((counter[id] % 1000) == 0) {
                 tcum[id] = 0;
@@ -510,8 +511,8 @@ function rebuildCam(tmpObj) {
     var pe = $("#push_enable").is(":checked");
 
     if (pe && (jchaos.socket != null) && (jchaos.socket.connected)) {
-      jchaos.iosubscribeCU(tmpObj.elems, false, ["o"]);
-      jchaos.iosubscribeCU(selectedCams, true, ["o"]);
+      jchaos.iosubscribeCU(tmpObj.elems, false);
+      jchaos.iosubscribeCU(selectedCams, true);
 
     }
     selectedCams.forEach(function (key) {
@@ -962,8 +963,8 @@ function getWidget() {
         jchaos.options['io_onconnect'] = (s) => {
           console.log("resubscribe ..")
 
-          jchaos.iosubscribeCU(cu, true, ["i", "healt", "a", "w", "s"]);
-          jchaos.iosubscribeCU(selectedCams, true, ["o"]);
+          jchaos.iosubscribeCU(cu, true);
+          jchaos.iosubscribeCU(selectedCams, true);
           onConnectServer();
         }
         jchaos.options['io_onmessage'] = (ds) => {
@@ -1004,7 +1005,7 @@ function getWidget() {
 
           }
         }
-        jchaos.iosubscribeCU(cu, true, ["i", "healt", "a", "w", "s"]);
+        jchaos.iosubscribeCU(cu, true);
 
 
 
