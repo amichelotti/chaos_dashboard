@@ -997,6 +997,10 @@ function getWidget() {
               $("#info-" + id).html("frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
 
             }
+            delete ds.FRAMEBUFFER;
+            tmpObj['data'] = [jchaos.chaosDatasetToFullDS(ds)];
+            jqccs.updateGenericTableDataset(tmpObj);
+
           } else {
             tmpObj['data'] = [jchaos.chaosDatasetToFullDS(ds)];
             //console.log("Not output:"+JSON.stringify(tmpObj['data']));

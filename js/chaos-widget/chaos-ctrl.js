@@ -7585,246 +7585,254 @@
         });
         return ret;
     }
+    jqccs.updateSingleNode=function (el){
+        return updateSingleNode(el);
+    }
+    function updateSingleNode(el,options){
+        try {
+            var name_device_db, name_id;
+            var status;
+            if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid"))) { //if el health
+                name_device_db = el.health.ndk_uid;
+                name_id = jchaos.encodeName(name_device_db);
+                el.systTime = Number(el.health.nh_st).toFixed(3);
+                el.usrTime = Number(el.health.nh_ut).toFixed(3);
+                el.tmStamp = Number(el.health.dpck_ats);
 
+                el.tmUtm = jchaos.toHHMMSS(el.health.nh_upt);
+                status = el.health.nh_status;
+                $("#" + name_id + "_health_uptime").html(el.tmUtm);
+                $("#" + name_id + "_health_timestamp").html(jchaos.getDateTime(el.tmStamp));
+                $("#" + name_id + "_health_usertime").html(el.usrTime);
+                $("#" + name_id + "_health_systemtime").html(el.systTime);
+                $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
+                if (el.health.hasOwnProperty("cuh_dso_size")) {
+                    var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
+                    $("#" + name_id + "_health_pband").html(band.toFixed(3));
+                }
+                /*
+                if (tmpObj.off_line === undefined) {
+                    tmpObj['off_line'] = {};
+                    tmpObj['off_line'][name_device_db] = 0;
+                }
+                if ((status != "Unload") && (status != "Fatal Error")) {
+                    switch (tmpObj.off_line[name_device_db]) {
+                        case 1:
+                            status = "Dead";
+                            break;
+                        case 2:
+                            status = "Checking";
+                            break;
+
+                    }
+                }
+*/
+                $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
+
+
+                if (status == 'Start') {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">play_arrow</i>');
+                } else if (status == 'Stop') {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:orange">stop</i>');
+                } else if (status == 'Calibrating') {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">assessment</i>');
+                } else if (status == 'Init') {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:yellow">trending_up</i>');
+
+                } else if (status == 'Deinit') {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">trending_down</i>');
+
+                } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
+                    $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" cuname="' + name_device_db + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
+                    $("#" + name_id + "_health_status").attr('title', "Device status:'" + status + "' " + el.health.nh_lem);
+
+                } else if (status == "Unload") {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">power</i>');
+
+
+                } else if (status == "Load") {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons verde" style="color:green">power</i>');
+
+                } /*else if (tmpObj.off_line[name_device_db] == 2) {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons">update</i>');
+
+                }*/ else {
+                    $("#" + name_id + "_health_status").html('<i class="material-icons red">block</i>');
+
+                }
+            }
+            if (el.hasOwnProperty('system') /*&& (tmpObj.off_line[name_device_db] == 0)*/) { //if el system
+                var busy = $.trim(el.system.busy);
+                var dev_alarm = Number(el.system.cudk_dalrm_lvl);
+                var cu_alarm = Number(el.system.cudk_calrm_lvl);
+                if (dev_alarm == 1) {
+                    $("#" + name_id + "_system_device_alarm").attr('title', "Device Warning");
+                    $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
+                } else if (dev_alarm == 2) {
+                    $("#" + name_id + "_system_device_alarm").attr('title', "Device Error");
+                    $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
+                } else {
+                    $("#" + name_id + "_system_device_alarm").html('');
+                }
+
+                if (cu_alarm == 1) {
+                    $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
+
+                    $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="material-icons" style="color:yellow">error_outline</i></a>');
+                } else if (cu_alarm == 2) {
+                    $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
+
+                    $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i  class="material-icons" style="color:red">error_outline</i></a>');
+                } else {
+                    $("#" + name_id + "_system_cu_alarm").html('');
+                }
+
+                if (el.system.hasOwnProperty("running_cmd_alias")) {
+                    var cmd_state = el.system.running_cmd_alias;
+                    if (el.system.hasOwnProperty("cudk_set_tag") && el.system.hasOwnProperty("cudk_set_state")) {
+                        if (el.system.cudk_set_state == 3) {
+                            cmd_state = el.system.running_cmd_alias + " (<b>" + el.system.cudk_set_tag + "</b>)";
+                        } else if (el.system.cudk_set_state < 0) {
+                            cmd_state = el.system.running_cmd_alias + ' (<font color="red">' + el.system.cudk_set_tag + '</font>)';
+                        } else {
+                            if (updateGenericTableDataset.count & 1) {
+                                cmd_state = el.system.running_cmd_alias + ' (<font color="yellow"><b>' + el.system.cudk_set_tag + '</b></font>)';
+                            } else {
+                                cmd_state = el.system.running_cmd_alias + ' (<font color="orange"><b>' + el.system.cudk_set_tag + '</b></font>)';
+
+                            }
+                        }
+                    }
+                    if (busy == "true") {
+                        if (updateGenericTableDataset.count & 1) {
+                            $("#" + name_id + "_system_current_command").html("<b>" + cmd_state + "</b>");
+                        } else {
+                            $("#" + name_id + "_system_current_command").html(cmd_state);
+                        }
+                    } else {
+                        $("#" + name_id + "_system_current_command").html(cmd_state);
+                    }
+                } else {
+                    $("#" + name_id + "_system_current_command").html("NA");
+                }
+                $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
+
+                if (status == 'Start') {
+                    if (updateGenericTableDataset.count & 1) {
+                        if (el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
+                            $("#" + name_id + "_health_status").html('<i class="material-icons verde" style="color:green">videocam</i>');
+                            $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
+                        } else if (el.system.hasOwnProperty("dsndk_storage_type") && (el.system.dsndk_storage_type & 0x1)) {
+                            $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">save</i>');
+                        }
+                    }
+                }
+
+
+
+                if (busy == 'true') {
+                    $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:" + el.system.running_cmd_alias);
+                    if (updateGenericTableDataset.count & 1) {
+                        $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons" style="color:green">hourglass_empty</i>');
+                    } else {
+                        $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons" style="color:green">hourglass_full</i>');
+                    }
+                } else {
+                    $("#" + name_id + "_system_busy").html('');
+                }
+                if (el.system.hasOwnProperty("dp_sys_unit_type") && (el.system.dp_sys_unit_type == "nt_script_eu")) {
+                    $("#" + name_id + "_system_bypass").attr('title', "Script EU")
+                    $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">settings</i>');
+                } else {
+                    if (el.system.hasOwnProperty("cudk_bypass_state")) {
+                        if (el.system.cudk_bypass_state == false) {
+                            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">usb</i>');
+                            $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
+
+                        } else {
+                            $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
+
+                            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
+                        }
+                    } else if (!el.system.hasOwnProperty("dp_sys_unit_type") || (el.system.dp_sys_unit_type != "nt_rt_cu")) {
+                        $("#" + name_id + "_system_bypass").attr('title', "Rest CU")
+                        $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">http</i>');
+                    }
+                }
+            }
+
+            /*if (el.hasOwnProperty("output")){
+                var lat=el.output.dpck_mds_ats-el.output.dpck_ats;
+                if(typeof lat === "number"){
+                    $("#" + name_id + "_latenza").html(lat);
+                } else {
+                    $("#" + name_id + "_latenza").html("NA");
+
+                }
+
+            }*/
+            for (var dstype of ["output", "input", "custom"]) {
+                if (el.hasOwnProperty(dstype) && (el[dstype].hasOwnProperty("ndk_uid"))) {
+                    name_device_db = el[dstype].ndk_uid;
+                    name_id = jchaos.encodeName(name_device_db);
+
+                    for (var key in el[dstype]) {
+                        var val = el[dstype][key];
+                        var val_saved;
+                        var selector = "#" + name_id + "_" + dstype + "_" + key;
+                        var selector_save = "#" + name_id + "_" + dstype + "_saved_" + key;
+                        if ((cu_name_to_saved != null) && (cu_name_to_saved[name_device_db] != null) && (cu_name_to_saved[name_device_db][dstype] != null)) {
+                            val_saved = cu_name_to_saved[name_device_db][dstype][key];
+                            if (val_saved != null) {
+                                html_save = val_saved;
+                            }
+                        }
+                        var html = "NA";
+                        var html_save = "";
+                        if (typeof val === "number") {
+
+                            var attr = $(selector).attr('digits');
+                            var digits = 3;
+
+                            if (typeof attr !== typeof undefined && attr !== false) {
+                                digits = attr;
+
+                            }
+                            html = val.toFixed(digits)
+                        } else if (typeof val !== "object") {
+                            html = val;
+                        }
+                        if(options!==undefined && options.hasOwnProperty('htmlFn')){
+                        if (options.htmlFn.hasOwnProperty(dstype) &&
+                        options.htmlFn[dstype].hasOwnProperty(key) && (typeof options.htmlFn[dstype][key] === "function")) {
+                            html = options.htmlFn[dstype][key](val);
+                            if ((val_saved != null)) {
+                                html_save = options.htmlFn[dstype][key](val_saved);
+
+                            }
+                        }
+                    }
+                        $(selector).html(html);
+                        if ($(selector_save).length) {
+                            $(selector_save).html(html_save);
+
+                        }
+
+                    }
+                }
+            }
+
+        } catch (e) {
+            console.log(name_device_db + " warning :", e);
+        }
+    }
     function updateCUDS(tmpObj) {
         if (tmpObj.data == null || !(tmpObj.data instanceof Array)) {
             return;
         }
         var cu = tmpObj.data;
         cu.forEach(function (el) {
-            try {
-                var name_device_db, name_id;
-                var status;
-                if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid"))) { //if el health
-                    name_device_db = el.health.ndk_uid;
-                    name_id = jchaos.encodeName(name_device_db);
-                    el.systTime = Number(el.health.nh_st).toFixed(3);
-                    el.usrTime = Number(el.health.nh_ut).toFixed(3);
-                    el.tmStamp = Number(el.health.dpck_ats);
-
-                    el.tmUtm = jchaos.toHHMMSS(el.health.nh_upt);
-                    status = el.health.nh_status;
-                    $("#" + name_id + "_health_uptime").html(el.tmUtm);
-                    $("#" + name_id + "_health_timestamp").html(jchaos.getDateTime(el.tmStamp));
-                    $("#" + name_id + "_health_usertime").html(el.usrTime);
-                    $("#" + name_id + "_health_systemtime").html(el.systTime);
-                    $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
-                    if (el.health.hasOwnProperty("cuh_dso_size")) {
-                        var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
-                        $("#" + name_id + "_health_pband").html(band.toFixed(3));
-                    }
-                    if (tmpObj.off_line === undefined) {
-                        tmpObj['off_line'] = {};
-                        tmpObj['off_line'][name_device_db] = 0;
-                    }
-                    if ((status != "Unload") && (status != "Fatal Error")) {
-                        switch (tmpObj.off_line[name_device_db]) {
-                            case 1:
-                                status = "Dead";
-                                break;
-                            case 2:
-                                status = "Checking";
-                                break;
-
-                        }
-                    }
-
-                    $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
-
-
-                    if (status == 'Start') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">play_arrow</i>');
-                    } else if (status == 'Stop') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:orange">stop</i>');
-                    } else if (status == 'Calibrating') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">assessment</i>');
-                    } else if (status == 'Init') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:yellow">trending_up</i>');
-
-                    } else if (status == 'Deinit') {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">trending_down</i>');
-
-                    } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
-                        $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" cuname="' + name_device_db + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
-                        $("#" + name_id + "_health_status").attr('title', "Device status:'" + status + "' " + el.health.nh_lem);
-
-                    } else if (status == "Unload") {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:red">power</i>');
-
-
-                    } else if (status == "Load") {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons verde" style="color:green">power</i>');
-
-                    } else if (tmpObj.off_line[name_device_db] == 2) {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons">update</i>');
-
-                    } else {
-                        $("#" + name_id + "_health_status").html('<i class="material-icons red">block</i>');
-
-                    }
-                }
-                if (el.hasOwnProperty('system') && (tmpObj.off_line[name_device_db] == 0)) { //if el system
-                    var busy = $.trim(el.system.busy);
-                    var dev_alarm = Number(el.system.cudk_dalrm_lvl);
-                    var cu_alarm = Number(el.system.cudk_calrm_lvl);
-                    if (dev_alarm == 1) {
-                        $("#" + name_id + "_system_device_alarm").attr('title', "Device Warning");
-                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
-                    } else if (dev_alarm == 2) {
-                        $("#" + name_id + "_system_device_alarm").attr('title', "Device Error");
-                        $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
-                    } else {
-                        $("#" + name_id + "_system_device_alarm").html('');
-                    }
-
-                    if (cu_alarm == 1) {
-                        $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
-
-                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="material-icons" style="color:yellow">error_outline</i></a>');
-                    } else if (cu_alarm == 2) {
-                        $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
-
-                        $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i  class="material-icons" style="color:red">error_outline</i></a>');
-                    } else {
-                        $("#" + name_id + "_system_cu_alarm").html('');
-                    }
-
-                    if (el.system.hasOwnProperty("running_cmd_alias")) {
-                        var cmd_state = el.system.running_cmd_alias;
-                        if (el.system.hasOwnProperty("cudk_set_tag") && el.system.hasOwnProperty("cudk_set_state")) {
-                            if (el.system.cudk_set_state == 3) {
-                                cmd_state = el.system.running_cmd_alias + " (<b>" + el.system.cudk_set_tag + "</b>)";
-                            } else if (el.system.cudk_set_state < 0) {
-                                cmd_state = el.system.running_cmd_alias + ' (<font color="red">' + el.system.cudk_set_tag + '</font>)';
-                            } else {
-                                if (updateGenericTableDataset.count & 1) {
-                                    cmd_state = el.system.running_cmd_alias + ' (<font color="yellow"><b>' + el.system.cudk_set_tag + '</b></font>)';
-                                } else {
-                                    cmd_state = el.system.running_cmd_alias + ' (<font color="orange"><b>' + el.system.cudk_set_tag + '</b></font>)';
-
-                                }
-                            }
-                        }
-                        if (busy == "true") {
-                            if (updateGenericTableDataset.count & 1) {
-                                $("#" + name_id + "_system_current_command").html("<b>" + cmd_state + "</b>");
-                            } else {
-                                $("#" + name_id + "_system_current_command").html(cmd_state);
-                            }
-                        } else {
-                            $("#" + name_id + "_system_current_command").html(cmd_state);
-                        }
-                    } else {
-                        $("#" + name_id + "_system_current_command").html("NA");
-                    }
-                    $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
-
-                    if (status == 'Start') {
-                        if (updateGenericTableDataset.count & 1) {
-                            if (el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
-                                $("#" + name_id + "_health_status").html('<i class="material-icons verde" style="color:green">videocam</i>');
-                                $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
-                            } else if (el.system.hasOwnProperty("dsndk_storage_type") && (el.system.dsndk_storage_type & 0x1)) {
-                                $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">save</i>');
-                            }
-                        }
-                    }
-
-
-
-                    if (busy == 'true') {
-                        $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd + " cmd:" + el.system.running_cmd_alias);
-                        if (updateGenericTableDataset.count & 1) {
-                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons" style="color:green">hourglass_empty</i>');
-                        } else {
-                            $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons" style="color:green">hourglass_full</i>');
-                        }
-                    } else {
-                        $("#" + name_id + "_system_busy").html('');
-                    }
-                    if (el.system.hasOwnProperty("dp_sys_unit_type") && (el.system.dp_sys_unit_type == "nt_script_eu")) {
-                        $("#" + name_id + "_system_bypass").attr('title', "Script EU")
-                        $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">settings</i>');
-                    } else {
-                        if (el.system.hasOwnProperty("cudk_bypass_state")) {
-                            if (el.system.cudk_bypass_state == false) {
-                                $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">usb</i>');
-                                $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
-
-                            } else {
-                                $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
-
-                                $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
-                            }
-                        } else if (!el.system.hasOwnProperty("dp_sys_unit_type") || (el.system.dp_sys_unit_type != "nt_rt_cu")) {
-                            $("#" + name_id + "_system_bypass").attr('title', "Rest CU")
-                            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons" style="color:green">http</i>');
-                        }
-                    }
-                }
-
-                /*if (el.hasOwnProperty("output")){
-                    var lat=el.output.dpck_mds_ats-el.output.dpck_ats;
-                    if(typeof lat === "number"){
-                        $("#" + name_id + "_latenza").html(lat);
-                    } else {
-                        $("#" + name_id + "_latenza").html("NA");
-
-                    }
-
-                }*/
-                for (var dstype of ["output", "input", "custom"]) {
-                    if (el.hasOwnProperty(dstype) && (el[dstype].hasOwnProperty("ndk_uid"))) {
-                        name_device_db = el[dstype].ndk_uid;
-                        name_id = jchaos.encodeName(name_device_db);
-
-                        for (var key in el[dstype]) {
-                            var val = el[dstype][key];
-                            var val_saved;
-                            var selector = "#" + name_id + "_" + dstype + "_" + key;
-                            var selector_save = "#" + name_id + "_" + dstype + "_saved_" + key;
-                            if ((cu_name_to_saved != null) && (cu_name_to_saved[name_device_db] != null) && (cu_name_to_saved[name_device_db][dstype] != null)) {
-                                val_saved = cu_name_to_saved[name_device_db][dstype][key];
-                                if (val_saved != null) {
-                                    html_save = val_saved;
-                                }
-                            }
-                            var html = "NA";
-                            var html_save = "";
-                            if (typeof val === "number") {
-
-                                var attr = $(selector).attr('digits');
-                                var digits = tmpObj.digits;
-
-                                if (typeof attr !== typeof undefined && attr !== false) {
-                                    digits = attr;
-
-                                }
-                                html = val.toFixed(digits)
-                            } else if (typeof val !== "object") {
-                                html = val;
-                            }
-                            if (tmpObj.htmlFn.hasOwnProperty(dstype) &&
-                                tmpObj.htmlFn[dstype].hasOwnProperty(key) && (typeof tmpObj.htmlFn[dstype][key] === "function")) {
-                                html = tmpObj.htmlFn[dstype][key](val);
-                                if ((val_saved != null)) {
-                                    html_save = tmpObj.htmlFn[dstype][key](val_saved);
-
-                                }
-                            }
-                            $(selector).html(html);
-                            if ($(selector_save).length) {
-                                $(selector_save).html(html_save);
-
-                            }
-
-                        }
-                    }
-                }
-
-            } catch (e) {
-                console.log(name_device_db + " warning :", e);
-            }
+              updateSingleNode(el,tmpObj);     
         });
     }
 
