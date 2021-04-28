@@ -3402,7 +3402,8 @@
     // the interface has all the main elements
     function updateInterfaceCU(tmpObj) {
         var template = tmpObj.type;
-        var descs = jchaos.getDesc(tmpObj['elems'], null);
+//var descs = jchaos.getDesc(tmpObj['elems'], null);
+        var descs = jchaos.node(tmpObj['elems'], "desc","all");
         if (descs instanceof Array) {
             descs.forEach(function (elem, id) {
                 var name = tmpObj['elems'][id];

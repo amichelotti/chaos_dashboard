@@ -103,7 +103,7 @@
 <script>
 	$("#push_enable").prop('disabled',true);
 
-	function onConnectServer(){
+	function onConnectServer(s){
 		$("#server-connection-status").removeClass("indicator-nok");
 		$("#server-connection-status").addClass("indicator-ok");
 		$("#push_enable").prop('disabled',false);
@@ -117,7 +117,7 @@
 	}
 	$("#client-connection-id").html("<font size=\"1\">"+localStorage['chaos_browser_uuid_cookie'].substr(localStorage['chaos_browser_uuid_cookie'].length - 5) +"</font>");
 	jchaos.options['io_onconnect'] = (s) => {
-		onConnectServer();
+		onConnectServer(s);
     }
 	jchaos.options['io_disconnect']=(sock)=> {
 		onDisconnectServer();
