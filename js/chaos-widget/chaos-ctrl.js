@@ -11396,8 +11396,7 @@
           });
           return config;
     }
-    function parseDefaultConfig(name){
-    }
+    
     function initSettings(setname,defaultconf) {
         var dashboard_settings={};
         if(setname == undefined){
