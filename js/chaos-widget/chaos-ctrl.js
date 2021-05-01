@@ -665,7 +665,7 @@
                             $(e.target).text("Dec(s)");
                     }
                     let chnum = showdataset;
-                    if (showdataset == 7) {
+                    if (showdataset == 8) {
                         chnum = 128;
                     } else if (chnum > 7) {
                         chnum = -1;
@@ -717,7 +717,7 @@
                     }
                     if ((!stop_update) && (isediting == false)) {
                         var chnum = showdataset;
-                        if (showdataset == 7) {
+                        if (showdataset == 8) {
                             chnum = 128;
                         } else if (chnum > 7) {
                             chnum = -1;
