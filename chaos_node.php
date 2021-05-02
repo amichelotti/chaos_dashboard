@@ -1434,11 +1434,10 @@ require_once('header.php');
 						var healt = bruninfo[0].health;
 						if ((healt.dpck_ats !== undefined) && ((Math.abs(healt.dpck_ats - (new Date()).getTime())) < 10000)) {
 							//$("#"+node.id).addClass("bg-success");
-							jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
 								//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
 								//node_data = Object.assign(bi, node_data);
 
-								var nd = Object.assign({}, { build: bi }, { state: bruninfo[0] }, { info: node_data });
+								var nd = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
 								var elem = bruninfo[0];
 								if ((elem.system !== undefined) && (elem.system.ndk_uid !== undefined)) {
 									var dev_alarm = Number(elem.system.cudk_dalrm_lvl);
@@ -1469,16 +1468,7 @@ require_once('header.php');
 
 
 
-							}, bad => {
-								// no build info
-								//node_data = Object.assign(bi, node_data);
-								var nd = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
-								$('#desc_view').html(jqccs.json2html(nd));
-								jqccs.jsonSetup($('#desc_view'), function (e) {
-								});
-								$('#desc_view').find('a.json-toggle').click();
-
-							})
+							
 						} else {
 							$("#" + node.id).removeClass("bg-success");
 
