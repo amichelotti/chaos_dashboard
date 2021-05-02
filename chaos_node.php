@@ -1846,10 +1846,7 @@ require_once('header.php');
 
 			}
 			jchaos.search(filter, "ceu", alive, sopt, (culist) => {
-				/*var roots = jchaos.search(filter, "root", alive);
-				if ((roots instanceof Array) && (roots.length > 0)) {
-					culist = culist.concat(roots);
-				}*/
+				
 				if ((culist.length == 0) && (typeof handler === "function")) {
 					handler(jsree_data);
 				}

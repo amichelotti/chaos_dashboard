@@ -47,7 +47,7 @@
 	},
 	"defaultRestTimeout" : {
 		"type":"integer",
-		"default":10000,
+		"default":20000,
 		"description":"Default Timeout Rest operation (ms)"
 	},
 	"camera":{
