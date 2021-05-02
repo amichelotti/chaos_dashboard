@@ -1178,7 +1178,7 @@
                 var def = JSON.parse(localStorage['chaos_dashboard_settings']);
                 jqccs.jsonEditWindow("Config", templ, def, function (d) {
                     localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
-                    console.log("Save settings:"+ocalStorage['chaos_dashboard_settings']);
+                    console.log("Save settings:"+localStorage['chaos_dashboard_settings']);
 					var e = jQuery.Event('keypress');
                     e.which = 13;
                     e.keyCode = 13;
