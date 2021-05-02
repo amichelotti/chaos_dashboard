@@ -206,8 +206,11 @@ require_once('header.php');
 								$("#" + iname + "_devalarm").html('');
 							}
 							if ((healt.dpck_ats !== undefined)) {
-
-								if ((Math.abs(healt.dpck_ats - now) < 10000)) {
+								var ts=healt.dpck_ats;
+								if(healt.hasOwnProperty("dpck_mds_ats")){
+									ts=healt.dpck_mds_ats;
+								}
+								if ((Math.abs(ts - now) < 10000)) {
 									isalive = true;
 								} else if (node_old_state[uid] !== undefined && node_state[uid] !== undefined) {
 									if ((node_state[uid].dpck_ats !== undefined) && (node_old_state[uid].dpck_ats !== undefined)) {

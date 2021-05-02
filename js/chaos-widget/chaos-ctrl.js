@@ -4510,8 +4510,12 @@
             var name;
             if (elem.hasOwnProperty("dpck_ats")) {
                 curr_time = elem.dpck_ats;
-            } else if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("dpck_ats")) {
-                curr_time = elem.health.dpck_ats;
+            } else if (elem.hasOwnProperty("health")){
+                if(elem.health.hasOwnProperty("dpck_mds_ats")){
+                    curr_time = elem.health.dpck_mds_ats;
+                } else if(elem.health.hasOwnProperty("dpck_ats")){
+                    curr_time = elem.health.dpck_ats;
+                }
             } else if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("dpck_ats")) {
                 curr_time = elem.output.dpck_ats;
             }
@@ -11385,7 +11389,7 @@
                 
                 for(var k in json.properties){
                     if(json.properties[k].hasOwnProperty("$ref")){
-                        config[k]=jqccs.parseDefaultConfig(json.properties[k]["$ref"]);
+                        config[k]=parseDefaultConfig(json.properties[k]["$ref"]);
                     } else if(json.properties[k].hasOwnProperty('default')){
                         config[k]=json.properties[k].default;
                     }
