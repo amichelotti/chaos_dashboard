@@ -176,12 +176,16 @@
 						language = "LUA";
 					}
 					var group = "";
+					if(node.hasOwnProperty("data")&&node.data.hasOwnProperty("group")){
+						group=node.data.group;
+					} else {
 					var zone_selected = $("#zones option:selected").val();
 
-					if (typeof zone_selected === "string") {
-						group = zone_selected;
-					} else {
-						group = "ALL";
+						if ((typeof zone_selected === "string")&&(!zone_selected.includes("--"))) {
+							group = zone_selected;
+						} else {
+							group = "ALL";
+						}
 					}
 					if (node['group'] !== undefined) {
 						group = node['group'];
