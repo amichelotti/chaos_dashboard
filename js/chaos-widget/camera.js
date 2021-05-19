@@ -64,7 +64,8 @@ function buildCameraArray(id, row, col) {
     maxCameraCol: col || 2,
     cameraPerRow: row || 2
   };
-  var html = '<table class="table table-striped" id="' + tablename + '">';
+ // var html = '<table class="table" id="' + tablename + '">';
+ var html="";
   var hostWidth = $(window).width();
   var hostHeight = $(window).height();
   var maxwidth = Math.trunc(hostWidth / tmpObj.maxCameraCol);
@@ -75,11 +76,14 @@ function buildCameraArray(id, row, col) {
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
   var cnt = 0;
   for (var r = 0; r < row; r++) {
-    html += '<tr class="row_element" height="' + maxheight + 'px" id=camera-"' + r + '">';
+    html += '<div class="row">';
+    //html += '<tr class="d-flex" id=camera-"' + r + '">';
 
     for (var c = 0; c < col; c++, cnt++) {
       var encoden = r + "_" + c;
-      html += '<td class="cameraMenu" width="' + maxwidth + 'px" id="camera-' + encoden + '">';
+     // html += '<td id="camera-' + encoden + '">';
+      html += '<div class="col">';
+
       html += '<div>';
       html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/logo_chaos_col_xMg_icon.ico" />';
       html += '</div>';
@@ -87,16 +91,20 @@ function buildCameraArray(id, row, col) {
 
       html += '<div>';
 
-      html += '<select class="camselect" id="select-' + encoden + '" vid="' + encoden + '">';
+      html += '<select class="camselect chaos_image" id="select-' + encoden + '" vid="' + encoden + '">';
       html += buildSelected(list_cu, cnt);
       html += '</select>';
 
-      html += '</div></td>';
+      html += '</div>';
+      //html += '</td>';
+      html += '</div>'; //col
+
     }
-    html += "</tr>";
+   // html += "</tr>";
+   html += "</div>";// row
 
   }
-  html += "</table>";
+  //html += "</table>";
 
   return html;
 }
@@ -146,9 +154,6 @@ $.fn.buildCameraArray = function (row, col) {
           jchaos.iosubscribeCU(cameralist, true);
         }
         jchaos.options['io_onmessage'] = (ds) => {
-
-
-
           if (ds.dpck_ds_type == 0) {
             // output
             var id = mappedcamera[ds.ndk_uid];
@@ -163,12 +168,14 @@ $.fn.buildCameraArray = function (row, col) {
               tcum[id] += (start - old_tim[id]);
 
             }
-            old_tim[id] = start;
 
 
             // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
             $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
             let freq = 1000.0 * counter[id] / tcum[id];
+          //  let freq = 1000.0 / (start-old_tim[id]);
+            old_tim[id] = start;
+
             let lat = start - ds.dpck_ats;
             if (ds.WIDTH !== undefined) {
               $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
@@ -569,8 +576,8 @@ function rebuildCam(tmpObj) {
   var cnt = 0;
   var tablename = "main_table-" + tmpObj.template;
 
-  var html = '<table class="table table-striped" id="' + tablename + '">';
-
+  //var html = '<table class="table table-striped" id="' + tablename + '">';
+  var html="";//'<div class="container">';
   if (selectedCams instanceof Array) {
     var hostWidth = $(window).width();
     var hostHeight = $(window).height();
@@ -583,45 +590,43 @@ function rebuildCam(tmpObj) {
       jchaos.iosubscribeCU(selectedCams, true);
 
     }
-    console.log("Rebuild Camera Array:"+tmpObj.cameraPerRow+"x"+tmpObj.maxCameraCol+ " maxwidth:"+maxwidth);
+    console.log("Rebuild Camera Array camera per row:"+tmpObj.cameraPerRow);
 
     selectedCams.forEach(function (key) {
-      if (cnt < tmpObj.maxCameraCol) {
         var encoden = jchaos.encodeName(key);
         if ((cnt % tmpObj.cameraPerRow) == 0) {
-          if (cnt > 0) {
-            html += "</tr>"
-          }
-          html += '<tr class="row_element" height="' + maxheight + 'px" id=camera-row"' + cnt + '">';
+          html +='<div class="row">';
+        //  html += '<tr class="row_element" height="' + maxheight + 'px" id=camera-row"' + cnt + '">';
         }
-        html += '<td class="cameraMenu" style="width:' + maxwidth + 'px" id="camera-' + encoden + '" cuname="' + key + '" >'
+       // html += '<td class="cameraMenu" style="width:' + maxwidth + 'px" id="camera-' + encoden + '" cuname="' + key + '" >'
         //   html += '<div><b>'+key+'</b>';
-        html += '<div>';
+        html +='<div class="col cameraMenu" cuname="' + key + '">';
+
         if (selectedCams.length > 1) {
-          html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
-          //   html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="" />';
+          html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
         } else {
           html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
 
         }
-        //                html += '<div class="row">';
-
         html += '<div>' + key + '</div>';
         html += '<div id="info-' + encoden + '"></div>';
 
-        //               html += '</div></div></div>';
-        html += '</div></div>';
-
+        html += '</div>'; // close col
+        
         cnt++;
-      }
+        if ((selectedCams.lengt==1)||((cnt % tmpObj.cameraPerRow) == 0)) {
+          html +='</div>'; // close row
+        //  html += '<tr class="row_element" height="' + maxheight + 'px" id=camera-row"' + cnt + '">';
+        }
+      
     });
 
-    if (cnt > 0) {
-      html += "</tr>";
-
-    }
+    
+    //  html += "</tr>";
+   // html += "</div>"; //container
+    
   }
-  html += "</table>";
+  //html += "</table>";
   $("#cameraTable").html(html);
 
   selectedCams.forEach(function (key) {
@@ -1168,26 +1173,28 @@ function getWidget() {
         jchaos.options['io_onmessage'] = (ds) => {
 
 
-          var id = jchaos.encodeName(ds.ndk_uid);
-          var start = Date.now();
+          let id = jchaos.encodeName(ds.ndk_uid);
           if (ds.dpck_ds_type == 0) {
+            let start = Date.now();
+
             // output
             if (old_tim[id]) {
-              if ((counter[id] % 1000) == 0) {
-                tcum[id] = 0;
+              if ((counter[id] % 100) == 0) {
                 counter[id] = 1;
+                tcum[id] =0;
               } else {
                 counter[id]++;
               }
               tcum[id] += (start - old_tim[id]);
 
             }
-            old_tim[id] = start;
+            
 
 
             // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
             $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
-            let freq = 1000.0 * counter[id] / tcum[id];
+           // let freq = 1000.0 * counter[id] / tcum[id];
+            let freq = 1000.0 / (start-old_tim[id]);
             let lat = start - ds.dpck_ats;
             if (ds.WIDTH !== undefined) {
               $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
@@ -1195,6 +1202,8 @@ function getWidget() {
               $("#info-" + id).html("frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
 
             }
+            old_tim[id] = start;
+
             delete ds.FRAMEBUFFER;
             tmpObj['data'] = [jchaos.chaosDatasetToFullDS(ds)];
             jqccs.updateGenericTableDataset(tmpObj);

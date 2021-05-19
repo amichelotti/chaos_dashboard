@@ -132,10 +132,14 @@ a:hover {
 }
 
 .chaos_image{
-  width: auto;
-  height: 100%;
+  width: 100%;
+  height: auto;
 }
 
+.chaos_image_max{
+  max-width: 100%;
+  height: auto;
+}
 .chaosrow{
   overflow:hidden; /*make sure the wrapper has no dimension*/
   margin-bottom:10px;
