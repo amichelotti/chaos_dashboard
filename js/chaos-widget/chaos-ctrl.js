@@ -2451,6 +2451,7 @@
             $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
 
         });
+        
 
     }
 
@@ -6943,13 +6944,19 @@
         var interface = $("#classe option:selected").val();
         var element_selected = $("#elements option:selected").val();
         var zone_selected = $("#zones option:selected").val();
+       // var zone_selected = $("#zones").val();
         var state = $("#errorState option:selected").val();
-
         dashboard_settings['last_alive'] = alive;
-        dashboard_settings['last_interface'] = interface;
-        dashboard_settings['last_group'] = element_selected;
-        dashboard_settings['last_zone'] = zone_selected;
-        localStorage['chaos_dashboard_settings'] = JSON.stringify(dashboard_settings);
+        if(interface!=undefined){
+            dashboard_settings['last_interface'] = interface;
+        }
+        if(element_selected!= undefined && element_selected!="--Select--"){
+            dashboard_settings['last_group'] = element_selected;
+        }
+        if(zone_selected!= undefined && zone_selected!="--Select--"){
+            dashboard_settings['last_zone'] = zone_selected;
+        }
+        localStorage.setItem('chaos_dashboard_settings', JSON.stringify(dashboard_settings));
 
         var search_string = "";
         if ((typeof GetURLParameter('ALIVE') === "string") && (GetURLParameter('ALIVE') != "")) {
@@ -7037,7 +7044,73 @@
         });
 
     }
+    function setDefaultsQuery(){
+        var defzone = "";
+        var defgroup = "";
+        var definterface = "";
+        
+        if ((typeof GetURLParameter('ZONE') === "string") && (GetURLParameter('ZONE') != "")) {
+            defzone = GetURLParameter('ZONE');
+        } else {
+            if (dashboard_settings.hasOwnProperty("defaultZone") && (dashboard_settings.defaultZone != "") && (dashboard_settings.defaultZone != "ALL")) {
+                defzone = dashboard_settings.defaultZone;
 
+            } else if (dashboard_settings.hasOwnProperty("last_zone") && (dashboard_settings.last_zone != "")) {
+                defzone = dashboard_settings.last_zone;
+
+            }
+        }
+        if ((typeof GetURLParameter('GROUP') === "string") && (GetURLParameter('GROUP') != "")) {
+            defgroup = GetURLParameter('GROUP');
+        } else {
+            if (dashboard_settings.hasOwnProperty("defaultGroup") && (dashboard_settings.defaultGroup != "")) {
+                defgroup = dashboard_settings.defaultGroup;
+
+            } else if (dashboard_settings.hasOwnProperty("last_group") && (dashboard_settings.last_group != "")) {
+                defgroup = dashboard_settings.last_group;
+
+            }
+        }
+        if ((typeof GetURLParameter('CLASS') === "string") && (GetURLParameter('CLASS') != "")) {
+            definterface = GetURLParameter('CLASS');
+        } else {
+            if (dashboard_settings.hasOwnProperty("defaultInterface") && (dashboard_settings.defaultInterface != "")) {
+                definterface = dashboard_settings.defaultInterface;
+            } else if (dashboard_settings.hasOwnProperty("last_interface") && (dashboard_settings.last_interface != "")) {
+                definterface = dashboard_settings.last_interface;
+
+            }
+        }
+        if (defzone != "") {
+            $("#zones option[value=\"" + defzone + "\"]").attr('selected', true);
+         //$("#zones select").val(defzone);
+            $("#zones").val(defzone);
+           // $("#zones").val(defzone);
+            console.log("Default Zone:"+defzone);
+        }
+        if (defgroup != "") {
+            console.log("Default Group:"+defgroup);
+            $("#elements option[value=\"" + defgroup + "\"]").attr('selected', true);
+            $("#elements").val(defgroup);
+
+           /* jchaos.search((defzone == "ALL") ? "" : defzone, "class", true, (cl) => {
+
+                element_sel('#elements', cl, 1);
+
+            });*/
+        }
+        if (definterface != "") {
+            $("#classe option[value=\"" + definterface + "\"]").attr('selected', true);
+           // $("#classe").val(definterface);
+            console.log("Default Interface:"+definterface);
+
+        }
+        
+        if (defzone != "" || defgroup != "" || definterface != "") {
+            return true;
+        }
+        return false;
+    }
     function mainCU(tmpObj) {
         var list_cu = [];
         var classe = ["powersupply", "motor", "camera", "bpm"];
@@ -7048,7 +7121,16 @@
         var alive = ($("[name=search-alive]:checked").val() == "true");
         jchaos.search("", "zone", alive, (zon) => {
             element_sel('#zones', zon, 1);
+            
+            if(setDefaultsQuery()){
+                var zone_selected = $("#zones option:selected").val();
 
+                jchaos.search(zone_selected, "class", alive, function (ll) {
+                    element_sel('#elements', ll, 1);
+                });
+                updateNodeEvent();
+    
+            }
         });
 
 
@@ -7064,11 +7146,12 @@
             }
         });
         element_sel('#classe', classe, 1);
-
+        
         $("#zones").change(function () {
             var zone_selected;
             var zone_selected = $("#zones option:selected").val();
             $("#search-chaos").val("");
+            var alive = ($("[name=search-alive]:checked").val() == "true");
 
             if (zone_selected == "--Select--") { //Disabilito la select dei magneti se non � selezionata la zona
                 $("#elements").attr('disabled', 'disabled');
@@ -7110,6 +7193,7 @@
             buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
         });
+
         $("#classe").change(function () {
             dashboard_settings.current_page = 0;
             $("#search-chaos").val("");
@@ -7161,13 +7245,16 @@
         var defzone = "";
         var defgroup = "";
         var definterface = "";
+        
         if ((typeof GetURLParameter('ZONE') === "string") && (GetURLParameter('ZONE') != "")) {
             defzone = GetURLParameter('ZONE');
         } else {
             if (dashboard_settings.hasOwnProperty("defaultZone") && (dashboard_settings.defaultZone != "") && (dashboard_settings.defaultZone != "ALL")) {
                 defzone = dashboard_settings.defaultZone;
+
             } else if (dashboard_settings.hasOwnProperty("last_zone") && (dashboard_settings.last_zone != "")) {
                 defzone = dashboard_settings.last_zone;
+
             }
         }
         if ((typeof GetURLParameter('GROUP') === "string") && (GetURLParameter('GROUP') != "")) {
@@ -7175,8 +7262,10 @@
         } else {
             if (dashboard_settings.hasOwnProperty("defaultGroup") && (dashboard_settings.defaultGroup != "")) {
                 defgroup = dashboard_settings.defaultGroup;
+
             } else if (dashboard_settings.hasOwnProperty("last_group") && (dashboard_settings.last_group != "")) {
                 defgroup = dashboard_settings.last_group;
+
             }
         }
         if ((typeof GetURLParameter('CLASS') === "string") && (GetURLParameter('CLASS') != "")) {
@@ -7186,31 +7275,39 @@
                 definterface = dashboard_settings.defaultInterface;
             } else if (dashboard_settings.hasOwnProperty("last_interface") && (dashboard_settings.last_interface != "")) {
                 definterface = dashboard_settings.last_interface;
+
             }
         }
         if (defzone != "") {
-            $("#zones option[value=\"" + defzone + "\"]").prop('selected', true);
+            $("#zones option[value=\"" + defzone + "\"]").attr('selected', true);
+         //$("#zones select").val(defzone);
             //$("#zones").val(defzone);
-
+           // $("#zones").val(defzone);
+            console.log("Default Zone:"+defzone);
         }
         if (defgroup != "") {
+            console.log("Default Group:"+defgroup);
+
             jchaos.search((defzone == "ALL") ? "" : defzone, "class", true, (cl) => {
 
                 element_sel('#elements', cl, 1);
 
-                $("#elements option[value=\"" + defgroup + "\"]").prop('selected', true);
+                $("#elements option[value=\"" + defgroup + "\"]").attr('selected', true);
+                $("#elements").val(defgroup);
             });
         }
         if (definterface != "") {
-            $("#classe option[value=\"" + definterface + "\"]").prop('selected', true);
-            $("#classe").val(definterface);
+            $("#classe option[value=\"" + definterface + "\"]").attr('selected', true);
+           // $("#classe").val(definterface);
+            console.log("Default Interface:"+definterface);
 
         }
         if (defzone != "" || defgroup != "" || definterface != "") {
-            buildInterfaceFromPagedSearch(tmpObj, "ceu");
+            updateNodeEvent();
+           // buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
         }
-
+       
     }
 
 
@@ -11412,7 +11509,7 @@
         var sett = localStorage[setname];
         if (!sett || sett == "null") {
             dashboard_settings=parseDefaultConfig(defaultconf);
-            localStorage[setname] = JSON.stringify(dashboard_settings);
+            localStorage.setItem(setname, JSON.stringify(dashboard_settings));
   
         } else {
             
@@ -11425,7 +11522,7 @@
                     dashboard_settings[k]=defconf[k];
                 }
             }
-            localStorage[setname] = JSON.stringify(dashboard_settings);            
+            localStorage.setItem(setname, JSON.stringify(dashboard_settings));            
         }
         return dashboard_settings;
 

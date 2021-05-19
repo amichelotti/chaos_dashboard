@@ -1149,7 +1149,7 @@
 	dashboard_settings['current_page'] = 0;
 
 	jqccs['dashboard_settings']=dashboard_settings;
-
+	
 	$("#help-about").on("click", function () {
                 jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
                     //alert("version:"+JSON.stringify(ver));
@@ -1192,8 +1192,8 @@
                         jchaos.setOptions({ "timeout": 10000 });
 
                     }
-
-                    $("#search-chaos").trigger(e);
+					return 0;// close window
+                //    $("#search-chaos").trigger(e);
                 }, null);
 
             });

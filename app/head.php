@@ -101,7 +101,7 @@ function getUserIP() {
         jchaos.setOptions({"uri":location.host+":8081","socketio":location.host+":4000"});
 		var url_server =  location.host; //"chaosdev-webui1.chaos.lnf.infn.it";
 		var n_port = "8081";
-		jchaos.ioconnect(location.host+":4000",{query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":9000}});
+		jchaos.ioconnect(location.host+":4000",{query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":1000}});
 		jchaos.options.io_onchat=(msg)=>{
 			
 			chat_incoming_message.dispatchEvent(new CustomEvent("chat_incoming_message", {detail:msg}));

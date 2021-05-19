@@ -131,6 +131,11 @@ a:hover {
   border-radius: 50%;
 }
 
+.chaos_image{
+  width: auto;
+  height: 100%;
+}
+
 .chaosrow{
   overflow:hidden; /*make sure the wrapper has no dimension*/
   margin-bottom:10px;
