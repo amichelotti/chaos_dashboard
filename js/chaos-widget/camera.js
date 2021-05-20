@@ -632,9 +632,21 @@ function rebuildCam(tmpObj) {
   selectedCams.forEach(function (key) {
     var encoden = jchaos.encodeName(key);
 
-    $("#cameraImage-" + encoden).on('click', function () {
-     cropEnable(key,tmpObj);
-    })
+    $("#cameraImage-" + encoden).on('click', function (e) {
+      var offset = $(this).offset();
+        var x = (e.pageX - offset.left);
+          var y = (e.pageY - offset.top);
+       // var x = event.pageX - this.offsetLeft;
+       // var y = event.pageY - this.offsetTop;
+        jchaos.setAttribute(key,"REFX",x.toString(),(ok)=>{
+          jchaos.setAttribute(key,"REFY",y.toString(),ok=>{
+            console.log(key+" X Coordinate: " + x + " Y Coordinate: " + y);
+
+          });
+        });
+
+    });
+
   });
 
   $.contextMenu('destroy', '.cameraMenu');
@@ -646,23 +658,49 @@ function rebuildCam(tmpObj) {
       var name = $(e.currentTarget).attr("cuname");
       var cuitem = {};
       var desc = jchaos.node(name, "desc", "all");
-    /*  cuitem['set-roi'] = {
-        name: "Set Roi " + name ,
+      cuitem['select-area'] = {
+        name: "Select Area..",
         callback: function (cmd, opt, e) {
-          cropEnable(name,tmpObj,(crop_opt)=>{
-            var encoden = jchaos.encodeName(name);
 
-          console.log("CROP_OBJ:" + JSON.stringify(crop_opt));
-          var x = crop_opt.x.toFixed();
-          var y = crop_opt.y.toFixed();
-          var width = crop_opt.width.toFixed();
-          var height = crop_opt.height.toFixed();
-          setRoi(name, width, height, x, y, () => { $("#cameraImage-" + encoden).cropper('destroy'); 
-        });
-
-        });
+          cropEnable(name,tmpObj);
+          
       }
-      };*/
+      };
+        cuitem['auto-reference'] = {
+        name: "Set Auto Reference",
+        callback: function (cmd, opt, e) {
+          jqccs.getEntryWindow("Threashold", "Threashold", 10, "Perform Reference", function (th) {
+            jchaos.command(name, { "act_name": "calibrateNodeUnit","act_msg":{"autoreference":true,"threshold":parseInt(th)} }, function (data) {
+              jqccs.instantMessage("Performing autoreference:" + name, "Sent", 2000, true);
+  
+          }, function (data) {
+              jqccs.instantMessage("ERROR Performing autoreference:" + name, "Error:" + JSON.stringify(data), 5000, false);
+  
+          });
+
+
+        }, "Cancel");
+          
+      }
+      };
+      cuitem['reset-roi'] = {
+        name: "Reset ROI", cu: name,
+        callback: function (itemKey, opt, e) {
+          var name = opt.items[itemKey].cu;
+          var encoden = jchaos.encodeName(name);
+          resetRoi(name,() => {
+            $("#cameraImage-" + encoden).cropper('destroy');
+          });
+
+        }
+      };
+      cuitem['histo-image'] = {
+        name: "Histogram", cu: name,
+        callback: function (itemKey, opt, e) {
+          showHisto("Histogram " + opt.items[itemKey].cu, opt.items[itemKey].cu, 1000, 0);
+
+        }
+      };
       if (tmpObj.hasOwnProperty('crop')) {
         var crop_obj = tmpObj['crop'][name];
         if (typeof crop_obj === "object") {
@@ -697,18 +735,14 @@ function rebuildCam(tmpObj) {
             var x = crop_opt.x + width;
             var y = crop_opt.y + height;
             setReference(crop_opt.cu, x, y, width, height);
-
+            var encoden = jchaos.encodeName(name);
+            $("#cameraImage-" + encoden).cropper('destroy');
           }
+          
         };
 
 
-        cuitem['histo-image'] = {
-          name: "Histogram", cu: name,
-          callback: function (itemKey, opt, e) {
-            showHisto("Histogram " + opt.items[itemKey].cu, opt.items[itemKey].cu, 1000, 0);
-
-          }
-        };
+        
 
         cuitem['exit-crop'] = {
           name: "Exit cropping", cu: name,
@@ -718,19 +752,12 @@ function rebuildCam(tmpObj) {
           }
 
         };
-        cuitem['reset-roi'] = {
-          name: "Reset ROI", cu: name,
-          callback: function (itemKey, opt, e) {
-            var name = opt.items[itemKey].cu;
-            var encoden = jchaos.encodeName(name);
-            resetRoi(name,() => {
-              $("#cameraImage-" + encoden).cropper('destroy');
-            });
+        
 
-          }
-        };
-
-        cuitem['sep1'] = "---------";
+        
+      }
+    }
+      cuitem['sep1'] = "---------";
         var ele = jchaos.getChannel(name, 1, null);
         var el = ele[0];
         for (var k in el) {
@@ -767,8 +794,24 @@ function rebuildCam(tmpObj) {
           }
 
         };
+    /*  cuitem['set-roi'] = {
+        name: "Set Roi " + name ,
+        callback: function (cmd, opt, e) {
+          cropEnable(name,tmpObj,(crop_opt)=>{
+            var encoden = jchaos.encodeName(name);
+
+          console.log("CROP_OBJ:" + JSON.stringify(crop_opt));
+          var x = crop_opt.x.toFixed();
+          var y = crop_opt.y.toFixed();
+          var width = crop_opt.width.toFixed();
+          var height = crop_opt.height.toFixed();
+          setRoi(name, width, height, x, y, () => { $("#cameraImage-" + encoden).cropper('destroy'); 
+        });
+
+        });
       }
-    }
+      };*/
+     
         return {
           items: cuitem
         }

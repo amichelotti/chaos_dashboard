@@ -10885,6 +10885,24 @@
 
             };
             items['fold2'] = {
+                "name": "Restore",
+                "items": {
+                    'restore-default-set': {
+                        name: "Restore Default as setpoint",
+                        callback: function (itemKey, opt, e) {
+                            jchaos.saveDefaultAsSetpoint(currsel, (ok) => {
+                                instantMessage("Default setpoint restored successfully", "", 2000, true);
+                            }, (bad) => {
+                                instantMessage("Error restoring setpoint:", JSON.stringify(bad), 4000, false);
+
+                            });
+                        }
+                    }
+                }
+
+            };
+
+            items['fold3'] = {
                 "name": "Show",
                 "items": {
                     'show-dataset': {
@@ -10967,7 +10985,7 @@
 
             };
 
-            items['fold3'] = {
+            items['fold4'] = {
                 "name": "Properties",
                 "items": {
                     'driver-prop': {
