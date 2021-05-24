@@ -56,8 +56,6 @@
 		    "$ref":"../camera-settings.json",
 		    "title":"Camera Settings",
 			"required": true
-
-		
 	}
 }
 }

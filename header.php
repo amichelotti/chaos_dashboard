@@ -122,6 +122,7 @@
 	jchaos.options['io_disconnect']=(sock)=> {
 		onDisconnectServer();
 	};
+	jchaos.iosubscribeCU("all",false);
 	jchaos.options['on_restTimeout']=(e)=> {
 		var now = (new Date()).getTime();
 

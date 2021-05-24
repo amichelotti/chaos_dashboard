@@ -66,7 +66,7 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/camera.js"></script>';
 
             });
 	
-		$("#main-dashboard").buildCameraArray(settings.camera['cameraPerRow'],settings.camera['maxCameraCol']);
+		$("#main-dashboard").buildCameraArray(settings);
 
 	</script>
 

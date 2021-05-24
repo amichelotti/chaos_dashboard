@@ -22,15 +22,20 @@
 		"default":8,
 		"required": true,
 		"description":"Max Number of simultaneous cameras"
-	},
-	
+	},	
 	"restTimeout" : {
 		"type":"integer",
 		"default":6000,
 		"required": true,
-
 		"description":"Timeout of Rest ops (ms)"
+	},	
+	"debug" : {
+		"type":"boolean",
+		"default":false,
+		"required": true,
+		"description":"Debug info displayed"
 	}
+
 }
 }
     
