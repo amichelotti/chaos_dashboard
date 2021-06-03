@@ -153,8 +153,14 @@ a:hover {
   border:none;
 }
 .insideWrapper{ 
-  width:100%; height:100%; 
+/*  width:100%; height:100%; */
   position:relative;
+  width: 640px;
+  height: 480px;
+  overflow-x:scroll;
+  overflow-y:scroll;     
+    
+  white-space: nowrap;
 }
 .chaosrow{
   overflow:hidden; /*make sure the wrapper has no dimension*/

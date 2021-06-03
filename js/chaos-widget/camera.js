@@ -153,11 +153,12 @@ function buildCameraArray(id, opt) {
     for (var c = 0; c < col; c++, cnt++) {
       var encoden = r + "_" + c;
      // html += '<td id="camera-' + encoden + '">';
-      html += '<div class="col">';
+      html += '<div class="col cameraMenuShort" cuindex="'+encoden+'">';
 
       html += '<div class="insideWrapper">';
       html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/logo_chaos_col_xMg_icon.ico" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
+      html += '</div>';
 
       html += '<div id="info-' + encoden + '"></div>';
 
@@ -166,7 +167,6 @@ function buildCameraArray(id, opt) {
       html += buildSelected(list_cu, cnt);
       html += '</select>';
 
-      html += '</div>';
       //html += '</td>';
       html += '</div>'; //col
 
@@ -203,7 +203,8 @@ $.fn.buildCameraArray = function (opt) {
         }
       }
       mappedcamera[ev.currentTarget.value] = vid[1];
-      
+      activateMenuShort();
+
       // console.log(JSON.stringify(mapcamera));
      // checkRedrawReference(ev.currentTarget.value,vid[1]);
 
@@ -667,9 +668,82 @@ function cropEnable(cu,tmpObj,func){
     }
   });
 }
+function activateMenuShort(){
+  $.contextMenu('destroy', '.cameraMenuShort');
+  $.contextMenu({
+    selector: '.cameraMenuShort',
+    zIndex: 10000,
+    build: function ($trigger, e) {
+      var domid=$(e.currentTarget).attr("cuindex");
+      var name = mapcamera[domid];
+      var cuitem = {};
+      console.log(domid+" Menu for :"+name);
+
+        var ele = jchaos.getChannel(name, 1, null);
+        var el = ele[0];
+        redrawReference(domid,ele[0].REFX,ele[0].REFY,ele[0].REFSX,ele[0].REFSY,ele[0].REFRHO);
+
+        for (var k in el) {
+          if (!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk"))) {
+            var val = el[k];
+            if (typeof el[k] === "object") {
+              val = JSON.stringify(el[k]);
+            }
+            cuitem['set-' + k] = {
+              name: "Set " + k, type: "text", value: val, events: (function (k) {
+                var events = {
+                  keyup: function (e) {
+                    // add some fancy key handling here?
+                    if (e.keyCode == 13) {
+                      jchaos.setAttribute(name, k, e.target.value, function () {
+                        jqccs.instantMessage("Setting ", "\"" + k + "\"=\"" + e.target.value + "\" sent", 3000);
+                        if(name=="REFX"){
+                          redrawReference(domid,e.target.value);
+                        }
+                        if(name=="REFY"){
+                          redrawReference(domid,undefined,e.target.value);
+                        }
+                        if(name=="REFSX"){
+                          redrawReference(domid,undefined,undefined,e.target.value);
+                        }
+                        if(name=="REFSY"){
+                          redrawReference(domid,undefined,undefined,undefined,e.target.value);
+                        }
+                        if(name=="REFRHO"){
+                          console.log("Setting RHO:"+e.target.value);
+                          redrawReference(domid,undefined,undefined,undefined,undefined,e.target.value);
+                        }
+                      });
+                    }
+                  }
+                }
+                return events;
+              })(k)
+            }
+          }
+        }
+
+
+
+        cuitem['sep2'] = "---------";
+
+        cuitem['quit'] = {
+          name: "Quit", icon: function () {
+            return 'context-menu-icon context-menu-icon-quit';
+          }
+
+        };
+    
+     
+        return {
+          items: cuitem
+        }
+      }
+
+    });
+}
 function activateMenu(tmpObj){
   $.contextMenu('destroy', '.cameraMenu');
-
   $.contextMenu({
     selector: '.cameraMenu',
     zIndex: 10000,
@@ -906,15 +980,15 @@ function rebuildCam(tmpObj) {
         html += '<div class="insideWrapper">';
 
         if (selectedCams.length > 1) {
-          html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
+          html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
         } else {
           html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
         }
         html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
-       
+        html += '</div>';
+
         html += '<div>' + key + '</div>';
         html += '<div id="info-' + encoden + '"></div>';
-        html += '</div>';
         html += '</div>'; // close col
         
         cnt++;
