@@ -348,6 +348,7 @@ require_once('header.php');
 								}
 
 							}
+							if(impl!="---"){
 							if (impl != "") {
 								list_impl.push(impl);
 								if (cu_template != null) {
@@ -366,6 +367,15 @@ require_once('header.php');
 								}
 
 							}
+							for (var k in cudb) {
+								for (var im in cudb[k]) {
+
+									if (im != impl) {
+										list_impl.push(cudb[k][im].info.impl);
+									}
+								}
+							}
+						}
 							if ((glist instanceof Array) && (glist.length > 0)) {
 								templ['properties']['group'].enum = glist;
 							} else {
@@ -377,14 +387,7 @@ require_once('header.php');
 
 								};
 							}
-							for (var k in cudb) {
-								for (var im in cudb[k]) {
-
-									if (im != impl) {
-										list_impl.push(cudb[k][im].info.impl);
-									}
-								}
-							}
+							
 							if ((ob.ndk_uid !== undefined) && (typeof ob.ndk_uid == "string")) {
 								if (jchaos.pathToZoneGroupId(ob.ndk_uid) != null) {
 									//valid path change 
@@ -617,7 +620,7 @@ require_once('header.php');
 						label: menu_str + "New Custom",
 						action: function () {
 							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
-
+							obj['control_unit_implementation']="---";// custom
 							addEditCU(cu, tree);
 						}
 					}

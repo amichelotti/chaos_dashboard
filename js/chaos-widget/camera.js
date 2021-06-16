@@ -2,6 +2,8 @@
 var selectedCams = [];
 var stateObj = {};
 var cameraDriverDesc={};
+var cameraLayoutSettings={};
+
 function checkRedrawReference(camid,domid,x,y,sx,sy,r){
   jchaos.getChannel(camid,1,(ele)=>{
     let xx,yy,sxx,syy,rro;
@@ -26,7 +28,7 @@ function redrawReference(domid,x,y,sx,sy,r){
       canvas.height = $("#cameraImage-"+domid).height();
       let natwidth=$("#cameraImage-"+domid).prop('naturalWidth');
       let natheight=$("#cameraImage-"+domid).prop('naturalHeight');
-
+     
       const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     console.log("canvas width:"+canvas.width + " height:"+canvas.height+" original img size:"+natwidth+"x"+natheight+" offsetTop:" +canvas.offsetTop + " offsetLeft:"+canvas.offsetLeft+" offsetW:"+canvas.offsetWidth + " offsetH:"+canvas.offsetHeight);
@@ -155,7 +157,7 @@ function buildCameraArray(id, opt) {
      // html += '<td id="camera-' + encoden + '">';
       html += '<div class="col cameraMenuShort" cuindex="'+encoden+'">';
 
-      html += '<div class="insideWrapper">';
+      html += '<div class="insideWrapper" id="insideWrapper-'+encoden+'">';
       html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/logo_chaos_col_xMg_icon.ico" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '</div>';
@@ -678,11 +680,32 @@ function activateMenuShort(){
       var name = mapcamera[domid];
       var cuitem = {};
       console.log(domid+" Menu for :"+name);
-
+      var currzoomm=1.0;
+      if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid].hasOwnProperty("zoom")){
+        currzoomm=cameraLayoutSettings[domid]["zoom"];
+      }
         var ele = jchaos.getChannel(name, 1, null);
         var el = ele[0];
         redrawReference(domid,ele[0].REFX,ele[0].REFY,ele[0].REFSX,ele[0].REFSY,ele[0].REFRHO);
-
+        cuitem['zoom-in'] = {
+          name: "Zoom In "+(currzoomm+0.5), cu: name,
+          callback: function (itemKey, opt, e) {
+            zoomInOut(domid,0.5);
+          }
+        };
+        cuitem['zoom-out'] = {
+          name: "Zoom Out "+(currzoomm-0.5), cu: name,
+          callback: function (itemKey, opt, e) {
+            zoomInOut(domid,-0.5);
+          }
+        };
+        cuitem['zoom-reset'] = {
+          name: "Zoom Reset", cu: name,
+          callback: function (itemKey, opt, e) {
+            var name = opt.items[itemKey].cu;
+            zoomInOut(name,0);
+          }
+        };
         for (var k in el) {
           if (!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk"))) {
             var val = el[k];
@@ -742,6 +765,33 @@ function activateMenuShort(){
 
     });
 }
+function zoomInOut(name,incr){
+  var currzoom=1.0;
+  if(cameraLayoutSettings.hasOwnProperty(name)){
+      if(cameraLayoutSettings[name].hasOwnProperty("zoom")){
+        currzoom=cameraLayoutSettings[name]["zoom"];
+      } else {
+        cameraLayoutSettings[name]["zoom"]=currzoom;
+      }
+  } else{
+    cameraLayoutSettings[name]={"zoom":currzoom};
+
+  }
+  if(incr==0){
+    currzoom=1.0;
+  } else {
+    currzoom+=incr;
+
+  }
+  cameraLayoutSettings[name]["zoom"]=currzoom;
+  var encoden = jchaos.encodeName(name);
+  console.log(name+" Zooming "+currzoom);
+
+//  $("#insideWrapper-"+encoden).css("transform","scale("+currzoom+")");
+  $("#cameraImage-"+encoden).css("transform","scale("+currzoom+")");
+  $("#cameraImageCanv-"+encoden).css("transform","scale("+currzoom+")");
+
+}
 function activateMenu(tmpObj){
   $.contextMenu('destroy', '.cameraMenu');
   $.contextMenu({
@@ -751,6 +801,11 @@ function activateMenu(tmpObj){
       var name = $(e.currentTarget).attr("cuname");
       var cuitem = {};
       var desc = jchaos.node(name, "desc", "all");
+      var currzoomm=1.0;
+      if(cameraLayoutSettings.hasOwnProperty(name)&&cameraLayoutSettings[name].hasOwnProperty("zoom")){
+        currzoomm=cameraLayoutSettings[name]["zoom"];
+      }
+
       cuitem['select-area'] = {
         name: "Select Area..",
         callback: function (cmd, opt, e) {
@@ -758,6 +813,28 @@ function activateMenu(tmpObj){
           cropEnable(name,tmpObj);
           
       }
+      };
+      cuitem['zoom-in'] = {
+        name: "Zoom In "+(currzoomm+0.5), cu: name,
+        callback: function (itemKey, opt, e) {
+          var name = opt.items[itemKey].cu;
+          zoomInOut(name,0.5);
+        }
+      };
+      cuitem['zoom-out'] = {
+        name: "Zoom Out "+(currzoomm-0.5), cu: name,
+        callback: function (itemKey, opt, e) {
+          var name = opt.items[itemKey].cu;
+          var encoden = jchaos.encodeName(name);
+          zoomInOut(name,-0.5);
+        }
+      };
+      cuitem['zoom-reset'] = {
+        name: "Zoom Reset", cu: name,
+        callback: function (itemKey, opt, e) {
+          var name = opt.items[itemKey].cu;
+          zoomInOut(name,0);
+        }
       };
         cuitem['auto-reference'] = {
         name: "Set Auto Reference",
@@ -977,7 +1054,7 @@ function rebuildCam(tmpObj) {
        // html += '<td class="cameraMenu" style="width:' + maxwidth + 'px" id="camera-' + encoden + '" cuname="' + key + '" >'
         //   html += '<div><b>'+key+'</b>';
         html +='<div class="col cameraMenu" cuname="' + key + '">';
-        html += '<div class="insideWrapper">';
+        html += '<div class="insideWrapper" id="insideWrapper-'+encoden+'">';
 
         if (selectedCams.length > 1) {
           html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
@@ -1016,12 +1093,17 @@ function rebuildCam(tmpObj) {
         activateMenu(tmpObj);
         $("#cameraImageCanv-" + encoden).on('dblclick', function (e) {
           var offset = $(this).offset();
-            var x = (e.pageX - offset.left);
-              var y = (e.pageY - offset.top);
+          var currzoomm=1.0;
+            if(cameraLayoutSettings.hasOwnProperty(key)&&cameraLayoutSettings[key].hasOwnProperty("zoom")){
+              currzoomm=cameraLayoutSettings[key]["zoom"];
+            }
+            var x = (e.pageX - offset.left)/currzoomm;
+              var y = (e.pageY - offset.top)/currzoomm;
+              
            // var x = event.pageX - this.offsetLeft;
            // var y = event.pageY - this.offsetTop;
-           jqccs.confirm("Reference Change", "Do you want change to :" + x.toFixed(1)+"x"+y.toFixed(1), "Ok", function () {
-    
+           jqccs.confirm("Reference Change", "Do you want change to :" + x.toFixed(1)+"x"+y.toFixed(1) + " Zoom:"+currzoomm, "Ok", function () {
+            
             jchaos.setAttribute(key,"REFX",x.toString(),(ok)=>{
               jchaos.setAttribute(key,"REFY",y.toString(),ok=>{
                 console.log(key+" X Coordinate: " + x + " Y Coordinate: " + y);
@@ -1490,6 +1572,14 @@ function getWidget() {
   return chaos;
 }
 function setReference(cu, x, y, width, height) {
+  /*var currzoomm=1.0;
+  if(cameraLayoutSettings.hasOwnProperty(key)&&cameraLayoutSettings[key].hasOwnProperty("zoom")){
+    currzoomm=cameraLayoutSettings[key]["zoom"];
+  }
+  x=x/currzoomm;
+  y=y/currzoomm;
+  width=width/currzoomm;
+  height=height/currzoomm;*/
   jchaos.setAttribute(cu, "REFX", String(x.toFixed()), function () {
     jchaos.setAttribute(cu, "REFY", String(y.toFixed()), function () {
       jchaos.setAttribute(cu, "REFSX", String(width.toFixed()), function () {

@@ -10997,6 +10997,7 @@
                                 jqccs.editJSON("Driver Properties " + currsel, data[0], (json, fupdate) => {
                 
                                     var changed = {};
+                                    console.log("CHANGED:"+JSON.stringify(jchaos.jsonDiff(json,origin_json)));
                                     for (var key in json) {
                 
                                         if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
