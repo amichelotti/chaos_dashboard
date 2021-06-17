@@ -10996,15 +10996,15 @@
                                 var origin_json = JSON.parse(JSON.stringify(data[0])); // not reference
                                 jqccs.editJSON("Driver Properties " + currsel, data[0], (json, fupdate) => {
                 
-                                    var changed = {};
-                                    console.log("CHANGED:"+JSON.stringify(jchaos.jsonDiff(json,origin_json)));
-                                    for (var key in json) {
+                                    var changed = jchaos.jsonDiff(json,origin_json);
+                                    console.log("CHANGED:"+JSON.stringify(changed));
+                                    /*for (var key in json) {
                 
                                         if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
                                             changed[key] = json[key];
                 
                                         }
-                                    }
+                                    }*/
                                     var msg = {
                                         "act_msg": changed,
                                         "act_name": "cu_prop_drv_set"

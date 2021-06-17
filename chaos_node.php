@@ -128,55 +128,14 @@ require_once('header.php');
 		});
 		setInterval(function () {
 			var now = (new Date()).getTime();
-			if (node_list.length > 0) {
+				for (var i=0; i<node_list.length; i+=100) {
+    					var node_chunk = node_list.slice(i,i+100);
 
-				jchaos.node(node_list, "health", "", function (run_info) {
+				jchaos.node(node_chunk, "health", "", function (run_info) {
 
 					run_info.forEach((elem, index) => {
 						var isalive = false;
-						/*	if ((elem.system !== undefined) && (elem.system.ndk_uid !== undefined)){
-								var dev_alarm = Number(elem.system.cudk_dalrm_lvl);
-								var cu_alarm = Number(elem.system.cudk_calrm_lvl);
-								var name_id = jchaos.encodeName(elem.system.ndk_uid);
-								var name_device_db=elem.system.ndk_uid;
-	
-								if(dev_alarm>0){
-									if (dev_alarm == 1) {
-										$("#" + name_id + "_devalarm").attr('title', "Device Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
-										$("#" + name_id + "_devalarm").html('<img src="img/icon/warning.png">');
-	
-										//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
-									} else {
-										$("#" + name_id + "_devalarm").attr('title',"Device Error:"+JSON.stringify(jchaos.filterAlarmObject(elem._alarms,false)));
-										$("#" + name_id + "_devalarm").html('<img src="img/icon/error.png">');
-	
-										//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
-									} 
-	
-								} else {
-										$("#" + name_id + "_devalarm").html('');
-								}
-								if(cu_alarm>0){
-									if (cu_alarm == 1) {
-										$("#" + name_id + "_cualarm").attr('title', "CU Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
-									//	$("#" + name_id + "_cualarm").css('background-image', 'url(img/warning.png)');
-									$("#" + name_id + "_cualarm").html('<img src="img/icon/warning.png">');
-	
-									//	$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
-									} else {
-										$("#" + name_id + "_cualarm").attr('title', "CU Error:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
-										//$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
-										//$("#" + name_id + "_cualarm").css('background-image', 'url(img/error.png)');
-										$("#" + name_id + "_cualarm").html('<img src="img/icon/error.png">');
-	
-									} 
-	
-								} else {
-									//	$("#" + name_id + "_cualarm").html('');
-									//	$("#" + name_id + "_cualarm").css('background-image', '');
-										$("#" + name_id + "_cualarm").html('');
-									}
-							}*/
+						
 						if ((elem.health.ndk_uid !== undefined)) {
 							var healt = elem.health;
 							var uid = healt.ndk_uid;
@@ -266,7 +225,7 @@ require_once('header.php');
 							}
 
 						} else {
-							var uid = node_list[index];
+							var uid = node_chunk[index];
 							var iname = jchaos.encodeName(uid);
 							if (iname == "") {
 								console.error("NO NAME at index:" + index + " UID:" + uid);
@@ -280,7 +239,7 @@ require_once('header.php');
 					});
 
 				}, (bad) => {
-					node_list.forEach((d) => {
+					node_chunk.forEach((d) => {
 						var iname = jchaos.encodeName(d);
 						setTextClasses(iname, "text-muted");
 
@@ -288,6 +247,7 @@ require_once('header.php');
 					});
 				});
 			}
+			
 		}, 5000);
 
 
