@@ -99,8 +99,12 @@ function getCameraDesc(cul){
             $("#"+bname+ "_GAIN_INFO").html(html);
           }
           if(k=="SerialNumber"){
-            $("#"+bname+ "_INFO").html(ele[k].value);
-            console.log("Serial:"+ele[k].value);
+            if(ele[k].hasOwnProperty("value")){
+              $("#"+bname+ "_INFO").html(ele[k].value);
+              console.log("Serial:"+ele[k].value);
+            } else if(ele[k].hasOwnProperty("VAL")){
+              $("#"+bname+ "_INFO").html(ele[k].VAL);
+              console.log("Serial:"+ele[k].VAL);
 
           }
         } else {
@@ -688,19 +692,19 @@ function activateMenuShort(){
         var el = ele[0];
         redrawReference(domid,ele[0].REFX,ele[0].REFY,ele[0].REFSX,ele[0].REFSY,ele[0].REFRHO);
         cuitem['zoom-in'] = {
-          name: "Zoom In "+(currzoomm+0.5), cu: name,
+          name: "Zoom In ", cu: name,
           callback: function (itemKey, opt, e) {
             zoomInOut(domid,0.5);
           }
         };
         cuitem['zoom-out'] = {
-          name: "Zoom Out "+(currzoomm-0.5), cu: name,
+          name: "Zoom Out ", cu: name,
           callback: function (itemKey, opt, e) {
             zoomInOut(domid,-0.5);
           }
         };
         cuitem['zoom-reset'] = {
-          name: "Zoom Reset", cu: name,
+          name: "Actual Size", cu: name,
           callback: function (itemKey, opt, e) {
             var name = opt.items[itemKey].cu;
             zoomInOut(name,0);
