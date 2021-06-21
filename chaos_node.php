@@ -310,7 +310,7 @@ require_once('header.php');
 							}
 							if(impl!="---"){
 							if (impl != "") {
-								list_impl.push(impl);
+					//			list_impl.push(impl);
 								if (cu_template != null) {
 									glist = cu_template.info.group;
 								}
@@ -325,9 +325,7 @@ require_once('header.php');
 									}
 
 								}
-
-							}
-							for (var k in cudb) {
+								for (var k in cudb) {
 								for (var im in cudb[k]) {
 
 									if (im != impl) {
@@ -335,6 +333,9 @@ require_once('header.php');
 									}
 								}
 							}
+
+							}
+							
 						}
 							if ((glist instanceof Array) && (glist.length > 0)) {
 								templ['properties']['group'].enum = glist;
