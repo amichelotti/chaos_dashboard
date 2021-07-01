@@ -31,65 +31,51 @@ require_once('header.php');
 						</select>
 					</div>
 
-		<div class="statbox purple col-sm-2">
-		<h3>Interface</h3>
-		<select id="classe">
-		<option value="All">All</option>
-        <option value="powersupply">powersupply</option>
-        <option value="motor">motor</option>
-        <option value="camera">camera</option>
-        <option value="BPM">BPM</option>
-		</select>
-		</div>
-				
-		<div class="statbox purple col-sm-6">
-       
-	   <div class="row">
-	  
-	   <div class="col-sm"> 
-	   <h3>Live</h3>
-	   <label for="search-alive">All  </label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>
-	   <label for="search-alive">Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true checked>
-	   </div>
-	   
-	   <div class="col-sm">
-	   <h3>Search</h3>
-	   <input class="input-xlarge focused" id="search-chaos" title="Free form Search" type="text" value="">
-	   </div>
-	 
-	   <div class="col-sm">
-	   <h3>Status</h3>
-	   <select id="errorState">
-	   <option value="All">All</option>
-	   <option value="Ok">OK</option>
-	   <option value="Error">Error</option>
-	   <option value="Warning">Warning</option>
-	   <option value="NotStart">No Running</option></select>
-	   </div>
-	   </div>
-	   </div>
-<!-- 
-					<div class="statbox purple col-md-3">
-						<div class="row align-items-center">
+					<div class="statbox purple col-sm-2">
+						<h3>Interface</h3>
+						<select id="classe">
+							<option value="All">All</option>
+							<option value="powersupply">powersupply</option>
+							<option value="motor">motor</option>
+							<option value="camera">camera</option>
+							<option value="BPM">BPM</option>
+						</select>
+					</div>
+
+					<div class="statbox purple col-sm-6">
+
+						<div class="row">
+
 							<div class="col-sm">
-								<label for="search-alive">All</label><input class="input-xlarge" id="search-alive-false"
-									title="Search Alive and not Alive nodes" name="search-alive" type="radio"
-									value=false>
-							</div>
-							<div class="col-sm">
+								<h3>Live</h3>
+								<label for="search-alive">All </label><input class="input-xlarge"
+									id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive"
+									type="radio" value=false>
 								<label for="search-alive">Alive</label><input class="input-xlarge"
 									id="search-alive-true" title="Search just alive nodes" name="search-alive"
 									type="radio" value=true checked>
 							</div>
+
 							<div class="col-sm">
-								<label for="search-chaos">Search</label>
-								<input class="input-xlarge focused" id="search-chaos" title="Free form Search"
+								<h3>Regex Search</h3>
+								<input class="input-xlarge focused" id="search-chaos" title="Free form Regex Search"
 									type="text" value="">
 							</div>
-						</div>
 
+							<div class="col-sm">
+								<h3>Status</h3>
+								<select id="errorState">
+									<option value="All">All</option>
+									<option value="Ok">OK</option>
+									<option value="Error">Error</option>
+									<option value="Warning">Warning</option>
+									<option value="NotStart">No Running</option>
+								</select>
+							</div>
+						</div>
 					</div>
- --> 				</div>
+				
+				</div>
 				<div class="box-content">
 
 					<div class="box row">
@@ -121,92 +107,73 @@ require_once('header.php');
 
 
 	<script>
-	
+
 		var cu_copied = null;
 		var synoptic = {};
 		var node_list = [];
 		var node_state = {};
 		var node_old_state = {};
-
+		var cu_catalog_by_interface = {};
 		jchaos.variable("synoptic", "get", (ok) => {
 			synoptic = ok;
 		}, (bad) => {
 			console.error("error:" + JSON.stringify(bad));
 
 		});
+		jchaos.variable("cu_catalog", "get", (ok) => {
+			cu_catalog_by_interface = ok
+		}, (bad) => {
+			console.error("error:" + JSON.stringify(bad));
+
+		});
 		setInterval(function () {
 			var now = (new Date()).getTime();
-			if (node_list.length > 0) {
-				node_list.forEach((d) => {
-					var iname = jchaos.encodeName(d);
+				for (var i=0; i<node_list.length; i+=100) {
+    					var node_chunk = node_list.slice(i,i+100);
 
-
-				});
-				jchaos.getChannel(node_list, 255, function (run_info) {
+				jchaos.node(node_chunk, "health", "", function (run_info) {
 
 					run_info.forEach((elem, index) => {
 						var isalive = false;
-						if ((elem.system !== undefined) && (elem.system.ndk_uid !== undefined)){
-							var dev_alarm = Number(elem.system.cudk_dalrm_lvl);
-							var cu_alarm = Number(elem.system.cudk_calrm_lvl);
-							var name_id = jchaos.encodeName(elem.system.ndk_uid);
-							var name_device_db=elem.system.ndk_uid;
-
-							if(dev_alarm>0){
-								if (dev_alarm == 1) {
-									$("#" + name_id + "_devalarm").attr('title', "Device Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
-									$("#" + name_id + "_devalarm").html('<img src="img/icon/warning.png">');
-
-									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
-								} else {
-									$("#" + name_id + "_devalarm").attr('title',"Device Error:"+JSON.stringify(jchaos.filterAlarmObject(elem._alarms,false)));
-									$("#" + name_id + "_devalarm").html('<img src="img/icon/error.png">');
-
-									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
-								} 
-
-							} else {
-									$("#" + name_id + "_devalarm").html('');
-							}
-							if(cu_alarm>0){
-								if (cu_alarm == 1) {
-									$("#" + name_id + "_cualarm").attr('title', "CU Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
-								//	$("#" + name_id + "_cualarm").css('background-image', 'url(img/warning.png)');
-								$("#" + name_id + "_cualarm").html('<img src="img/icon/warning.png">');
-
-								//	$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
-								} else {
-									$("#" + name_id + "_cualarm").attr('title', "CU Error:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
-									//$("#" + name_id + "_cualarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
-									//$("#" + name_id + "_cualarm").css('background-image', 'url(img/error.png)');
-									$("#" + name_id + "_cualarm").html('<img src="img/icon/error.png">');
-
-								} 
-
-							} else {
-								//	$("#" + name_id + "_cualarm").html('');
-								//	$("#" + name_id + "_cualarm").css('background-image', '');
-									$("#" + name_id + "_cualarm").html('');
-								}
-						}
-						if ((elem.health !== undefined) && (elem.health.ndk_uid !== undefined)) {
+						
+						if ((elem.health.ndk_uid !== undefined)) {
 							var healt = elem.health;
 							var uid = healt.ndk_uid;
 							elem['lives'] = false;
+							var alarm = Number(healt.cuh_alarm_lvl);
 
 							node_state[uid] = elem;
 							var iname = jchaos.encodeName(uid);
-							if(elem.health.hasOwnProperty("cuh_alarm_msk")&&(elem.health.cuh_alarm_msk>0)){
+							if (healt.hasOwnProperty("cuh_alarm_msk") && (healt.cuh_alarm_msk > 0)) {
 								$("#" + iname + "_maskalarm").html('<img src="img/icon/silent.png">');
 
 							}
-							if ((healt.dpck_ats !== undefined)) {
+							if (alarm > 0) {
+								if (alarm == 1) {
+									//	$("#" + name_id + "_devalarm").attr('title', "Warning:"+JSON.stringify(jchaos.filterAlarmObject(elem.cu_alarms,false)));
+									$("#" + iname + "_devalarm").html('<img src="img/icon/warning.png">');
 
-								if ((Math.abs(healt.dpck_ats - now) < 10000)) {
+									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
+								} else {
+									//	$("#" + name_id + "_devalarm").attr('title',"Error:"+JSON.stringify(jchaos.filterAlarmObject(elem._alarms,false)));
+									$("#" + iname + "_devalarm").html('<img src="img/icon/error.png">');
+
+									//$("#" + name_id + "_devalarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
+								}
+
+							} else {
+								$("#" + iname + "_devalarm").html('');
+							}
+							if ((healt.dpck_ats !== undefined)) {
+								var ts=healt.dpck_ats;
+								if(healt.hasOwnProperty("dpck_mds_ats")){
+									ts=healt.dpck_mds_ats;
+								}
+								if ((Math.abs(ts - now) < 10000)) {
 									isalive = true;
 								} else if (node_old_state[uid] !== undefined && node_state[uid] !== undefined) {
-									if ((node_state[uid].health.dpck_ats !== undefined) && (node_old_state[uid].health.dpck_ats !== undefined)) {
-										if (node_state[uid].health.dpck_ats > node_old_state[uid].health.dpck_ats) {
+									if ((node_state[uid].dpck_ats !== undefined) && (node_old_state[uid].dpck_ats !== undefined)) {
+										if (node_state[uid].dpck_ats > node_old_state[uid].dpck_ats) {
 											isalive = true;
 										}
 
@@ -218,12 +185,12 @@ require_once('header.php');
 
 
 								if (isalive) {
-									setTextClasses(iname,"text-success");
+									setTextClasses(iname, "text-success");
 									elem['lives'] = true;
 
 									node_state[uid]['lives'] = true;
 								} else {
-									setTextClasses(iname,"text-muted");
+									setTextClasses(iname, "text-muted");
 								}
 								if (healt.hasOwnProperty("nh_status")) {
 									var title = uid + ":" + new Date(healt.dpck_ats).toLocaleString() + " Status:'" + healt.nh_status + "' Uptime:'" + jchaos.toHHMMSS(healt.nh_upt);
@@ -235,42 +202,52 @@ require_once('header.php');
 											title += ", in :" + healt.nh_led;
 
 										}
-										if (elem['lives']){
-											setTextClasses(iname,"text-danger");
+										if (elem['lives']) {
+											setTextClasses(iname, "text-danger");
 
 										}
 
 									} else if (elem['lives']) {
-										if(healt.nh_status != 'Start'){
-											setTextClasses(iname,"text-warning");
+										if (healt.nh_status != 'Start') {
+											setTextClasses(iname, "text-warning");
 
 										}
-									} 
+									}
 									$("#" + iname).attr('title', title);
 
 								}
 							} else {
-								console.error("no timestamp key on "+uid);
-								removeTextClasses(iname);
+								//console.error("no timestamp key on "+uid+" :"<<JSON.stringify(elem.health));
+								setTextClasses(iname, "text-dark");
+								$("#" + iname).attr('title', uid + ": DEAD no timestamp info");
+
 
 							}
 
 						} else {
-							var uid = node_list[index];
+							var uid = node_chunk[index];
 							var iname = jchaos.encodeName(uid);
 							if (iname == "") {
 								console.error("NO NAME at index:" + index + " UID:" + uid);
 							} else {
-								setTextClasses(iname,"text-dark");
-								$("#" + iname).attr('title', uid + ": DEAD no info");
+								setTextClasses(iname, "text-dark");
+								$("#" + iname).attr('title', uid + ": DEAD no health info");
 							}
 
 
 						}
 					});
 
+				}, (bad) => {
+					node_chunk.forEach((d) => {
+						var iname = jchaos.encodeName(d);
+						setTextClasses(iname, "text-muted");
+
+
+					});
 				});
 			}
+			
 		}, 5000);
 
 
@@ -319,27 +296,49 @@ require_once('header.php');
 								impl = obj.control_unit_implementation;
 							}
 							var glist = [];
-
+							var cu_template = null;
 							if (impl != "") {
-								list_impl.push(impl);
-								if ((cudb[impl] !== undefined) && (cudb[impl].info !== undefined)) {
-									//templ['properties']['group'].enum = cudb[impl].group;
-									glist = cudb[impl].group;
-								}
-							} else {
 								for (var k in cudb) {
-									if (cudb[k].info !== undefined) {
-										if (cudb[k].info.group !== undefined) {
-											glist = glist.concat(cudb[k].info.group);
+									for (var im in cudb[k]) {
+										if (cudb[k][im].info.impl == impl) {
+											cu_template = cudb[k][im];
 										}
 									}
 
 								}
-								//		templ['properties']['group'].enum = glist;
 
 							}
-							if (glist.length > 0) {
-								templ['properties']['group'] = glist;
+							if(impl!="---"){
+							if (impl != "") {
+					//			list_impl.push(impl);
+								if (cu_template != null) {
+									glist = cu_template.info.group;
+								}
+							} else {
+								for (var k in cudb) {
+									for (var impl in cudb[k]) {
+										if (cudb[k][impl].info !== undefined) {
+											if (cudb[k][impl].info.group !== undefined) {
+												glist = glist.concat(cudb[k][impl].info.group);
+											}
+										}
+									}
+
+								}
+								for (var k in cudb) {
+								for (var im in cudb[k]) {
+
+									if (im != impl) {
+										list_impl.push(cudb[k][im].info.impl);
+									}
+								}
+							}
+
+							}
+							
+						}
+							if ((glist instanceof Array) && (glist.length > 0)) {
+								templ['properties']['group'].enum = glist;
 							} else {
 								templ['properties']['group'] = {
 									"type": "string",
@@ -349,11 +348,7 @@ require_once('header.php');
 
 								};
 							}
-							for (var k in cudb) {
-								if (k != impl) {
-									list_impl.push(k);
-								}
-							}
+							
 							if ((ob.ndk_uid !== undefined) && (typeof ob.ndk_uid == "string")) {
 								if (jchaos.pathToZoneGroupId(ob.ndk_uid) != null) {
 									//valid path change 
@@ -372,7 +367,7 @@ require_once('header.php');
 							if ((obj.ndk_type !== undefined) && (obj.ndk_type == "nt_root")) {
 								list_impl = jchaos.findScriptByType("", "CPP");
 							}
-							if (list_impl.size > 0) {
+							if (list_impl.length > 0) {
 								templ['properties']['control_unit_implementation'].enum = list_impl;
 							} else {
 								templ['properties']['control_unit_implementation'] = {
@@ -386,16 +381,19 @@ require_once('header.php');
 							var drv_impl = obj.cudk_driver_description;
 							var list_drivers = [];
 
-							/*	if ((drv_impl !== undefined) && (drv_impl.length)) {
+							if ((drv_impl !== undefined)) {
+								if (drv_impl instanceof Array) {
 									drv_impl.forEach((d) => {
 										list_drivers.push(d.cudk_driver_description_name);
 									});
-									// return just the drivers that are supported
-		
-		
-								}*/
-							if ((impl != "") && (cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined)) {
-								var dlist = cudb[impl].drivers;
+								} else if (typeof drv_impl == "object") {
+									list_drivers.push(drv_impl)
+								}
+								// return just the drivers that are supported
+
+
+							} else if ((impl != "") && (cu_template != null)) {
+								var dlist = cu_template.drivers;
 								// drivers for the implementation
 								for (d in dlist) {
 									// push drivers available for implementation
@@ -408,9 +406,13 @@ require_once('header.php');
 
 							} else {
 								for (var k in cudb) {
-									var dlist = cudb[k].drivers;
-									for (d in dlist) {
-										list_drivers.push(d);
+									for (var i in cudb[k]) {
+
+										var dlist = cudb[k][i].drivers;
+
+										for (d in dlist) {
+											list_drivers.push(d);
+										}
 									}
 								}
 							}
@@ -444,14 +446,15 @@ require_once('header.php');
 
 							var list_prop = [];
 							if (obj.cudk_prop !== undefined) {
-								try {
+								list_prop=obj.cudk_prop;
+								/*try {
 									var par = JSON.parse(list_prop);
 									for (var k in par) {
 										list_prop.push({ k: par(k) });
 									}
 								} catch (e) {
 
-								}
+								}*/
 
 							}
 							obj['cudk_prop'] = list_prop;
@@ -459,14 +462,7 @@ require_once('header.php');
 								obj.cudk_driver_description.forEach((ele, index) => {
 									var list_prop = [];
 									if (ele.cudk_driver_prop !== undefined) {
-										try {
-											var par = JSON.parse(ele.cudk_driver_prop);
-											for (var k in par) {
-												list_prop.push({ k: par(k) });
-											}
-										} catch (e) {
-
-										}
+										list_prop=ele.cudk_driver_prop;
 									}
 
 									obj.cudk_driver_description[index]['cudk_driver_prop'] = list_prop;
@@ -572,57 +568,85 @@ require_once('header.php');
 					if (node.data.hasOwnProperty("ndk_type") && (node.data.ndk_type == "nt_unit_server")) {
 						menu_str = "Add ";
 					}
+					var cu = {};
+					cu['id'] = "<MY ID>";
+					if ((node.data.ndk_type == "nt_unit_server")) {
+						cu['ndk_parent'] = node.data.ndk_uid;
+					}
+					var submenu = {
+					};
+					submenu['new-cu-custom'] = {
+						"separator_before": false,
+						"separator_after": false,
+						label: menu_str + "New Custom",
+						action: function () {
+							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
+							obj['control_unit_implementation']="---";// custom
+							addEditCU(cu, tree);
+						}
+					}
 
+
+					for (var c in cu_catalog_by_interface) {
+						var subMenu = {}
+						var subDriver = {}
+
+						for (var typ in cu_catalog_by_interface[c]) {
+							var aname = typ;
+							if (cu_catalog_by_interface[c][typ].info.hasOwnProperty("alias")) {
+								aname = cu_catalog_by_interface[c][typ].info.alias;
+							}
+							var objcu = Object.assign({}, cu);
+							objcu['control_unit_implementation'] = cu_catalog_by_interface[c][typ].info.impl;
+							objcu['cudk_desc']=cu_catalog_by_interface[c][typ].info.desc;
+							for (var d in cu_catalog_by_interface[c][typ].drivers) {
+								var objcud = Object.assign({}, objcu);
+
+								objcud['cudk_driver_description'] = [cu_catalog_by_interface[c][typ].drivers[d]];
+
+								subDriver['new-' + c + "-" + typ + "-" + d] = {
+									"separator_before": false,
+									"separator_after": false,
+									"cu": objcud,
+									label: menu_str + d,
+									action: function (obj) {
+										addEditCU(obj.item.cu, tree);
+
+									}
+								}
+							}
+							subMenu['new-' + c + "-" + typ] = {
+								"separator_before": false,
+								"separator_after": false,
+								label: menu_str + aname,
+								"cu": objcu,
+								submenu: subDriver,
+								action: function (obj) {
+									addEditCU(obj.item.cu, tree);
+								}
+
+							}
+
+						}
+						submenu['new-' + c] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: menu_str + c,
+							"cu": objcu,
+							action: function (obj) {
+								addEditCU(obj.item.cu, tree);
+
+							},
+							submenu: subMenu
+
+						}
+					}
 					items['new-cu'] = {
 						"separator_before": false,
 						"separator_after": false,
 						label: menu_str + "New CU",
-						action: function () {
-							var cu = {};
-							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
-							cu['id'] = "<MY ID>";
-							if ((node.data.ndk_type == "nt_unit_server")) {
-								cu['ndk_parent'] = node.data.ndk_uid;
-							}
-							cu2editor(cu, (edit_templ, editobj, cudb) => {
+						"submenu": submenu
 
-								jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
-									jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
-									decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
-									var icon_name = "/img/devices/" + decoded["group"] + ".png";
-
-									if (decoded) {
-										json['group'] = decoded["group"];
-										var newnode = {
-											"id": jchaos.encodeName(json.ndk_uid),
-											"parent": node.id,
-											"icon": icon_name,
-											"text": decoded["id"],
-											"data": json
-										};
-
-										tree.create_node(node, newnode);
-										triggerRefreshEdit();
-
-
-									}
-								}, function (bad) {
-									jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
-
-								}, function (e) {
-									var cu = e.getValue();
-									if (cudb.hasOwnProperty(cu.control_unit_implementation)) {
-										if (cudb[cu.control_unit_implementation].info !== undefined) {
-											e.schema.properties.group.enum = cudb[cu.control_unit_implementation].info.group;
-											//		e.refresh();
-										}
-
-										console.log("Editor change :" + cu.control_unit_implementation);
-
-									}
-								});
-							});
-						}
 
 					};
 
@@ -647,34 +671,34 @@ require_once('header.php');
 
 									if (decoded) {
 										cu["ndk_uid"] = zone + "/" + decoded["group"] + "/" + decoded['id'] + (new Date()).getTime();
-
-										cu2editor(cu, (edit_templ, editobj) => {
-
-											jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
-												jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
-												decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
-												var icon_name = "/img/devices/" + decoded["group"] + ".png";
-
-												if (decoded) {
-													json['group'] = decoded["group"];
-													var newnode = {
-														"id": jchaos.encodeName(json.ndk_uid),
-														"parent": node.id,
-														"icon": icon_name,
-														"text": decoded["id"],
-														"data": json
-													};
-
-													tree.create_node(node, newnode);
-													triggerRefreshEdit();
-
-
-												}
-											}, function (bad) {
-												jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
-
-											});
-										});
+										addEditCU(cu, tree);
+										/*	cu2editor(cu, (edit_templ, editobj) => {
+	
+												jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
+													jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
+													decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
+													var icon_name = "/img/devices/" + decoded["group"] + ".png";
+	
+													if (decoded) {
+														json['group'] = decoded["group"];
+														var newnode = {
+															"id": jchaos.encodeName(json.ndk_uid),
+															"parent": node.id,
+															"icon": icon_name,
+															"text": decoded["id"],
+															"data": json
+														};
+	
+														tree.create_node(node, newnode);
+														triggerRefreshEdit();
+	
+	
+													}
+												}, function (bad) {
+													jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
+	
+												});
+											});*/
 									} else {
 										alert("Not a valid uid:'" + cu.ndk_uid + "' must contain at least zone/group/id")
 									}
@@ -753,7 +777,7 @@ require_once('header.php');
 							"separator_after": true,
 							label: "Control..",
 							action: function () {
-								
+
 								jqccs.openControl("Control " + selected_node, selected_node);
 								return;
 							}
@@ -771,6 +795,10 @@ require_once('header.php');
 									if (data != null) {
 										//editorFn = cuSave;
 										//jsonEdit(templ, data);
+										//!! TODO: check why?
+										if(!data.hasOwnProperty("ndk_type")){
+											data['ndk_type']=type;
+										}
 										cu2editor(data, (edit_templ, editobj) => {
 											jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (ok) {
 												jqccs.instantMessage("CU/EU saved " + selected_node, " OK", 2000, true);
@@ -924,69 +952,70 @@ require_once('header.php');
 						"separator_after": false,
 						label: "Delete Node",
 						action: function (obj) {
-							if(type == "nt_unit_server"){
+							if (type == "nt_unit_server") {
 								jchaos.search(selected_node, "server", true, (nodes) => {
-									if(nodes[0]==selected_node){
+									if (nodes[0] == selected_node) {
 										jqccs.instantMessage("Cannot remove a node that is alive:" + selected_node, "Kill before", 2000, false);
 
-									} else{
-									jchaos.node(selected_node, "get", "us", function (desc) {
-										if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
-											var list = desc.us_desc.cu_desc;
-											let cnt=list.length;
-											jqccs.confirm("Delete US "+selected_node, "Your are deleting : " + list.length + " CUs", "Ok", function () {
-												list.forEach(ele=>{
-													jchaos.node(ele.ndk_uid, "deletenode", "all", function () {
-														console.log("deleting CU "+ele.ndk_uid);
-														cnt--;
-														if(cnt==0){
-															jchaos.node(selected_node, "deletenode", "all", function () {
-																console.log("deleting US "+selected_node);
-																tree.delete_node(node);
-																triggerRefreshEdit();
+									} else {
+										jchaos.node(selected_node, "get", "us", function (desc) {
+											if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
+												var list = desc.us_desc.cu_desc;
+												let cnt = list.length;
+												jqccs.confirm("Delete US " + selected_node, "Your are deleting : " + list.length + " CUs", "Ok", function () {
+													list.forEach(ele => {
+														jchaos.node(ele.ndk_uid, "deletenode", "all", function () {
+															console.log("deleting CU " + ele.ndk_uid);
+															cnt--;
+															if (cnt == 0) {
+																jchaos.node(selected_node, "deletenode", "all", function () {
+																	console.log("deleting US " + selected_node);
+																	tree.delete_node(node);
+																	triggerRefreshEdit();
 
-															});
+																});
 
-														}
+															}
+														});
 													});
-												});
-											}, "Cancel");
+												}, "Cancel");
 
-										}
-									});
-								}
-							});
+											}
+										});
+									}
+								});
 							} else {
 								jchaos.search(selected_node, "ceu", true, (nodes) => {
-									if(nodes[0]==selected_node){
+									if (nodes[0] == selected_node) {
 										jqccs.instantMessage("Cannot remove a node that is alive:" + selected_node, "Kill before", 2000, false);
 
-									} else{
+									} else {
 
-							jqccs.confirm("Delete Node", "Your are deleting : " + selected_node, "Ok", function () {
-								jchaos.node(selected_node, "deletenode", "all", function () {
-									jqccs.instantMessage("Node deleted " + selected_node, " OK", 2000, true);
-									if (node.data.hasOwnProperty('ndk_parent') && node.data.ndk_parent != "") {
-										jchaos.node(node.data.ndk_parent, "desc", "all", (pd) => {
-											if (pd.ndk_type == "nt_agent") {
-												jchaos.node(node.data.ndk_parent, "del", "agent", selected_node, function (daa) {
-													instantMessage("Removed association " + selected_node, " OK", 2000, true);
+										jqccs.confirm("Delete Node", "Your are deleting : " + selected_node, "Ok", function () {
+											jchaos.node(selected_node, "deletenode", "all", function () {
+												jqccs.instantMessage("Node deleted " + selected_node, " OK", 2000, true);
+												if (node.data.hasOwnProperty('ndk_parent') && node.data.ndk_parent != "") {
+													jchaos.node(node.data.ndk_parent, "desc", "all", (pd) => {
+														if (pd.ndk_type == "nt_agent") {
+															jchaos.node(node.data.ndk_parent, "del", "agent", selected_node, function (daa) {
+																instantMessage("Removed association " + selected_node, " OK", 2000, true);
 
-												});
-											}
-										}, (bad) => { });
+															});
+														}
+													}, (bad) => { });
+												}
+												tree.delete_node(node);
+												triggerRefreshEdit();
+
+
+											}, function (err) {
+												jqccs.instantMessage("cannot delete " + selected_node, JSON.stringify(err), 2000, false);
+
+											});
+										}, "Cancel");
 									}
-									tree.delete_node(node);
-									triggerRefreshEdit();
-
-
-								}, function (err) {
-									jqccs.instantMessage("cannot delete " + selected_node, JSON.stringify(err), 2000, false);
-
 								});
-							}, "Cancel");}
-						});
-						}
+							}
 
 						}
 					};
@@ -1017,14 +1046,14 @@ require_once('header.php');
 												server.replace(/:\d+/g, '');
 											}
 											var uid = "";
-											var enconsole=false;
+											var enconsole = false;
 											data.andk_node_associated.forEach(ele => {
 												if (ele.ndk_uid == node.data.ndk_uid) {
 													uid = ele.association_uid;
-													enconsole=ele.node_log_on_console;
+													enconsole = ele.node_log_on_console;
 												}
 											});
-											if(enconsole){
+											if (enconsole) {
 												if (uid != "") {
 													jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
 												} else {
@@ -1091,7 +1120,9 @@ require_once('header.php');
 							"separator_after": false,
 							label: "Show Dataset",
 							action: function () {
-								jqccs.showDataset(node.data.ndk_uid, node.data.ndk_uid, 1000);
+								var dashboard_settings=jqccs.initSettings();
+
+								jqccs.showDataset(node.data.ndk_uid, node.data.ndk_uid, dashboard_settings['generalRefresh']);
 
 							}
 						}
@@ -1102,32 +1133,32 @@ require_once('header.php');
 							action: function () {
 								jchaos.getChannel(node.data.ndk_uid, 255, function (run_info) {
 									var obj = Object.assign({}, run_info[0].cu_alarms, run_info[0].device_alarms);
-									tmp={
+									tmp = {
 
-										handler:function(e){
+										handler: function (e) {
 											if (e.keyCode == 13) {
 
 												var val = parseInt(e.target.value);
 												var attrname = e.target.name;
 												var desc = jchaos.decodeCUPath(attrname);
-												console.log("value:"+e.target.value+" name:"+desc.var);
-												var alrm={
-													name:desc.var,
-													value:val
+												console.log("value:" + e.target.value + " name:" + desc.var);
+												var alrm = {
+													name: desc.var,
+													value: val
 												}
-												jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm","act_msg":alrm }, function (data) {
-													jqccs.instantMessage(node.data.ndk_uid, "Set Alarm: " + desc.var+"="+val+" on "+node.data.ndk_uid, 4000, true);
+												jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
+													jqccs.instantMessage(node.data.ndk_uid, "Set Alarm: " + desc.var + "=" + val + " on " + node.data.ndk_uid, 4000, true);
 
-												},function(bad){
+												}, function (bad) {
 													jqccs.instantMessage(node.data.ndk_uid, "Error Setting Alarm " + JSON.stringify(bad), 4000, true);
 
 												});
 
 
+											}
 										}
 									}
-								}
-									jqccs.showJson("Alarms " + node.data.ndk_uid, jchaos.filterAlarmObject(obj),tmp);
+									jqccs.showJson("Alarms " + node.data.ndk_uid, jchaos.filterAlarmObject(obj), tmp);
 
 								});
 
@@ -1143,44 +1174,44 @@ require_once('header.php');
 
 								jchaos.getChannel(node.data.ndk_uid, 255, function (run_info) {
 									var obj = Object.assign({}, run_info[0].cu_alarms, run_info[0].device_alarms);
-									tmp={
+									tmp = {
 
-										handler:function(e){
+										handler: function (e) {
 											if (e.keyCode == 13) {
 
 												var val = parseInt(e.target.value);
 												var attrname = e.target.name;
 												var desc = jchaos.decodeCUPath(attrname);
-												console.log("value:"+e.target.value+" name:"+desc.var);
-												var alrm={
-													name:desc.var,
-													mask:val
+												console.log("value:" + e.target.value + " name:" + desc.var);
+												var alrm = {
+													name: desc.var,
+													mask: val
 												}
-												if(objects instanceof Array){
-													objects.forEach(ele=>{
-														jchaos.command(ele.data.ndk_uid, { "act_name": "cu_set_alarm","act_msg":alrm }, function (data) {
-															jqccs.instantMessage(ele.data.ndk_uid, "Set Mask of "+ desc.var +"="+val+" on "+ ele.data.ndk_uid, 4000, true);
-		
-														},function(bad){
-															jqccs.instantMessage(ele.data.ndk_uid, "Error Setting Mask of " +desc.var +" "+ JSON.stringify(bad), 4000, true);
-		
+												if (objects instanceof Array) {
+													objects.forEach(ele => {
+														jchaos.command(ele.data.ndk_uid, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
+															jqccs.instantMessage(ele.data.ndk_uid, "Set Mask of " + desc.var + "=" + val + " on " + ele.data.ndk_uid, 4000, true);
+
+														}, function (bad) {
+															jqccs.instantMessage(ele.data.ndk_uid, "Error Setting Mask of " + desc.var + " " + JSON.stringify(bad), 4000, true);
+
 														});
 													})
 												} else {
-												jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm","act_msg":alrm }, function (data) {
-													jqccs.instantMessage(node.data.ndk_uid, "Set Mask of "+ desc.var +"="+val+" on "+ node.data.ndk_uid, 4000, true);
+													jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
+														jqccs.instantMessage(node.data.ndk_uid, "Set Mask of " + desc.var + "=" + val + " on " + node.data.ndk_uid, 4000, true);
 
-												},function(bad){
-													jqccs.instantMessage(node.data.ndk_uid, "Error Setting Mask of " +desc.var +" "+ JSON.stringify(bad), 4000, true);
+													}, function (bad) {
+														jqccs.instantMessage(node.data.ndk_uid, "Error Setting Mask of " + desc.var + " " + JSON.stringify(bad), 4000, true);
 
-												});
+													});
+												}
+
+
 											}
-
-
 										}
 									}
-								}
-									jqccs.showJson("Mask Alarms (0x0 mask, 0xFF no mask)" + node.data.ndk_uid, jchaos.filterAlarmObject(obj),tmp);
+									jqccs.showJson("Mask Alarms (0x0 mask, 0xFF no mask)" + node.data.ndk_uid, jchaos.filterAlarmObject(obj), tmp);
 
 								});
 
@@ -1367,30 +1398,41 @@ require_once('header.php');
 						var healt = bruninfo[0].health;
 						if ((healt.dpck_ats !== undefined) && ((Math.abs(healt.dpck_ats - (new Date()).getTime())) < 10000)) {
 							//$("#"+node.id).addClass("bg-success");
-							jchaos.command(ndk_uid, { "act_name": "getBuildInfo", "act_domain": "system", "direct": true }, function (bi) {
 								//console.log(ndk_uid+" Build:"+JSON.stringify(bi));
 								//node_data = Object.assign(bi, node_data);
-								var nd = Object.assign({}, { build: bi }, { state: bruninfo[0] }, { info: node_data });
 
-
-								$('#desc_view').html(jqccs.json2html(nd));
-								jqccs.jsonSetup($('#desc_view'), function (e) {
-								});
-								$('#desc_view').find('a.json-toggle').click();
-
-
-
-
-							}, bad => {
-								// no build info
-								//node_data = Object.assign(bi, node_data);
 								var nd = Object.assign({}, { state: bruninfo[0] }, { info: node_data });
+								var elem = bruninfo[0];
+								if ((elem.system !== undefined) && (elem.system.ndk_uid !== undefined)) {
+									var dev_alarm = Number(elem.system.cudk_dalrm_lvl);
+									var cu_alarm = Number(elem.system.cudk_calrm_lvl);
+									var name_id = jchaos.encodeName(elem.system.ndk_uid);
+									var name_device_db = elem.system.ndk_uid;
+									var alarms = {};
+									if (dev_alarm > 0) {
+										alarms['DEVICE'] = jchaos.filterAlarmObject(elem.device_alarms, false);
+									}
+									if (cu_alarm > 0) {
+										alarms['CU'] = jchaos.filterAlarmObject(elem.cu_alarms, false);
+
+									}
+									if (cu_alarm > 0 || dev_alarm > 0) {
+										$("#" + name_id + "_devalarm").attr('title', "ALARMS:" + JSON.stringify(alarms));
+										nd = Object.assign(nd, { ALARMS: alarms });
+
+									}
+
+								}
+
 								$('#desc_view').html(jqccs.json2html(nd));
 								jqccs.jsonSetup($('#desc_view'), function (e) {
 								});
 								$('#desc_view').find('a.json-toggle').click();
 
-							})
+
+
+
+							
 						} else {
 							$("#" + node.id).removeClass("bg-success");
 
@@ -1426,7 +1468,7 @@ require_once('header.php');
 			}
 		}
 		function addListeners() {
-			
+
 			$('#hier_view').on('move_node.jstree', function (e, data) {
 				var i, j, r = [];
 				var node_data = data.instance.get_node(data.selected[0]).data;
@@ -1568,17 +1610,25 @@ require_once('header.php');
 				data.push(obj);
 			}
 		}
-
 		function addUSOrRoot(jsree_data, node_created, edesc, without_parent) {
-			if (edesc.ndk_type == "nt_unit_server" || (edesc.ndk_type == "nt_root")) {
-				var parent = "#";
-				var desc;
-				if (edesc.ndk_type == "nt_unit_server") {
-					desc = jchaos.node(edesc.ndk_uid, "get", "us");
-				} else {
-					desc = edesc;
+			var idname = jchaos.encodeName(edesc.ndk_uid);
 
-				}
+			if (node_created.hasOwnProperty(idname)) {
+				return;
+			}
+
+			if(edesc.ndk_type == "nt_unit_server"){
+				dus=jchaos.node(edesc.ndk_uid, "get", "us");
+
+				addUSOrRoot_int(jsree_data, node_created, dus, without_parent);
+				
+
+			} else {
+				addUSOrRoot_int(jsree_data, node_created, edesc, without_parent);
+			}
+		}
+		function addUSOrRoot_int(jsree_data, node_created, desc, without_parent) {
+				var parent = "#";
 				var icon_name = "";
 				var parent = "#";
 				icon_name = "/img/devices/" + desc.ndk_type + ".png";
@@ -1607,34 +1657,38 @@ require_once('header.php');
 					if (desc.hasOwnProperty('us_desc') && (desc.us_desc['cu_desc'] instanceof Array)) {
 						var list = desc.us_desc.cu_desc;
 						list.forEach(cu => {
-							var name = cu.ndk_uid;
-							var regex = /(.*)\/(.*)\/(.*)$/;
-							var match = regex.exec(name);
-							var icon_name = "";
-							if ((match != null) && (typeof match[2] !== "undefined")) {
-								icon_name = "/img/devices/" + match[2] + ".png";
-								cu["zone"] = match[1];
-								cu["group"] = match[2];
-							}
-							var idname = jchaos.encodeName(name);
+							if(cu.hasOwnProperty("ndk_uid")){
+								var name = cu.ndk_uid;
+								var regex = /(.*)\/(.*)\/(.*)$/;
+								var match = regex.exec(name);
+								var icon_name = "";
+								if ((match != null) && (typeof match[2] !== "undefined")) {
+									icon_name = "/img/devices/" + match[2] + ".png";
+									cu["zone"] = match[1];
+									cu["group"] = match[2];
+								}
+								var idname = jchaos.encodeName(name);
+								if(!cu.hasOwnProperty('ndk_type')){
+									cu['ndk_type']="nt_control_unit";
+								}
+								var node = {
+									"id": idname,
+									"parent": jchaos.encodeName(cu.ndk_parent),
+									"icon": icon_name,
+									"text": "<span>" + name + "</span>" + '<span class="decodeAlarm" id="' + jchaos.encodeName(name) + '_devalarm"></span>' + '<span id="' + jchaos.encodeName(name) + '_maskalarm"></span>',
 
-							var node = {
-								"id": idname,
-								"parent": jchaos.encodeName(cu.ndk_parent),
-								"icon": icon_name,
-								"text": "<span>"+name+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(name)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(name)+'_maskalarm"></span>',
-
-								"data": cu
-							};
-							if (!node_created.hasOwnProperty(idname)) {
-								jsree_data.push(node);
-								node_created[idname] = true;
-							}
+									"data": cu
+								};
+								if (!node_created.hasOwnProperty(idname)) {
+									jsree_data.push(node);
+									node_created[idname] = true;
+								}
+						}
 						});
 					}
 				}
 
-			}
+			
 		}
 		function createJSTreeByServer(filter, alive, handler) {
 			var jsree_data = [];
@@ -1689,7 +1743,7 @@ require_once('header.php');
 										if (!found) {
 											//	console.log(edesc.ndk_uid+" looking among NOT live for:"+ass.ndk_uid)
 
-											var nn = jchaos.node(ass.ndk_uid, "desc", "all");
+											jchaos.node(ass.ndk_uid, "desc", "all",(nn)=>{
 											if (nn != null && nn.hasOwnProperty('ndk_uid')) {
 												addUSOrRoot(jsree_data, node_created, nn, false);
 
@@ -1698,6 +1752,7 @@ require_once('header.php');
 
 												alert("Agent " + edesc.ndk_uid + " is associated to a non valid node:" + ass.ndk_uid + " please remove it from associations")
 											}
+										});
 										}
 
 									});
@@ -1707,6 +1762,7 @@ require_once('header.php');
 					});
 					d.forEach(edesc => {
 						addUSOrRoot(jsree_data, node_created, edesc, true);
+
 					});
 					if (typeof handler === "function") {
 						handler(jsree_data);
@@ -1735,36 +1791,23 @@ require_once('header.php');
 			var state = $("#errorState option:selected").val();
 			var interface = $("#classe option:selected").val();
 
-			sopt={};
-			if(state!="All"){
-				sopt['state']=state;
+			sopt = {};
+			if (state != "All") {
+				sopt['state'] = state;
 			}
-			if(interface!="All"){
-				sopt['interface']=interface;
+			if (interface != "All") {
+				sopt['interface'] = interface;
 
 			}
-			jchaos.search(filter, "ceu", alive, sopt,(culist) => {
-				/*var roots = jchaos.search(filter, "root", alive);
-				if ((roots instanceof Array) && (roots.length > 0)) {
-					culist = culist.concat(roots);
-				}*/
+			jchaos.search(filter, "ceu", alive, sopt, (culist) => {
+				
 				if ((culist.length == 0) && (typeof handler === "function")) {
 					handler(jsree_data);
 				}
-				let cnt = culist.length;
-				culist.forEach(cui => {
-					if (cui == "" || cui == null) {
-						alert("Node with empty/null uid");
-						cnt--;
-						if (cnt == 0) {
+				if (culist.length > 0) {
+					jchaos.node(culist, "desc", "all", (e) => {
+						e.forEach(elem => {
 
-							if (typeof handler === "function") {
-								handler(jsree_data);
-							}
-						}
-					} else {
-						jchaos.node(cui, "desc", "all", (elem) => {
-							cnt--;
 							//	var desc = jchaos.getDesc(elem, null);
 							var decoded = jchaos.pathToZoneGroupId(elem.ndk_uid);
 							if (decoded != null) {
@@ -1805,7 +1848,7 @@ require_once('header.php');
 										}
 										node['id'] = uname;
 										node['cid'] = elem.ndk_uid;
-										node['text']="<span>"+p+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem.ndk_uid)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(elem.ndk_uid)+'_maskalarm"></span>';
+										node['text'] = "<span>" + p + "</span>" + '<span class="decodeAlarm" id="' + jchaos.encodeName(elem.ndk_uid) + '_devalarm"></span>' + '<span id="' + jchaos.encodeName(elem.ndk_uid) + '_maskalarm"></span>';
 
 									}
 									if (!node_created.hasOwnProperty(node['id'])) {
@@ -1819,30 +1862,27 @@ require_once('header.php');
 
 
 							}
-							if (cnt == 0) {
-								if (typeof handler === "function") {
-									handler(jsree_data);
-								}
-							}
-						}, () => {
-							cnt--;
-							console.error(cnt + "] retrieving status of:" + cui);
-							if (cnt == 0) {
+						});
+						if (typeof handler === "function") {
+							handler(jsree_data);
+						}
 
-								if (typeof handler === "function") {
-									handler(jsree_data);
-								}
-							}
-						})
-					}
-				});
-			}
-				, () => { //search of C
+					}, (bad) => {
+						console.error("retrieving descriptions:"+JSON.stringify(bad));
+
+						if (typeof handler === "function") {
+							handler(jsree_data);
+						}
+
+					})
+				} else {
 					if (typeof handler === "function") {
 						handler(jsree_data);
 					}
-				});
+				}
 
+
+			});
 		}
 		function createJSTreeByDevice(filter, alive, handler) {
 			var jsree_data = [];
@@ -1850,15 +1890,15 @@ require_once('header.php');
 			var state = $("#errorState option:selected").val();
 			var interface = $("#classe option:selected").val();
 
-			sopt={};
-			if(state!="All"){
-				sopt['state']=state;
+			sopt = {};
+			if (state != "All") {
+				sopt['state'] = state;
 			}
-			if(interface!="All"){
-				sopt['interface']=interface;
+			if (interface != "All") {
+				sopt['interface'] = interface;
 
 			}
-			jchaos.search(filter, "ceu", alive, sopt,(culist) => {
+			jchaos.search(filter, "ceu", alive, sopt, (culist) => {
 				/*var roots = jchaos.search(filter, "root", alive);
 				if ((roots instanceof Array) && (roots.length > 0)) {
 					culist = culist.concat(roots);
@@ -1905,7 +1945,7 @@ require_once('header.php');
 								"id": id,
 								"parent": device,
 								"icon": icon_name,
-								"text": "<span>"+elem+"</span>"+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_cualarm"></span>'+'<span class="decodeAlarm" id="'+jchaos.encodeName(elem)+'_devalarm"></span>'+'<span id="'+jchaos.encodeName(elem)+'_maskalarm"></span>',
+								"text": "<span>" + elem + "</span>" + '<span class="decodeAlarm" id="' + jchaos.encodeName(elem) + '_devalarm"></span>' + '<span id="' + jchaos.encodeName(elem) + '_maskalarm"></span>',
 
 								"data": desc[index]
 							};
@@ -1987,15 +2027,55 @@ require_once('header.php');
 			$("#" + iname).removeClass("text-warning");
 
 		}
-		function setTextClasses(iname,classname) {
-			if(!$("#" + iname).hasClass(classname)){
+		function setTextClasses(iname, classname) {
+			if (!$("#" + iname).hasClass(classname)) {
 				removeTextClasses(iname);
 				$("#" + iname).addClass(classname);
 
 			}
-			
+
 		}
 
+		function addEditCU(cu, tree) {
+			cu2editor(cu, (edit_templ, editobj, cudb) => {
+
+				jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
+					jqccs.instantMessage("CU saved " + json.ndk_uid, " OK", 2000, true);
+					var decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
+					var icon_name = "/img/devices/" + decoded["group"] + ".png";
+
+					if (decoded) {
+						json['group'] = decoded["group"];
+						var newnode = {
+							"id": jchaos.encodeName(json.ndk_uid),
+							"parent": node.id,
+							"icon": icon_name,
+							"text": decoded["id"],
+							"data": json
+						};
+
+						tree.create_node(node, newnode);
+						triggerRefreshEdit();
+
+
+					}
+				}, function (bad) {
+					jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
+
+				}, function (e) {
+					var cu = e.getValue();
+					if (cudb.hasOwnProperty(cu.control_unit_implementation)) {
+						if (cudb[cu.control_unit_implementation].info !== undefined) {
+							e.schema.properties.group.enum = cudb[cu.control_unit_implementation].info.group;
+							//		e.refresh();
+						}
+
+						console.log("Editor change :" + cu.control_unit_implementation);
+
+					}
+				});
+			});
+		}
 	</script>
 
 

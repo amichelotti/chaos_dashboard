@@ -1,6 +1,5 @@
 stages:
     - deploy
-    - publish
 #variables:
 #  GIT_SUBMODULE_STRATEGY: recursive
 
@@ -56,19 +55,19 @@ deploy-chaos-web:
       when: always
         
   
-pages:
-  stage: publish
-  tags:
-      - shared
-  dependencies:
-    - deploy-chaos-web
-  image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
-  script:
-    - mkdir chaos_dashboard;tar xvfz $DEPLOY_NAME.tar.gz -C chaos_dashboard
+# pages:
+#   stage: publish
+#   tags:
+#       - shared
+#   dependencies:
+#     - deploy-chaos-web
+#   image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
+#   script:
+#     - mkdir chaos_dashboard;tar xvfz $DEPLOY_NAME.tar.gz -C chaos_dashboard
     
-  allow_failure: true
-  artifacts:
-    paths:
-    - 'chaos_dashboard'
-    expire_in: 3 day
+#   allow_failure: true
+#   artifacts:
+#     paths:
+#     - 'chaos_dashboard'
+#     expire_in: 3 day
   
