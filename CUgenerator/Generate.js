@@ -10,20 +10,38 @@ var labCheckedListBox = document.getElementById('labelChkPush');
 var fieldSelect = document.getElementById('pushSelection');
 var labfieldSelect = document.getElementById('labelPushSel');
 var rootChaosPath = document.getElementById('RemoteRootPath');
-
+window.addEventListener("onload", InitPage());
 var ptOparamInterface = [];
 var ptNeededOPar = [];
 var ptIparamInterface = [];
 var ptNeededIPar = [];
 var zip;
 toDownload.hidden = true;
-InitPage();
 var onefolder = true;
+InitPage();
 
+
+function isOneFolder(boolVal) {
+   
+    checkboxGenerateIntermediateMakeLists.hidden = boolVal;
+    document.getElementById('TextForCMakeLists').hidden = boolVal;
+    
+    document.getElementById('RemoteRootPath').hidden = boolVal;
+    document.getElementById('LRemoteRootPath').hidden = boolVal;
+    document.getElementById('buttonAddScript').hidden = boolVal;
+    onefolder = boolVal;
+}
 function InitPage() {
+    var currentCU = localStorage.getItem('controlUnit');
+    if (currentCU == null)
+        return "";
+    let CUJ = JSON.parse(currentCU);
+    let CU = CUcreate(CUJ);
     var lastRoot = localStorage.getItem('lastRootPath');
     if (lastRoot != null)
         rootChaosPath.value = lastRoot;
+    //alert("CurrentCU oneFolder set is " + CU.OneFolder);
+    isOneFolder(CU.OneFolder);
 }
 
 function ShowFieldSets() {

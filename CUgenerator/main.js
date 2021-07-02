@@ -9,8 +9,8 @@ var clearButton =  document.getElementById('ClearCU');
 var updateButton =  document.getElementById('UpdateCU');
 
 var UploadJSONButton =  document.getElementById('UploadJSON');
-var downLinkJson=document.getElementById('lnkDownloadJSON');
-
+var downLinkJson = document.getElementById('lnkDownloadJSON');
+var notOneFolder = document.getElementById('SeparateDriver');
 
 
 
@@ -22,7 +22,17 @@ if(localStorage.getItem('controlUnit')) {
 
 
 
-
+function switchFolderStyle() {
+    let lbDr = document.getElementById("labOffD");
+    let lbCo = document.getElementById("labOffC");
+    let bSet = !(notOneFolder.checked);
+   
+    OffsetFromCommonForm.hidden = bSet;
+    OffsetFromDriverForm.hidden = bSet;
+    lbDr.hidden = bSet;
+    lbCo.hidden = bSet;
+    
+}
 
 
 function retrieveCU() {
@@ -100,7 +110,8 @@ function createCU() {
         var name= document.getElementById('CUName').value;
         var prefix = document.getElementById('CUPrefix').value;
         var currentCU= new controlUnit();
-        
+
+        currentCU.OneFolder = !notOneFolder.checked;
         currentCU.Name=name;
         currentCU.Prefix=prefix;
         currentCU.OffsetFromDriver=OffsetFromDriverForm.value;
@@ -202,6 +213,7 @@ function updateCU() {
                 alert( "Data not correct. Abort updating");
                 return;
             }
+            obj.OneFolder = !notOneFolder.checked;
             obj.Name=CUNameForm.value;
             obj.Prefix=CUPrefixForm.value;
             obj.OffsetFromDriver=OffsetFromDriverForm.value;

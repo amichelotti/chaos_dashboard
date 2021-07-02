@@ -10,12 +10,14 @@ class controlUnit {
     //Commands
     //Alarms
     //AbstractEnumerations
+    //OneFolder
     constructor()
     {
         this.DataSet=[];
         this.Commands=[];
         this.Alarms=[];
-        this.AbstractEnumerations=[];
+        this.AbstractEnumerations = [];
+        this.OneFolder = true;
     }
     getNumberOfNeededInterfaceVariable(type,output,ptNeededOPar,ptNeededIPar) {
       

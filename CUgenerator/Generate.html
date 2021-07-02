@@ -41,20 +41,21 @@
                       <input type="checkbox" id="ExcludeCMakeLists" onchange="radioSelectHandler()" >Exclude CMakeLists<br>
                   </fieldset>
                   <div >
-                      <label class="largeText" for="RemoteRootPath">Remote !Chaos root path</label><br/>
+                      <label class="largeText" for="RemoteRootPath" id="LRemoteRootPath">Remote !Chaos root path</label><br/>
                       <input type="text" class="largeText" id="RemoteRootPath">
                   </div>
                 </td>
                 <td>
                     <input type="checkbox" id="GenerateDriver" checked>Generate Common Driver<br>
                     <input type="checkbox" id="DebugLog" checked>Add Debug Log<br>
-                    <input type="checkbox" id="GenerateIntermediateMakelists" >Generate Intermediate CMakelists<br>
-                    <input type="button" id = "buttonGenerate" value="Generate">
-                    <a download="something.txt" id=lnkDownload href="">download</a>​​​​​​​​​​​​​​​​​​​​​​​​​​​
-                    <br/>
-                    <input type="button" id = "buttonAddScript" value="Add Install Script" onclick="AddInstallScript()">
+                    <input type="checkbox" id="GenerateIntermediateMakelists">
+                    <label id="TextForCMakeLists">Generate Intermediate CMakelists</label> <br>
+                    <input type="button" id="buttonGenerate" value="Generate">
+                    <a download="something.txt" id=lnkDownload href="">download</a>
+                    <br />
+                    <input type="button" id="buttonAddScript" value="Add Install Script" onclick="AddInstallScript()">
 
-                  </td>
+                </td>
               </tr>
               </table>
       </form>

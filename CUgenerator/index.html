@@ -41,26 +41,30 @@
                         <input type="button" id = "UpdateCU" value="Update">
                         </fieldset>
                     </div>
+                    <div>
+                        <input type="checkbox" id="SeparateDriver" onchange="switchFolderStyle()" >Create COMMON and DRIVER Folder (Old Style)<br>
+                    </div>
                 </th>
                 <th>
-                        <div>
-                            <label for="LBOffsetFromDriver" >Path from Driver Folder</label>
-                            <input class="text" id="OffsetFromDriver" tabindex="3">
-                        </div>
-                        <div>
-                            <label for="LBOffsetFromCommon">Path from Common Folder</label>
-                            <input class="text" id="OffsetFromCommon" tabindex="4">
-                        </div>
-                        <div>
-                            <label for="LBDriverName">Common Driver Name *</label>
-                            <input class="text" id="DriverName"  tabindex="5">
-                        </div>
-                        <div>
-                            <a download="something.txt" id=lnkDownloadJSON href="" ><button onclick=startDownloadJSON()>download JSON description</button></a>​​​​​​​​​​​​​​​​​​​​​​​​​​​
-                        </div>
-                        
-    
-                    </th>
+                    <div>
+                        <label for="LBDriverName">Common Driver Name *</label>
+                        <input class="text" id="DriverName" tabindex="5">
+                    </div>
+                    <div>
+                        <label for="LBOffsetFromDriver" id="labOffD" hidden="true">Path from Driver Folder</label>
+                        <input class="text" id="OffsetFromDriver" tabindex="3" hidden="true">
+                    </div>
+                    <div>
+                        <label for="LBOffsetFromCommon" id="labOffC" hidden="true">Path from Common Folder</label>
+                        <input class="text" id="OffsetFromCommon" tabindex="4" hidden="true">
+                    </div>
+
+                    <div>
+                        <a download="something.txt" id=lnkDownloadJSON href=""><button onclick=startDownloadJSON()>download JSON description</button></a>
+                    </div>
+
+
+                </th>
             </tr>
             <tr>
                 <td></td>
