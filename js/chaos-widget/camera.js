@@ -114,6 +114,7 @@ function getCameraDesc(cul){
      // console.log(cul[cnt]+" ->"+JSON.stringify(pub));
       cameraDriverDesc[cul[cnt]]=pub;
       cnt++;
+    }
     });
   });
 }
