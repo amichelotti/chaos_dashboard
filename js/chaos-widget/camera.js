@@ -78,14 +78,14 @@ function redrawReference(domid,x,y,sx,sy,r){
 function getCameraDesc(cul){
   jchaos.command(cul, { "act_name": "cu_prop_drv_get" },data=>{
 
-  var cnt=0;
-  data.forEach(ele=>{
+  data.forEach((ele,cnt)=>{
       var pub={};
       for(k in ele ){
+        var bname=jchaos.encodeName(cul[cnt]);
+
         if(ele[k].hasOwnProperty("pubname")){
           pub[ele[k].pubname]=ele[k];
           var html="NA:NA";
-          var bname=jchaos.encodeName(cul[cnt]);
           if(ele[k].pubname=="SHUTTER"){
             if(ele[k].max != undefined){
               html=ele[k].max.toFixed(2) + ":"+ele[k].min.toFixed(2);
@@ -98,23 +98,23 @@ function getCameraDesc(cul){
             }
             $("#"+bname+ "_GAIN_INFO").html(html);
           }
-          if(k=="SerialNumber"){
-            if(ele[k].hasOwnProperty("value")){
-              $("#"+bname+ "_INFO").html(ele[k].value);
-              console.log("Serial:"+ele[k].value);
-            } else if(ele[k].hasOwnProperty("VAL")){
-              $("#"+bname+ "_INFO").html(ele[k].VAL);
-              console.log("Serial:"+ele[k].VAL);
-
-          }
-        } else {
-          pub[k]=ele[k];
+          
         }
-      }
-     // console.log(cul[cnt]+" ->"+JSON.stringify(pub));
+        if(k=="SerialNumber"){
+          if(ele[k].hasOwnProperty("VAL")){
+            $("#"+bname+ "_INFO").html(ele[k].VAL);
+            console.log("Serial:"+ele[k].VAL);
+          } else if(ele[k].hasOwnProperty("VAL")){
+            $("#"+bname+ "_INFO").html(ele[k].VAL);
+            console.log("Serial:"+ele[k].VAL);
+
+        } 
       cameraDriverDesc[cul[cnt]]=pub;
-      cnt++;
+    
+      }
     }
+     // console.log(cul[cnt]+" ->"+JSON.stringify(pub));
+
     });
   });
 }

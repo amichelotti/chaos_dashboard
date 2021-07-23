@@ -40,7 +40,7 @@
 
         <ul class="list-unstyled">
           <li>
-            <a href="http://chaostest-grafana01.chaos.lnf.infn.it:3000/login">Grafana preproduction</a>
+            <a href="http://chaost-grafana01.chaos.lnf.infn.it:3000/login">Grafana preproduction</a>
           </li>
           <li>
             <a href="https://chaos-lb01.chaos.lnf.infn.it/grafana">Grafana production</a>
