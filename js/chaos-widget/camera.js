@@ -3,6 +3,7 @@ var selectedCams = [];
 var stateObj = {};
 var cameraDriverDesc={};
 var cameraLayoutSettings={};
+var mouseX, mouseY;
 
 function checkRedrawReference(camid,domid,x,y,sx,sy,r){
   jchaos.getChannel(camid,1,(ele)=>{
@@ -31,7 +32,7 @@ function redrawReference(domid,x,y,sx,sy,r){
      
       const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    console.log("canvas width:"+canvas.width + " height:"+canvas.height+" original img size:"+natwidth+"x"+natheight+" offsetTop:" +canvas.offsetTop + " offsetLeft:"+canvas.offsetLeft+" offsetW:"+canvas.offsetWidth + " offsetH:"+canvas.offsetHeight);
+  //  console.log("canvas width:"+canvas.width + " height:"+canvas.height+" original img size:"+natwidth+"x"+natheight+" offsetTop:" +canvas.offsetTop + " offsetLeft:"+canvas.offsetLeft+" offsetW:"+canvas.offsetWidth + " offsetH:"+canvas.offsetHeight);
     let ratiox=canvas.width/natwidth;
     let ratioy=canvas.height/natheight;
     /*ctx.fillStyle = 'rgb(200, 0, 0)';
@@ -69,7 +70,7 @@ function redrawReference(domid,x,y,sx,sy,r){
      
       ctx.stroke();
     //  ctx.closePath();
-      console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
+   //   console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
     }
 
 
@@ -160,9 +161,9 @@ function buildCameraArray(id, opt) {
     for (var c = 0; c < col; c++, cnt++) {
       var encoden = r + "_" + c;
      // html += '<td id="camera-' + encoden + '">';
-      html += '<div class="col cameraMenuShort" cuindex="'+encoden+'">';
+      html += '<div class="col">';
 
-      html += '<div class="insideWrapper" id="insideWrapper-'+encoden+'">';
+      html += '<div class="insideWrapper cameraMenuShort" cuindex="'+encoden+'" id="insideWrapper-'+encoden+'">';
       html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/logo_chaos_col_xMg_icon.ico" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '</div>';
@@ -211,7 +212,16 @@ $.fn.buildCameraArray = function (opt) {
       }
       mappedcamera[ev.currentTarget.value] = vid[1];
       activateMenuShort();
-
+      $("#cameraImageCanv-" + vid[1]).on("mousemove", function (e) {
+        var offset = $(this).offset();
+        var currzoomm=1.0;
+        var x = (e.pageX - offset.left)/currzoomm;
+        var y = (e.pageY - offset.top)/currzoomm;
+      //  console.log("POS "+ev.currentTarget.value+" "+x+","+y)
+        mouseX=x;
+        mouseY=y;
+       
+      });
       // console.log(JSON.stringify(mapcamera));
      // checkRedrawReference(ev.currentTarget.value,vid[1]);
 
@@ -657,7 +667,7 @@ function cropEnable(cu,tmpObj,func){
     viewMode: 1,
     dragMode: 'none',
     initialAspectRatio: 1,
-    zoomable: false,
+    zoomable: true,
     crop: function (event) {
       tmpObj['crop'] = {};
       tmpObj['crop'][cu] = event.detail;
@@ -695,20 +705,20 @@ function activateMenuShort(){
         cuitem['zoom-in'] = {
           name: "Zoom In ", cu: name,
           callback: function (itemKey, opt, e) {
-            zoomInOut(domid,0.5);
+            zoomInOut(domid,2);
           }
         };
         cuitem['zoom-out'] = {
           name: "Zoom Out ", cu: name,
           callback: function (itemKey, opt, e) {
-            zoomInOut(domid,-0.5);
+            zoomInOut(domid,0.5);
           }
         };
         cuitem['zoom-reset'] = {
-          name: "Actual Size", cu: name,
+          name: "Zoom Reset", cu: name,
           callback: function (itemKey, opt, e) {
-            var name = opt.items[itemKey].cu;
-            zoomInOut(name,0);
+           // var name = opt.items[itemKey].cu;
+            zoomInOut(domid,0);
           }
         };
         for (var k in el) {
@@ -782,19 +792,41 @@ function zoomInOut(name,incr){
     cameraLayoutSettings[name]={"zoom":currzoom};
 
   }
+  var x=mouseX/currzoom;
+  var y=mouseY/currzoom;     
   if(incr==0){
     currzoom=1.0;
   } else {
-    currzoom+=incr;
+    
+    currzoom*=incr;
+    jqccs.instantMessage("Zoom:" + currzoom, "", 2000, true);
 
   }
   cameraLayoutSettings[name]["zoom"]=currzoom;
   var encoden = jchaos.encodeName(name);
-  console.log(name+" Zooming "+currzoom);
-
+  
 //  $("#insideWrapper-"+encoden).css("transform","scale("+currzoom+")");
-  $("#cameraImage-"+encoden).css("transform","scale("+currzoom+")");
-  $("#cameraImageCanv-"+encoden).css("transform","scale("+currzoom+")");
+  if((incr!=0)){
+    
+    var or=x + "px " +y+"px";
+    var prop={
+      "transform-origin":or,
+      "transform": "scale("+currzoom+")"
+    };
+    $("#cameraImage-"+encoden).css(prop);
+    $("#cameraImageCanv-"+encoden).css(prop);
+
+    //$("#cameraImage-"+encoden).css("transform-origin","10px 4px");
+    //$("#cameraImageCanv-"+encoden).css("transform-origin","10px 4px");
+
+    console.log(name+" Zooming "+currzoom +" "+JSON.stringify(prop));
+
+  } else {
+    console.log(name+" Zooming "+currzoom);
+
+    $("#cameraImage-"+encoden).css("transform","scale("+currzoom+")");
+    $("#cameraImageCanv-"+encoden).css("transform","scale("+currzoom+")");
+  }
 
 }
 function activateMenu(tmpObj){
@@ -820,18 +852,34 @@ function activateMenu(tmpObj){
       }
       };
       cuitem['zoom-in'] = {
-        name: "Zoom In "+(currzoomm+0.5), cu: name,
+        name: "Zoom In ", cu: name,
         callback: function (itemKey, opt, e) {
           var name = opt.items[itemKey].cu;
-          zoomInOut(name,0.5);
+          var offset = $(this).offset();
+         // var x = (e.pageX - offset.left);
+          //var y = (e.pageY - offset.top);
+         // var x = (e.pageX )/currzoomm;
+         // var y = (e.pageY)/currzoomm;
+         var x=mouseX/currzoomm;
+         var y=mouseY/currzoomm;
+          console.log("Zoom in Pos:"+x+"-"+e.clientX+","+y+"-"+e.clientY+" offleft:"+offset.left+" offtop:"+offset.top);
+          zoomInOut(name,2);
         }
       };
       cuitem['zoom-out'] = {
-        name: "Zoom Out "+(currzoomm-0.5), cu: name,
+        name: "Zoom Out ", cu: name,
         callback: function (itemKey, opt, e) {
           var name = opt.items[itemKey].cu;
           var encoden = jchaos.encodeName(name);
-          zoomInOut(name,-0.5);
+          var offset = $(this).offset();
+         // var x = (e.pageX - offset.left);
+         // var y = (e.pageY - offset.top);
+         //var x = (e.pageX )/currzoomm;
+         //var y = (e.pageY )/currzoomm;   
+      
+      //    console.log("Zoom out Pos:"+x+","+y +" offleft:"+offset.left+" offtop:"+offset.top);
+
+          zoomInOut(name,0.5);
         }
       };
       cuitem['zoom-reset'] = {
@@ -1058,13 +1106,13 @@ function rebuildCam(tmpObj) {
         }
        // html += '<td class="cameraMenu" style="width:' + maxwidth + 'px" id="camera-' + encoden + '" cuname="' + key + '" >'
         //   html += '<div><b>'+key+'</b>';
-        html +='<div class="col cameraMenu" cuname="' + key + '">';
-        html += '<div class="insideWrapper" id="insideWrapper-'+encoden+'">';
+        html +='<div class="col">';
+        html += '<div class="insideWrapper cameraMenu" cuname="' + key + '" id="insideWrapper-'+encoden+'">';
 
         if (selectedCams.length > 1) {
           html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
         } else {
-          html += '<img id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
+          html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
         }
         html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
         html += '</div>';
@@ -1103,10 +1151,19 @@ function rebuildCam(tmpObj) {
               currzoomm=cameraLayoutSettings[key]["zoom"];
             }
             var x = (e.pageX - offset.left)/currzoomm;
-              var y = (e.pageY - offset.top)/currzoomm;
+            var y = (e.pageY - offset.top)/currzoomm;
               
            // var x = event.pageX - this.offsetLeft;
            // var y = event.pageY - this.offsetTop;
+           let natw=$("#cameraImage-"+encoden).prop('naturalWidth');
+          let nath=$("#cameraImage-"+encoden).prop('naturalHeight');
+            x=x*(natw/this.width);
+            y=y*(nath/this.height);
+           //var natw=$(this).naturalWidth;
+           //var nath=$(this).naturalHeight;
+          // var offx=this.naturalWidth;
+          // var offy=this.naturalHeight;
+           console.log("Natural dim:"+natw+","+nath+ " Rendered "+this.width+","+this.height);
            jqccs.confirm("Reference Change", "Do you want change to :" + x.toFixed(1)+"x"+y.toFixed(1) + " Zoom:"+currzoomm, "Ok", function () {
             
             jchaos.setAttribute(key,"REFX",x.toString(),(ok)=>{
@@ -1120,6 +1177,28 @@ function rebuildCam(tmpObj) {
             });
           },"Cancel");
     
+        });
+        $("#cameraImageCanv-" + encoden).on('mousemove', function (e) {
+          var offset = $(this).offset();
+          var currzoomm=1.0;
+         // console.log("POS:"+e.pageX+","+e.pageY);
+          var x = (e.pageX - offset.left)/currzoomm;
+          var y = (e.pageY - offset.top)/currzoomm;
+          //let natw=$("#cameraImage-"+encoden).prop('naturalWidth');
+          //let nath=$("#cameraImage-"+encoden).prop('naturalHeight');
+          mouseX=x;
+          mouseY=y;
+          //console.log("POS:"+x+","+y+" Natural dim:"+natw+","+nath+ " Rendered "+this.width+","+this.height);
+     
+           // var x = event.pageX - this.offsetLeft;
+           // var y = event.pageY - this.offsetTop;
+           // x=x*(natw/this.width);
+           // y=y*(nath/this.height);
+           //var natw=$(this).naturalWidth;
+           //var nath=$(this).naturalHeight;
+          // var offx=this.naturalWidth;
+          // var offy=this.naturalHeight;
+           
         });
         checkRedrawReference(encoden);
         
@@ -1423,10 +1502,10 @@ function getWidget() {
       var cu = tmpObj.elems;
       var template = tmpObj.type;
 
-      var html = '<div>';
+      var html = '<div class="row">';
 
 
-      html += '<div id="cameraTable"></div>';
+      html += '<div class="container-fluid" id="cameraTable"></div>';
       html += '</div>';
 
       var cu = tmpObj.elems;

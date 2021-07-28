@@ -23,6 +23,10 @@
 										class="halflings-icon pencil"></i> Node Management</a>
 								<a class="dropdown-item" href="./configuration.php"><i
 										class=" halflings-icon cloud"></i> Configuration</a>
+								<a class="dropdown-item" href="./app/camera_view.php"><i class="halflings-icon camera"></i>
+									Camera View App</a>
+								<a class="dropdown-item" href="./app/synoptic_view.php"><i class="halflings-icon globe"></i>
+									Synoptic View App</a>
 							</div>
 						</li>
 						<li class="nav-item dropdown">

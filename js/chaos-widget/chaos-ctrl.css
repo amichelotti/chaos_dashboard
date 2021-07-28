@@ -136,7 +136,28 @@ a:hover {
   height: auto;
   margin:0;
   padding:0;
-  /*position:absolute;top:0px; left:0px;*/
+  display: block;
+}
+
+.syn_table{
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 0 auto;
+    border-spacing:0;
+    width:100%;
+    overflow-y: scroll;
+
+
+}
+.syn_input{
+  top:0px;
+  height:100%;
+}
+.syn_td {
+    width: 50%;
+    padding:0;
+    border:0;
+    display: inline-block;
 }
 
 .chaos_image_max{
@@ -144,6 +165,8 @@ a:hover {
   height: auto;
   margin:0;
   padding:0;
+  display: block;
+
 /*  position:absolute;top:0px; left:0px;*/
 }
 .coveringCanvas{ 
@@ -157,9 +180,8 @@ a:hover {
   position:relative;
   /*width: 640px;
   height: 480px;*/
-  overflow-x:auto;
-  overflow-y:auto;     
-    
+  overflow-x:scroll;
+  overflow-y:scroll;     
   white-space: nowrap;
 }
 .chaosrow{
@@ -220,7 +242,7 @@ div.loading .wait_modal {
   display: block;
 
   /* This rule is very important, please don't ignore this */
-  width: 100%;
+  max-width: 100%;
 }
 .vakata-context { 
   z-index:10052 !important; 
