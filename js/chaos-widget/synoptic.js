@@ -738,6 +738,72 @@
  */
 var tableborderVisible=0;
 var clist={};
+function draw_object(ctx,x,y,obj,color,lndepth,text){
+    var name=obj.description.CUName;
+    var decoded = jchaos.pathToZoneGroupId(name);
+    var imgsrc="/img/devices/" + decoded["group"] + ".png"
+    var imgsizex=0;
+    var imgsizey=0;
+    var fontsize=10;
+    var font="Arial";
+    if(text === undefined){
+        text=name;
+    }
+    if(obj.hasOwnProperty("img")){
+        imgsrc=obj.img;
+    }
+    if(obj.hasOwnProperty("imgsizex")){
+        imgsizex=obj.imgsizex;
+        imgsizey=obj.imgsizex;
+    }
+    if(obj.hasOwnProperty("imgsizey")){
+        imgsizey=obj.imgsizey;
+    } 
+    if(obj.hasOwnProperty("fontsize")){
+        fontsize=obj.fontsize;
+    }
+    if(obj.hasOwnProperty("font")){
+        font=obj.font;
+    }
+    const img = new Image();
+    img.onload = function() {
+        ctx.beginPath();
+        
+
+        //  alert(this.width + 'x' + this.height);
+        if(imgsizex==0){
+            imgsizex=img.width;
+        }
+        if(imgsizey==0){
+            imgsizey=img.height;
+        }
+        var r=(imgsizex>imgsizey) ? imgsizex:imgsizey;
+        ctx.clearRect(x-(r+lndepth),y-(r+lndepth),2*(r+lndepth),2*(r+lndepth));
+        if(clist[obj.row][obj.col]['text']){
+            ctx.clearRect(obj['text'].x,obj['text'].y-fontsize,obj['text'].w,obj['text'].h);
+            delete clist[obj.row][obj.col]['text'];
+        }
+        ctx.arc(x, y, r, 2 * Math.PI, false);
+        ctx.lineWidth = lndepth;
+        ctx.strokeStyle = color;
+        ctx.stroke();
+        ctx.font = fontsize+"px "+font;
+        ctx.drawImage(img, x-imgsizex/2, y-imgsizey/2,imgsizex,imgsizey);
+        if(text.length){
+            ctx.fillText(text, x-r,y+r+fontsize );
+            const textMetrics = ctx.measureText(text);
+            console.log("METRICS:"+JSON.stringify(textMetrics));
+            clist[obj.row][obj.col]['text']={"text":text,"x":x-r,"y":y+r+fontsize,"w":textMetrics.width,"h":fontsize};
+
+        }
+        clist[obj.row][obj.col]['circle']={"x":x,"y":y,"r":r};
+
+        //console.log(img["cu"].description.CUName+" ("+img["cu"].col+","+img["cu"].row+") ("+x+","+ y+") "+img.src);
+      }
+      img.src =imgsrc;
+      img.title=name;
+
+}
 function draw_circle(context,x,y,r,color){
     context.beginPath();
 
@@ -775,6 +841,12 @@ $.fn.buildSynoptic = function (opt) {
         for (var r = 0; r < nrows; r++) {
             for (var c = 0; c < ncols; c++) {
                 if((clist[r]!==undefined)&&(clist[r][c]!==undefined)){
+                    var x=c*(canvas.width/ncols);
+                    var y=r*(canvas.height/nrows);
+                    draw_object(ctx,x,y,clist[r][c],"green",5,"");
+                }
+
+                /*if((clist[r]!==undefined)&&(clist[r][c]!==undefined)){
                     var name=clist[r][c].description.CUName;
                     var decoded = jchaos.pathToZoneGroupId(name);
                     //const image = document.getElementById(decoded["group"] );
@@ -794,18 +866,16 @@ $.fn.buildSynoptic = function (opt) {
                     img.src ="/img/devices/" + decoded["group"] + ".png";
                     img.title=name;
                 
-            }
+            }*/
         }
 
     }
     var elemLeft = canvas.offsetLeft + canvas.clientLeft;
     var elemTop =  canvas.offsetTop +  canvas.clientTop;
-    $("#synopticImageCanv-" + encoden).on("click",(event)=>{
-        //var x = event.pageX- elemLeft;
-        //var y = event.pageY- elemTop;
+
+    function checkEventOnObj(event){
         var x = event.offsetX- elemLeft;
         var y = event.offsetY- elemTop;
-        console.log("event on "+x+","+y);
         for (var r = 0; r < nrows; r++) {
             for (var c = 0; c < ncols; c++) {
                 if((clist[r]!==undefined)&&(clist[r][c]!==undefined)){
@@ -813,40 +883,50 @@ $.fn.buildSynoptic = function (opt) {
                 var objy=clist[r][c]['circle'].y;
                 var objr=clist[r][c]['circle'].r;
                 if(((x>=objx-objr) && x<(objx+objr)) &&((y>=objy-objr) && y<(objy+objr))){
-                    console.log("Event on:"+clist[r][c].description.CUName);
-
+                  return clist[r][c];
                 }
             }
         }
+    }
+     return null;   
+    }
+
+    $("#synopticImageCanv-" + encoden).on("click",(event)=>{
+        var obj=checkEventOnObj(event);
+        if(obj!=null){
+            console.log("click on "+obj.description.CUName);
+
         }
+       
 
     });
+    var last_obj=null;
     $("#synopticImageCanv-" + encoden).mousemove((event)=>{
-         //var y = event.pageY- elemTop;
-         var x = event.offsetX- elemLeft;
-         var y = event.offsetY- elemTop;
-        // console.log("move on "+x+","+y);
-        for (var r = 0; r < nrows; r++) {
-            for (var c = 0; c < ncols; c++) {
-                if((clist[r]!==undefined)&&(clist[r][c]!==undefined)){
-                var objx=clist[r][c]['circle'].x;
-                var objy=clist[r][c]['circle'].y;
-                var objr=clist[r][c]['circle'].r;
-                if(((x>=objx-objr) && x<(objx+objr)) &&((y>=objy-objr) && y<(objy+objr))){
-                    console.log("MOVE on:"+clist[r][c].description.CUName);
-                    if(clist[r][c]['circle'].hasOwnProperty("text")){
-                        draw_circle(ctx,objx,objy,objr,"green");
-
-                    } else {
-                        clist[r][c]['circle']['text']=clist[r][c].description.CUName;
-                        draw_circle_text(ctx,objx,objy,objr,clist[r][c].description.CUName,"green");
-                    }
+        
+        var obj=checkEventOnObj(event);
+        if(obj!=null){ 
+            if(last_obj){
+                
 
 
-                }
+            } else {
+                console.log("MOVE on:"+obj.description.CUName);
+                draw_object(ctx,obj['circle'].x,obj['circle'].y,obj,"green",8);
+                last_obj=obj
             }
+            
+
+        } else {
+            if(last_obj){
+                draw_object(ctx,last_obj['circle'].x,last_obj['circle'].y,last_obj,"green",5,"");
+                last_obj=null;
+            }
+
         }
-        }
+
+            
+        
+        
     });
 	}
 	
