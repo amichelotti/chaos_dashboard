@@ -748,12 +748,20 @@
     }
 
 
-    jqccs.editJSON = function (msghead, json, applyfunc) {
+    jqccs.editJSON = function (msghead, json, applyfunc,opt) {
         var last_dataset = {};
         var showformat = 0;
         var name = jchaos.encodeName(msghead);
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
+        var options ={
+            collapsed: true,
+            withQuotes: true,
+            format: 10
+        }
+        if(opt!==undefined){
+            options=opt;
+        }
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
