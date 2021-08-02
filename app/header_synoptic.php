@@ -132,22 +132,7 @@
 						"separator_after": false,
 						label: "Run Synoptic",
 						action: function () {
-							var script = node.data;
-							jchaos.loadScript(script.script_name, script.seq, function (data) {
-
-								if (!data.hasOwnProperty('eudk_script_content')) {
-									jqccs.instantMessage("Load Script", script.script_name + " has no content", 4000, false);
-									return;
-								}
-
-								data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
-								jqccs.execConsole("Running " + script.script_name, () => {
-									return data['eudk_script_content'];
-								},
-									() => { jqccs.instantMessage("Execution ", script.script_name + "OK", 4000, true); },
-									() => { jqccs.instantMessage("Execution ", script.script_name + "FAILED", 4000, false); });
-							});
-
+							runSynoptic(node.data);
 						}
 					};
 				items['edit-script'] = {
@@ -155,52 +140,23 @@
 					"separator_after": false,
 					label: "Edit script",
 					action: function () {
-						var script = node.data;
-
-						jchaos.loadScript(script.script_name, script.seq, function (data) {
-
-							if (!data.hasOwnProperty('eudk_script_content')) {
-								jqccs.instantMessage("Load Script", script.script_name + " has no content", 4000, false);
-								return;
-							}
-							var templ = {
-								$ref: "algo.json",
-								format: "tabs"
-							}
-							if (!data.hasOwnProperty("script_group")) {
-								data['script_group'] = node.data['group'];
-							}
-							data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
-							delete data['_id'];
-							jqccs.jsonEditWindow("Loaded", templ, data, (obj)=>{
-						jqccs.algoSave(obj,()=>{refresh_script(pid);});
-						
-				
-			});
-
-						
+						var script = 
+						jqccs.jsonEditWindow("Synopsys Editor", null, node.data, function (data, obj) {
 						});
-						
-
 					}
+
 				};
 				items['download-script'] = {
 					"separator_before": false,
 					"separator_after": false,
 					label: "Download",
 					action: function () {
-						var script = node.data;
-						console.log("download " + script.script_name);
-						jchaos.loadScript(script.script_name, script.seq, function (data) {
-							if (!data.hasOwnProperty('eudk_script_content')) {
-								jqccs.instantMessage("Load Script", tmpObj.node_selected + " has no content", 4000, false);
-								return;
-							}
-
-							var obj = atob(data['eudk_script_content']);
-							var blob = new Blob([obj], { type: "json;charset=utf-8" });
-							saveAs(blob, data['script_name']);
-						});
+                                jqccs.getEntryWindow("Save to Disk", "Synoptic Name",  node.data.name, "Save", function (name) {
+									node.data['name'] = name;
+                                    var blob = new Blob([JSON.stringify( node.data)], { type: "json;charset=utf-8" });
+                                    saveAs(blob, name + ".synoptic.json");
+                                });
+						
 					}
 				};
 				items['delete-script'] = {
@@ -208,20 +164,25 @@
 					"separator_after": false,
 					label: "Delete script",
 					action: function () {
-						var script = node.data;
-						console.log("delete " + script.script_name);
-						jqccs.confirm("Delete Script", "Your are deleting script: " + script.script_name, "Ok", function () {
+						console.log("delete " + node.data.name);
+						jqccs.confirm("Delete Script", "Your are deleting synoptic: " + node.data.name, "Ok", function () {
+							jchaos.variable("synoptics", "get", null, function (synoptic) {
+                                    if (!(synoptic instanceof Object)) {
+                                        synoptic = {};
 
-							jchaos.rmScript(script, function (data) {
-								jqccs.instantMessage("Remove Script", "removed:" + script.script_name, 2000, true);
-								tree.delete_node(node);
+                                    }
+                                    delete synoptic[node.data.name];
+									jchaos.variable("synoptics", "set", synoptic, function (ok) {
+                                        jqccs.instantMessage("Saved " + syn.name, "OK", 3000, true);
 
-							});
+                                    });
+								});
+							
 						}, "Cancel");
 					}
 				};
 			}
-		}
+		
 		return items;
 	}
 
