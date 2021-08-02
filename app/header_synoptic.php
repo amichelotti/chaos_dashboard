@@ -7,8 +7,7 @@
 				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
 					<ul class="navbar-nav mr-auto">
 						<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Synoptic</a>
+						<a class="nav-link dropdown-toggle"  id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Synoptic</a>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
 							<a class="dropdown-item" href="javascript:handle_synoptic()" id="synoptic-management"><i
 										class="halflings-icon cog"></i> Synoptics..</a>
@@ -125,7 +124,23 @@
 			});
 		}
 		};
+		items['new-script'] = {
+					"separator_before": true,
+					"separator_after": false,
+					label: "New Synoptic",
+					action: function () {
+						var templ = {
+            				$ref: "synoptic_model.json",
+            				format: "tabs"
+        					}
+						
+						var t={'group':"GENERIC"};
+						jqccs.jsonEditWindow("Synoptic Editor", templ, t, function (data, obj) {
+							console.log("SAVE:"+JSON.stringify(data));
+						});
+					}
 
+				};
 		if (node.hasOwnProperty("data")) {
 					items['run-control'] = {
 						"separator_before": false,
@@ -140,8 +155,12 @@
 					"separator_after": false,
 					label: "Edit script",
 					action: function () {
-						var script = 
-						jqccs.jsonEditWindow("Synopsys Editor", null, node.data, function (data, obj) {
+						var templ = {
+            				$ref: "synoptic_model.json",
+            				format: "tabs"
+        					}
+						jqccs.jsonEditWindow("Synopsys Editor", templ, node.data, function (data, obj) {
+							console.log("SAVE:"+JSON.stringify(data));
 						});
 					}
 
@@ -191,11 +210,20 @@
 			var scripts = {};
 			var node_created = {};
 			jchaos.variable("synoptics", "get", null, function (synoptic) {
-				
+				var node_group = {
+									"id": jchaos.encodeName("GENERIC"),
+									"parent": "#",
+									"text": "GENERIC",
+								};
+								node_created[node_group["id"]] = true;
+								jsree_data.push(node_group);
+
+						
+						
 				for(var syn in synoptic){
 					var parent="#";
 					if(synoptic[syn].hasOwnProperty("group")){
-						var node_group = {
+						node_group = {
 									"id": jchaos.encodeName(synoptic[syn].group),
 									"parent": "#",
 									"text": synoptic[syn].group,
@@ -207,11 +235,12 @@
 
 						}
 					}
-					var node_group = {
+					node_group = {
 									"id": jchaos.encodeName(syn),
 									"parent": parent,
 									"text": syn,
-									"data":synoptic[syn]
+									"data":synoptic[syn],
+									"icon":"../img/synoptics/iot16.png"
 								};
 					if (!node_created.hasOwnProperty(node_group["id"])) {
 								node_created[node_group["id"]] = true;
@@ -256,7 +285,8 @@
 				//$('#hier_view').jstree('load_node',ds);
 				//addListeners();    
 			});
-		}
+	}
+
 	function handle_synoptic() {
 		$("body").addClass("loading");
 

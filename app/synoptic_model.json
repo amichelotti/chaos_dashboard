@@ -1,0 +1,67 @@
+{
+    "title": "Synoptic",
+    "type": "object",
+    "id": "editor-synoptic",
+    "format": "tab",
+    "properties": {
+        "name": {
+            "type": "string",
+            "required": true,
+            "format": "text",
+            "description": "Synoptic Name"
+        },
+        
+        "group": {
+            "type": "string",
+            "format": "text",
+            "required": true,
+            "default" : "GENERIC",
+            "description": "Synoptic Group"
+
+        },
+        "imageWidth": {
+            "type": "integer",
+            "default": 1024,
+            "required": false,
+            "description": "Width of the Synoptic image"
+
+        },
+        "imageHeight": {
+            "type": "integer",
+            "default": 768,
+            "required": false,
+            "description": "Height of the Synoptic image"
+
+        },
+        "numRows": {
+            "type": "integer",
+            "default": 29,
+            "required": true,
+            "description": "Rows of the synoptic"
+        },
+        "numCols": {
+            "type": "integer",
+            "default": 48,
+            "required": true,
+            "description": "Cols of the synoptic"
+        },
+        "imgsrc": {
+            "type": "string",
+            "format": "textarea",
+            "required": true,
+            "description": "Image Synoptic source"
+        },
+       
+        "controls": {
+            "type": "array",
+            "format": "tab",
+            "title": "Synoptic Nodes",
+            "required": true,
+            "items": {
+                "$ref": "synoptic-node.json",
+                "title": "Nodes"
+            }
+        }
+
+    }
+}
