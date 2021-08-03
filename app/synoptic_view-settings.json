@@ -1,45 +1,55 @@
 {
-    "title":"Dashboard Settings",
+    "title":"Synoptic Settings",
     "type":"object",
-	"id":"dashboard-settings",
+	"id":"sinoptic-settings",
 	"format":"tab",
     "properties": {
-	
+	"defaultSynoptic" : {
+			"type":"string",
+			"default":"Flame",
+			"description":"Default Synoptic To open"
+	},
 	"generalRefresh" : {
 		"type":"integer",
 		"default":1000,
 		"required": true,
 		"description":"General Refresh (ms)"
 	},
-	"maxNodesPerPage" : {
+	"showuid" : {
+		"type":"boolean",
+		"default":true,
+		"required": true,
+		"description":"Show UID"
+	},
+	"color" : {
+		"type":"string",
+		"default":"black",
+		"description":"Default Node Color"
+	},
+	"font" : {
+		"type":"string",
+		"default":"Arial",
+		"description":"Default Font"
+	},
+	"fontsize" : {
 		"type":"integer",
 		"default":10,
-		"description":"Max number of Nodes per page"
+		"description":"Default font size"
 	},
-	"defaultZone" : {
-		"type":"string",
-		"default":"ALL",
-		"description":"Default Zone to open"
-	},
-	"defaultGroup" : {
-		"type":"string",
-		"default":"ALL",
-		"description":"Default Group to open"
-	},
-	"defaultInterface" : {
-		"type":"string",
-		"default":"ALL",
-		"description":"Default Interface to open"
-	},
-	"generalControlRefresh" : {
+	"depth" : {
 		"type":"integer",
-		"default":500,
-		"description":"Default General Refresh when in control (ms)"
+		"default":3,
+		"description":"Default line depth"
 	},
-	"defaultPage" : {
+	"rowspan" : {
 		"type":"integer",
-		"default":1000,
-		"description":"Default History Page"
+		"default":1,
+		"description":"Default roswspan"
+	},
+	"colspan" : {
+		"type":"integer",
+		"default":1,
+		"description":"Default colspan"
 	},
 	"checkLive" : {
 		"type":"integer",
@@ -51,11 +61,6 @@
 		"default":10000,
 		"required": true,
 		"description":"Default Timeout Rest operation (ms)"
-	},
-	"camera":{
-		    "$ref":"../camera-settings.json",
-		    "title":"Camera Settings",
-			"required": true
 	}
 }
 }

@@ -1300,12 +1300,13 @@
         if (typeof channel === "undefined") {
             channel = 0;
         }
-        var instant = $('<div><img id="pict-' + name + '" src=""><div id="info-' + name + '"></div></div>').dialog({
+        var instant = $('<div><img class="chaos_image" id="pict-' + name + '" src=""><div id="info-' + name + '"></div></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
             title: msghead,
             position: "center",
             resizable: true,
+            fontSize:10,
             dialogClass: 'no-close',
             buttons: [{
                 text: "save",
@@ -7507,7 +7508,7 @@
      */
     function mainTableCommonHandling(id, tmpObj, e) {
         var node_list = tmpObj['elems'];
-        $("#mdl-commands").modal("hide");
+       // $("#mdl-commands").modal("hide");
         if (tmpObj.node_selected == $(e.currentTarget).attr(tmpObj.type + "-name")) {
             $(".row_element").removeClass("bg-warning");
             tmpObj.node_multi_selected = [];

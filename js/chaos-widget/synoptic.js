@@ -7,7 +7,9 @@ var syn_opt = null;
 var canvas = null;
 var nrows = 0;
 var ncols = 0;
-
+var ccol=0;
+var crow=0;
+var currx=0,curry=0;
 function coordToTable(x, y) {
 
     if (ncols == 0 || nrows == 0) {
@@ -41,7 +43,9 @@ function checkEventOnObj(event) {
 function eventToPos(event) {
     var elemLeft = canvas.offsetLeft + canvas.clientLeft;
     var elemTop = canvas.offsetTop + canvas.clientTop;
-    return { x: event.offsetX - elemLeft, y: event.offsetY - elemTop };
+   currx=event.offsetX - elemLeft;
+    curry=event.offsetY - elemTop;
+    return { x:currx , y: curry };
 
 }
 function draw_all() {
@@ -51,12 +55,17 @@ function draw_all() {
     canvas.width = $("#synopticImage-" + encoden).width();
     canvas.height = $("#synopticImage-" + encoden).height();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+    var showid=syn_opt.settings.showid;
     for (var r = 0; r < nrows; r++) {
         for (var c = 0; c < ncols; c++) {
             if ((clist[r][c] != null)) {
                 var t = tableToCoord(c, r);
-                draw_object(ctx, t.x, t.y, clist[r][c]);
+                if(showid){
+                    draw_object(ctx, false,t.x, t.y, clist[r][c],null,null, clist[r][c].object.uid);
+
+                } else{
+                    draw_object(ctx, false,t.x, t.y, clist[r][c]);
+                }
             }
 
 
@@ -80,8 +89,10 @@ function getSynoptic() {
     return ret;
 
 }
-function draw_object(ctx, x, y, obj, col, lnd, tex) {
-    var name = obj.description.uid;
+function draw_object(ctx, clear,x, y, obj, col, lnd, tex) {
+    var name;
+    name=obj.object.uid;
+    
     var decoded = jchaos.pathToZoneGroupId(name);
     var imgsrc = "/img/devices/" + decoded["group"] + ".png"
     var lndepth = 3;
@@ -108,7 +119,7 @@ function draw_object(ctx, x, y, obj, col, lnd, tex) {
 
     if (typeof tex === "string") {
         text = tex;
-    }
+    } 
     if (obj.hasOwnProperty("img")) {
         imgsrc = obj.img;
     }
@@ -135,10 +146,11 @@ function draw_object(ctx, x, y, obj, col, lnd, tex) {
         imgsizey = img.height * rowspan;
 
         var r = (imgsizex > imgsizey) ? imgsizex : imgsizey;
-        ctx.clearRect(x - (r + lndepth), y - (r + lndepth), 2 * (r + lndepth), 2 * (r + lndepth));
-        if (clist[obj.row][obj.col]['runtime'].hasOwnProperty('text')) {
-            ctx.clearRect(obj['runtime']['text'].x, obj['runtime']['text'].y - fontsize, obj['runtime']['text'].w, obj['text'].h);
-            delete clist[obj.row][obj.col]['runtime']['text'];
+        if(clear&&clist[obj.row][obj.col]['runtime'].hasOwnProperty('circle')){
+            ctx.clearRect(x - (r + lndepth), y - (r + lndepth), 2 * (r + lndepth), 2 * (r + lndepth));
+        }
+        if (clear&&clist[obj.row][obj.col]['runtime'].hasOwnProperty('text')) {
+            ctx.clearRect(obj['runtime']['text'].x, obj['runtime']['text'].y - fontsize, obj['runtime']['text'].w, obj['runtime']['text'].h);
         }
         ctx.arc(x, y, r, 2 * Math.PI, false);
         ctx.lineWidth = lndepth;
@@ -150,12 +162,11 @@ function draw_object(ctx, x, y, obj, col, lnd, tex) {
             ctx.fillText(text, x - r, y + r + fontsize);
             const textMetrics = ctx.measureText(text);
             //console.log("METRICS:"+JSON.stringify(textMetrics));
-            clist[obj.row][obj.col]['runtime']['text'] = { "text": text, "x": x - r, "y": y + r + fontsize, "w": textMetrics.width, "h": fontsize };
+            clist[obj.row][obj.col]['runtime']['text'] = { "text": text, "x": x - r, "y": y + r + fontsize, "w": textMetrics.width, "h": (fontsize+1) };
 
         }
         clist[obj.row][obj.col]['runtime']['circle'] = { "x": x, "y": y, "r": r };
 
-        //console.log(img["cu"].description.uid+" ("+img["cu"].col+","+img["cu"].row+") ("+x+","+ y+") "+img.src);
     }
     img.src = imgsrc;
     img.title = name;
@@ -180,13 +191,25 @@ function draw_circle_text(context, x, y, r, text, color) {
     context.fillText(text, x - r, y + r + 10);
     //console.log("circle:("+x+","+y+" r="+r+" color:"+color+")");
 }
+function checkUnique(name){
+    for(var r=0;r<nrows;r++){
+        for(var c=0;c<ncols;c++){
+            if((clist[r][c]!=null)&&clist[r][c].hasOwnProperty("object")&&clist[r][c].object.uid==name){
+                return false;
+            }
+        }
+
+    }
+    return true;
+}
 $.fn.buildSynoptic = function (opt) {
-    this.html(buildSyn(opt));
-    var encoden = jchaos.encodeName(opt.name);
     syn_opt = opt;
+
+    this.html(buildSyn(syn_opt));
+    var encoden = jchaos.encodeName(opt.name);
     var checkExist = setInterval(function () {
         console.log("Loading..." + opt.name);
-        if (($("#synopticImageCanv-" + encoden).length) && ($("#synopticImage-" + encoden).length)) {
+        if (($("#synopticImageCanv-" + encoden).length) && ($("#synopticImage-" + encoden).length)&&($("#synopticImage-" + encoden).width()>0)&&($("#synopticImage-" + encoden).height()>0)) {
             console.log("Loaded " + opt.name);
             clearInterval(checkExist);
 
@@ -198,10 +221,31 @@ $.fn.buildSynoptic = function (opt) {
 
                 canvas.width = $("#synopticImage-" + encoden).width();
                 canvas.height = $("#synopticImage-" + encoden).height();
+                if(syn_opt.numRows==-1){
+                    syn_opt.numRows= Math.round(canvas.width/opt.cellsizex);
+                }
+                if(syn_opt.numCols==-1){
+                    syn_opt.numCols= Math.round(canvas.height/opt.cellsizey);
+                }
+                nrows = syn_opt.numRows;
+                ncols = syn_opt.numCols;
+                console.log("Synoptic grid "+nrows+"x"+ncols);
+                var controls = [];
+                if (opt.hasOwnProperty("controls")) {
+                    controls = opt.controls;
+                }
+                for (var r = 0; r < nrows; r++) {
+                    clist[r] = {};
 
-                nrows = opt.numRows;
-                ncols = opt.numCols;
-
+                    for (var c = 0; c < ncols; c++) {
+                        clist[r][c] = null;
+                    }
+                }
+                controls.forEach(ele => {
+                    var o = buildDefaultNode(ele);
+                
+                    clist[ele.row][ele.col] = o;
+                });
                 draw_all();
 
 
@@ -209,15 +253,37 @@ $.fn.buildSynoptic = function (opt) {
                 $("#synopticImageCanv-" + encoden).on("click", (event) => {
                     var obj = checkEventOnObj(event);
                     if (obj != null) {
-                        console.log("click on " + obj.description.uid);
+                        console.log("click on " + obj.object.uid);
+                        dragging = false;
+                        draggingobj = null;
+                        draw_all();
+
                     }
 
 
                 });
+                $("#synopticImageCanv-" + encoden).on('dblclick', function (e) {
+                    var obj = checkEventOnObj(event);
+                    if (obj != null) {
+                        console.log("dblclick on " + obj.object.uid);
+                        dragging = false;
+                        draggingobj = null;
+                        var decoded = jchaos.pathToZoneGroupId(obj.object.uid);
+
+                        if(decoded['group']=="CAMERA"){
+                            jqccs.showPicture(obj.object.uid, obj.object.uid, 1000);
+
+                        } else {
+                            jqccs.openControl(obj.object.uid, obj.object.uid);
+                        }
+
+                    }
+                });
+
                 $("#synopticImageCanv-" + encoden).mousedown((event) => {
                     var obj = checkEventOnObj(event);
                     if (obj != null) {
-                        console.log("mouse down " + obj.description.uid);
+                        console.log("mouse down " + obj.object.uid);
                         draggingobj = obj;
                         dragging = false;
                     }
@@ -230,27 +296,27 @@ $.fn.buildSynoptic = function (opt) {
                         var pos = eventToPos(event);
                         var t = coordToTable(pos.x, pos.y);
                         if ((clist[t.row][t.col] != null)) {
-                            if ((draggingobj.description.uid != clist[t.row][t.col].description.uid)) {
-                                alert("Cannot drop \"" + draggingobj.description.uid + "\"  here, another element \"" + clist[t.row][t.col].description.uid + "\"");
+                            if ((draggingobj.object.uid != clist[t.row][t.col].object.uid)) {
+                                alert("Cannot drop \"" + draggingobj.object.uid + "\"  here, another element \"" + clist[t.row][t.col].object.uid + "\"");
                             }
 
-                            draw_all();
+//                            draw_all();
 
                         } else {
                             var oldr = draggingobj.row;
                             var oldc = draggingobj.col;
 
-                            console.log("Dragged " + draggingobj.description.uid + " from:(" + oldc + "," + oldr + ") to:(" + t.col + "," + t.row + ")");
+                            console.log("Dragged " + draggingobj.object.uid + " from:(" + oldc + "," + oldr + ") to:(" + t.col + "," + t.row + ")");
                             draggingobj.col = t.col;
                             draggingobj.row = t.row;
                             clist[t.row][t.col] = draggingobj;
                             clist[oldr][oldc] = null;
 
 
-                            draw_all();
+                        //    draw_all();
                         }
                         draggingobj = null;
-
+                        draw_all();
 
                     }
 
@@ -264,7 +330,7 @@ $.fn.buildSynoptic = function (opt) {
                     if (dragging && (draggingobj != null)) {
                         var pos = eventToPos(event);
                         draggingobj["depth"] = 5;
-                        draw_object(ctx, pos.x, pos.y, draggingobj);
+                        draw_object(ctx,true, pos.x, pos.y, draggingobj);
 
                     } else {
 
@@ -272,17 +338,18 @@ $.fn.buildSynoptic = function (opt) {
 
 
                         if (obj != null) {
-                            console.log("MOVE on:" + obj.description.uid + "(" + obj.col + "," + obj.row + ")");
+                            console.log("MOVE on:" + obj.object.uid + "(" + obj.col + "," + obj.row + ")");
                             last_obj = obj
                             obj["depth"] = 8;
-                            draw_object(ctx, obj['runtime']['circle'].x, obj['runtime']['circle'].y, obj);
+                            
+                            draw_object(ctx,true, obj['runtime']['circle'].x, obj['runtime']['circle'].y, obj,null,null,obj.object.uid );
 
 
                         } else {
                             if (last_obj) {
                                 last_obj["depth"] = 5;
-
-                                draw_object(ctx, last_obj['runtime']['circle'].x, last_obj['runtime']['circle'].y, last_obj);
+                                
+                                draw_object(ctx, true,last_obj['runtime']['circle'].x, last_obj['runtime']['circle'].y, last_obj);
                             }
 
                         }
@@ -303,9 +370,46 @@ $.fn.buildSynoptic = function (opt) {
                         draggingobj = null;
 
                         cuitem['add'] = {
-                            name: "Add",
+                            name: "Add Node",
                             callback: function (itemKey, opt, e) {
-                                // draw_all();
+                                var templ = {
+                                    $ref: "synoptic-node.json",
+                                    format: "tabs"
+                                    }
+                                
+                                var p=coordToTable(currx,curry);
+                                if ((clist[p.row][p.col] != null)) {
+                                    alert("cannot create a node here");
+                                    return;
+                                }
+                                
+                                jqccs.getEntryWindow("Node Name", "name", "<NODE NAME>", "Create", function (name) {
+                                    var t={
+                                        row:p.row,
+                                        col:p.col,
+                                        object:{'uid':name,type:"button"}
+                                    };
+                                    // check if the name exists already
+                                    if(checkUnique(name)==false){
+                                        alert(name+ " already present in synoptic ");
+                                        return;
+                                    }  
+                                    jchaos.search(name,"ceu",false,function(d){
+                                        if(d.length==0){
+                                            jqccs.confirm("WARNING", name+" does not exits as CHAOS Node, do you want to create anyway?", "Yes", function () {
+                                                clist[t.row][t.col] = buildDefaultNode(t);
+                                                
+                                            },"Cancel");
+                                        } else {
+                                            clist[t.row][t.col] = buildDefaultNode(t);
+
+                                        }
+                                        draw_all();
+
+                                    });
+                                    
+                                });
+                                
                             }
                         };
                         if (last_obj != null) {
@@ -313,7 +417,7 @@ $.fn.buildSynoptic = function (opt) {
                                 name: "Remove",
                                 callback: function (itemKey, opt, e) {
                                     // draw_all();
-                                    jqccs.confirm("Remove Node", "Do you wanto to remove :" + last_obj.description.uid, "Ok", function () {
+                                    jqccs.confirm("Remove Node", "Do you wanto to remove :" + last_obj.object.uid, "Ok", function () {
                                         clist[last_obj.row][last_obj.col] = null;
                                         draw_all();
                                     });
@@ -324,7 +428,7 @@ $.fn.buildSynoptic = function (opt) {
                                 callback: function (itemKey, opt, e) {
                                     var row = last_obj.row;
                                     var col = last_obj.col;
-                                    jqccs.editJSON("Edit " + last_obj.description.uid, last_obj, (res) => {
+                                    jqccs.editJSON("Edit " + last_obj.object.uid, last_obj, (res) => {
                                         clist[row][col] = null;
 
                                         clist[res.row][res.col] = res;
@@ -336,14 +440,21 @@ $.fn.buildSynoptic = function (opt) {
                                 }
                             };
                             cuitem['sep2'] = "---------";
+                            cuitem['fullctrl'] = {
+                                name: "Open Full Control...",
+                                callback: function (itemKey, opt, e) {
+                                    jqccs.openControl(last_obj.object.uid, last_obj.object.uid);
 
+                                    
+                                }
+                            };
                             cuitem['desc'] = {
                                 name: "Description..",
                                 callback: function (itemKey, opt, e) {
-                                    var currsel = last_obj.description.uid;
+                                    var currsel = last_obj.object.uid;
                                     jchaos.node(currsel, "desc", "all", function (data) {
 
-                                        jqccs.showJson("Description " + currsel, data);
+                                        jqccs.showJson("object " + currsel, data);
                                     }, (err) => {
                                         alert("Error:" + JSON.stringify(err));
                                     });
@@ -352,7 +463,7 @@ $.fn.buildSynoptic = function (opt) {
                             cuitem['dataset'] = {
                                 name: "Dataset..",
                                 callback: function (itemKey, opt, e) {
-                                    var currsel = last_obj.description.uid;
+                                    var currsel = last_obj.object.uid;
                                     var dashboard_settings = jqccs.initSettings();
 
                                     jqccs.showDataset(currsel, currsel, dashboard_settings['generalRefresh']);
@@ -425,14 +536,65 @@ $.fn.buildSynoptic = function (opt) {
     }, 100); //
 
 }
+function buildDefaultNode(el){
+    var ele={};
+    if(el !== undefined){
+        ele=el;
+    }
+    
+    var colspan = 1;
+    var rowspan = 1;
+    var fontsize = 10;
+    if(syn_opt.hasOwnProperty("settings")&&syn_opt.settings.hasOwnProperty("fontsize")){
+        fontsize=syn_opt.settings.fontsize;
+    }
 
+    var font = "Arial";
+    if(syn_opt.hasOwnProperty("settings")&&syn_opt.settings.hasOwnProperty("font")){
+        font=syn_opt.settings.font;
+    }
+    var color = "black";
+    if(syn_opt.hasOwnProperty("settings")&&syn_opt.settings.hasOwnProperty("color")){
+        color=syn_opt.settings.color;
+    }
+    var depth = 3;
+    if(syn_opt.hasOwnProperty("settings")&&syn_opt.settings.hasOwnProperty("depth")){
+        depth=syn_opt.settings.depth;
+    }
+    if(syn_opt.hasOwnProperty("settings")&&syn_opt.settings.hasOwnProperty("colspan")){
+        colspan=syn_opt.settings.colspan;
+    }
+    if(syn_opt.hasOwnProperty("settings")&&syn_opt.settings.hasOwnProperty("rowspan")){
+        rowpan=syn_opt.settings.rowspan;
+    }
+    
+    if (!ele.hasOwnProperty("color")) {
+        ele['color'] = color;
+    }
+    if (!ele.hasOwnProperty("font")) {
+        ele['font'] = font;
+    }
+    if (!ele.hasOwnProperty("fontsize")) {
+        ele['fontsize'] = fontsize;
+    }
+    if (!ele.hasOwnProperty("depth")) {
+        ele['depth'] = depth;
+    }
+    if (!ele.hasOwnProperty("colspan")) {
+        ele['colspan'] = colspan;
+    }
+    if (!ele.hasOwnProperty("rowspan")) {
+        ele['rowspan'] = rowspan;
+    }
+    
+    ele['runtime'] = {};
+    if(syn_opt.hasOwnProperty("settings")&&syn_opt.settings.hasOwnProperty("showuid")&&syn_opt.settings.showuid){
+        ele['runtime']['text']={"text":ele.object['uid']} ;
+    }
+    return ele;
+}
 function buildSyn(opt) {
-    const colspan = 1;
-    const rowspan = 1;
-    const fontsize = 10;
-    const font = "Arial";
-    const color = "black";
-    const depth = 3;
+   
 
     var html = "";
     var encoden = "synoptic";
@@ -449,41 +611,7 @@ function buildSyn(opt) {
         height = opt.imageHeight;
     }
 
-    var controls = [];
-    if (opt.hasOwnProperty("controls")) {
-        controls = opt.controls;
-    }
-    nrows = opt.numRows;
-    ncols = opt.numCols;
-    for (var r = 0; r < nrows; r++) {
-        clist[r] = {};
-
-        for (var c = 0; c < ncols; c++) {
-            clist[r][c] = null;
-        }
-    }
-    controls.forEach(ele => {
-        if (!ele.hasOwnProperty("color")) {
-            ele['color'] = color;
-        }
-        if (!ele.hasOwnProperty("font")) {
-            ele['font'] = font;
-        }
-        if (!ele.hasOwnProperty("fontsize")) {
-            ele['fontsize'] = fontsize;
-        }
-        if (!ele.hasOwnProperty("depth")) {
-            ele['depth'] = depth;
-        }
-        if (!ele.hasOwnProperty("colspan")) {
-            ele['colspan'] = colspan;
-        }
-        if (!ele.hasOwnProperty("rowspan")) {
-            ele['rowspan'] = rowspan;
-        }
-        ele['runtime'] = {};
-        clist[ele.row][ele.col] = ele;
-    });
+    
     if (opt.hasOwnProperty("imgsrc")) {
         html += '<div id="insideWrapper-' + encoden + '">';
         html += '<img class="chaos_image" id="synopticImage-' + encoden + '" src="' + opt.imgsrc + '" />';
@@ -496,110 +624,5 @@ function buildSyn(opt) {
     return html;
 
 }
-class OpenCUButton extends HTMLButtonElement {
-    constructor() {
-        HTMLButtonElement();
-        this.uid = "ciao";
-    }
-}
-
-function myFunction(name) {
-
-    let dims = "height=300,width=420";
-    var gg = window.open("", name, dims);
-    gg.document.title = name;
 
 
-}
-
-
-
-
-function MakeSinoptic() {
-
-    //Reading from DB
-    jchaos.setOptions({ "uri": "chaost-hawebui.lnf.infn.it" + ":8081", "socketio": "chaost-hawebui.lnf.infn.it" + ":4000" });
-    var syn = jchaos.variable("WindowsSynoptics", "get").synopticList[3];
-    //Setting useful variables
-    var Iheight = syn.description.imageHeight;
-    var Iwidth = syn.description.imageWidth;
-    var Wheight = Iheight + 20;
-    var Wwidth = Iwidth + 20;
-    var numRows = syn.description.numRows;
-    var numCols = syn.description.numCols;
-    var urlImg = "data:image/png;base64," + syn.description.FRAMEBUFFER.binary.base64;
-    var Controls = syn.description.Controls;
-
-    //CREATING THE NEW WINDOW
-
-    var strdim = "height=" + Wheight + ",width=" + Wwidth;
-    var SynWin = window.open("", syn.name, strdim);
-    var head = "";
-
-    //head+= "<script type=\"text/javascript\" src=\"../js/jquery-3.5.1.min.js\"></script>";
-    //head += "<script type=\"text/javascript\" src=\"../js/chaos-widget/chaos-ctrl.js\"></script>";
-
-    SynWin.document.write("<head>" + head + "</head><body id = \"body\" style = \"text-align:center;\"><table id = \"syn\"></table></body>");
-    SynWin.document.title = syn.name;
-    //creating style element
-    var style = document.createElement('style');
-    style.type = 'text/css';
-    SynWin.document.getElementsByTagName('head')[0].appendChild(style);
-
-    //CREATING TABLE
-    var table = SynWin.document.getElementById('syn');
-
-
-    for (var rw = 0; rw < numRows; rw++) {
-
-        let row = table.insertRow();
-        for (let col = 0; col < numCols; col++) {
-            let cell = row.insertCell();
-            cell.id = rw + "_" + col;
-            //var td= SynWin.document.getElementById("11_12").appendChild(btn);
-        }
-    }
-    table.style.width = Iwidth + "px";
-    table.style.height = Iheight + "px";
-    var pxCellH = Math.floor(Iheight / numRows);
-
-
-    //styling the table class;
-    var lll = "border-spacing:0;table-layout: fixed; background-size:" + Iwidth + "px " + Iheight + "px; ";
-    var bs = ".cssClass {" + lll + " background-repeat: no-repeat; background-image: url(" + urlImg + ");}";
-    style.innerHTML = bs.replace(/\n/g, '');
-
-    table.className = 'cssClass';
-    table.border = tableborderVisible;
-
-
-
-    var tdstyle = "td {align:center; line-height:" + pxCellH + "px; overflow: hidden; border-spacing: 0;margin: 0; padding: 0; }";
-    var cssButtons = ".btn { background-color: Peru; border-radius: 50%; border-width: 0px; margin:0px 0px; height:70%; width: 70%; }";
-    style.innerHTML += cssButtons + tdstyle;
-
-
-
-    for (var i = 0; i < Controls.length; ++i) {
-        var item = Controls[i];
-        var auxiliaryCss = "";
-        if (item.description.Type == "OpenCUButton") {
-            let ctrl = document.createElement('button');
-
-
-            let strID = item.row + "_" + item.col;
-            let secClass = "B" + strID;
-            let cssDescr = ".B" + strID + " { background-color: " + item.description.Color + ";}";
-            ctrl.className = "btn " + secClass;
-            ctrl.title = item.description.uid;
-            auxiliaryCss += cssDescr;
-
-            //ctrl.setAttribute("onclick",function(){myFunction(ctrl.title)});
-            ctrl.addEventListener('click', function () { myFunction(ctrl.title) });
-            //alert("appending child "+ctrl.title);
-            SynWin.document.getElementById(strID).appendChild(ctrl);
-        }
-        style.innerHTML += auxiliaryCss;
-    }
-
-}

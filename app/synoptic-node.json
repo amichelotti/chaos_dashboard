@@ -5,12 +5,7 @@
 	"format":"tab",
 
     "properties": {
-      "uid": {
-        "type": "string",
-        "required": true,
-            "default": "<NODENAME>",
-            "description": "Node UID (i.e CUNAME) "
-    },
+     
     "row": {
         "type": "integer",
             "required": true,
@@ -21,6 +16,24 @@
           "required": true,
           "description": "Col position"
   },
+  "object": {
+          "type": "object",
+          "format": "table",
+          "properties": {
+            "uid": {
+              "type": "string",
+              "required": true,
+                  "default": "<NODENAME>",
+                  "description": "Node UID (i.e CUNAME) "
+          },
+            "type": {
+              "type": "string",
+              "required": true,
+                "default": "OpenCUButton",
+                "description": "Control type"
+            }
+          }
+        },
   "color": {
     "type": "string",
     "required": true,
@@ -56,19 +69,7 @@
   "required": true,
       "default": 1,
       "description": "Default row span (enlarge y)"
-},
-		"description": {
-            "type": "object",
-            "format": "table",
-            "properties": {
-              "type": {
-                "type": "string",
-                "required": true,
-                  "default": "OpenCUButton",
-                  "description": "Control type"
-              }
-            }
-          }
+}
 
           }
 	

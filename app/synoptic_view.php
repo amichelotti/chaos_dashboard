@@ -40,14 +40,20 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/synoptic.js"></script>';
 
 
 	<script>
+        var current_synoptic=null;
         function runSynoptic(obj){
             const img = new Image();
                 img.onload = function() {
                     obj["imageWidth"]=this.width;
                     obj["imageHeight"]=this.height;
                     $("#app-name").html("SYNOPTIC "+obj.name);
+                    if(localStorage.hasOwnProperty('synoptic_view-settings')){
+					    def=JSON.parse(localStorage['synoptic_view-settings']);
+				    }
+                    obj['settings']=def;
+                    current_synoptic=obj;
 
-                    $("#main-dashboard").buildSynoptic(obj);
+                    $("#main-dashboard").buildSynoptic(current_synoptic);
                 }
         
                     img.src =obj.imgsrc;
@@ -83,11 +89,28 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/synoptic.js"></script>';
 
                     }
 					//jqccs.initSettings();
-
+                    if(current_synoptic){
+                        var obj=Object.assign({},current_synoptic);
+                        runSynoptic(current_synoptic);
+                    }
                 }, null);
 
             });
-	
+            if(settings.hasOwnProperty("defaultSynoptic")&&settings.defaultSynoptic!=""){
+                jchaos.variable("synoptics", "get", null, function (synoptic) {
+                                    
+                                    if((synoptic instanceof Object) && synoptic.hasOwnProperty(settings.defaultSynoptic)){
+                                        runSynoptic(synoptic[settings.defaultSynoptic]);
+                                    } else {
+                                        jqccs.instantMessage("Cannot retrive default Synoptic ",settings.defaultSynoptic , 2000, false);
+
+                                    }
+                                   
+                                }, (bad) => {
+                                    jqccs.instantMessage("Cannot retrive " + syn.name, JSON.stringify(bad), 2000, false);
+
+                                });
+            }
 	/*	var settings={'name':"FLAME","imgsrc":"../img/synoptics/Flame.png","imageWidth":640,"imageHeight":480};
         const img = new Image();
         img.onload = function() {

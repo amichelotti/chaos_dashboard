@@ -130,13 +130,28 @@
 					label: "New Synoptic",
 					action: function () {
 						var templ = {
-            				$ref: "synoptic_model.json",
+            				$ref: "synoptic_new_model.json",
             				format: "tabs"
         					}
-						
-						var t={'group':"GENERIC"};
+							
+							
+							
+						var t={'group':"GENERIC",'imgsrc':"../img/synoptics/<MYSYNOPTIC.png>"};
 						jqccs.jsonEditWindow("Synoptic Editor", templ, t, function (data, obj) {
-							console.log("SAVE:"+JSON.stringify(data));
+							if(data.name.length == 0){
+								alert("must provide an synoptic name:'name");
+								return;
+							}
+							if(data.imgsrc.length == 0){
+								alert("must provide an image source :'imgsrc");
+								return;
+							}
+							data["numRows"]=-1;// auto
+							data["numCols"]=-1;
+
+							console.log("New Synoptic:"+JSON.stringify(data));
+							runSynoptic(data);
+
 						});
 					}
 
@@ -159,8 +174,30 @@
             				$ref: "synoptic_model.json",
             				format: "tabs"
         					}
-						jqccs.jsonEditWindow("Synopsys Editor", templ, node.data, function (data, obj) {
-							console.log("SAVE:"+JSON.stringify(data));
+						jqccs.jsonEditWindow("Synoptic Editor", templ, node.data, function (data, obj) {
+							if(node.name.length == 0){
+								alert("must provide an synoptic name:'name");
+								return;
+							}
+							if(node.imgsrc.length == 0){
+								alert("must provide an image source :'imgsrc");
+								return;
+							}
+							jchaos.variable("synoptics", "get", null, function (synoptic) {
+                                    if (!(synoptic instanceof Object)) {
+                                        synoptic = {};
+
+                                    }
+                                    synoptic[node.data.name]=data;
+
+									jchaos.variable("synoptics", "set", synoptic, function (ok) {
+										console.log("SAVE:"+JSON.stringify(data));
+
+                                        jqccs.instantMessage("Saved " + syn.name, "OK", 3000, true);
+
+                                    });
+								});
+							
 						});
 					}
 
