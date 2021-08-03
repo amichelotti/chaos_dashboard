@@ -1512,7 +1512,7 @@ function getWidget() {
       var template = tmpObj.type;
       html += '<div class="row" id="table-space">';
       html += '<div class="box col-md-12">';
-      html += '<div class="box-content col-md-12">';
+      html += '<div class="box-content table-responsive col-md-12">';
       if (cu.length == 0) {
         html += '<p id="no-result-monitoring">No results match</p>';
 
@@ -1521,7 +1521,7 @@ function getWidget() {
 
       }
 
-      html += '<table class="table table-striped" id="main_table-' + template + '">';
+      html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
       html += '<thead class="box-header">';
       html += '<tr>';
       html += '<th><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" id="selectAll">';

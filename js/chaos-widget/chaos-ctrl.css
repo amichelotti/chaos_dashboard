@@ -174,6 +174,8 @@ a:hover {
   position:absolute; top:0px; left:0px;
   background:transparent;
   border:none;
+  background-color: transparent;
+
 }
 .insideWrapper{ 
   width:100%; height:auto;

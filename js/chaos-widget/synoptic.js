@@ -5,11 +5,16 @@ var dragging = false;
 var draggingobj = null;
 var syn_opt = null;
 var canvas = null;
+var canvasState = null;
+
 var nrows = 0;
 var ncols = 0;
 var ccol=0;
 var crow=0;
 var currx=0,curry=0;
+var last_obj = null;
+var dscache={};
+
 function coordToTable(x, y) {
 
     if (ncols == 0 || nrows == 0) {
@@ -50,16 +55,27 @@ function eventToPos(event) {
 }
 function draw_all() {
     const ctx = canvas.getContext('2d');
+    const ctx2 = canvasState.getContext('2d');
+
     var encoden = jchaos.encodeName(syn_opt.name);
 
     canvas.width = $("#synopticImage-" + encoden).width();
     canvas.height = $("#synopticImage-" + encoden).height();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx2.clearRect(0, 0, canvasState.width, canvasState.height);
+
     var showid=syn_opt.settings.showid;
     for (var r = 0; r < nrows; r++) {
         for (var c = 0; c < ncols; c++) {
             if ((clist[r][c] != null)) {
                 var t = tableToCoord(c, r);
+               /* if(!dscache.hasOwnProperty(clist[r][c].object.uid)){
+                    dscache[clist[r][c].object.uid]={};
+                }
+                if(clist[r][c].object.hasOwnProperty('setpoint'))){
+                    if(!dscache[clist[r][c].object.hasOwnProperty('input'))
+                    ['input']
+                }*/
                 if(showid){
                     draw_object(ctx, false,t.x, t.y, clist[r][c],null,null, clist[r][c].object.uid);
 
@@ -88,6 +104,82 @@ function getSynoptic() {
     }
     return ret;
 
+}
+function updateObject(obj,fn){
+    var ch=4;
+    if(obj.object.hasOwnProperty('setpoint')||obj.object.hasOwnProperty('readout')){
+        ch=-1;
+    }
+    jchaos.getChannel(obj.object.uid,ch,(ds)=>{
+        if(obj.object.hasOwnProperty('setpoint')){
+            for(var k in obj.object.setpoint){
+                var val=ds[0]['input'][k];
+                if(typeof val === "number"){
+                    val=val.toFixed(3);
+                }
+                obj.object['setpoint'][k]["value"]=val;
+            }
+        }
+        if(obj.object.hasOwnProperty('readout')){
+            for(var k in obj.object.readout){
+                var val=ds[0]['output'][k];
+                if(typeof val === "number"){
+                    val=val.toFixed(3);
+                }
+                obj.object['readout'][k]["value"]=val;
+            }
+        }
+        if(ch==-1){
+            obj.object['state']=ds[0]['health'];
+        } else {
+            obj.object['state']=ds[0];
+
+        }
+        fn(obj);
+    });
+
+}
+function draw_object_state(ctx, obj) {
+    var now= Date.now();
+    var state=obj.object['state'];
+    var color=obj.color;
+    if(state.nh_status=="Start" ){
+            if((now-state.dpck_ats)<10000){
+                if(state.dpck_seq_id&1){
+                    color="LightGreen";
+                }else {
+                    color="Green";
+                }
+            }
+    } else if(state.nh_status=="Stop" ){
+            color="orange";
+    } else if(state.nh_status=="Init" ){
+            color="yellow";
+    }
+    
+        ctx.beginPath();
+        var x=obj['runtime']['circle'].x;
+        var y=obj['runtime']['circle'].y;
+        var r=obj['runtime']['circle'].r;
+
+        ctx.arc(x, y, r, 2 * Math.PI, false);
+        ctx.lineWidth = obj.depth;
+        ctx.strokeStyle = color;
+        ctx.stroke();
+        var pos=0;
+        if(obj.object.hasOwnProperty('setpoint')){
+            for(var k in obj.object.setpoint){
+                ctx.fillText(obj.object.setpoint[k].value, x - 2*r, y - 2*r + pos);
+                pos+=obj.fontsize+1;
+            }
+        }
+        pos=0
+        if(obj.object.hasOwnProperty('readout')){
+            for(var k in obj.object.readout){
+                ctx.fillText(obj.object.readout[k].value, x + r, y - 2*r + pos);
+                pos+=obj.fontsize+1;
+            }
+        }  
 }
 function draw_object(ctx, clear,x, y, obj, col, lnd, tex) {
     var name;
@@ -202,6 +294,27 @@ function checkUnique(name){
     }
     return true;
 }
+function refreshState(){
+
+const ct = canvasState.getContext('2d');
+
+
+ct.clearRect(0, 0, canvasState.width, canvasState.height);
+
+
+console.log("refresh");
+for(var r=0;r<nrows;r++){
+    for(var c=0;c<ncols;c++){
+        if((clist[r][c]!=null)&&(clist[r][c]['runtime'].hasOwnProperty("circle"))){
+            updateObject(clist[r][c],(obj)=>{
+                draw_object_state(ct,obj);
+
+            });
+        }
+
+    }
+    }
+}
 $.fn.buildSynoptic = function (opt) {
     syn_opt = opt;
 
@@ -209,18 +322,22 @@ $.fn.buildSynoptic = function (opt) {
     var encoden = jchaos.encodeName(opt.name);
     var checkExist = setInterval(function () {
         console.log("Loading..." + opt.name);
-        if (($("#synopticImageCanv-" + encoden).length) && ($("#synopticImage-" + encoden).length)&&($("#synopticImage-" + encoden).width()>0)&&($("#synopticImage-" + encoden).height()>0)) {
+        if (($("#synopticImageCanv-" + encoden).length) && ($("#synopticImageCanvState-" + encoden).length)&&($("#synopticImage-" + encoden).length)&&($("#synopticImage-" + encoden).width()>0)&&($("#synopticImage-" + encoden).height()>0)) {
             console.log("Loaded " + opt.name);
             clearInterval(checkExist);
 
 
             canvas = document.getElementById("synopticImageCanv-" + encoden);
+            canvasState = document.getElementById("synopticImageCanvState-" + encoden);
+
             const ctx = canvas.getContext('2d');
 
             if (opt.hasOwnProperty("imgsrc")) {
 
                 canvas.width = $("#synopticImage-" + encoden).width();
                 canvas.height = $("#synopticImage-" + encoden).height();
+                canvasState.width = $("#synopticImage-" + encoden).width();
+                canvasState.height = $("#synopticImage-" + encoden).height();
                 if(syn_opt.numRows==-1){
                     syn_opt.numRows= Math.round(canvas.width/opt.cellsizex);
                 }
@@ -250,7 +367,7 @@ $.fn.buildSynoptic = function (opt) {
 
 
 
-                $("#synopticImageCanv-" + encoden).on("click", (event) => {
+                $("#synopticImageCanvState-" + encoden).on("click", (event) => {
                     var obj = checkEventOnObj(event);
                     if (obj != null) {
                         console.log("click on " + obj.object.uid);
@@ -262,7 +379,7 @@ $.fn.buildSynoptic = function (opt) {
 
 
                 });
-                $("#synopticImageCanv-" + encoden).on('dblclick', function (e) {
+                $("#synopticImageCanvState-" + encoden).on('dblclick', function (e) {
                     var obj = checkEventOnObj(event);
                     if (obj != null) {
                         console.log("dblclick on " + obj.object.uid);
@@ -280,7 +397,7 @@ $.fn.buildSynoptic = function (opt) {
                     }
                 });
 
-                $("#synopticImageCanv-" + encoden).mousedown((event) => {
+                $("#synopticImageCanvState-" + encoden).mousedown((event) => {
                     var obj = checkEventOnObj(event);
                     if (obj != null) {
                         console.log("mouse down " + obj.object.uid);
@@ -289,7 +406,7 @@ $.fn.buildSynoptic = function (opt) {
                     }
 
                 });
-                $("#synopticImageCanv-" + encoden).mouseup((event) => {
+                $("#synopticImageCanvState-" + encoden).mouseup((event) => {
                     var wasDragging = dragging;
                     dragging = false;
                     if (wasDragging && (draggingobj != null)) {
@@ -322,8 +439,7 @@ $.fn.buildSynoptic = function (opt) {
 
 
                 });
-                var last_obj = null;
-                $("#synopticImageCanv-" + encoden).mousemove((event) => {
+                $("#synopticImageCanvState-" + encoden).mousemove((event) => {
 
                     var obj = checkEventOnObj(event);
 
@@ -351,7 +467,7 @@ $.fn.buildSynoptic = function (opt) {
                                 
                                 draw_object(ctx, true,last_obj['runtime']['circle'].x, last_obj['runtime']['circle'].y, last_obj);
                             }
-
+                            last_obj=null;
                         }
                     }
 
@@ -359,7 +475,7 @@ $.fn.buildSynoptic = function (opt) {
 
 
                 });
-
+                
                 $.contextMenu('destroy', '.synoptic_menu');
                 $.contextMenu({
                     selector: '.synoptic_menu',
@@ -369,52 +485,86 @@ $.fn.buildSynoptic = function (opt) {
                         dragging = false;
                         draggingobj = null;
 
-                        cuitem['add'] = {
-                            name: "Add Node",
-                            callback: function (itemKey, opt, e) {
-                                var templ = {
-                                    $ref: "synoptic-node.json",
-                                    format: "tabs"
+                        
+                        if (last_obj != null) {
+                            cuitem['readout'] = {
+                                name: "Add Readout",
+                                callback: function (itemKey, opt, e) {
+                                    jchaos.getChannel(last_obj.object.uid, 0, function (imdata) {
+                                        var readout=[];
+                                        for(var k in imdata[0]){
+                                            readout.push(k);
+                                        }
+
+                                    jqccs.getEntryWindow("Readout", "name", readout, "Create", function (name) {
+                                        if(!clist[last_obj.row][last_obj.col]['object'].hasOwnProperty("readout")){
+                                            clist[last_obj.row][last_obj.col]['object']['readout']={};
+                                        }
+                                        clist[last_obj.row][last_obj.col]['object']['readout'][name]={"name":name,"value":imdata[0][name]};
+                                        draw_all();
+                                        console.log("ADDING Readout"+name);
+                                    });
+                                });
+
+                                }
+                            };
+                            cuitem['readout-rm'] = {
+                                name: "Remove Readout",
+                                callback: function (itemKey, opt, e) {
+                                    var readout=[];
+                                    for(var k in clist[last_obj.row][last_obj.col]['object']['readout']){
+                                        readout.push(k);
                                     }
-                                
-                                var p=coordToTable(currx,curry);
-                                if ((clist[p.row][p.col] != null)) {
-                                    alert("cannot create a node here");
-                                    return;
+                                       
+
+                                    jqccs.getEntryWindow("Readout", "name", readout, "Remove", function (name) {
+                                        delete clist[last_obj.row][last_obj.col]['object']['readout'][name];
+                                        draw_all()
+                                        
+                                    });
+                                }
+                            };
+                            cuitem['setpoint'] = {
+                                name: "Add Setpoint",
+                                callback: function (itemKey, opt, e) {
+                                    jchaos.getChannel(last_obj.object.uid, 1, function (imdata) {
+                                        var readout=[];
+                                        for(var k in imdata[0]){
+                                            readout.push(k);
+                                        }
+
+                                    jqccs.getEntryWindow("SetPoint", "name", readout, "Create", function (name) {
+                                        if(!clist[last_obj.row][last_obj.col]['object'].hasOwnProperty("setpoint")){
+                                            clist[last_obj.row][last_obj.col]['object']['setpoint']={};
+                                        }
+                                        clist[last_obj.row][last_obj.col]['object']['setpoint'][name]={"name":name,"value":imdata[0][name]};
+                                        draw_all()
+
+                                        console.log("ADDING Setpoint "+name);
+                                    });
+                                });
+
                                 }
                                 
-                                jqccs.getEntryWindow("Node Name", "name", "<NODE NAME>", "Create", function (name) {
-                                    var t={
-                                        row:p.row,
-                                        col:p.col,
-                                        object:{'uid':name,type:"button"}
-                                    };
-                                    // check if the name exists already
-                                    if(checkUnique(name)==false){
-                                        alert(name+ " already present in synoptic ");
-                                        return;
-                                    }  
-                                    jchaos.search(name,"ceu",false,function(d){
-                                        if(d.length==0){
-                                            jqccs.confirm("WARNING", name+" does not exits as CHAOS Node, do you want to create anyway?", "Yes", function () {
-                                                clist[t.row][t.col] = buildDefaultNode(t);
-                                                
-                                            },"Cancel");
-                                        } else {
-                                            clist[t.row][t.col] = buildDefaultNode(t);
+                            };
+                            cuitem['setpoint-rm'] = {
+                                name: "Remove Setpoint",
+                                callback: function (itemKey, opt, e) {
+                                    var readout=[];
+                                    for(var k in clist[last_obj.row][last_obj.col]['object']['setpoint']){
+                                        readout.push(k);
+                                    }
+                                       
 
-                                        }
-                                        draw_all();
-
+                                    jqccs.getEntryWindow("Setpoint", "name", readout, "Remove", function (name) {
+                                        delete clist[last_obj.row][last_obj.col]['object']['setpoint'][name];
+                                        draw_all()
+                                        
                                     });
-                                    
-                                });
-                                
-                            }
-                        };
-                        if (last_obj != null) {
+                                }
+                            };
                             cuitem['remove'] = {
-                                name: "Remove",
+                                name: "Remove Node",
                                 callback: function (itemKey, opt, e) {
                                     // draw_all();
                                     jqccs.confirm("Remove Node", "Do you wanto to remove :" + last_obj.object.uid, "Ok", function () {
@@ -424,7 +574,7 @@ $.fn.buildSynoptic = function (opt) {
                                 }
                             };
                             cuitem['edit'] = {
-                                name: "Edit..",
+                                name: "Edit Node..",
                                 callback: function (itemKey, opt, e) {
                                     var row = last_obj.row;
                                     var col = last_obj.col;
@@ -467,6 +617,50 @@ $.fn.buildSynoptic = function (opt) {
                                     var dashboard_settings = jqccs.initSettings();
 
                                     jqccs.showDataset(currsel, currsel, dashboard_settings['generalRefresh']);
+                                }
+                            };
+                        } else {
+                            cuitem['add'] = {
+                                name: "Add Node",
+                                callback: function (itemKey, opt, e) {
+                                    var templ = {
+                                        $ref: "synoptic-node.json",
+                                        format: "tabs"
+                                        }
+                                    
+                                    var p=coordToTable(currx,curry);
+                                    if ((clist[p.row][p.col] != null)) {
+                                        alert("cannot create a node here");
+                                        return;
+                                    }
+                                    
+                                    jqccs.getEntryWindow("Node Name", "name", "<NODE NAME>", "Create", function (name) {
+                                        var t={
+                                            row:p.row,
+                                            col:p.col,
+                                            object:{'uid':name,type:"button"}
+                                        };
+                                        // check if the name exists already
+                                        if(checkUnique(name)==false){
+                                            alert(name+ " already present in synoptic ");
+                                            return;
+                                        }  
+                                        jchaos.search(name,"ceu",false,function(d){
+                                            if(d.length==0){
+                                                jqccs.confirm("WARNING", name+" does not exits as CHAOS Node, do you want to create anyway?", "Yes", function () {
+                                                    clist[t.row][t.col] = buildDefaultNode(t);
+                                                    
+                                                },"Cancel");
+                                            } else {
+                                                clist[t.row][t.col] = buildDefaultNode(t);
+    
+                                            }
+                                            draw_all();
+    
+                                        });
+                                        
+                                    });
+                                    
                                 }
                             };
                         }
@@ -531,6 +725,9 @@ $.fn.buildSynoptic = function (opt) {
                     }
 
                 });
+                console.log("Setting update to:"+syn_opt.settings.generalRefresh);
+                setInterval(refreshState,syn_opt.settings.generalRefresh);
+
             }
         }
     }, 100); //
@@ -615,7 +812,10 @@ function buildSyn(opt) {
     if (opt.hasOwnProperty("imgsrc")) {
         html += '<div id="insideWrapper-' + encoden + '">';
         html += '<img class="chaos_image" id="synopticImage-' + encoden + '" src="' + opt.imgsrc + '" />';
-        html += '<canvas class="coveringCanvas synoptic_menu" id="synopticImageCanv-' + encoden + '"/></canvas>';
+        html += '<canvas class="coveringCanvas synoptic_menu" style="z-index: 1;" id="synopticImageCanvState-' + encoden + '"/></canvas>';
+
+        html += '<canvas class="coveringCanvas synoptic_menu" style="z-index: 0;" id="synopticImageCanv-' + encoden + '"/></canvas>';
+
         html += '</div>';
         html += '<div id="info-' + encoden + '"></div>';
     }

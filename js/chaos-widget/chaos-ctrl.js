@@ -10452,7 +10452,18 @@
         return getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText);
     }
     function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
-        var html = '<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>';
+        var html= '<div width="100%"><h6>' + msg + '</h6>';
+        if(def_text instanceof Array){
+            html+= '<select id="getEntryWindow_name">';
+
+            def_text.forEach(elem=>{
+                html+='<option value='+elem+'>'+elem+'</option>';
+            });
+            html+='</select>';
+        } else {
+            html+= '<input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%">';
+        }
+        html+="</div>";
         var opt = {
             modal: true,
             title: hmsg,
