@@ -19,14 +19,14 @@ function checkRedrawReference(camid,domid,x,y,sx,sy,r){
   });
 }
 function redrawReference(domid,x,y,sx,sy,r){
-
+  const canvas = document.getElementById("cameraImageCanv-"+domid);
+  canvas.width = $("#cameraImage-"+domid).width();
+  canvas.height = $("#cameraImage-"+domid).height();
+  
   
     if(sx>0 && sy>0){
       //let name=jchaos.encodeName(id);
 
-      const canvas = document.getElementById("cameraImageCanv-"+domid);
-      canvas.width = $("#cameraImage-"+domid).width();
-      canvas.height = $("#cameraImage-"+domid).height();
       let natwidth=$("#cameraImage-"+domid).prop('naturalWidth');
       let natheight=$("#cameraImage-"+domid).prop('naturalHeight');
      
@@ -721,6 +721,27 @@ function activateMenuShort(){
             zoomInOut(domid,0);
           }
         };
+        cuitem['rotatep90'] = {
+          name: "Rotate +90", cu: name,
+          callback: function (itemKey, opt, e) {
+           // var name = opt.items[itemKey].cu;
+            zoomInOut(domid,1.0,90);
+          }
+        };
+        cuitem['rotatem90'] = {
+          name: "Rotate -90", cu: name,
+          callback: function (itemKey, opt, e) {
+           // var name = opt.items[itemKey].cu;
+            zoomInOut(domid,1.0,-90);
+          }
+        };
+        cuitem['rotateReset'] = {
+          name: "Rotate reset", cu: name,
+          callback: function (itemKey, opt, e) {
+           // var name = opt.items[itemKey].cu;
+            zoomInOut(domid,1.0,0);
+          }
+        };
         for (var k in el) {
           if (!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk"))) {
             var val = el[k];
@@ -780,20 +801,31 @@ function activateMenuShort(){
 
     });
 }
-function zoomInOut(name,incr){
+function zoomInOut(name,incr,rot){
   var currzoom=1.0;
+  var currrot=0;
   if(cameraLayoutSettings.hasOwnProperty(name)){
       if(cameraLayoutSettings[name].hasOwnProperty("zoom")){
         currzoom=cameraLayoutSettings[name]["zoom"];
       } else {
         cameraLayoutSettings[name]["zoom"]=currzoom;
       }
+      if(cameraLayoutSettings[name].hasOwnProperty("rot")){
+        currrot=cameraLayoutSettings[name]["rot"];
+      } 
   } else{
     cameraLayoutSettings[name]={"zoom":currzoom};
 
   }
   var x=mouseX/currzoom;
-  var y=mouseY/currzoom;     
+  var y=mouseY/currzoom;
+  if(typeof rot === "number" ){
+    if(rot==0){
+      currrot=0;
+    } else {
+      currrot+=rot;
+    }
+  }     
   if(incr==0){
     currzoom=1.0;
   } else {
@@ -803,29 +835,35 @@ function zoomInOut(name,incr){
 
   }
   cameraLayoutSettings[name]["zoom"]=currzoom;
+  cameraLayoutSettings[name]["rot"]=currrot;
+
   var encoden = jchaos.encodeName(name);
-  
+  var prop=null;
+
 //  $("#insideWrapper-"+encoden).css("transform","scale("+currzoom+")");
-  if((incr!=0)){
-    
+ 
+  if((currrot!=0) || (currzoom!=1.0)){
     var or=x + "px " +y+"px";
-    var prop={
+
+    prop={
       "transform-origin":or,
-      "transform": "scale("+currzoom+")"
+      "transform":"" 
     };
+    if(currrot!=0){
+      prop["transform"]="rotate("+currrot+"deg)";
+    }
+    if(currzoom!=1.0){
+      prop["transform"]=prop["transform"]+" scale("+currzoom+")";
+
+    }
     $("#cameraImage-"+encoden).css(prop);
     $("#cameraImageCanv-"+encoden).css(prop);
-
-    //$("#cameraImage-"+encoden).css("transform-origin","10px 4px");
-    //$("#cameraImageCanv-"+encoden).css("transform-origin","10px 4px");
-
-    console.log(name+" Zooming "+currzoom +" "+JSON.stringify(prop));
-
+    console.log(name+" Zoom:"+currzoom +" Rotate:"+currrot+" CSS:"+JSON.stringify(prop));
   } else {
-    console.log(name+" Zooming "+currzoom);
-
     $("#cameraImage-"+encoden).css("transform","scale("+currzoom+")");
     $("#cameraImageCanv-"+encoden).css("transform","scale("+currzoom+")");
+    console.log(name+" Zoom:"+currzoom +" Rotate:"+currrot);
+
   }
 
 }
@@ -887,6 +925,27 @@ function activateMenu(tmpObj){
         callback: function (itemKey, opt, e) {
           var name = opt.items[itemKey].cu;
           zoomInOut(name,0);
+        }
+      };
+      cuitem['rotatep90'] = {
+        name: "Rotate +90", cu: name,
+        callback: function (itemKey, opt, e) {
+         // var name = opt.items[itemKey].cu;
+          zoomInOut(name,1,90);
+        }
+      };
+      cuitem['rotatem90'] = {
+        name: "Rotate -90", cu: name,
+        callback: function (itemKey, opt, e) {
+         // var name = opt.items[itemKey].cu;
+          zoomInOut(name,1,-90);
+        }
+      };
+      cuitem['rotateReset'] = {
+        name: "Rotate reset", cu: name,
+        callback: function (itemKey, opt, e) {
+         // var name = opt.items[itemKey].cu;
+          zoomInOut(name,1.0,0);
         }
       };
         cuitem['auto-reference'] = {
@@ -1143,6 +1202,10 @@ function rebuildCam(tmpObj) {
      checkExist[key] = setInterval(function() {
 
       if ($("#cameraImageCanv-" + encoden).length && $("#cameraImage-" + encoden).length) {
+        const canvas = document.getElementById("cameraImageCanv-"+encoden);
+        canvas.width = $("#cameraImage-"+encoden).width();
+        canvas.height = $("#cameraImage-"+encoden).height();
+        console.log(key+ " canvas "+canvas.width+"x"+canvas.height);
         activateMenu(tmpObj);
         $("#cameraImageCanv-" + encoden).on('dblclick', function (e) {
           var offset = $(this).offset();
@@ -1179,6 +1242,7 @@ function rebuildCam(tmpObj) {
     
         });
         $("#cameraImageCanv-" + encoden).on('mousemove', function (e) {
+          
           var offset = $(this).offset();
           var currzoomm=1.0;
          // console.log("POS:"+e.pageX+","+e.pageY);
@@ -1188,6 +1252,7 @@ function rebuildCam(tmpObj) {
           //let nath=$("#cameraImage-"+encoden).prop('naturalHeight');
           mouseX=x;
           mouseY=y;
+        //  console.log("X:"+x+" Y:"+y);
           //console.log("POS:"+x+","+y+" Natural dim:"+natw+","+nath+ " Rendered "+this.width+","+this.height);
      
            // var x = event.pageX - this.offsetLeft;
