@@ -31,7 +31,27 @@
               "required": true,
                 "default": "OpenCUButton",
                 "description": "Control type"
-            }
+            },
+            "setpoint": {
+              "type": "object",
+              "format": "tab",
+              "title": "Setpoints",
+              "required": false,
+              "items": {
+                  "$ref": "synoptic-value.json",
+                  "title": "Setpoint Values"
+              }
+          },
+            "readout": {
+              "type": "object",
+              "format": "tab",
+              "title": "ReadOuts",
+              "required": false,
+              "items": {
+                  "$ref": "synoptic-value.json",
+                  "title": "Readout Values"
+              }
+          }
           }
         },
   "color": {

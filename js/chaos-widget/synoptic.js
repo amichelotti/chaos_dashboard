@@ -115,7 +115,7 @@ function updateObject(obj,fn){
             for(var k in obj.object.setpoint){
                 var val=ds[0]['input'][k];
                 if(typeof val === "number"){
-                    val=val.toFixed(3);
+                    val=val.toFixed( obj.object.setpoint[k].digit);
                 }
                 obj.object['setpoint'][k]["value"]=val;
             }
@@ -124,15 +124,15 @@ function updateObject(obj,fn){
             for(var k in obj.object.readout){
                 var val=ds[0]['output'][k];
                 if(typeof val === "number"){
-                    val=val.toFixed(3);
+                    val=val.toFixed(obj.object.readout[k].digit);
                 }
                 obj.object['readout'][k]["value"]=val;
             }
         }
         if(ch==-1){
-            obj.object['state']=ds[0]['health'];
+            obj['runtime']['state']=ds[0]['health'];
         } else {
-            obj.object['state']=ds[0];
+            obj['runtime']['state']=ds[0];
 
         }
         fn(obj);
@@ -141,14 +141,22 @@ function updateObject(obj,fn){
 }
 function draw_object_state(ctx, obj) {
     var now= Date.now();
-    var state=obj.object['state'];
+    var state=obj['runtime']['state'];
     var color=obj.color;
     if(state.nh_status=="Start" ){
             if((now-state.dpck_ats)<10000){
                 if(state.dpck_seq_id&1){
-                    color="LightGreen";
+                    if(state.cuh_alarm_lvl){
+                        color="red";
+                    } else {
+                        color="LightGreen";
+                    }
                 }else {
-                    color="Green";
+                    if(state.cuh_alarm_lvl){
+                        color="LightRed";
+                    } else {
+                        color="Green";
+                    }
                 }
             }
     } else if(state.nh_status=="Stop" ){
@@ -156,28 +164,54 @@ function draw_object_state(ctx, obj) {
     } else if(state.nh_status=="Init" ){
             color="yellow";
     }
+    var x=obj['runtime']['circle'].x;
+    var y=obj['runtime']['circle'].y;
+    var r=obj['runtime']['circle'].r;
+    if(obj['runtime'].hasOwnProperty("error")){
+
+        ctx.clearRect(obj['runtime']['error'].x,obj['runtime']['error'].y,obj['runtime']['error'].width,obj['runtime']['error'].height);
+        delete clist[obj.row][obj.col]['runtime']['error'];
+    }
+    if(state.cuh_alarm_lvl){
+        const img = new Image();
+        img.onload = function () {
+            ctx.drawImage(img, x+r+1, y );
+            clist[obj.row][obj.col]['runtime']['error'] = { "x": x+r+1, "y": y, "width": img.width,"height":img.height };
+
+        }
+        if(state.cuh_alarm_lvl==1){
+            img.src="../img/icon/warning.png";
+        } else {
+            img.src="../img/icon/error.png"
+        }
+    } 
     
         ctx.beginPath();
-        var x=obj['runtime']['circle'].x;
-        var y=obj['runtime']['circle'].y;
-        var r=obj['runtime']['circle'].r;
-
+        
         ctx.arc(x, y, r, 2 * Math.PI, false);
         ctx.lineWidth = obj.depth;
         ctx.strokeStyle = color;
         ctx.stroke();
-        var pos=0;
         if(obj.object.hasOwnProperty('setpoint')){
             for(var k in obj.object.setpoint){
-                ctx.fillText(obj.object.setpoint[k].value, x - 2*r, y - 2*r + pos);
-                pos+=obj.fontsize+1;
+                var v=obj.object.setpoint[k];
+                const textMetrics = ctx.measureText(v.value);
+                ctx.clearRect(x +v.offsetx,y +v.offsety-obj.fontsize,textMetrics.width,obj.fontsize+1);
+                if(v.hasOwnProperty("color")){
+                    ctx.fillStyle=v.color;
+                }
+                ctx.fillText(v.value, x+v.offsetx, y +v.offsety);
             }
         }
-        pos=0
         if(obj.object.hasOwnProperty('readout')){
             for(var k in obj.object.readout){
-                ctx.fillText(obj.object.readout[k].value, x + r, y - 2*r + pos);
-                pos+=obj.fontsize+1;
+                var v=obj.object.readout[k];
+                const textMetrics = ctx.measureText(v.value);
+                ctx.clearRect(x +v.offsetx,y +v.offsety-obj.fontsize,textMetrics.width,obj.fontsize+1);
+                if(v.hasOwnProperty("color")){
+                    ctx.fillStyle=v.color;
+                }
+                ctx.fillText(v.value, x+v.offsetx, y +v.offsety);
             }
         }  
 }
@@ -299,7 +333,7 @@ function refreshState(){
 const ct = canvasState.getContext('2d');
 
 
-ct.clearRect(0, 0, canvasState.width, canvasState.height);
+//ct.clearRect(0, 0, canvasState.width, canvasState.height);
 
 
 console.log("refresh");
@@ -500,7 +534,32 @@ $.fn.buildSynoptic = function (opt) {
                                         if(!clist[last_obj.row][last_obj.col]['object'].hasOwnProperty("readout")){
                                             clist[last_obj.row][last_obj.col]['object']['readout']={};
                                         }
-                                        clist[last_obj.row][last_obj.col]['object']['readout'][name]={"name":name,"value":imdata[0][name]};
+                                        var pos=0;
+                                        const ctx = canvasState.getContext('2d');
+                                        var value=imdata[0][name];
+                                        if(typeof value === "number"){
+                                            value=value.toFixed(3);
+                                        }
+                                        const textMetrics = ctx.measureText(value);
+                                        
+                                        for(var k in clist[last_obj.row][last_obj.col]['object']['setpoint']){
+                                            pos+=clist[last_obj.row][last_obj.col].fontsize;
+                                        }
+                                        var val={
+                                            "name":name,
+                                                "color":"black",
+                                                "value":value,
+                                                "row":last_obj.row,
+                                                "col":last_obj.col,
+                                                "offsetx":last_obj['runtime']['circle'].r+1,
+                                                "offsety":-last_obj['runtime']['circle'].r+pos,
+                                                "font":last_obj.font,
+                                                "digit":3,
+                                                "fontsize":last_obj.fontsize
+
+                                            };
+                                        console.log("LAST OBJECT:"+JSON.stringi)
+                                        clist[last_obj.row][last_obj.col]['object']['readout'][name]=val;
                                         draw_all();
                                         console.log("ADDING Readout"+name);
                                     });
@@ -537,7 +596,31 @@ $.fn.buildSynoptic = function (opt) {
                                         if(!clist[last_obj.row][last_obj.col]['object'].hasOwnProperty("setpoint")){
                                             clist[last_obj.row][last_obj.col]['object']['setpoint']={};
                                         }
-                                        clist[last_obj.row][last_obj.col]['object']['setpoint'][name]={"name":name,"value":imdata[0][name]};
+                                        const ctx = canvasState.getContext('2d');
+                                        var value=imdata[0][name];
+                                        if(typeof value === "number"){
+                                            value=value.toFixed(3);
+                                        }
+                                        var pos=0;
+                                        const textMetrics = ctx.measureText(value);
+                                        
+                                        for(var k in clist[last_obj.row][last_obj.col]['object']['setpoint']){
+                                            pos+=clist[last_obj.row][last_obj.col].fontsize;
+                                        }
+                                        var val={
+                                            "name":name,
+                                                "color":"brown",
+                                                "value":imdata[0][name],
+                                                "row":last_obj.row,
+                                                "col":last_obj.col,
+                                                "offsetx":-last_obj['runtime']['circle'].r-1-textMetrics.width,
+                                                "offsety":-last_obj['runtime']['circle'].r+pos,
+                                                "font":last_obj.font,
+                                                "digit":3,
+                                                "fontsize":last_obj.fontsize
+
+                                            };
+                                        clist[last_obj.row][last_obj.col]['object']['setpoint'][name]=val;
                                         draw_all()
 
                                         console.log("ADDING Setpoint "+name);
@@ -578,14 +661,18 @@ $.fn.buildSynoptic = function (opt) {
                                 callback: function (itemKey, opt, e) {
                                     var row = last_obj.row;
                                     var col = last_obj.col;
-                                    jqccs.editJSON("Edit " + last_obj.object.uid, last_obj, (res) => {
+                                    var templ = {
+                                        $ref: "synoptic-node.json",
+                                        format: "tabs"
+                                    }
+                                    jqccs.jsonEditWindow("Edit "+ last_obj.object.uid, templ, last_obj, function (res) {
                                         clist[row][col] = null;
 
                                         clist[res.row][res.col] = res;
                                         last_obj = res;
                                         draw_all();
                                     });
-
+                                                                       
                                     // draw_all();
                                 }
                             };
@@ -784,7 +871,8 @@ function buildDefaultNode(el){
         ele['rowspan'] = rowspan;
     }
     
-    ele['runtime'] = {};
+    ele['runtime'] = {state:{},text:{},circle:{}};
+
     if(syn_opt.hasOwnProperty("settings")&&syn_opt.settings.hasOwnProperty("showuid")&&syn_opt.settings.showuid){
         ele['runtime']['text']={"text":ele.object['uid']} ;
     }
