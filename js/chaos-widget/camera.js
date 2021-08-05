@@ -3,7 +3,8 @@ var selectedCams = [];
 var stateObj = {};
 var cameraDriverDesc={};
 var cameraLayoutSettings={};
-var mouseX, mouseY;
+var mouseX=0, mouseY=0;
+var currzoomm=1.0;
 
 function checkRedrawReference(camid,domid,x,y,sx,sy,r){
   jchaos.getChannel(camid,1,(ele)=>{
@@ -20,9 +21,10 @@ function checkRedrawReference(camid,domid,x,y,sx,sy,r){
 }
 function redrawReference(domid,x,y,sx,sy,r){
   const canvas = document.getElementById("cameraImageCanv-"+domid);
-  canvas.width = $("#cameraImage-"+domid).width();
-  canvas.height = $("#cameraImage-"+domid).height();
-  
+  if($("#cameraImage-"+domid).length){
+    canvas.width = $("#cameraImage-"+domid).width();
+    canvas.height = $("#cameraImage-"+domid).height();
+  }
   
     if(sx>0 && sy>0){
       //let name=jchaos.encodeName(id);
@@ -214,7 +216,6 @@ $.fn.buildCameraArray = function (opt) {
       activateMenuShort();
       $("#cameraImageCanv-" + vid[1]).on("mousemove", function (e) {
         var offset = $(this).offset();
-        var currzoomm=1.0;
         var x = (e.pageX - offset.left)/currzoomm;
         var y = (e.pageY - offset.top)/currzoomm;
       //  console.log("POS "+ev.currentTarget.value+" "+x+","+y)
@@ -695,7 +696,6 @@ function activateMenuShort(){
       var name = mapcamera[domid];
       var cuitem = {};
       console.log(domid+" Menu for :"+name);
-      var currzoomm=1.0;
       if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid].hasOwnProperty("zoom")){
         currzoomm=cameraLayoutSettings[domid]["zoom"];
       }
@@ -809,16 +809,19 @@ function zoomInOut(name,incr,rot){
         currzoom=cameraLayoutSettings[name]["zoom"];
       } else {
         cameraLayoutSettings[name]["zoom"]=currzoom;
+        cameraLayoutSettings[name]["orx"]=0;
+        cameraLayoutSettings[name]["ory"]=0;
+
       }
       if(cameraLayoutSettings[name].hasOwnProperty("rot")){
         currrot=cameraLayoutSettings[name]["rot"];
       } 
   } else{
-    cameraLayoutSettings[name]={"zoom":currzoom};
+    cameraLayoutSettings[name]={"zoom":currzoom,"orx":0,"ory":0};
 
   }
-  var x=mouseX/currzoom;
-  var y=mouseY/currzoom;
+  var x=mouseX;
+  var y=mouseY;
   if(typeof rot === "number" ){
     if(rot==0){
       currrot=0;
@@ -831,7 +834,6 @@ function zoomInOut(name,incr,rot){
   } else {
     
     currzoom*=incr;
-    jqccs.instantMessage("Zoom:" + currzoom, "", 2000, true);
 
   }
   cameraLayoutSettings[name]["zoom"]=currzoom;
@@ -843,28 +845,52 @@ function zoomInOut(name,incr,rot){
 //  $("#insideWrapper-"+encoden).css("transform","scale("+currzoom+")");
  
   if((currrot!=0) || (currzoom!=1.0)){
-    var or=x + "px " +y+"px";
+    const mirinosize=100;
+
+    var scaleorx=x-mirinosize;
+    var scaleory=y-mirinosize;
+    
+
+    
+
+    if(scaleorx<0){
+      scaleorx =0;
+    }
+    if(scaleory<0){
+      scaleory=0;
+    }
+    if((currzoom!=1.0) && (incr!=1)){
+      cameraLayoutSettings[name]["orx"]=scaleorx;
+      cameraLayoutSettings[name]["ory"]=scaleory;
+    }
+    var scaleor=cameraLayoutSettings[name]["orx"] + "px " +cameraLayoutSettings[name]["ory"]+"px";
+
+   // var or=x + "px " +y+"px";
 
     prop={
-      "transform-origin":or,
+      "transform-origin":((currzoom==1.0)?"center":scaleor),
       "transform":"" 
     };
-    if(currrot!=0){
-      prop["transform"]="rotate("+currrot+"deg)";
-    }
     if(currzoom!=1.0){
-      prop["transform"]=prop["transform"]+" scale("+currzoom+")";
+      prop["transform"]="scale("+currzoom+","+currzoom+")";
 
     }
+    if(currrot!=0){
+      prop["transform"]=prop["transform"]+" rotate("+currrot+"deg)";
+    }
+    
     $("#cameraImage-"+encoden).css(prop);
     $("#cameraImageCanv-"+encoden).css(prop);
     console.log(name+" Zoom:"+currzoom +" Rotate:"+currrot+" CSS:"+JSON.stringify(prop));
+    jqccs.instantMessage("Transform", "Zoom:"+currzoom+" Rotate:"+currrot+" CSS:"+JSON.stringify(prop), 2000, true);
+
   } else {
     $("#cameraImage-"+encoden).css("transform","scale("+currzoom+")");
     $("#cameraImageCanv-"+encoden).css("transform","scale("+currzoom+")");
     console.log(name+" Zoom:"+currzoom +" Rotate:"+currrot);
 
   }
+  currzoomm=currzoom;
 
 }
 function activateMenu(tmpObj){
@@ -876,7 +902,6 @@ function activateMenu(tmpObj){
       var name = $(e.currentTarget).attr("cuname");
       var cuitem = {};
       var desc = jchaos.node(name, "desc", "all");
-      var currzoomm=1.0;
       if(cameraLayoutSettings.hasOwnProperty(name)&&cameraLayoutSettings[name].hasOwnProperty("zoom")){
         currzoomm=cameraLayoutSettings[name]["zoom"];
       }
@@ -898,9 +923,6 @@ function activateMenu(tmpObj){
           //var y = (e.pageY - offset.top);
          // var x = (e.pageX )/currzoomm;
          // var y = (e.pageY)/currzoomm;
-         var x=mouseX/currzoomm;
-         var y=mouseY/currzoomm;
-          console.log("Zoom in Pos:"+x+"-"+e.clientX+","+y+"-"+e.clientY+" offleft:"+offset.left+" offtop:"+offset.top);
           zoomInOut(name,2);
         }
       };
@@ -1209,7 +1231,6 @@ function rebuildCam(tmpObj) {
         activateMenu(tmpObj);
         $("#cameraImageCanv-" + encoden).on('dblclick', function (e) {
           var offset = $(this).offset();
-          var currzoomm=1.0;
             if(cameraLayoutSettings.hasOwnProperty(key)&&cameraLayoutSettings[key].hasOwnProperty("zoom")){
               currzoomm=cameraLayoutSettings[key]["zoom"];
             }
@@ -1244,7 +1265,6 @@ function rebuildCam(tmpObj) {
         $("#cameraImageCanv-" + encoden).on('mousemove', function (e) {
           
           var offset = $(this).offset();
-          var currzoomm=1.0;
          // console.log("POS:"+e.pageX+","+e.pageY);
           var x = (e.pageX - offset.left)/currzoomm;
           var y = (e.pageY - offset.top)/currzoomm;
@@ -1252,7 +1272,8 @@ function rebuildCam(tmpObj) {
           //let nath=$("#cameraImage-"+encoden).prop('naturalHeight');
           mouseX=x;
           mouseY=y;
-        //  console.log("X:"+x+" Y:"+y);
+         
+         // console.log("X:"+x+" Y:"+y + "currzoom:"+currzoomm );
           //console.log("POS:"+x+","+y+" Natural dim:"+natw+","+nath+ " Rendered "+this.width+","+this.height);
      
            // var x = event.pageX - this.offsetLeft;

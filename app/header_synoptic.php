@@ -168,18 +168,18 @@
 				items['edit-script'] = {
 					"separator_before": true,
 					"separator_after": false,
-					label: "Edit script",
+					label: "Edit Synoptic",
 					action: function () {
 						var templ = {
             				$ref: "synoptic_model.json",
             				format: "tabs"
         					}
 						jqccs.jsonEditWindow("Synoptic Editor", templ, node.data, function (data, obj) {
-							if(node.name.length == 0){
+							if(node.data.name.length == 0){
 								alert("must provide an synoptic name:'name");
 								return;
 							}
-							if(node.imgsrc.length == 0){
+							if(node.data.imgsrc.length == 0){
 								alert("must provide an image source :'imgsrc");
 								return;
 							}
