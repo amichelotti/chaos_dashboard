@@ -149,10 +149,16 @@ function getUserIP() {
 		if(localStorage['chaos_browser_uuid_cookie'] === undefined){
 			localStorage['chaos_browser_uuid_cookie']=jchaos.generateUID();
 		}
-        jchaos.setOptions({"uri":location.host+":8081","socketio":location.host+":4000"});
-		var url_server =  location.host; //"chaosdev-webui1.chaos.lnf.infn.it";
-		var n_port = "8081";
-		jchaos.ioconnect(location.host+":4000",{
+		const address = location.host.split(':');
+		if(address.length==1){
+			jchaos.setOptions({"uri":location.host+":8081","socketio":location.host+":4000"});
+
+		} else {
+			jchaos.setOptions({"uri":address[0]+":"+address[1]+"81","socketio":address[0]+":4000"});
+
+		}
+
+		jchaos.ioconnect(address[0]+":4000",{
 			query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":4000}
 		});
 		jchaos.options.io_onchat=(msg)=>{
