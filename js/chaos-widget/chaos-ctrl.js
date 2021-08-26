@@ -567,6 +567,9 @@
                 click: function (e) {
                     // var interval=$(this).attr("refresh_time");
                     showdataset++;
+                    showformat=0;
+                    $("#dataset-radix-" + name).text("Dec(s)");
+
                     switch (showdataset) {
                         case 0:
                             $(e.target).text("Output");
@@ -717,6 +720,7 @@
                     }
                     if ((!stop_update) && (isediting == false)) {
                         var chnum = showdataset;
+                        
                         if (showdataset == 8) {
                             chnum = 128;
                         } else if (chnum > 7) {
@@ -726,7 +730,7 @@
                         jchaos.getChannel(cuname, chnum, function (imdata) {
                             last_dataset = imdata;
 
-                            updateDataSetFormat(cuname, (vardir != "" ? (cuname + "/" + vardir) : cuname), imdata[0], showdataset, tmpObj);
+                            updateDataSetFormat(cuname, (vardir != "" ? (cuname + "/" + vardir) : cuname), imdata[0], showformat, tmpObj);
                         }, function (err) {
                             console.log(err);
                         });
@@ -3643,20 +3647,26 @@
             var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0) | ((dslog) ? 0x10 : 0);
             var node_multi_selected = tmpObj.node_multi_selected;
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { 
+                    jqccs.instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); 
+                },
+                function (err) { 
+                    jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type +" err:"+JSON.stringify(err), 3000, false);
+                 });
 
         });
         $("input[type=radio][name=log-enable]").change(function (e) {
-            var dslive = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+            var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
             var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
             var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
 
             var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0) | ((dslog) ? 0x10 : 0);
             var node_multi_selected = tmpObj.node_multi_selected;
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { 
+                    jqccs.instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+                function (err) { 
+                    jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type+", err:"+JSON.stringify(err), 3000, false); });
 
         });
         $("input[type=radio][name=histo-enable]").change(function (e) {
@@ -3668,28 +3678,27 @@
             var node_multi_selected = tmpObj.node_multi_selected;
 
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { jqccs.instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+                function (err) { 
+                    jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type+", err:"+JSON.stringify(err), 3000, false); });
 
         });
         $("#cu_clear_current_cmd").click(function (e) {
             var node_multi_selected = tmpObj.node_multi_selected;
 
             jchaos.node(node_multi_selected, "killcmd", "cu", function () {
-                instantMessage("Clear Current Command", node_multi_selected + ":Clearing last command OK", 1000, true);
-            }, function () {
-                instantMessage("ERROR Clear Current Command", node_multi_selected[0] + ":Clearing last command ", 3000, false);
-            });
+                jqccs.instantMessage("Clear Current Command", node_multi_selected + ":Clearing last command OK", 1000, true);
+            },  function (err) { 
+                jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type+", err:"+JSON.stringify(err), 3000, false); });
         });
 
         $("#cu_clear_queue").click(function (e) {
             var node_multi_selected = tmpObj.node_multi_selected;
 
             jchaos.node(node_multi_selected, "clrcmdq", "cu", function () {
-                instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
-            }, function () {
-                instantMessage("ERROR Command Queue", node_multi_selected[0] + ":Clearing Command Queue ", 3000, false);
-            });
+                jqccs.instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
+            },  function (err) { 
+                jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type+", err:"+JSON.stringify(err), 3000, false); });
 
         });
 
