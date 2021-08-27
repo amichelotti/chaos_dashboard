@@ -711,7 +711,7 @@ function activateMenuShort() {
       var el = ele[0];
       redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO);
       cuitem['sep1'] = "---------";
-      cuitem['fold1'] = {
+      cuitem['transforms'] = {
         "name": "Trasforms..",
         "items": {
           'zoom-in': {
@@ -936,7 +936,7 @@ function activateMenu(tmpObj) {
       tcuitem['zoom-in'] = {
         name: "Zoom In ", cu: name,
         callback: function (itemKey, opt, e) {
-          var name = opt.items[itemKey].cu;
+          var name = opt.items['transforms'].items[itemKey].cu;
           var offset = $(this).offset();
           // var x = (e.pageX - offset.left);
           //var y = (e.pageY - offset.top);
@@ -948,7 +948,7 @@ function activateMenu(tmpObj) {
       tcuitem['zoom-out'] = {
         name: "Zoom Out ", cu: name,
         callback: function (itemKey, opt, e) {
-          var name = opt.items[itemKey].cu;
+          var name = opt.items['transforms'].items[itemKey].cu;
           var encoden = jchaos.encodeName(name);
           var offset = $(this).offset();
           // var x = (e.pageX - offset.left);
@@ -964,7 +964,7 @@ function activateMenu(tmpObj) {
       tcuitem['zoom-reset'] = {
         name: "Zoom Reset", cu: name,
         callback: function (itemKey, opt, e) {
-          var name = opt.items[itemKey].cu;
+          var name = opt.items['transforms'].items[itemKey].cu;
           zoomInOut(name, 0);
         }
       };
@@ -989,7 +989,7 @@ function activateMenu(tmpObj) {
           zoomInOut(name, 1.0, 0);
         }
       };
-      cuitem['fold1'] = {
+      cuitem['transforms'] = {
         "name": "Trasforms..",
         "items": tcuitem
       };
@@ -1024,7 +1024,7 @@ function activateMenu(tmpObj) {
       rcuitem['reset-roi'] = {
         name: "Reset ROI", cu: name,
         callback: function (itemKey, opt, e) {
-          var name = opt.items[itemKey].cu;
+          var name = opt.items['refroi'].items[itemKey].cu;
           var encoden = jchaos.encodeName(name);
           resetRoi(name, () => {
             $("#cameraImage-" + encoden).cropper('destroy');
@@ -1043,7 +1043,7 @@ function activateMenu(tmpObj) {
               name: "Set Roi " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj,
               callback: function (cmd, opt, e) {
 
-                var crop_opt = opt.items['fold2']['items'][cmd].crop_opt;
+                var crop_opt = opt.items['refroi']['items'][cmd].crop_opt;
                 var encoden = jchaos.encodeName(crop_opt.cu);
 
                 console.log("CROP_OBJ:" + JSON.stringify(crop_opt));
@@ -1060,7 +1060,7 @@ function activateMenu(tmpObj) {
           rcuitem['set-reference'] = {
             name: "Set Reference Centroid " + name + " (" + crop_obj.x.toFixed() + "," + crop_obj.y.toFixed() + ") size " + crop_obj.width.toFixed() + "x" + crop_obj.height.toFixed(), crop_opt: crop_obj,
             callback: function (cmd, opt, e) {
-              var crop_opt = opt.items['fold2']['items'][cmd].crop_opt;
+              var crop_opt = opt.items['refroi']['items'][cmd].crop_opt;
 
               var width = crop_opt.width / 2;
               var height = crop_opt.height / 2;
@@ -1080,7 +1080,7 @@ function activateMenu(tmpObj) {
           rcuitem['exit-crop'] = {
             name: "Exit cropping", cu: name,
             callback: function (itemKey, opt, e) {
-              var encoden = jchaos.encodeName(opt.items[itemKey].cu);
+              var encoden = jchaos.encodeName(opt.items['refroi'].items[itemKey].cu);
               $("#cameraImage-" + encoden).cropper('destroy');
             }
 
@@ -1090,7 +1090,7 @@ function activateMenu(tmpObj) {
 
         }
       }
-      cuitem['fold2'] = {
+      cuitem['refroi'] = {
         "name": "Reference/Roi..",
         "items": rcuitem
       };
@@ -1162,23 +1162,7 @@ function activateMenu(tmpObj) {
         }
 
       };
-      /*  cuitem['set-roi'] = {
-          name: "Set Roi " + name ,
-          callback: function (cmd, opt, e) {
-            cropEnable(name,tmpObj,(crop_opt)=>{
-              var encoden = jchaos.encodeName(name);
-  
-            console.log("CROP_OBJ:" + JSON.stringify(crop_opt));
-            var x = crop_opt.x.toFixed();
-            var y = crop_opt.y.toFixed();
-            var width = crop_opt.width.toFixed();
-            var height = crop_opt.height.toFixed();
-            setRoi(name, width, height, x, y, () => { $("#cameraImage-" + encoden).cropper('destroy'); 
-          });
-  
-          });
-        }
-        };*/
+      
 
       return {
         items: cuitem
@@ -1520,6 +1504,14 @@ function getWidget() {
     tableClickFn: function (tmpObj, e) {
       //  rebuildCam(tmpObj);
       console.log("Table click");
+      jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
+        var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+
+        tmpObj.data[cindex] = cu[0];
+        jqccs.updateGenericTableDataset(tmpObj);
+        
+        jqccs.updateGenericControl(tmpObj,cu[0]);
+      })
 
     },
     updateInterfaceFn: function (tmpObj) {

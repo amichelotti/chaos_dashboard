@@ -5717,118 +5717,7 @@
 
     }
 
-    /*
-      function buildNodeInterface(nodes, cutype, template) {
-        if (nodes == null) {
-          alert("NO Nodes given!");
-          return;
-        }
-        if (!(nodes instanceof Array)) {
-          node_list = [nodes];
-        } else {
-          node_list = nodes;
-        }
-  
-        node_list.forEach(function (elem, id) {
-          var name = jchaos.encodeName(elem);
-          node_name_to_index[name] = id;
-          health_time_stamp_old[name] = 0;
-          off_line[name] = false;
-        });
-        // cu_selected = cu_list[0];
-        node_selected = null;
-        var htmlt, htmlc, htmlg;
-        var updateTableFn = new Function;
-       
-        htmlt = generateNodeTable(node_list, template);
-        updateTableFn = updateNodeTable;
-  
-  
-        $("#specific-table-" + tmpObj.template).html(htmlt);
-        // $("div.specific-control").html(htmlc);
-        checkRegistration = 0;
-        setupNode(template);
-  
-        jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-          var cnt = 0;
-          var us_list = [];
-          var cu_list = [];
-          node_list.forEach(function (elem, index) {
-            var type = data[index].ndk_type;
-            node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
-            if ((type == "nt_control_unit")) {
-              cu_list.push(elem);
-            } else if ((type == "nt_unit_server")) {
-              us_list.push(elem);
-            }
-  
-          });
-          if (cu_list.length > 0) {
-            jchaos.getDesc(cu_list, function (data) {
-              var cnt = 0;
-              data.forEach(function (cu) {
-                if (cu.hasOwnProperty("instance_description")) {
-                  node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
-                  node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
-                }
-                cnt++;
-              });
-            });
-          }
-          if (us_list.length > 0) {
-            jchaos.node(us_list, "parent", "us", null, null, function (data) {
-              var cnt = 0;
-              data.forEach(function (us) {
-                if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
-                  node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
-                }
-                cnt++;
-              });
-            });
-          }
-        });
-  
-  
-        if (node_list_interval != null) {
-          clearInterval(node_list_interval);
-        }
-        updateTableFn(node_list);
-        node_list_interval = setInterval(function (e) {
-          var start_time = (new Date()).getTime();
-          if ((start_time - checkRegistration) > 60000) {
-            checkRegistration = start_time;
-            jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-              var cnt = 0;
-              node_list.forEach(function (elem, index) {
-                node_name_to_desc[elem].desc = data[index];
-              });
-            });
-            updateTableFn(node_list);
-  
-          }
-          jchaos.node(node_list, "health", cutype, null, null, function (data) {
-            node_live_selected = data;
-            updateGenericTableDataset(node_live_selected);
-  
-          });
-  
-  
-         
-          // update all generic
-  
-          if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[node_selected] == null) {
-            return;
-          }
-  
-  
-  
-  
-        }, options.Interval, updateTableFn);
-  
-        installCheckLive();
-  
-  
-      } */
+    
 
     function buildAlgoInterface(nodes, interface, template) {
         if (nodes == null) {
@@ -11122,7 +11011,9 @@
 
         return items;
     }
-
+    jqccs.updateGenericControl=function(tmpObj, cu){
+        return updateGenericControl(tmpObj,cu);
+    }
     function updateGenericControl(tmpObj, cu) {
         if (cu == null) {
             return;
@@ -11143,7 +11034,7 @@
             $("#cmd-recover-error").children().remove();
             $("#cmd-bypass-on-off").children().remove();
             */
-            if ((status != "Unload") && (status != "Fatal Error")) {
+            if ((status != "Unload") && (status != "Fatal Error")&& (tmpObj!=null)&&(tmpObj.hasOwnProperty("off_line")&&tmpObj.off_line.hasOwnProperty(encoden))) {
                 switch (tmpObj.off_line[encoden]) {
                     case 1:
                         status = "Dead";
