@@ -4339,6 +4339,7 @@
             list_eu = [];
             if (zone_selected == "--Select--") { //Disabilito la select dei magneti se non � selezionata la zona
                 $("#elements").attr('disabled', 'disabled');
+                return;
             } else {
                 $("#elements").removeAttr('disabled');
             }
@@ -4361,7 +4362,7 @@
             if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
                 search_string = zone_selected;
             }
-            if ((element_selected != "ALL") && (node_selected != "--Select--")) {
+            if ((element_selected != "ALL") && (element_selected != "--Select--")) {
                 search_string += "/" + element_selected;
             }
 
@@ -4655,27 +4656,33 @@
 
 
         }
-        $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function (data, textStatus, jqxhr) {
-            var w = getWidget();
-            tmpObj['htmlFn'] = w.dsFn;
-            tmpObj['generateTableFn'] = w.tableFn;
-            if (w.hasOwnProperty('cmdFn')) {
-                tmpObj['generateCmdFn'] = w.cmdFn;
-            }
-            if (w.hasOwnProperty('updateFn')) {
-                tmpObj['updateFn'] = w.updateFn;
-            }
-            if (w.hasOwnProperty('updateInterfaceFn')) {
-                tmpObj['updateInterfaceFn'] = w.updateInterfaceFn;
-            }
-            if (w.hasOwnProperty('tableClickFn')) {
-                tmpObj['tableClickFn'] = w.tableClickFn;
-            }
-            handler(tmpObj);
+        if(tmpObj.type!="cu"){
+            // if not generic view try to load widget
+            $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function (data, textStatus, jqxhr) {
+                var w = getWidget();
+                tmpObj['htmlFn'] = w.dsFn;
+                tmpObj['generateTableFn'] = w.tableFn;
+                if (w.hasOwnProperty('cmdFn')) {
+                    tmpObj['generateCmdFn'] = w.cmdFn;
+                }
+                if (w.hasOwnProperty('updateFn')) {
+                    tmpObj['updateFn'] = w.updateFn;
+                }
+                if (w.hasOwnProperty('updateInterfaceFn')) {
+                    tmpObj['updateInterfaceFn'] = w.updateInterfaceFn;
+                }
+                if (w.hasOwnProperty('tableClickFn')) {
+                    tmpObj['tableClickFn'] = w.tableClickFn;
+                }
+                handler(tmpObj);
 
-        }).fail(() => {
-            handler(tmpObj);
-        });
+            }).fail(() => {
+                handler(tmpObj);
+            });
+    } else {
+        handler(tmpObj);
+
+    }
 
     }
 
@@ -6872,7 +6879,7 @@
             if (!dashboard_settings.hasOwnProperty('pages')) {
                 dashboard_settings['pages'] = 1;
             }
-            if (dashboard_settings.current_page < dashboard_settings.pages) {
+            if ((dashboard_settings.current_page+1) < dashboard_settings.pages) {
                 dashboard_settings.current_page++;
                 var query = tmpObj['search_query'];
                 buildInterfaceFromPagedSearch(tmpObj, query.what);
@@ -6957,28 +6964,40 @@
         }
         var alive = ($("[name=search-alive]:checked").val() == "true");
         jchaos.search("", "zone", alive, (zon) => {
+            dashboard_settings.current_page = 0;
+
             element_sel('#zones', zon, 1);
             
             if(setDefaultsQuery()){
                 var zone_selected = $("#zones option:selected").val();
-
+                if(zone_selected=="ALL" || zone_selected=="--Select--"){
+                    zone_selected="";
+                }
                 jchaos.search(zone_selected, "class", alive, function (ll) {
                     element_sel('#elements', ll, 1);
                 });
                 updateNodeEvent();
     
+            } else {
+                jchaos.search("", "class", alive, function (ll) {
+                    element_sel('#elements', ll, 1);
+                });
             }
         });
 
 
         $("#zones").click(function () {
             var zone_selected = $("#zones option:selected").val();
-            if (zone_selected == "ALL") {
+            if (zone_selected == "ALL" || zone_selected=="--Select--") {
+                // refresh
                 var alive = ($("[name=search-alive]:checked").val() == "true");
                 jchaos.search("", "zone", alive, function (zones) {
                     element_sel('#zones', zones, 1);
                 }, function (error) {
                     stateOutput(error, true);
+                });
+                jchaos.search("", "class", alive, function (ll) {
+                    element_sel('#elements', ll, 1);
                 });
             }
         });
@@ -7006,6 +7025,8 @@
                     element_sel('#elements', ll, 1);
                 });
             }
+            dashboard_settings.current_page = 0;
+
             buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
 
@@ -7395,7 +7416,7 @@
         var template = tmpObj.type;
         var html = '<div class="row" z-index=-1 id="table-space">';
         html += '<div class="col-md-12">';
-        html += '<div class="box-content col-md-12">';
+        html += '<div class="box-content table-responsive">';
         if (cu.length == 0) {
             html += '<p id="no-result-monitoring">No results match</p>';
 
@@ -7404,7 +7425,7 @@
 
         }
 
-        html += '<table class="table table-striped" id="main_table-' + template + '">';
+        html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name CU</th>';
