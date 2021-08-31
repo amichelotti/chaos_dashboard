@@ -1038,6 +1038,7 @@
                     // var interval=$(this).attr("refresh_time");
                     //    $('#console-' + pid).terminal().exit();
                     $(this).dialog("close");
+                    $(this).remove();
                 }
 
             }],
