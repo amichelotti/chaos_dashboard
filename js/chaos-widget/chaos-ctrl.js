@@ -964,9 +964,9 @@
                     text: "close",
                     id: 'console-close-' + pid,
                     click: function (e) {
-                        // var interval=$(this).attr("refresh_time");
-                        //    $('#console-' + pid).terminal().exit();
                         $(this).dialog('destroy');
+                        $(this).remove();
+
                     }
 
                 }

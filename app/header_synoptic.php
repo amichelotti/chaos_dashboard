@@ -327,7 +327,7 @@
 	function handle_synoptic() {
 		$("body").addClass("loading");
 
-		jqccs.createBrowserWindow("Script browser", refresh_synoptic);
+		jqccs.createBrowserWindow("Synoptic browser", refresh_synoptic);
 	}
 
 
