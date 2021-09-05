@@ -79,6 +79,29 @@
             "required": true,
             "description": "Parameters given in load (Constructor of the CU class)"
         },
+        "cudk_alrm_msk": {
+            "type": "array",
+            "format": "table",
+            "title": "Alarm Mask",
+            "description": "Initialization of alarm masks (0x0 mask all, 0x1 just warning, 0x2 just error, 0xff or unitialized no mask)",
+            "uniqueItems": true,
+
+            "items": {
+                "type": "object",
+                "title": "Property",
+                "properties": {
+                    "alarm": {
+                        "type": "string"
+                    },
+                    "mask": {
+                        "type": "integer"
+                    }
+                },
+                "headerTemplate": "{{ i1 }} - {{ self.alarm }} (value {{ self.mask }})"
+
+
+            }
+        },
         "cudk_prop": {
             "type": "array",
             "format": "table",

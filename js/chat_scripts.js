@@ -203,7 +203,9 @@ $(document).ready(function() {
         
             scrollToBottom() {
                 const chat = document.getElementById("msg-page");
-                chat.scrollTo(0, chat.scrollHeight + 30);
+                if(chat){
+                    chat.scrollTo(0, chat.scrollHeight + 30);
+                }
             }
         }
     
@@ -240,6 +242,7 @@ $(document).ready(function() {
     chat_incoming_message.addEventListener("chat_incoming_message", function(msg) {
         
         console.log("something arrived:"+JSON.stringify(msg.detail));
+        
         chatService.insertMessage(msg.detail);
       });
    

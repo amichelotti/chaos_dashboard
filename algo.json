@@ -37,6 +37,7 @@
     "eudk_script_content": {
       "type": "string",
       "format": "textarea",
+      "input_height":"400px",
       "description": "Script code"
     },
     "eudk_script_keepalive": {

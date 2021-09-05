@@ -12,7 +12,8 @@
 		"cameraRefresh":1000,
 		"cameraPerRow" :2,
 		"maxCameraCol" :8,
-		"restTimeout":6000
+		"restTimeout":6000,
+		"debug":false
 	}
 		
 }

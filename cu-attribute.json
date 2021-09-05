@@ -10,15 +10,26 @@
 		},
 		"cudk_default_value" : {
 			"type": "string",
-			"description":"Default Value"
+			"format":"textarea",
+			"description":"Default Value (applied on Init)"
 		},
 		"cudk_ds_max_range" : {
 			"type": "string",
-			"description":"Max Range"
+			"description":"Max Range, ERROR if greater"
 		},
 		"cudk_ds_min_range" : {
 			"type": "string",
-			"description":"Min Range"
+			"description":"Min Range, ERROR if smaller"
+		},
+		"cudk_ds_max_warn_range" : {
+			"type": "string",
+			"default":"",
+			"description":"Set WARNING if greater"
+		},
+		"cudk_ds_min_warn_range" : {
+			"type": "string",
+			"default":"",
+			"description":"Set WARNING if smaller"
 		},
 		"cudk_ds_attr_inc" : {
 			"type": "string",
@@ -43,6 +54,19 @@
 			"default":"0",
 			"description":"Offset to apply on sets"
 		}
+		,
+		"cudk_ds_attr_wrn_thr" : {
+			"type": "string",
+			"default":"",
+			"description":"Set/readout warning threshold"
+		}
+		,
+		"cudk_ds_attr_error_thr" : {
+			"type": "string",
+			"default":"",
+			"description":"Set/readout error thresholdt"
+		}
+		
 	} 
 }
     

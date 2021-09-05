@@ -75,7 +75,6 @@ function getUrlVars() {
 	var hostWidth = $(window).width();
 	var hostHeight = $(window).height();
 	var av_graphs = jchaos.variable("highcharts", "get", null, null);
-	jqccs.initSettings();
 
 	console.log("current window "+hostWidth+"x"+hostHeight);
 	console.log("graph params"+JSON.stringify(jsonparm));

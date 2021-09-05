@@ -45,8 +45,8 @@ function getWidget() {
         var template = tmpObj.type;
         var html = '<div class="row">';
         html += '<div class="box col-md-12">';
-        html += '<div class="box-content">';
-        html += '<table class="table table-striped" id="main_table-' + template + '">';
+        html += '<div class="box-content table-responsive">';
+        html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Element</th>';
@@ -165,7 +165,7 @@ function getWidget() {
             $("#"+name).append("<option value='"+custom.cudk_load_param.poi[i]+"'>"+i+"</option>");
 
           }
-          $("#"+name).on("click", function (s) {
+          $("#"+name).on("change", function (s) {
 
             var cuname = $(this).attr('name');
             var poiv = $(this).find("option:selected").text();
