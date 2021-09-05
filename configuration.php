@@ -152,14 +152,15 @@ require_once('header.php');
 		reader.onload = function(e) {
 		var cmdselected = $("#upload_selection").val();
 		try{
-			jchaos.restoreFullConfig(JSON.parse(e.target.result),cmdselected);
+			var o=JSON.parse(e.target.result);
+			} catch(e){
+				alert("ERROR parsing '"+fname.name+"' : "+e);
+				return;
+		}
+			jchaos.restoreFullConfig(o,cmdselected);
 			jqccs.instantMessage("Restored "+fname.name, " OK", 3000, true);
 
-		} catch(e){
-			alert("ERROR parsing '"+fname.name+"' : "+e);
-			//jqccs.instantMessage("ERROR parsing "+fname.name, e, 5000, false);
-
-		}
+		
 
 	
 
