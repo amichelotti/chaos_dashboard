@@ -8,6 +8,7 @@
 	"generalRefresh" : {
 		"type":"integer",
 		"default":1000,
+		"required": true,
 		"description":"General Refresh (ms)"
 	},
 	"maxNodesPerPage" : {
@@ -17,17 +18,17 @@
 	},
 	"defaultZone" : {
 		"type":"string",
-		"default":"",
+		"default":"ALL",
 		"description":"Default Zone to open"
 	},
 	"defaultGroup" : {
 		"type":"string",
-		"default":"",
+		"default":"ALL",
 		"description":"Default Group to open"
 	},
 	"defaultInterface" : {
 		"type":"string",
-		"default":"",
+		"default":"ALL",
 		"description":"Default Interface to open"
 	},
 	"generalControlRefresh" : {
@@ -47,13 +48,14 @@
 	},
 	"defaultRestTimeout" : {
 		"type":"integer",
-		"default":30000,
+		"default":10000,
+		"required": true,
 		"description":"Default Timeout Rest operation (ms)"
 	},
 	"camera":{
-		    "$ref":"camera-settings.json",
-		    "title":"Camera Settings"
-		
+		    "$ref":"../camera-settings.json",
+		    "title":"Camera Settings",
+			"required": true
 	}
 }
 }

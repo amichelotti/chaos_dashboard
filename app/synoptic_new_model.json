@@ -1,0 +1,44 @@
+{
+    "title": "Synoptic",
+    "type": "object",
+    "id": "editor-synoptic",
+    "format": "tab",
+    "properties": {
+        "name": {
+            "type": "string",
+            "required": true,
+            "format": "text",
+            "description": "Synoptic Name"
+        },
+        
+        "group": {
+            "type": "string",
+            "format": "text",
+            "required": true,
+            "default" : "GENERIC",
+            "description": "Synoptic Group"
+
+        },
+        "imgsrc": {
+            "type": "string",
+            "format": "textarea",
+            "required": true,
+            "description": "Image Synoptic source on server (ask to administrator) or specify base64 image (deprecated)"
+        },
+	"cellsizex" : {
+		"type":"integer",
+		"default":30,
+        "required": true,
+
+		"description":"Default cell size x in px (determines the number of cells on x position (greater numbers, bigger icons and smaller position resolution)"
+	},
+	"cellsizey" : {
+		"type":"integer",
+		"default":30,
+        "required": true,
+
+		"description":"Default cell size y in px (determines the number of cells on y position (greater numbers, bigger icons and smaller  position resolution)"
+	}
+
+    }
+}

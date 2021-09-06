@@ -1,0 +1,68 @@
+{
+  "title": "Value",
+  "type": "object",
+  "id": "synoptic-node",
+  "format": "tab",
+  "properties": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "default": "black",
+      "description": "UID of the value"
+    },
+    "value": {
+      "type": "string",
+      "required": false,
+      "description": "value"
+    },
+    "digit": {
+      "type": "integer",
+      "required": true,
+      "default": 3,
+      "description": "Significant digit in case of number"
+
+    },
+    "color": {
+      "type": "string",
+      "required": true,
+      "default": "black",
+      "description": "Default color"
+    },
+    "font": {
+      "type": "string",
+      "required": true,
+      "default": "Arial",
+      "description": "Default Font"
+    },
+    "fontsize": {
+      "type": "integer",
+      "required": true,
+      "default": 10,
+      "description": "Default Font size"
+    },
+    "row": {
+      "type": "integer",
+      "required": true,
+      "default": 1,
+      "description": "Row position"
+    },
+    "col": {
+      "type": "integer",
+      "required": true,
+      "default": 1,
+      "description": "Col position"
+    },
+    "offsetx": {
+      "type": "integer",
+      "default": 0,
+      "required": true,
+      "description": "Offset X from position (px)"
+    },
+    "offsety": {
+      "type": "integer",
+      "default": 0,
+      "required": true,
+      "description": "Offset Y from position (px)"
+    }
+  }
+}

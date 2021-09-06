@@ -42,8 +42,13 @@ var Controls= syn.description.Controls;
 //CREATING THE NEW WINDOW
 
 var strdim="height="+Wheight+",width="+Wwidth;
-var SynWin= window.open("",syn.name,strdim);
-SynWin.document.write("<head></head><body id = \"body\" style = \"text-align:center;\"><table id = \"syn\"></table></body>");
+var SynWin = window.open("", syn.name, strdim);
+	var head = "";
+	
+	//head+= "<script type=\"text/javascript\" src=\"../js/jquery-3.5.1.min.js\"></script>";
+    //head += "<script type=\"text/javascript\" src=\"../js/chaos-widget/chaos-ctrl.js\"></script>";
+
+SynWin.document.write("<head>"+head+"</head><body id = \"body\" style = \"text-align:center;\"><table id = \"syn\"></table></body>");
 SynWin.document.title=syn.name;
 //creating style element
 var style = document.createElement('style');

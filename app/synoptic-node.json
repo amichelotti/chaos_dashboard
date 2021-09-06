@@ -1,0 +1,99 @@
+{
+    "title":"Node",
+    "type":"object",
+	"id":"synoptic-node",
+	"format":"tab",
+
+    "properties": {
+     
+    "row": {
+        "type": "integer",
+            "required": true,
+            "description": "Row position"
+    },
+    "col": {
+      "type": "integer",
+          "required": true,
+          "description": "Col position"
+  },
+  "object": {
+          "type": "object",
+          "format": "table",
+          "properties": {
+            "uid": {
+              "type": "string",
+              "required": true,
+                  "default": "<NODENAME>",
+                  "description": "Node UID (i.e CUNAME) "
+          },
+            "type": {
+              "type": "string",
+              "required": true,
+                "default": "OpenCUButton",
+                "description": "Control type"
+            },
+            "setpoint": {
+              "type": "object",
+              "format": "tab",
+              "title": "Setpoints",
+              "required": false,
+              "items": {
+                  "$ref": "synoptic-value.json",
+                  "title": "Setpoint Values"
+              }
+          },
+            "readout": {
+              "type": "object",
+              "format": "tab",
+              "title": "ReadOuts",
+              "required": false,
+              "items": {
+                  "$ref": "synoptic-value.json",
+                  "title": "Readout Values"
+              }
+          }
+          }
+        },
+  "color": {
+    "type": "string",
+    "required": true,
+        "default": "black",
+        "description": "Default color"
+},
+"font": {
+  "type": "string",
+  "required": true,
+      "default": "Arial",
+      "description": "Default Font"
+},
+"fontsize": {
+  "type": "integer",
+  "required": true,
+      "default": 10,
+      "description": "Default Font size"
+},
+"depth": {
+  "type": "integer",
+  "required": true,
+      "default": 3,
+      "description": "Default line depth"
+},
+"colspan": {
+  "type": "integer",
+  "required": true,
+      "default": 1,
+      "description": "Default col span (enlarge x)"
+},
+"rowspan": {
+  "type": "integer",
+  "required": true,
+      "default": 1,
+      "description": "Default row span (enlarge y)"
+}
+
+          }
+	
+}
+    
+    
+    
