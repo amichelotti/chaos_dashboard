@@ -1093,6 +1093,22 @@
 							};
 
 						}
+						items['clralarm'] = {
+							"separator_before": false,
+							"separator_after": false,
+							label: "Clear Alarm",
+							action: function () {
+								var typ = jchaos.nodeTypeToHuman(type);
+
+								jchaos.node(selected_node, "nodeclralrm", typ, function () {
+											jqccs.instantMessage("Clear Alarms ", "Cleared " + selected_node + "", 1000, true);
+										}, function (err) {
+											jqccs.instantMessage("Error Clearing Alarms ", "Clearing " + selected_node + " "+JSON.stringify(err), 2000, true);
+										});
+										
+								
+						}
+					}
 						items['shutdown'] = {
 							"separator_before": false,
 							"separator_after": true,
@@ -1860,6 +1876,8 @@
 									"text": edesc.ndk_uid,
 									"data": edesc
 								};
+								node['text'] = "<span>" + edesc.ndk_uid + "</span>" + '<span class="decodeAlarm" id="' + jchaos.encodeName(edesc.ndk_uid) + '_devalarm"></span>' + '<span id="' + jchaos.encodeName(edesc.ndk_uid) + '_maskalarm"></span>';
+
 								if (!node_created.hasOwnProperty(iname)) {
 									jsree_data.push(node);
 									node_created[iname] = true;
