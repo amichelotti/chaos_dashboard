@@ -567,6 +567,9 @@
                 click: function (e) {
                     // var interval=$(this).attr("refresh_time");
                     showdataset++;
+                    showformat=0;
+                    $("#dataset-radix-" + name).text("Dec(s)");
+
                     switch (showdataset) {
                         case 0:
                             $(e.target).text("Output");
@@ -717,6 +720,7 @@
                     }
                     if ((!stop_update) && (isediting == false)) {
                         var chnum = showdataset;
+                        
                         if (showdataset == 8) {
                             chnum = 128;
                         } else if (chnum > 7) {
@@ -726,7 +730,7 @@
                         jchaos.getChannel(cuname, chnum, function (imdata) {
                             last_dataset = imdata;
 
-                            updateDataSetFormat(cuname, (vardir != "" ? (cuname + "/" + vardir) : cuname), imdata[0], showdataset, tmpObj);
+                            updateDataSetFormat(cuname, (vardir != "" ? (cuname + "/" + vardir) : cuname), imdata[0], showformat, tmpObj);
                         }, function (err) {
                             console.log(err);
                         });
@@ -748,12 +752,20 @@
     }
 
 
-    jqccs.editJSON = function (msghead, json, applyfunc) {
+    jqccs.editJSON = function (msghead, json, applyfunc,opt) {
         var last_dataset = {};
         var showformat = 0;
         var name = jchaos.encodeName(msghead);
         var hostWidth = $(window).width();
         var hostHeight = $(window).height();
+        var options ={
+            collapsed: true,
+            withQuotes: true,
+            format: 10
+        }
+        if(opt!==undefined){
+            options=opt;
+        }
         var instant = $('<div id=dataset-' + name + '></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
@@ -952,9 +964,9 @@
                     text: "close",
                     id: 'console-close-' + pid,
                     click: function (e) {
-                        // var interval=$(this).attr("refresh_time");
-                        //    $('#console-' + pid).terminal().exit();
                         $(this).dialog('destroy');
+                        $(this).remove();
+
                     }
 
                 }
@@ -1026,6 +1038,7 @@
                     // var interval=$(this).attr("refresh_time");
                     //    $('#console-' + pid).terminal().exit();
                     $(this).dialog("close");
+                    $(this).remove();
                 }
 
             }],
@@ -1292,12 +1305,13 @@
         if (typeof channel === "undefined") {
             channel = 0;
         }
-        var instant = $('<div><img id="pict-' + name + '" src=""><div id="info-' + name + '"></div></div>').dialog({
+        var instant = $('<div><img class="chaos_image" id="pict-' + name + '" src=""><div id="info-' + name + '"></div></div>').dialog({
             minWidth: hostWidth / 4,
             minHeight: hostHeight / 4,
             title: msghead,
             position: "center",
             resizable: true,
+            fontSize:10,
             dialogClass: 'no-close',
             buttons: [{
                 text: "save",
@@ -3634,20 +3648,26 @@
             var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0) | ((dslog) ? 0x10 : 0);
             var node_multi_selected = tmpObj.node_multi_selected;
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { 
+                    jqccs.instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); 
+                },
+                function (err) { 
+                    jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type +" err:"+JSON.stringify(err), 3000, false);
+                 });
 
         });
         $("input[type=radio][name=log-enable]").change(function (e) {
-            var dslive = ($("input[type=radio][name=log-enable]:checked").val() == "true");
+            var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
             var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
             var dslog = ($("input[type=radio][name=log-enable]:checked").val() == "true");
 
             var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0) | ((dslog) ? 0x10 : 0);
             var node_multi_selected = tmpObj.node_multi_selected;
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { 
+                    jqccs.instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+                function (err) { 
+                    jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type+", err:"+JSON.stringify(err), 3000, false); });
 
         });
         $("input[type=radio][name=histo-enable]").change(function (e) {
@@ -3659,28 +3679,27 @@
             var node_multi_selected = tmpObj.node_multi_selected;
 
             jchaos.setProperty(node_multi_selected, [{ "dsndk_storage_type": storage_type }],
-                function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
-                function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
+                function () { jqccs.instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+                function (err) { 
+                    jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type+", err:"+JSON.stringify(err), 3000, false); });
 
         });
         $("#cu_clear_current_cmd").click(function (e) {
             var node_multi_selected = tmpObj.node_multi_selected;
 
             jchaos.node(node_multi_selected, "killcmd", "cu", function () {
-                instantMessage("Clear Current Command", node_multi_selected + ":Clearing last command OK", 1000, true);
-            }, function () {
-                instantMessage("ERROR Clear Current Command", node_multi_selected[0] + ":Clearing last command ", 3000, false);
-            });
+                jqccs.instantMessage("Clear Current Command", node_multi_selected + ":Clearing last command OK", 1000, true);
+            },  function (err) { 
+                jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type+", err:"+JSON.stringify(err), 3000, false); });
         });
 
         $("#cu_clear_queue").click(function (e) {
             var node_multi_selected = tmpObj.node_multi_selected;
 
             jchaos.node(node_multi_selected, "clrcmdq", "cu", function () {
-                instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
-            }, function () {
-                instantMessage("ERROR Command Queue", node_multi_selected[0] + ":Clearing Command Queue ", 3000, false);
-            });
+                jqccs.instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
+            },  function (err) { 
+                jqccs.instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type+", err:"+JSON.stringify(err), 3000, false); });
 
         });
 
@@ -3853,7 +3872,6 @@
             }, "Cancel");
 
         } else if (cmd == "tag-cu") {
-            jqccs.tagConfigStart(node_multi_selected);
 
         } else if (cmd == "calibrate") {
 
@@ -3935,27 +3953,6 @@
                 openControl("Control ", tmpObj, tt, 1000);
             }
 
-
-        } else if (cmd == "live-cu-disable") {
-            jchaos.storageLive(node_multi_selected, 0,
-                function () { instantMessage("Live CU disabled", node_multi_selected[0], 2000, true); },
-                function () { instantMessage("Error Live CU disabled", node_multi_selected[0], 2000, false); });
-
-
-        } else if (cmd == "live-cu-enable") {
-            jchaos.storageLive(node_multi_selected, 1,
-                function () { instantMessage("Live CU enabled", node_multi_selected[0], 2000, true); },
-                function () { instantMessage("Error Live CU enabled", node_multi_selected[0], 2000, false); });
-
-        } else if (cmd == "histo-cu-disable") {
-            jchaos.storageHisto(node_multi_selected, 0,
-                function () { instantMessage("History CU disabled", node_multi_selected[0], 2000, true); },
-                function () { instantMessage("Error History CU disabled", node_multi_selected[0], 2000, false); });
-
-        } else if (cmd == "histo-cu-enable") {
-            jchaos.storageHisto(node_multi_selected, 1,
-                function () { instantMessage("History CU disabled", node_multi_selected[0], 2000, true); },
-                function () { instantMessage("Error History CU disabled", node_multi_selected[0], 2000, false); });
 
         } else if (cmd == "show-dataset") {
             /*jchaos.getChannel(currsel, -1, function (imdata) {
@@ -4068,54 +4065,6 @@
                 jsonEditWindow("Loaded", templ, scriptTmp, algoSave, obj);
             });
 
-
-        } else if (cmd == "history-cu-root") {
-            createQueryDialog(function (query) {
-                // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
-                //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
-                //console.log("start:"+start_s + " end:"+end_s);
-                // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
-                var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
-
-                runScript("CU2Tree.C", args);
-            })
-
-        } else if (cmd == "history-cu") {
-            createQueryDialog(function (query) {
-                //query call back
-                progressBar("Retrive and Zip", "zipprogress", "zipping");
-                jchaos.setOptions({ "timeout": 60000 });
-
-                jchaos.fetchHistoryToZip(query.tag, tmpObj.node_multi_selected, query.start, query.stop, query.tag, function (meta) {
-                    $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
-                    console.log("percent:" + parseInt(meta.percent.toFixed(2)));
-
-                }, function (msg) {
-                    $("#zipprogress").parent().remove();
-
-                    instantMessage("fetchHistoryToZip ", "failed:" + msg, 3000, false);
-                });
-
-
-            }, function () {
-                // open CB 
-                var names = findTagsOf(tmpObj, currsel);
-                element_sel("#select-tag", names, 0);
-                $("#select-tag").on("click", function () {
-                    var tagname = $("#select-tag option:selected").val();
-                    $("#query-tag").val(tagname);
-                    var tags = jchaos.variable("tags", "get", null, null);
-                    if (tags.hasOwnProperty(tagname)) {
-                        var tag = tags[tagname];
-                        var desc = "<b>" + tag['tag_desc'] + "</b> involved:" + JSON.stringify(tag['tag_elements']);
-                        // $("#query-start").val(tagname);
-                        $("#query-tag").attr('title', desc);
-                        $("#select-tag").attr('title', desc);
-                    }
-
-                });
-
-            });
 
         } else if (cnd == 'set-roi') {
             return executeCameraMenuCmd(tmpObj, cmd, opt);
@@ -4391,6 +4340,7 @@
             list_eu = [];
             if (zone_selected == "--Select--") { //Disabilito la select dei magneti se non � selezionata la zona
                 $("#elements").attr('disabled', 'disabled');
+                return;
             } else {
                 $("#elements").removeAttr('disabled');
             }
@@ -4413,7 +4363,7 @@
             if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
                 search_string = zone_selected;
             }
-            if ((element_selected != "ALL") && (node_selected != "--Select--")) {
+            if ((element_selected != "ALL") && (element_selected != "--Select--")) {
                 search_string += "/" + element_selected;
             }
 
@@ -4707,27 +4657,33 @@
 
 
         }
-        $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function (data, textStatus, jqxhr) {
-            var w = getWidget();
-            tmpObj['htmlFn'] = w.dsFn;
-            tmpObj['generateTableFn'] = w.tableFn;
-            if (w.hasOwnProperty('cmdFn')) {
-                tmpObj['generateCmdFn'] = w.cmdFn;
-            }
-            if (w.hasOwnProperty('updateFn')) {
-                tmpObj['updateFn'] = w.updateFn;
-            }
-            if (w.hasOwnProperty('updateInterfaceFn')) {
-                tmpObj['updateInterfaceFn'] = w.updateInterfaceFn;
-            }
-            if (w.hasOwnProperty('tableClickFn')) {
-                tmpObj['tableClickFn'] = w.tableClickFn;
-            }
-            handler(tmpObj);
+        if(tmpObj.type!="cu"){
+            // if not generic view try to load widget
+            $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function (data, textStatus, jqxhr) {
+                var w = getWidget();
+                tmpObj['htmlFn'] = w.dsFn;
+                tmpObj['generateTableFn'] = w.tableFn;
+                if (w.hasOwnProperty('cmdFn')) {
+                    tmpObj['generateCmdFn'] = w.cmdFn;
+                }
+                if (w.hasOwnProperty('updateFn')) {
+                    tmpObj['updateFn'] = w.updateFn;
+                }
+                if (w.hasOwnProperty('updateInterfaceFn')) {
+                    tmpObj['updateInterfaceFn'] = w.updateInterfaceFn;
+                }
+                if (w.hasOwnProperty('tableClickFn')) {
+                    tmpObj['tableClickFn'] = w.tableClickFn;
+                }
+                handler(tmpObj);
 
-        }).fail(() => {
-            handler(tmpObj);
-        });
+            }).fail(() => {
+                handler(tmpObj);
+            });
+    } else {
+        handler(tmpObj);
+
+    }
 
     }
 
@@ -5699,118 +5655,7 @@
 
     }
 
-    /*
-      function buildNodeInterface(nodes, cutype, template) {
-        if (nodes == null) {
-          alert("NO Nodes given!");
-          return;
-        }
-        if (!(nodes instanceof Array)) {
-          node_list = [nodes];
-        } else {
-          node_list = nodes;
-        }
-  
-        node_list.forEach(function (elem, id) {
-          var name = jchaos.encodeName(elem);
-          node_name_to_index[name] = id;
-          health_time_stamp_old[name] = 0;
-          off_line[name] = false;
-        });
-        // cu_selected = cu_list[0];
-        node_selected = null;
-        var htmlt, htmlc, htmlg;
-        var updateTableFn = new Function;
-       
-        htmlt = generateNodeTable(node_list, template);
-        updateTableFn = updateNodeTable;
-  
-  
-        $("#specific-table-" + tmpObj.template).html(htmlt);
-        // $("div.specific-control").html(htmlc);
-        checkRegistration = 0;
-        setupNode(template);
-  
-        jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-          var cnt = 0;
-          var us_list = [];
-          var cu_list = [];
-          node_list.forEach(function (elem, index) {
-            var type = data[index].ndk_type;
-            node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
-            if ((type == "nt_control_unit")) {
-              cu_list.push(elem);
-            } else if ((type == "nt_unit_server")) {
-              us_list.push(elem);
-            }
-  
-          });
-          if (cu_list.length > 0) {
-            jchaos.getDesc(cu_list, function (data) {
-              var cnt = 0;
-              data.forEach(function (cu) {
-                if (cu.hasOwnProperty("instance_description")) {
-                  node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
-                  node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
-                }
-                cnt++;
-              });
-            });
-          }
-          if (us_list.length > 0) {
-            jchaos.node(us_list, "parent", "us", null, null, function (data) {
-              var cnt = 0;
-              data.forEach(function (us) {
-                if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
-                  node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
-                }
-                cnt++;
-              });
-            });
-          }
-        });
-  
-  
-        if (node_list_interval != null) {
-          clearInterval(node_list_interval);
-        }
-        updateTableFn(node_list);
-        node_list_interval = setInterval(function (e) {
-          var start_time = (new Date()).getTime();
-          if ((start_time - checkRegistration) > 60000) {
-            checkRegistration = start_time;
-            jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-              var cnt = 0;
-              node_list.forEach(function (elem, index) {
-                node_name_to_desc[elem].desc = data[index];
-              });
-            });
-            updateTableFn(node_list);
-  
-          }
-          jchaos.node(node_list, "health", cutype, null, null, function (data) {
-            node_live_selected = data;
-            updateGenericTableDataset(node_live_selected);
-  
-          });
-  
-  
-         
-          // update all generic
-  
-          if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[node_selected] == null) {
-            return;
-          }
-  
-  
-  
-  
-        }, options.Interval, updateTableFn);
-  
-        installCheckLive();
-  
-  
-      } */
+    
 
     function buildAlgoInterface(nodes, interface, template) {
         if (nodes == null) {
@@ -7035,7 +6880,7 @@
             if (!dashboard_settings.hasOwnProperty('pages')) {
                 dashboard_settings['pages'] = 1;
             }
-            if (dashboard_settings.current_page < dashboard_settings.pages) {
+            if ((dashboard_settings.current_page+1) < dashboard_settings.pages) {
                 dashboard_settings.current_page++;
                 var query = tmpObj['search_query'];
                 buildInterfaceFromPagedSearch(tmpObj, query.what);
@@ -7120,28 +6965,40 @@
         }
         var alive = ($("[name=search-alive]:checked").val() == "true");
         jchaos.search("", "zone", alive, (zon) => {
+            dashboard_settings.current_page = 0;
+
             element_sel('#zones', zon, 1);
             
             if(setDefaultsQuery()){
                 var zone_selected = $("#zones option:selected").val();
-
+                if(zone_selected=="ALL" || zone_selected=="--Select--"){
+                    zone_selected="";
+                }
                 jchaos.search(zone_selected, "class", alive, function (ll) {
                     element_sel('#elements', ll, 1);
                 });
                 updateNodeEvent();
     
+            } else {
+                jchaos.search("", "class", alive, function (ll) {
+                    element_sel('#elements', ll, 1);
+                });
             }
         });
 
 
         $("#zones").click(function () {
             var zone_selected = $("#zones option:selected").val();
-            if (zone_selected == "ALL") {
+            if (zone_selected == "ALL" || zone_selected=="--Select--") {
+                // refresh
                 var alive = ($("[name=search-alive]:checked").val() == "true");
                 jchaos.search("", "zone", alive, function (zones) {
                     element_sel('#zones', zones, 1);
                 }, function (error) {
                     stateOutput(error, true);
+                });
+                jchaos.search("", "class", alive, function (ll) {
+                    element_sel('#elements', ll, 1);
                 });
             }
         });
@@ -7169,6 +7026,8 @@
                     element_sel('#elements', ll, 1);
                 });
             }
+            dashboard_settings.current_page = 0;
+
             buildInterfaceFromPagedSearch(tmpObj, "ceu");
 
 
@@ -7499,7 +7358,7 @@
      */
     function mainTableCommonHandling(id, tmpObj, e) {
         var node_list = tmpObj['elems'];
-        $("#mdl-commands").modal("hide");
+       // $("#mdl-commands").modal("hide");
         if (tmpObj.node_selected == $(e.currentTarget).attr(tmpObj.type + "-name")) {
             $(".row_element").removeClass("bg-warning");
             tmpObj.node_multi_selected = [];
@@ -7558,7 +7417,7 @@
         var template = tmpObj.type;
         var html = '<div class="row" z-index=-1 id="table-space">';
         html += '<div class="col-md-12">';
-        html += '<div class="box-content col-md-12">';
+        html += '<div class="box-content table-responsive">';
         if (cu.length == 0) {
             html += '<p id="no-result-monitoring">No results match</p>';
 
@@ -7567,7 +7426,7 @@
 
         }
 
-        html += '<table class="table table-striped" id="main_table-' + template + '">';
+        html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Name CU</th>';
@@ -10443,7 +10302,18 @@
         return getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText);
     }
     function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
-        var html = '<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>';
+        var html= '<div width="100%"><h6>' + msg + '</h6>';
+        if(def_text instanceof Array){
+            html+= '<select id="getEntryWindow_name">';
+
+            def_text.forEach(elem=>{
+                html+='<option value='+elem+'>'+elem+'</option>';
+            });
+            html+='</select>';
+        } else {
+            html+= '<input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%">';
+        }
+        html+="</div>";
         var opt = {
             modal: true,
             title: hmsg,
@@ -10692,9 +10562,16 @@
     function updateCUMenu(tmpObj, name) {
         var items = {};
         var cindex = tmpObj.node_name_to_index[name];
-        var cu = tmpObj.data[cindex];
-        var node_multi_selected = tmpObj.node_multi_selected
+        var node_multi_selected = tmpObj.node_multi_selected;
         var currsel = tmpObj.node_multi_selected[0];
+        var stat=jchaos.getChannel(currsel,255);
+        for (var k in stat[0]){
+            //update status
+            tmpObj.data[cindex][k]=stat[0][k]; 
+        }
+       
+        var cu = tmpObj.data[cindex];
+
         if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) { //if el health
             var status = cu.health.nh_status;
             if ((tmpObj.off_line[cu.health.ndk_uid] == 0)) {
@@ -10703,7 +10580,6 @@
                     items['stop'] = { name: "Stop", icon: "stop" };
                     items['sep1'] = "---------";
                     items['snapshot-cu'] = { name: "Take Snapshot", icon: "snapshot" };
-                    items['tag-cu'] = { name: "Tag for...", icon: "tag" };
                     items['calibrate'] = { name: "Calibrate", icon: "tag" };
                 } else if (status == 'Stop') {
                     items['start'] = { name: "Start", icon: "start" };
@@ -10758,9 +10634,7 @@
             items['unload'] = { name: "Unload", icon: "unload" };
             items['deinit'] = { name: "Deinit", icon: "deinit" };
         }
-        items['history-cu'] = { name: "Retrive zip History for...", icon: "histo" };
-        items['history-cu-root'] = { name: "Retrive Root Tree History for...", icon: "histo" };
-
+        
         items['sep2'] = "---------";
         //node_name_to_desc[node_multi_selected[0]]
         var desc = tmpObj.node_name_to_desc[name];
@@ -10785,7 +10659,7 @@
 
         if (tmpObj.node_multi_selected.length == 1) {
 
-            items['fold1'] = {
+            items['savenode'] = {
                 "name": "Save",
                 "items": {
                     'save-default': {
@@ -10985,7 +10859,7 @@
 
             };
 
-            items['fold4'] = {
+            items['properies'] = {
                 "name": "Properties",
                 "items": {
                     'driver-prop': {
@@ -11074,18 +10948,121 @@
         
         }
         items['sep3'] = "---------";
-
         if (cu != null && cu.hasOwnProperty('system') && cu.system.hasOwnProperty("dsndk_storage_type")) {
+            var citem={};
             if (cu.system.dsndk_storage_type & 0x2) {
-                items['live-cu-disable'] = { name: "Disable Live", icon: "live" };
+                citem['live-cu-disable'] = { name: "Disable Live", icon: "live",callback: function (itemKey, opt, e) {
+                    jchaos.storageLive(node_multi_selected, 0,
+                        function () { instantMessage("Live CU disabled", node_multi_selected[0], 2000, true); },
+                        function () { instantMessage("Error Live CU disabled", node_multi_selected[0], 2000, false); });
+                          } };
             } else {
-                items['live-cu-enable'] = { name: "Enable Live", icon: "live" };
+                citem['live-cu-enable'] = { name: "Enable Live", icon: "live",callback: function (itemKey, opt, e) {
+                    jchaos.storageLive(node_multi_selected, 1,
+                        function () { instantMessage("Live CU disabled", node_multi_selected[0], 2000, true); },
+                        function () { instantMessage("Error Live CU disabled", node_multi_selected[0], 2000, false); });
+                          } };
             }
             if (cu.system.dsndk_storage_type & 0x1) {
-                items['histo-cu-disable'] = { name: "Disable History", icon: "live" };
+                citem['histo-cu-disable'] = { name: "Disable History", icon: "live",callback: function (itemKey, opt, e) {
+                    jchaos.storageHisto(node_multi_selected, 0,
+                        function () { instantMessage("Histo CU disabled", node_multi_selected[0], 2000, true); },
+                        function () { instantMessage("Error disabling Histo", node_multi_selected[0], 2000, false); });
+                          } };
             } else {
-                items['histo-cu-enable'] = { name: "Enable History", icon: "live" };
+                citem['histo-cu-enable'] = { name: "Enable History", icon: "live",callback: function (itemKey, opt, e) {
+                    jchaos.storageHisto(node_multi_selected, 1,
+                        function () { instantMessage("Histo enabled", node_multi_selected[0], 2000, true); },
+                        function () { instantMessage("Error enabling Histo", node_multi_selected[0], 2000, false); });
+                          } };
             }
+            if (cu.system.dsndk_storage_type & 0x10) {
+                citem['log-cu-disable'] = { name: "Disable Log", icon: "live",callback: function (itemKey, opt, e) {
+                    jchaos.storageLog(node_multi_selected, 0,
+                        function () { instantMessage("Log  disabled(Grafana)", node_multi_selected[0], 2000, true); },
+                        function () { instantMessage("Error disabling Log", node_multi_selected[0], 2000, false); });
+                          } };
+            } else {
+                citem['log-cu-enable'] = { name: "Enable Log(Grafana)", icon: "live",callback: function (itemKey, opt, e) {
+                    jchaos.storageLog(node_multi_selected, 1,
+                        function () { instantMessage("Log enabled", node_multi_selected[0], 2000, true); },
+                        function () { instantMessage("Error disabling Log", node_multi_selected[0], 2000, false); });
+                          } };
+            }
+            function queryOption(opt){
+                opt['updateCall']=function (meta) {
+                    $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
+                    console.log("percent:" + parseInt(meta.percent.toFixed(2)));
+
+                };
+
+                createQueryDialog(function (query) {
+                    //query call back
+                    progressBar("Retrive and Zip", "zipprogress", "zipping");
+                    jchaos.setOptions({ "timeout": 60000 });
+    
+                    jchaos.fetchHistoryToZip(query.tag, node_multi_selected, query.start, query.stop, query.tag, opt, function (msg) {
+                        $("#zipprogress").parent().remove();
+    
+                        instantMessage("fetchHistoryToZip ", "failed:" + msg, 3000, false);
+                    });
+    
+    
+                }, function () {
+                    // open CB 
+                    var names = findTagsOf(tmpObj, currsel);
+                    element_sel("#select-tag", names, 0);
+                    $("#select-tag").on("click", function () {
+                        var tagname = $("#select-tag option:selected").val();
+                        $("#query-tag").val(tagname);
+                        var tags = jchaos.variable("tags", "get", null, null);
+                        if (tags.hasOwnProperty(tagname)) {
+                            var tag = tags[tagname];
+                            var desc = "<b>" + tag['tag_desc'] + "</b> involved:" + JSON.stringify(tag['tag_elements']);
+                            // $("#query-start").val(tagname);
+                            $("#query-tag").attr('title', desc);
+                            $("#select-tag").attr('title', desc);
+                        }
+    
+                    });
+    
+                });
+
+            }
+            citem['history-json-cu'] = { name: "Retrive JSON zip History for...", icon: "histo" ,callback: function (itemKey, opt, e) {
+                var opt={
+                    fmt:"json"
+                };
+                queryOption(opt);
+            }};
+            citem['history-csv-cu'] = { name: "Retrive CSV zip History for...", icon: "histo" ,callback: function (itemKey, opt, e) {
+                var opt={
+                    fmt:"csv",
+                    separator:","
+                };
+                queryOption(opt);
+            }};
+            /*citem['history-cu-root'] = { name: "Retrive Root Tree History for...", icon: "histo",callback: function (itemKey, opt, e) { 
+                createQueryDialog(function (query) {
+                    // var start_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.start));
+                    //var end_s = $.datepicker.formatDate("yymmddhhmmss", new Date(query.stop));
+                    //console.log("start:"+start_s + " end:"+end_s);
+                    // var start_s=new Date(query.start).toLocaleFormat("%y%m%d%h%m%s");
+                    var args = "(\"" + tmpObj.node_multi_selected[0] + "\"," + query.start + "," + query.stop + "," + query.chunk + "," + query.page + ")";
+    
+                    runScript("CU2Tree.C", args);
+                })
+            }};*/
+            if (status == 'Start') {
+                citem['tag-cu'] = { name: "Tag for...", icon: "tag",callback: function (itemKey, opt, e) { 
+                    jqccs.tagConfigStart(node_multi_selected);
+
+                }
+            };
+            }
+
+            items['channcontrol']={ name: "Storage Control",items:citem};
+        
         }
         items['sep4'] = "---------";
         items['execute-jscript'] = { name: "Execute JS script.." };
@@ -11093,7 +11070,9 @@
 
         return items;
     }
-
+    jqccs.updateGenericControl=function(tmpObj, cu){
+        return updateGenericControl(tmpObj,cu);
+    }
     function updateGenericControl(tmpObj, cu) {
         if (cu == null) {
             return;
@@ -11114,7 +11093,7 @@
             $("#cmd-recover-error").children().remove();
             $("#cmd-bypass-on-off").children().remove();
             */
-            if ((status != "Unload") && (status != "Fatal Error")) {
+            if ((status != "Unload") && (status != "Fatal Error")&& (tmpObj!=null)&&(tmpObj.hasOwnProperty("off_line")&&tmpObj.off_line.hasOwnProperty(encoden))) {
                 switch (tmpObj.off_line[encoden]) {
                     case 1:
                         status = "Dead";

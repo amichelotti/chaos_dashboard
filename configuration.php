@@ -12,41 +12,45 @@ $curr_page = "CONFIG";
 require_once('header.php');
 ?>
 
-	<div class="container-fluid-full fill">
+	<div class="container-fluid">
 	
 			
-    	<div class="row-fluid fill">
+    	<div class="row border">
 
-			<div class="box span12">
-    			<div class="box-content">
-    				<h3 class="box-header">Configuration</h3>
-					<div class="span11 box">
-    					<label class="label span6">Save whole configuration </label>
-						<button type="button" id="save-configuration" class="icon-save span4">Save To Disk</button>
+			<div class="col-md-12">
+					<div class="row bg-info">
+
+    				<h3>CHAOS Configuration</h3>
 					</div>
-					<div class="span11 box">
-						<input type="file" id="upload-file" class="span3" />
-						<select id="upload_selection" class="span2" multiple="multiple">
-							<option value="us">UnitServers</option>
-							<option value="agents">Agents</option>
-							<option value="snapshots">Snapshots</option>
-							<option value="graphs">Graphs</option>
-							<option value="cu_templates">CU Templates</option>
-							<option value="custom_group">Groups</option>
-						</select>
-					</div>
+					<div class="row border border-info">
+						<div class="col-md-12">
 
-					<div class="span11 box">
-						<h3 class="box-header">Variables</h3>
-						<div class="row-fluid">
-							<input class="input-xlarge focused span7" id="varname" type="text" title="variable name search" value=""/>
-
-							<a class="quick-button-small span2" id="update-variable"><i class='material-icons verde'>search</i><p>Search</p></a>
+    					<label for="save-configuration" class="form-label">Save whole configuration </label>
+						<a class="btn-outline-info icon-save col-md-2" id="save-configuration">Save To Disk</a>
+						</div>
+						<div class="col-md-12">
+						<label for="upload-file" class="form-label">Import configuration </label>
+						<input id="upload-file" type="file" class="form-control-md" />
 						</div>
 
-						<div id="chaos_variables"></div>
 					</div>
-				</div>
+			</div>
+		</div>
+    	<div class="row">
+			<div class="col-md-12 box">
+					<div class="row bg-info">
+						<h3>Variables</h3>
+					</div>
+						<div class="row border border-info">
+							<div class="col-md-12">
+								<input class="input-xlarge focused" id="varname" type="text" title="variable name search" value=""/>
+								<a class="btn-outline-info" id="update-variable"><i class='material-icons verde'>search</i><p>Search</p></a>
+							</div>
+							<div class="col-md-12">
+
+								<div id="chaos_variables"></div>
+							</div>
+						</div>
 			</div>
 		</div>
 
@@ -54,8 +58,7 @@ require_once('header.php');
 				
 								
 		</div> <!-- content -->
-		</div><!--/fluid-row-->
-	</div>
+	</div><!--/fluid-row-->
 	
 	<div id="jsoneditor"> </div>
 	
@@ -141,14 +144,29 @@ require_once('header.php');
 		varupdate($("#varname").val());
 	});
 	  $('#upload-file').on('change', function() {
+		  var fname=this.files[0];
+
+		jqccs.confirm("Do You want OVERWRITE FULL CONFIGURATION?", "Current Confuration will be lost, using:"+fname.name, "Ok", function () {
+  
 		var reader = new FileReader();
 		reader.onload = function(e) {
 		var cmdselected = $("#upload_selection").val();
-		jchaos.restoreFullConfig(JSON.parse(e.target.result),cmdselected);
+		try{
+			var o=JSON.parse(e.target.result);
+			} catch(e){
+				alert("ERROR parsing '"+fname.name+"' : "+e);
+				return;
+		}
+			jchaos.restoreFullConfig(o,cmdselected);
+			jqccs.instantMessage("Restored "+fname.name, " OK", 3000, true);
+
 		
 
+	
+
 	};
-	reader.readAsText(this.files[0]);
+	reader.readAsText(fname);
+}, "Cancel");
 	});
 	varupdate("");
 </script>

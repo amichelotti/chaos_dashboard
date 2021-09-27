@@ -83,10 +83,29 @@
             "description": "Time in Seconds before the data will be wiped out (0=disabled)"
 
         },
+        "dsndk_storage_history_time": {
+            "type": "integer",
+            "default": 0,
+            "description": "Max history period in ms (store another after the given ms)"
+
+        },
+        
         "dsndk_storage_live_time": {
             "type": "integer",
             "default": 0,
             "description": "the time in us that need to pass before store another datapack into the live system"
+
+        },
+        "dsndk_update_anyway": {
+            "type": "integer",
+            "default": 60000,
+            "description": "the time in ms, to force the CU push output even if nothing change"
+
+        },
+        "cudk_log_max_ms": {
+            "type": "integer",
+            "default": 1000,
+            "description": "don't log warning/error that change less than specified ms"
 
         },
         "cudk_driver_description": {

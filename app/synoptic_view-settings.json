@@ -1,0 +1,67 @@
+{
+    "title":"Synoptic Settings",
+    "type":"object",
+	"id":"sinoptic-settings",
+	"format":"tab",
+    "properties": {
+	"defaultSynoptic" : {
+			"type":"string",
+			"default":"Flame",
+			"description":"Default Synoptic To open"
+	},
+	"generalRefresh" : {
+		"type":"integer",
+		"default":1000,
+		"required": true,
+		"description":"General Refresh (ms)"
+	},
+	"showuid" : {
+		"type":"boolean",
+		"default":true,
+		"required": true,
+		"description":"Show UID"
+	},
+	"color" : {
+		"type":"string",
+		"default":"black",
+		"description":"Default Node Color"
+	},
+	"font" : {
+		"type":"string",
+		"default":"Arial",
+		"description":"Default Font"
+	},
+	"fontsize" : {
+		"type":"integer",
+		"default":10,
+		"description":"Default font size"
+	},
+	"depth" : {
+		"type":"integer",
+		"default":3,
+		"description":"Default line depth"
+	},
+	"rowspan" : {
+		"type":"integer",
+		"default":1,
+		"description":"Default roswspan"
+	},
+	"colspan" : {
+		"type":"integer",
+		"default":1,
+		"description":"Default colspan"
+	},
+	"checkLive" : {
+		"type":"integer",
+		"default":10000,
+		"description":"Live Check Refresh (ms)"
+	},
+	"defaultRestTimeout" : {
+		"type":"integer",
+		"default":10000,
+		"required": true,
+		"description":"Default Timeout Rest operation (ms)"
+	}
+}
+}
+    
