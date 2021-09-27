@@ -1150,7 +1150,6 @@
 		});
 	}
 	
-	var dashboard_settings=jqccs.initSettings();
 	dashboard_settings['current_page'] = 0;
 
 	jqccs['dashboard_settings']=dashboard_settings;
