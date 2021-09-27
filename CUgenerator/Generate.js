@@ -2261,6 +2261,22 @@ function CreateCommonDriverSource() {
     return rett;
 
 }
+function CreateConfigurationJson() {
+    var currentCU = localStorage.getItem('controlUnit');
+        if (currentCU == null)
+            return;
+        var CU = CUcreate(JSON.parse(currentCU));
+        let des=CU.configuration;
+        alert(CU.Name+" des "+des);
+        return JSON.stringify(des);
+       
+
+        
+
+
+}
+
+
 
 function AddInstallScript() {
     var wr;
@@ -2506,6 +2522,7 @@ function GenerateCUCode() {
 
     }
 
+    
 
     zip.generateAsync({ type: "blob" }).then(function (content) {
         try {
@@ -2709,7 +2726,11 @@ function GenerateCUCodeAsSingleFolder() {
     //alert (ChaosDDCPP[0]+"\n\n"+ChaosDDCPP[1]);
     zip.file(US[0], US[1]);
     AddCheckBox(US[2]);
-
+   
+    var conf=CreateConfigurationJson();
+    alert(conf);
+    zip.file("InstanceConfiguration.json",conf);
+    AddCheckBox("InstanceConfiguration.json")
     zip.generateAsync({ type: "blob" }).then(function (content) {
         try {
             var zipname = retrieveFromJson("Name");
