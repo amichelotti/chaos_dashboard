@@ -53,14 +53,14 @@
             "description": "Default Timeout Rest operation (ms)"
         },
         "defaultRestPort": {
-            "type": "integer",
-            "default": 8081,
-            "description": "Default Rest Port"
+            "type": "string",
+            "default": "8081",
+            "description": "Default Rest Port or rest path"
         },
         "defaultIOPort": {
-            "type": "integer",
-            "default": 4000,
-            "description": "Default SocketIO port"
+            "type": "string",
+            "default": "4000",
+            "description": "Default SocketIO port or io path"
         },
         "camera": {
             "$ref": "../camera-settings.json",
