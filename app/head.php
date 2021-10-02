@@ -103,7 +103,7 @@ function getUserIP() {
 		var ioport=":4000";
 		var dashboard_settings=jqccs.initSettings();
 		if(dashboard_settings.hasOwnProperty("defaultRestPort")){
-			if(Number.isInteger(dashboard_settings.defaultRestPort)){
+			if(!isNaN(dashboard_settings.defaultRestPort)){
 				rport=":"+dashboard_settings.defaultRestPort;
 			} else {
 				rport="/"+dashboard_settings.defaultRestPort;
@@ -112,7 +112,7 @@ function getUserIP() {
 
 		}
 		if(dashboard_settings.hasOwnProperty("defaultIOPort")){
-			if(Number.isInteger(dashboard_settings.defaultIOPort)){
+			if(!isNaN(dashboard_settings.defaultIOPort)){
 				ioport=":"+dashboard_settings.defaultIOPort;
 			} else {
 				ioport="/"+dashboard_settings.defaultIOPort;
@@ -120,10 +120,10 @@ function getUserIP() {
 			console.log("IOPORT="+ioport);
 		}
 		if(address.length==1){
-			jchaos.setOptions({"uri":location.host+rport,"socketio":location.host+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":location.host+ioport});
 
 		} else {
-			jchaos.setOptions({"uri":address[0]+rport,"socketio":address[0]+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":address[0]+ioport});
 
 		}
 
