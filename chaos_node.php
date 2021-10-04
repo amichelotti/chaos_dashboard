@@ -1672,7 +1672,7 @@
 
 			function updateJST(what, search, alive) {
 				cu_copied = null;
-				jqccs.busyWindow(true, 120000);
+				jqccs.busyWindow(true, 10000,()=>{alert("Timeout check the REST port on Settings->Config->defaultRestPort");});
 				//$("body").addClass("loading");
 				$('#hier_view').jstree("destroy");
 				node_list = [];
