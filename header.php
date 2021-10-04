@@ -1196,6 +1196,7 @@
                         jchaos.setOptions({ "timeout": 10000 });
 
                     }
+					location.reload();
 					return 0;// close window
                 //    $("#search-chaos").trigger(e);
                 }, null);

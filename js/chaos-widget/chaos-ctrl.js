@@ -1840,57 +1840,57 @@
         return html;
     }
     /*
-            function generateProcessTable(tmpObj) {
-                var cu = tmpObj.elems;
-                var template = tmpObj.type;
-                var html = "";
-                html += '<div class="row">';
-                html += '<table class="table table-striped" id="graph_table-' + template + '">';
-                html += '</table></div>';
+                function generateProcessTable(tmpObj) {
+                    var cu = tmpObj.elems;
+                    var template = tmpObj.type;
+                    var html = "";
+                    html += '<div class="row">';
+                    html += '<table class="table table-striped" id="graph_table-' + template + '">';
+                    html += '</table></div>';
     
     
-               // html += '<div class="box col-md" id="container-main-table">';
-                html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
-                html += '<div class="row">';
-                html += '<div class="col-md">';
+                   // html += '<div class="box col-md" id="container-main-table">';
+                    html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
+                    html += '<div class="row">';
+                    html += '<div class="col-md">';
     
-                html += '<table class="table table-striped" id="main_table-' + template + '">';
-                html += '<thead class="box-header processMenu">';
-                html += '<tr>';
-                html += '<th>Instance</th>';
-                html += '<th>Name</th>';
-                html += '<th>Type</th>';
-                html += '<th>Start</th>';
-                html += '<th>End</th>';
-                html += '<th>LastLog(s ago)</th>';
-                html += '<th>Hostname</th>';
-                html += '<th>PID</th>';
-                html += '<th>Status</th>';
-                html += '<th>TimeStamp</th>';
-                html += '<th>Uptime</th>';
-                html += '<th>System Time</th>';
-                html += '<th>User Time</th>';
-                html += '<th>VMem(KB)</th>';
-                html += '<th colspan="2">RMem(KB)|%</th>';
-                html += '<th>Parent</th>';
+                    html += '<table class="table table-striped" id="main_table-' + template + '">';
+                    html += '<thead class="box-header processMenu">';
+                    html += '<tr>';
+                    html += '<th>Instance</th>';
+                    html += '<th>Name</th>';
+                    html += '<th>Type</th>';
+                    html += '<th>Start</th>';
+                    html += '<th>End</th>';
+                    html += '<th>LastLog(s ago)</th>';
+                    html += '<th>Hostname</th>';
+                    html += '<th>PID</th>';
+                    html += '<th>Status</th>';
+                    html += '<th>TimeStamp</th>';
+                    html += '<th>Uptime</th>';
+                    html += '<th>System Time</th>';
+                    html += '<th>User Time</th>';
+                    html += '<th>VMem(KB)</th>';
+                    html += '<th colspan="2">RMem(KB)|%</th>';
+                    html += '<th>Parent</th>';
     
-                html += '</tr>';
+                    html += '</tr>';
     
     
-                html += '</thead> ';
+                    html += '</thead> ';
     
-                html += '</table>';
-                html += '</div>';
+                    html += '</table>';
+                    html += '</div>';
     
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
+                    html += '</div>';
+                    html += '</div>';
+                    html += '</div>';
     
-             //   html += generateScriptAdminModal();
-                return html;
+                 //   html += generateScriptAdminModal();
+                    return html;
     
-            }
-        */
+                }
+            */
     function generateNodeTable(tmpObj) {
         var cu = tmpObj.elems;
         var template = tmpObj.type;
@@ -2258,8 +2258,10 @@
         }
         if (typeof timeoutms === "number") {
             setTimeout(() => {
-                $("div").removeClass("loading");
-                if (typeof timeofn === "function") { timeofn(); }
+                if ($("div").hasClass("loading")) {
+                    $("div").removeClass("loading");
+                    if (typeof timeofn === "function") { timeofn(); }
+                }
             }, timeoutms);
         }
 
