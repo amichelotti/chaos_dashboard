@@ -1,4 +1,6 @@
 [submodule "jchaos"]
 	path = js/jchaos
 	url = git@baltig.infn.it:chaos-lnf-control/jchaos.git
-	branch = master	
+	branch = master
+	update = merge
+	
