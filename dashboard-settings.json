@@ -1,60 +1,69 @@
 {
-    "title":"Dashboard Settings",
-    "type":"object",
-	"id":"dashboard-settings",
-	"format":"tab",
+    "title": "Dashboard Settings",
+    "type": "object",
+    "id": "dashboard-settings",
+    "format": "tab",
     "properties": {
-	
-	"generalRefresh" : {
-		"type":"integer",
-		"default":1000,
-		"description":"General Refresh (ms)"
-	},
-	"maxNodesPerPage" : {
-		"type":"integer",
-		"default":10,
-		"description":"Max number of Nodes per page"
-	},
-	"defaultZone" : {
-		"type":"string",
-		"default":"",
-		"description":"Default Zone to open"
-	},
-	"defaultGroup" : {
-		"type":"string",
-		"default":"",
-		"description":"Default Group to open"
-	},
-	"defaultInterface" : {
-		"type":"string",
-		"default":"",
-		"description":"Default Interface to open"
-	},
-	"generalControlRefresh" : {
-		"type":"integer",
-		"default":500,
-		"description":"Default General Refresh when in control (ms)"
-	},
-	"defaultPage" : {
-		"type":"integer",
-		"default":1000,
-		"description":"Default History Page"
-	},
-	"checkLive" : {
-		"type":"integer",
-		"default":10000,
-		"description":"Live Check Refresh (ms)"
-	},
-	"defaultRestTimeout" : {
-		"type":"integer",
-		"default":30000,
-		"description":"Default Timeout Rest operation (ms)"
-	},
-	"camera":{
-		    "$ref":"camera-settings.json",
-		    "title":"Camera Settings"
-		
-	}
+
+        "generalRefresh": {
+            "type": "integer",
+            "default": 1000,
+            "description": "General Refresh (ms)"
+        },
+        "maxNodesPerPage": {
+            "type": "integer",
+            "default": 10,
+            "description": "Max number of Nodes per page"
+        },
+        "defaultZone": {
+            "type": "string",
+            "default": "",
+            "description": "Default Zone to open"
+        },
+        "defaultGroup": {
+            "type": "string",
+            "default": "",
+            "description": "Default Group to open"
+        },
+        "defaultInterface": {
+            "type": "string",
+            "default": "",
+            "description": "Default Interface to open"
+        },
+        "generalControlRefresh": {
+            "type": "integer",
+            "default": 500,
+            "description": "Default General Refresh when in control (ms)"
+        },
+        "defaultPage": {
+            "type": "integer",
+            "default": 1000,
+            "description": "Default History Page"
+        },
+        "checkLive": {
+            "type": "integer",
+            "default": 10000,
+            "description": "Live Check Refresh (ms)"
+        },
+        "defaultRestTimeout": {
+            "type": "integer",
+            "default": 30000,
+            "description": "Default Timeout Rest operation (ms)"
+        },
+        "defaultRestPort": {
+            "type": "string",
+            "default": "8081",
+            "description": "Default Rest Port or rest path"
+        },
+        "defaultIOPort": {
+            "type": "string",
+            "default": "4000",
+            "description": "Default SocketIO port or io path"
+        },
+        "camera": {
+            "$ref": "camera-settings.json",
+            "title": "Camera Settings"
+
+        }
+    }
 }
-}
-    

@@ -150,15 +150,36 @@ function getUserIP() {
 			localStorage['chaos_browser_uuid_cookie']=jchaos.generateUID();
 		}
 		const address = location.host.split(':');
+		var rport=":8081";
+		var ioport=":4000";
+		var dashboard_settings=jqccs.initSettings();
+		if(dashboard_settings.hasOwnProperty("defaultRestPort")){
+			if(!isNaN(dashboard_settings.defaultRestPort)){
+				rport=":"+dashboard_settings.defaultRestPort;
+			} else {
+				rport="/"+dashboard_settings.defaultRestPort;
+			}
+			console.log("RESTPORT:"+rport);
+
+		}
+		if(dashboard_settings.hasOwnProperty("defaultIOPort")){
+			if(!isNaN(dashboard_settings.defaultIOPort)){
+				ioport=":"+dashboard_settings.defaultIOPort;
+			} else {
+				ioport="/"+dashboard_settings.defaultIOPort;
+			}
+			console.log("IOPORT="+ioport);
+		}
 		if(address.length==1){
-			jchaos.setOptions({"uri":location.host+":8081","socketio":location.host+":4000"});
+			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":location.host+ioport});
 
 		} else {
-			jchaos.setOptions({"uri":address[0]+":"+address[1]+"81","socketio":address[0]+":4000"});
+			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":address[0]+ioport});
 
 		}
 
-		jchaos.ioconnect(address[0]+":4000",{
+
+		jchaos.ioconnect(address[0]+ioport,{
 			query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":4000}
 		});
 		jchaos.options.io_onchat=(msg)=>{

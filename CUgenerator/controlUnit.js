@@ -11,6 +11,7 @@ class controlUnit {
     //Alarms
     //AbstractEnumerations
     //OneFolder
+    //configuration
     constructor()
     {
         this.DataSet=[];

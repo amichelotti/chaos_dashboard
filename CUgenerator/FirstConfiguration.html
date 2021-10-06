@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>Configure An Istance of This Control Unit</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300|Bitter|Ubuntu+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="combobox.js"></script>
+
+</head>
+  <body>
+        
+        <div class="wrapper">
+                <h1>Configuration</h1>
+                <div w3-include-html="menubar.html"></div>
+                <div class="tabcontainer">
+                        <form>
+                        <table class="invisible">
+                                <tr>
+
+                                    <th>
+                                        <div>
+                                            <label for="InstName">Instance Name:</label>
+                                            <input class="text" id="InstName">
+                                        </div>
+                                        <div>
+                                            <label for="InstDesc">Description:</label><br />
+                                            <input type="text" class="FullCellText" id="InstDesc">
+                                            
+                                        </div>
+                                        <div>
+                                            <table class="invisible">
+                                                <tr>
+                                                <td>
+                                                <table id="tableKey" class="tabcontainer">
+                                                    <tr>
+                                                    </tr>
+                                                </table>
+                                                </td>
+                                                <td>
+                                                    <table id="tableKey2" class="tabcontainer">
+                                                        <tr>
+                                                            <th>
+                                                                <div>
+                                                                    <label for="DrvVer">Driver Version:</label>
+                                                                    <input class="text" id="DrvVer" value="1.0.0">
+                                                                </div>
+                                                                <div>
+                                                                    <label for="DrvDesc">Driver Description:</label>
+                                                                    <input class="largeText" id="DrvDesc">
+                                                                </div>
+                                                                
+                                                            </th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                
+                                                                <div>
+                                                                    <fieldset   id="PlaceOn">
+                                                                        <legend>Place on:</legend>
+                                                                        
+                                                                        <label for="radioNewUS" id="IdLNew">New UnitServer:</label>
+                                                                        <input type="radio" name="whatUS" id="radioNewUS" checked onchange="resolveCheckBox()"><br>
+                                                                        <label for="radioExisting" id="IdLExisting">Existing UnitServer</label>
+                                                                        <input type="radio" name="whatUS" id="radioExisting"  onchange="resolveCheckBox()"><br>
+                                                                    </fieldset>
+                                                                </div>
+                                                                <div>
+                                                                    <label id="lusnewname" for="USNewName">UnitServer</label>
+                                                                    <input type="text" id="UsNewName"> 
+                                                                </div>
+                                                                <div>
+                                                                    
+                                                                    <select id="USList" class="largeText" hidden="true">
+                                                                        
+                                                                    </select>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        
+                                        <div>
+                                            <input type="button" id = "AddConfiguration" value="Add Configuration">
+                                        </div>
+
+
+
+                                    </th>
+                        
+                        </tr>
+                        </table>
+                        </form>
+                </div>
+        </div>
+  </body>
+  <script type="text/javascript" src="../js/jchaos/jchaos.js"></script>
+  <script src="controlUnit.js"></script>
+  <script>includeHTML();</script>
+  <script src="FirstConfiguration.js"></script>
+  
+</html>

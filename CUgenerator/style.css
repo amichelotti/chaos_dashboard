@@ -91,6 +91,11 @@ form div input, form div select {
 	text-align: left;
 }
 
+.FullCellText {
+	width: 100%;
+	/*text-align: left;
+		*/
+}
 .inputfile {
 	width: 0.1px;
 	height: 0.1px;
@@ -185,7 +190,10 @@ margin: 0ch;
 	transition: 0.3s;
 	
 }
-
+.numberInput
+{
+	width:30%;
+}
 .curParLabel{
 	vertical-align: top;
 }
@@ -193,6 +201,7 @@ margin: 0ch;
 .tooltip {
     position: relative;
     display: inline-block;
+	padding-bottom: 0rem;
    /* border-bottom: 1px dotted black;*/
 }
 
@@ -211,6 +220,7 @@ margin: 0ch;
     margin-left: -60px;
     opacity: 0;
     transition: opacity 0.3s;
+
 }
 
 .tooltip .tooltiptext::after {

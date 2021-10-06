@@ -1150,7 +1150,6 @@
 		});
 	}
 	
-	var dashboard_settings=jqccs.initSettings();
 	dashboard_settings['current_page'] = 0;
 
 	jqccs['dashboard_settings']=dashboard_settings;
@@ -1197,6 +1196,7 @@
                         jchaos.setOptions({ "timeout": 10000 });
 
                     }
+					location.reload();
 					return 0;// close window
                 //    $("#search-chaos").trigger(e);
                 }, null);
