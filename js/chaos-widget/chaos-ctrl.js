@@ -2250,16 +2250,19 @@
         }
         return 0;
     }
-    jqccs.busyWindow = function(enable, timeoutms, timeofn) {
+    jqccs.busyWindow = function(enable, timeoutms, timeofn,ele) {
+        if(ele === undefined){
+            ele="div";
+        }
         if (enable) {
-            $("div").addClass("loading");
+            $(ele).addClass("loading");
         } else {
-            $("div").removeClass("loading");
+            $(ele).removeClass("loading");
         }
         if (typeof timeoutms === "number") {
             setTimeout(() => {
-                if ($("div").hasClass("loading")) {
-                    $("div").removeClass("loading");
+                if ($(ele).hasClass("loading")) {
+                    $(ele).removeClass("loading");
                     if (typeof timeofn === "function") { timeofn(); }
                 }
             }, timeoutms);
