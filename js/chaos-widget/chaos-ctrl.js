@@ -11708,6 +11708,7 @@
 
                 templateObj.updateInterfaceFn = updateProcessInterface;
                 templateObj.updateFn = updateProcess;
+                templateObj['refresh_rate'] = dashboard_settings.processRefresh;
 
 
             }
