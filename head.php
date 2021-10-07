@@ -162,7 +162,12 @@ function getUserIP() {
 			console.log("RESTPORT:"+rport);
 
 		}
+		var ioloc="ws://";
+		if(location.protocol.includes("https")){
+			ioloc="wss://";
+		}
 		if(dashboard_settings.hasOwnProperty("defaultIOPort")){
+
 			if(!isNaN(dashboard_settings.defaultIOPort)){
 				ioport=":"+dashboard_settings.defaultIOPort;
 			} else {
@@ -170,11 +175,12 @@ function getUserIP() {
 			}
 			console.log("IOPORT="+ioport);
 		}
+		
 		if(address.length==1){
-			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":location.host+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":ioloc+location.host+ioport});
 
 		} else {
-			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":address[0]+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":ioloc+address[0]+ioport});
 
 		}
 
@@ -189,21 +195,7 @@ function getUserIP() {
 				alert(msg.date+" ALARM FROM \""+msg.username+"\" MESSAGE:"+msg.msg);
 			}
 		}
-		/*const socket=io("ws://"+url_server+":4000",{transports: ['websocket']});
-		var ws_socket=null;
-		socket.on("connect", () => {
-			ws_socket=socket;
-		});
-		socket.on("connect", () => {
-			ws_socket=socket;
-			console.log("CONNECTED to "+"ws://"+url_server+":4000"+ " client id:"+socket.id);
-		});
-		socket.on("disconnect", () => {
-			ws_socket=null;
-			console.log("DISCONNECTED from "+"ws://"+url_server+":4000"+ " client id:"+socket.id);
-
-		});
-	*/
+		
 	</script>	
 	
 

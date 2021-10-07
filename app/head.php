@@ -111,6 +111,10 @@ function getUserIP() {
 			console.log("RESTPORT:"+rport);
 
 		}
+		var ioloc="ws://";
+		if(location.protocol.includes("https")){
+			ioloc="wss://";
+		}
 		if(dashboard_settings.hasOwnProperty("defaultIOPort")){
 			if(!isNaN(dashboard_settings.defaultIOPort)){
 				ioport=":"+dashboard_settings.defaultIOPort;
@@ -120,10 +124,10 @@ function getUserIP() {
 			console.log("IOPORT="+ioport);
 		}
 		if(address.length==1){
-			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":location.host+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":ioloc+location.host+ioport});
 
 		} else {
-			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":address[0]+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":ioloc+address[0]+ioport});
 
 		}
 
