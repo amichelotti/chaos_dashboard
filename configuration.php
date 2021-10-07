@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+
 <html>
 <?php
 require_once('head.php');
@@ -148,35 +150,51 @@ require_once('header.php');
 		$('#upload-file').on('change', function () {
 			var fname = this.files[0];
 
-
+			jqccs.busyWindow(false);
 			jqccs.confirm("Do You want OVERWRITE FULL CONFIGURATION?", "Current Confuration will be lost, using:" + fname.name, "Ok", function () {
-
+				
 				var reader = new FileReader();
-				jqccs.busyWindow(true, 120000, () => {
-						alert("Timeout check the REST port on Settings->Config->defaultRestPort");
-					},"body");
+				
 
 
 				reader.onload = function (e) {
 					var cmdselected = $("#upload_selection").val();
+					
 					try {
 						var o = JSON.parse(e.target.result);
 					} catch (e) {
 						alert("ERROR parsing '" + fname.name + "' : " + e);
 						jqccs.busyWindow(false);
+						location.reload();
 
 						return;
 					}
-					
-					jchaos.restoreFullConfig(o, cmdselected);
-					jqccs.busyWindow(false,null,null,"body");
+					try{
+						
+						setTimeout(() => {
+							jchaos.restoreFullConfig(o, cmdselected);
+							jqccs.instantMessage("Restored " + fname.name, " OK", 3000, true);
+							location.reload();
+							jqccs.busyWindow(false);
 
-					jqccs.instantMessage("Restored " + fname.name, " OK", 3000, true);
-					location.reload();
+						}, 100);
+					    
 
+
+					} catch(e){
+						jqccs.instantMessage("Error " + fname.name, " error:"+e, 5000, false);
+						jqccs.busyWindow(false);
+
+					}
 
 				};
+
+				jqccs.busyWindow(true, 120000, () => {
+						alert("Timeout check the REST port on Settings->Config->defaultRestPort");
+				});
 				reader.readAsText(fname);
+
+				
 			}, "Cancel");
 		});
 		varupdate("");

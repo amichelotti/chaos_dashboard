@@ -2250,12 +2250,11 @@
         }
         return 0;
     }
-    jqccs.busyWindow = function(enable, timeoutms, timeofn,ele) {
-        if(ele === undefined){
-            ele="div";
-        }
+    jqccs.busyWindow = function(enable, timeoutms, timeofn,completefn) {
+        var ele="body";
+        
         if (enable) {
-            $(ele).addClass("loading");
+            $(ele).addClass("loading",completefn);
         } else {
             $(ele).removeClass("loading");
         }
@@ -10302,10 +10301,11 @@
                 id: "confirm-yes",
                 text: butyes,
                 click: function(e) {
+                    $(this).dialog("close");
+
                     if (typeof yeshandle === "function") {
                         yeshandle();
                     }
-                    $(this).dialog("close");
                 }
             });
         }
@@ -10380,7 +10380,7 @@
         var opt = {
             modal: true,
             title: hmsg,
-            zIndex: 10000,
+            zIndex: 1000,
             autoOpen: true,
             width: 'auto',
             resizable: true

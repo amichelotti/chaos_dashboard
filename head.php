@@ -185,7 +185,7 @@ function getUserIP() {
 		}
 
 
-		jchaos.ioconnect(address[0]+ioport,{
+		jchaos.ioconnect(ioloc+address[0]+ioport,{
 			query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":4000}
 		});
 		jchaos.options.io_onchat=(msg)=>{
