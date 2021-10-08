@@ -8476,7 +8476,7 @@
     }
 
     function initializeTimePicker(queryfn, id) {
-        if (typeof query_params === "undefined") {
+        if ((typeof query_params === "undefined")|| isNaN(query_params.start)||isNaN(query_params.stop)) {
             query_params = {
                 page: dashboard_settings.defaultPage,
                 start: (new Date()).getTime() - 3600000,
@@ -8553,26 +8553,17 @@
     function createQueryDialog(querycb, opencb, gopt) {
         var dstart = new Date();
         dstart.setHours(0, 0, 0, 0);
-        if (typeof query_params === "undefined") {
+        if ((typeof query_params === "undefined")|| isNaN(query_params.start)||isNaN(query_params.stop)){
             query_params = {
                 page: dashboard_settings.defaultPage,
-                start: dstart.getTime(),
+                start: (new Date()).getTime() - 3600000,
                 stop: (new Date()).getTime(),
                 tag: "",
                 chunk: dashboard_settings.defaultChunk,
                 reduction: 1
             };
         }
-
-        /*var html = '<div class="modal fade draggable" id="dlg-query">';
-
-        html += '<div class="modal-header">';
-        html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-        html += '<h3>Query History</h3>';
-        html += '</div>';
-
-        html += '<div class="modal-body">';
-        */
+        
         var html = "";
         html += '<div class="row">';
 
@@ -8628,15 +8619,23 @@
             resizable: true
         }
         createCustomDialog(opt, html, "Run", function() {
+            if(!isNaN(Number($("#query-page").val()))){
+                query_params['page'] = Number($("#query-page").val());
+            }
+            if(!isNaN(Number($("#query-start").val()))){
+                query_params['start'] = Number($("#query-start").val());
+            }
+            if(!isNaN(Number($("#query-stop").val()))){
+                query_params['stop'] = Number($("#query-stop").val());
+            }
+            if(!isNaN(Number($("#query-chunk").val()))){
+                query_params['chunk'] = Number($("#query-chunk").val());
+            }
+            if(!isNaN(Number($("#query-reduction").val()))){
+                query_params['reduction'] = Number($("#query-reduction").val());
 
-            query_params['page'] = Number($("#query-page").val());
-            query_params['start'] = Number($("#query-start").val());
-
-            query_params['stop'] = Number($("#query-stop").val());
-
+            }
             query_params['tag'] = $("#query-tag").val();
-            query_params['chunk'] = Number($("#query-chunk").val());
-            query_params['reduction'] = Number($("#query-reduction").val());
 
             querycb(query_params)
 
@@ -10301,11 +10300,12 @@
                 id: "confirm-yes",
                 text: butyes,
                 click: function(e) {
-                    $(this).dialog("close");
 
                     if (typeof yeshandle === "function") {
                         yeshandle();
                     }
+                    $(this).dialog("close");
+
                 }
             });
         }
