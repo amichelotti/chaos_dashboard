@@ -1101,9 +1101,9 @@
 							var typ = jchaos.nodeTypeToHuman(type);
 
 							jchaos.node(selected_node, "nodeclralrm", typ, function () {
-								jqccs.instantMessage("Clear Alarms ", "Cleared " + selected_node + "", 1000, true);
+								jqccs.instantMessage("Clear Alarms ", "Cleared " + selected_node + "", 2000, true);
 							}, function (err) {
-								jqccs.instantMessage("Error Clearing Alarms ", "Clearing " + selected_node + " " + JSON.stringify(err), 2000, true);
+								jqccs.instantMessage("Error Clearing Alarms ", "Clearing " + selected_node + " " + JSON.stringify(err), 5000, false);
 							});
 
 
