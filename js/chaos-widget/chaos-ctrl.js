@@ -2460,7 +2460,9 @@
         $("#mdl-jsonedit").modal("show");
         //json_editor.enable();
     }
-
+    jqccs.element_sel=function(field, arr, add_all) {
+        return element_sel(field, arr, add_all) ;
+    };
     function element_sel(field, arr, add_all) {
         $(field).empty();
         //$(field).append("<option value='ALL'>ALL</option>");

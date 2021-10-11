@@ -19,6 +19,12 @@ ul.json-dict, ol.json-array {
   background-color: yellow;
 }
 
+.listview{
+  max-height: 600px;
+  margin-bottom: 10px;
+  overflow:scroll;
+  -webkit-overflow-scrolling: touch;
+}
 .json-literal {
   color: #1A01CC;
   font-weight: bold;

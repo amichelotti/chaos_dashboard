@@ -1085,7 +1085,6 @@
 		});
 	}
 	
-	jqccs.initSettings();
 	$("#help-about").on("click", function () {
                 jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
                     //alert("version:"+JSON.stringify(ver));
