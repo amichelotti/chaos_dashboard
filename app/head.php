@@ -96,7 +96,7 @@ function getUserIP() {
 		const address = location.host.split(':');
 		var rport=":8081";
 		var ioport=":4000";
-		var dashboard_settings=jqccs.initSettings("../chaos_dashboard_settings.json","../dashboard-settings.json");
+		var dashboard_settings=jqccs.initSettings("chaos_dashboard_settings","../dashboard-settings.json");
 
 		if(dashboard_settings.hasOwnProperty("defaultRestPort")){
 			if(!isNaN(dashboard_settings.defaultRestPort)){

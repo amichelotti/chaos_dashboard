@@ -459,6 +459,72 @@
             resetSearch();
 
         });
+        $.contextMenu({
+            selector: '.listitem',
+            build: function($trigger, e) {
+                var node_selected = $(e.currentTarget).attr("cu");
+
+                var cuitem={};
+                cuitem['desc'] = {
+                    name: "Description",
+                    callback: function(key, opt) {
+                            
+                        jchaos.node(node_selected, "desc", "cu", function(data) {
+
+                            jqccs.showJson("Description " + node_selected, data.instance_description);
+                        });
+                    }
+
+                }
+                cuitem['dataset'] = {
+                    name: "Show Dataset",
+                    callback: function(key, opt) {
+                            
+                        jqccs.showDataset(node_selected,node_selected,dashboard_settings.generalRefresh)
+                    }
+
+                }
+                cuitem['quit'] = {
+                    name: "Quit",
+                    icon: function() {
+                        return 'context-menu-icon context-menu-icon-quit';
+                    }
+                };
+
+                return {
+
+                    items: cuitem
+                }
+            }
+
+
+        });
+        $("#app-setting").on("click", function () {
+            var templ = {
+                $ref: "../dashboard-settings.json",
+                format: "tabs"
+            }
+            var def={}
+
+            var def = JSON.parse(localStorage['chaos_dashboard_settings']);
+            jqccs.jsonEditWindow("Config", templ, def, function (d) {
+                localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
+                console.log("Save settings:"+localStorage['chaos_dashboard_settings']);
+                var e = jQuery.Event('keypress');
+                e.which = 13;
+                e.keyCode = 13;
+                if(d.hasOwnProperty("defaultRestTimeout")){
+                    jchaos.setOptions({ "timeout": d.defaultRestTimeout });
+                } else {
+                    jchaos.setOptions({ "timeout": 10000 });
+
+                }
+                location.reload();
+                return 0;// close window
+            //    $("#search-chaos").trigger(e);
+            }, null);
+
+        });
         setInterval(() => {
             refreshAll();
         }, 2000);

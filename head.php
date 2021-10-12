@@ -63,9 +63,9 @@ function getUserIP() {
 			
 		//	echo '<link id="base-style-responsive" href="' .$main_dir. '/css/style-responsive.css" rel="stylesheet">';
 			echo '<link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">';
-			echo '<link href="http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&subset=latin,cyrillic-ext,latin-ext" rel="stylesheet" type="text/css">';
+		//	echo '<link href="http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&subset=latin,cyrillic-ext,latin-ext" rel="stylesheet" type="text/css">';
 			//echo '<link id="ie-style" href="' .$main_dir. '/css/ie.css" rel="stylesheet">';
-			echo '<link id="ie9style" href="' .$main_dir. '/css/ie9.css" rel="stylesheet">';
+		//	echo '<link id="ie9style" href="' .$main_dir. '/css/ie9.css" rel="stylesheet">';
 			echo '<link href="' .$main_dir. '/css/highcharts.css" rel="stylesheet">';
 			
 			//echo '<link href="' .$main_dir. '/css/custom_style.css" rel="stylesheet">';

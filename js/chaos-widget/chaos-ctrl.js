@@ -7,7 +7,7 @@
     // library jquery chaos control studio
     var jqccs = {};
     var json_editor;
-    var dashboard_settings = initSettings();
+    var dashboard_settings = {};
     var interface;
     var cu_copied = {};
     var us_copied = {};
@@ -11614,6 +11614,9 @@
       for (var i = 1; i < interval_id; i++)
         clearInterval(i);
   */
+        if(opt.hasOwnProperty("dashboard_settings")){
+            dashboard_settings=opt.dashboard_settings;
+        }
         hostWidth = $(window).width();
         hostHeight = $(window).height();
         console.log("Window size:" + hostWidth + "x" + hostHeight);
