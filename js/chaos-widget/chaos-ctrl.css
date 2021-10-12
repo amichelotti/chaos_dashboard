@@ -25,6 +25,11 @@ ul.json-dict, ol.json-array {
   overflow:scroll;
   -webkit-overflow-scrolling: touch;
 }
+.listitem {
+  overflow: scroll !important;
+  text-overflow: clip !important;
+
+}
 .json-literal {
   color: #1A01CC;
   font-weight: bold;

@@ -1214,7 +1214,7 @@
 															jqccs.instantMessage(ele.data.ndk_uid, "Set Mask of " + desc.var + "=" + val + " on " + ele.data.ndk_uid, 4000, true);
 
 														}, function (bad) {
-															jqccs.instantMessage(ele.data.ndk_uid, "Error Setting Mask of " + desc.var + " " + JSON.stringify(bad), 4000, true);
+															jqccs.instantMessage(ele.data.ndk_uid, "Error Setting Mask of " + desc.var + " " + JSON.stringify(bad), 4000, false);
 
 														});
 													})
@@ -1223,7 +1223,7 @@
 														jqccs.instantMessage(node.data.ndk_uid, "Set Mask of " + desc.var + "=" + val + " on " + node.data.ndk_uid, 4000, true);
 
 													}, function (bad) {
-														jqccs.instantMessage(node.data.ndk_uid, "Error Setting Mask of " + desc.var + " " + JSON.stringify(bad), 4000, true);
+														jqccs.instantMessage(node.data.ndk_uid, "Error Setting Mask of " + desc.var + " " + JSON.stringify(bad), 4000, false);
 
 													});
 												}

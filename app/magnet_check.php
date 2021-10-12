@@ -53,59 +53,85 @@
                         </div>
                     </div>
                 </div>
-                <div class="row box">
-                    <div class="col-sm">
-                        <div class="card list-group ">
-                            <div id="outofset_h" class="card-header">
-                                Out Of Set
-                            </div>
-                            <ul id="outofset" class="listview">
+                <div class="row">
+                    <div class="col-sm-9">
+                        <div class="box row">
+                            <div class="col-sm">
+                                <div class="card list-group ">
+                                    <div id="outofset_h" class="card-header">
+                                        Out Of Set
+                                    </div>
+                                    <ul id="outofset" class="listview">
 
-                            </ul>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="card list-group">
+                                    <div id="outofpol_h" class="card-header">
+                                        Out Of Polarity
+                                    </div>
+                                    <ul id="outofpol" class="listview">
+
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="card">
+                                    <div id="outofstat_h" class="card-header">
+                                        Out Of Status
+                                    </div>
+                                    <ul id="outofstat" class="listview">
+
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="card list-group">
+                                    <div id="fault_h" class="card-header">
+                                        PS Fault
+                                    </div>
+                                    <ul id="fault" class="listview">
+
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="card list-group">
+                                    <div id="bad_h" class="card-header">
+                                        Bad Status
+                                    </div>
+                                    <ul id="bad" class="listview">
+
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-sm">
-                        <div class="card list-group" style="width: 18rem;">
-                            <div id="outofpol_h" class="card-header">
-                                Out Of Polarity
-                            </div>
-                            <ul id="outofpol" class="listview">
+                    <div class="col-sm-1 align-self-center">
+                        <div class="row justify-content-center">
+                            <button type="button" id="b_mask" class="btn btn-default btn-lg">
+                                <i class="fa fa-long-arrow-right fa-4x" aria-hidden="true"></i></span>
+                            </button>
 
-                            </ul>
+                        </div>
+                        <div class="row justify-content-center">
+                            <button type="button" id="b_unmask" class="btn btn-default btn-lg">
+                                <i class="fa fa-long-arrow-left fa-4x" aria-hidden="true"></i></span>
+                            </button>                        
                         </div>
                     </div>
-                    <div class="col-sm">
-                        <div class="card" style="width: 18rem;">
-                            <div id="outofstat_h" class="card-header">
-                                Out Of Status
+                    <div class="col-sm-2 box">
+                        <div class="card list-group">
+                            <div id="masked_h" class="card-header">
+                                Masked
                             </div>
-                            <ul id="outofstat" class="listview">
-
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-sm">
-                        <div class="card list-group" style="width: 18rem;">
-                            <div id="fault_h" class="card-header">
-                                PS Fault
-                            </div>
-                            <ul id="fault" class="listview">
-
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-sm">
-                        <div class="card list-group" style="width: 18rem;">
-                            <div id="bad_h" class="card-header">
-                                Bad Status
-                            </div>
-                            <ul id="bad" class="listview">
+                            <ul id="masked" class="listview">
 
                             </ul>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -125,6 +151,8 @@
         var fault = ["--"];
         var bad = ["--"];
 
+        var masklist={};
+        var unmasklist={};
 
         var l_outofset = {};
         var l_outofpol = {};
@@ -275,71 +303,27 @@
                     }
                     if (updateset || (outofset.length != n_outofset.length)) {
                         outofset = n_outofset;
-                        refreshList("outofset", outofset);
+                        refreshList("outofset", "Out Of Set",outofset);
 
                     }
 
                     if (updatestat || (outofstat.length != n_outofstat.length)) {
                         outofstat = n_outofstat;
-                        refreshList("outofstat", outofstat);
+                        refreshList("outofstat","Out Of Status", outofstat);
                     }
 
                     if (updatepol || (outofpol.length != n_outofpol.length)) {
                         outofpol = n_outofpol;
-                        refreshList("outofpol", outofpol);
+                        refreshList("outofpol", "Out Of Polarity",outofpol);
 
                     }
                     if (updatefault || (fault.length != n_fault.length)) {
                         fault = n_fault;
-                        refreshList("fault", fault);
+                        refreshList("fault", "Fault", fault);
                     }
                     if (updatebad || (bad.length != n_bad.length)) {
                         bad = n_bad;
-                        refreshList("bad", bad);
-                    }
-                    $("#outofpol_h").html("<b>Out Of Polarity</b> " + outofpol.length);
-                    $("#outofset_h").html("<b>Out Of Set</b> " + outofset.length);
-                    $("#outofstat_h").html("<b>Out Of Status</b> " + outofstat.length);
-                    $("#fault_h").html("<b>Fault</b> " + fault.length);
-                    $("#bad_h").html("<b>Bad Status</b> " + bad.length);
-
-
-                    if (bad.length == 0) {
-                        $("#bad_h").addClass("bg-success");
-                    } else if (bad.length == 1) {
-                        $("#bad_h").addClass("bg-warning");
-                    } else {
-                        $("#bad_h").addClass("bg-danger");
-
-                    }
-                    if (outofpol.length == 0) {
-                        $("#outofpol_h").addClass("bg-success");
-                    } else if (outofpol.length == 1) {
-                        $("#outofpol_h").addClass("bg-warning");
-                    } else {
-                        $("#outofpol_h").addClass("bg-danger");
-
-                    }
-                    if (outofstat.length == 0) {
-                        $("#outofstat_h").addClass("bg-success");
-                    } else if (outofstat.length == 1) {
-                        $("#outofstat_h").addClass("bg-warning");
-                    } else {
-                        $("#outofstat_h").addClass("bg-danger");
-                    }
-                    if (outofset.length == 0) {
-                        $("#outofset_h").addClass("bg-success");
-                    } else if (outofset.length == 1) {
-                        $("#outofset_h").addClass("bg-warning");
-                    } else {
-                        $("#outofset_h").addClass("bg-danger");
-                    }
-                    if (fault.length == 0) {
-                        $("#fault_h").addClass("bg-success");
-                    } else if (fault.length == 1) {
-                        $("#fault_h").addClass("bg-warning");
-                    } else {
-                        $("#fault_h").addClass("bg-danger");
+                        refreshList("bad","Bad Status", bad);
                     }
 
 
@@ -348,16 +332,41 @@
             });
 
         }
-        function refreshList(dom, l) {
+        function maskUnMask(dev,maskunmask){
+            var mvalue= ((maskunmask)?0:0xFF);
+            var alrm = {
+                all: true,
+                mask: mvalue
+            }
+            jchaos.command(dev, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
+                jqccs.instantMessage(dev, "Set Mask on " + dev  + "=" + mvalue, 2000, true);
+
+            }, function (bad) {
+                jqccs.instantMessage(dev,  "ERROR: Setting Mask on " + dev  + "=" + mvalue +", error:"+ JSON.stringify(bad), 4000, false);
+
+            });
+            
+        }
+        function refreshList(dom, t,l) {
             $("#" + dom).empty();
 
             l.forEach(item => {
                 var n = jchaos.encodeName(item);
                 var t = (JSON.stringify(descs[item])).replaceAll("\"", "");
                 // var l = "<li class=\"list-group-item list-group-item-action\" title=\""+t+"\" id=\""+n+"\">"+item+"</li>";
-                var l = "<li title=\"" + t + "\" id=\"" + n + "\">" + item + "</li>";
+                var l = "<li class=\"listitem\" title=\"" + t + "\" id=\"" + n + "\" cu=\""+item+"\">" + item + "</li>";
                 $("#" + dom).append(l);
             });
+            $("#"+dom+"_h").html("<b>"+t+"</b> " + l.length);
+
+            if (l.length == 0) {
+                $("#"+dom+"_h").addClass("bg-success");
+            } else if (l.length == 1) {
+                $("#"+dom+"_h").addClass("bg-warning");
+            } else {
+                $("#"+dom+"_h").addClass("bg-danger");
+            }
+
             $("#" + dom).simsCheckbox({
 
                 btnStyle: 'checkbox',
@@ -367,7 +376,28 @@
                 uncheckedClass: "btn-default",
                 checkedClass: "btn-warning",
                 selectAllBtn: false,
-                selectAllText: 'Select/Unselect All'
+                selectAllText: 'Select/Unselect All',
+                ifChecked:function() {
+                    var cuname=this.attr("cu");
+                    console.log("CHECK "+cuname);
+                    if(dom=="masked"){
+                        unmasklist[cuname]=descs[cuname];
+
+                    } else {
+                        masklist[cuname]=descs[cuname];
+                    }
+
+                },
+                ifUnChecked:function() {
+                    var cuname=this.attr("cu");
+                    console.log("UNCHECK "+cuname);
+                    if(dom=="masked"){
+                        delete unmasklist[cuname];
+                    } else {
+                        delete masklist[cuname];
+                    }
+                }
+
             });
 
         }
@@ -395,6 +425,32 @@
                 resetSearch();
 
             }
+
+        });
+        $("#b_mask").click(function () {
+            console.log("masking: "+JSON.stringify(masklist));
+            var l=[];
+            for(var k in masklist){
+                l.push(k);
+                maskUnMask(k,true);
+            }
+            refreshList("masked", "Masked", l);
+
+        });
+        $("#b_unmask").click(function () {
+            console.log("unmasking: "+JSON.stringify(unmasklist));
+            var l=[];
+            for(var k in unmasklist){
+                maskUnMask(k,false);
+
+                delete masklist[k];
+            }
+            for(var k in masklist){
+                l.push(k);
+            }
+            
+            
+            refreshList("masked","Masked", l);
 
         });
         $("#classes").change(function () {
