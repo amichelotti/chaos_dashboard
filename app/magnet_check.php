@@ -164,6 +164,7 @@
         var selzone = "";
         var selclass = "";
         var selsearch = "";
+        
         function resetSearch() {
             outofset = [];
             outofpol = [];
@@ -499,6 +500,8 @@
 
 
         });
+        $("#app-name").html("MAGNET CHECK");
+
         $("#app-setting").on("click", function () {
             var templ = {
                 $ref: "../dashboard-settings.json",
