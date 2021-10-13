@@ -145,7 +145,8 @@
 							var iname = jchaos.encodeName(uid);
 							if (healt.hasOwnProperty("cuh_alarm_msk") && (healt.cuh_alarm_msk > 0)) {
 								$("#" + iname + "_maskalarm").html('<img src="img/icon/silent.png">');
-
+							} else {
+								$("#" + iname + "_maskalarm").html('');
 							}
 							if (alarm > 0) {
 								if (alarm == 1) {

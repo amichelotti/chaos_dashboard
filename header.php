@@ -7,58 +7,49 @@
 				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
 					<ul class="navbar-nav mr-auto">
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
+							<a class="nav-link dropdown-toggle" id="dropdown01"
 								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Chaos</a>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="./index.php"><i class="halflings-icon home"></i>
-									CU/EU</a>
-								<a class="dropdown-item" href="./chaos_jshell.php"><i class="halflings-icon edit"></i>
-									Control Shell</a>
-								<a class="dropdown-item" href="./process.php"><i class="halflings-icon cog"></i>
-									Process
-									View</a>
-								<a class="dropdown-item" href="./chaos_node.php"><i class="halflings-icon wrench"></i>
-									Node Management(Experimental)</a>
-								<a class="dropdown-item" href="./chaos_node_table.php"><i
-										class="halflings-icon pencil"></i> Node Management</a>
-								<a class="dropdown-item" href="./configuration.php"><i
-										class=" halflings-icon cloud"></i> Configuration</a>
-								<a class="dropdown-item" href="./app/camera_view.php"><i class="halflings-icon camera"></i>
-									Camera View App</a>
-								<a class="dropdown-item" href="./app/synoptic_view.php"><i class="halflings-icon globe"></i>
-									Synoptic View App</a>
+								<a class="dropdown-item" href="./index.php"><i class="fa fa-gamepad" aria-hidden="true"></i> CU/EU</a>
+								<a class="dropdown-item" href="./chaos_jshell.php"><i class="fa fa-terminal" aria-hidden="true"></i> Control Shell</a>
+								<a class="dropdown-item" href="./process.php"><i class="fa fa-cogs" aria-hidden="true"></i> Process</a>
+								<a class="dropdown-item" href="./chaos_node.php"><i class="fa fa-wrench" aria-hidden="true"></i> Node Management</a>
+								<a class="dropdown-item" href="./configuration.php"><i class="fa fa-file-text" aria-hidden="true"></i> Chaos Configuration</a>
+								
 							</div>
 						</li>
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tools</a>
+							<a class="nav-link dropdown-toggle" id="dropdown01"
+								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">App</a>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="javascript:handle_script()" id="hscript-management"><i
-										class="halflings-icon cog"></i> Scripts</a>
-								<a class="dropdown-item" href="javascript:handle_graph()" id="hgraph"><i
-										class="halflings-icon stats-bar"></i> Graph</a>
-								<a class="dropdown-item" href="javascript:handle_snap()" id="hsnap-management"><i
-										class="halflings-icon tag"></i> Snapshot</a>
-								<a class="dropdown-item" href="javascript:handle_log()" id="hlog"><i
-										class="halflings-icon list"></i>Log</a>
-								<a class="dropdown-item" href="javascript:handle_chat()" id="hchat"><i
-										class="halflings-icon list"></i>Message chat</a>
+							<a class="dropdown-item" href="./app/camera_view.php"><i class="fa fa-video-camera" aria-hidden="true"></i> Camera</a>
+								<a class="dropdown-item" href="./app/synoptic_view.php"><i class="fa fa-map-marker" aria-hidden="true"></i> Synoptic</a>
+								<a class="dropdown-item" href="./app/magnet_check.php"><i class="fa fa-magnet" ></i> Magnet Check</a>
 
 							</div>
 						</li>
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01"
+							<a class="nav-link dropdown-toggle" id="dropdown01"
+								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tools</a>
+							<div class="dropdown-menu" aria-labelledby="dropdown01">
+								<a class="dropdown-item" href="javascript:handle_script()" id="hscript-management"><i class="fa fa-cogs" aria-hidden="true"></i>  Scripts</a>
+								<a class="dropdown-item" href="javascript:handle_graph()" id="hgraph"><i class="fa fa-area-chart" aria-hidden="true"></i> Graph</a>
+								<a class="dropdown-item" href="javascript:handle_snap()" id="hsnap-management"><i class="fa fa-tags" aria-hidden="true"></i> Snapshot</a>
+								<a class="dropdown-item" href="javascript:handle_log()" id="hlog"><i class="fa fa-list" aria-hidden="true"></i> Log</a>
+								<a class="dropdown-item" href="javascript:handle_chat()" id="hchat"><i class="fa fa-commenting-o" aria-hidden="true"></i> Message chat</a>
+
+							</div>
+						</li>
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" id="dropdown01"
 								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</a>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="login.html"><i class="halflings-icon off"></i>
-									Login</a>
-								<a class="dropdown-item" id="config-settings"><i class="halflings-icon off"></i>
-									Config..</a>
-								<a class="dropdown-item" id="help-clients"><i class="halflings-icon off"></i>
+								<a class="dropdown-item" href="login.html"><i class="fa fa-sign-in" aria-hidden="true"></i> Login</a>
+								<a class="dropdown-item" id="config-settings"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>Config..</a>
+								<!-- <a class="dropdown-item" id="help-clients"><i class="halflings-icon off"></i>
 									Client
-									List..</a>
-								<a class="dropdown-item" id="help-about"><i class="halflings-icon off"></i>
-									About..</a>
+									List..</a> -->
+								<a class="dropdown-item" id="help-about"><i class="fa fa-info" aria-hidden="true"></i> About..</a>
 
 							</div>
 						</li>

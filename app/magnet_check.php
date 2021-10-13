@@ -150,7 +150,7 @@
         var outofstat = ["--"];
         var fault = ["--"];
         var bad = ["--"];
-
+        var dontupdatemask=false;
         var masklist={};
         var unmasklist={};
 
@@ -197,7 +197,7 @@
                     var n_outofstat = [];
                     var n_fault = [];
                     var n_bad = [];
-
+                    var n_masked=[];
                     run_info.forEach(ele => {
                         var desc = {};
 
@@ -210,6 +210,13 @@
                             l_bad[name] = {};
 
                             descs[name] = {};
+                            if(ele.health.cuh_alarm_msk){
+                                if(ele.cu_alarms.hasOwnProperty("polarity_out_of_set_MASK")&&
+                                   ele.cu_alarms.hasOwnProperty("current_out_of_set_MASK")&&
+                                   ele.cu_alarms.hasOwnProperty("stby_out_of_set_MASK")){
+                                       n_masked.push(name);
+                                }
+                            }
                             if (ele.health.cuh_alarm_lvl) {
                                 if (!ele.device_alarms.interlock && !ele.device_alarms.faulty_state && !ele.device_alarms.bad_state && !ele.device_alarms.unknown_state) {
                                     if (ele.cu_alarms.hasOwnProperty("polarity_out_of_set") && ele.cu_alarms.polarity_out_of_set) {
@@ -218,7 +225,7 @@
 
                                     }
                                     if (ele.cu_alarms.hasOwnProperty("current_out_of_set") && ele.cu_alarms.current_out_of_set) {
-                                        desc['current_out_of_set'] = ele.cu_alarms.current_out_of_set;
+                                        desc['c'] = ele.cu_alarms.current_out_of_set;
 
                                         l_outofset[name]['desc'] = desc;
                                     }
@@ -326,8 +333,11 @@
                         bad = n_bad;
                         refreshList("bad","Bad Status", bad);
                     }
+                    
 
-
+                    if(!dontupdatemask){
+                        refreshList("masked", "Masked", n_masked);
+                    }
                 });
 
             });
@@ -360,12 +370,17 @@
             });
             $("#"+dom+"_h").html("<b>"+t+"</b> " + l.length);
 
-            if (l.length == 0) {
-                $("#"+dom+"_h").addClass("bg-success");
+            $("#"+dom+"_h").removeClass("bg-danger");
+            $("#"+dom+"_h").removeClass("bg-warning");
+            $("#"+dom+"_h").removeClass("bg-success");
+
+            if (l.length > 1) {
+                $("#"+dom+"_h").addClass("bg-danger");
             } else if (l.length == 1) {
                 $("#"+dom+"_h").addClass("bg-warning");
             } else {
-                $("#"+dom+"_h").addClass("bg-danger");
+                $("#"+dom+"_h").addClass("bg-success");
+
             }
 
             $("#" + dom).simsCheckbox({
@@ -430,12 +445,12 @@
         });
         $("#b_mask").click(function () {
             console.log("masking: "+JSON.stringify(masklist));
-            var l=[];
+            //var l=[];
             for(var k in masklist){
-                l.push(k);
+           //     l.push(k);
                 maskUnMask(k,true);
             }
-            refreshList("masked", "Masked", l);
+            //refreshList("masked", "Masked", l);
 
         });
         $("#b_unmask").click(function () {
@@ -446,12 +461,12 @@
 
                 delete masklist[k];
             }
-            for(var k in masklist){
+         /*   for(var k in masklist){
                 l.push(k);
             }
+           */ 
             
-            
-            refreshList("masked","Masked", l);
+          //  refreshList("masked","Masked", l);
 
         });
         $("#classes").change(function () {
@@ -460,6 +475,13 @@
             resetSearch();
 
         });
+        $("#masked").mouseover(function () {
+            dontupdatemask=true;
+        });
+        $("#masked").mouseout(function () {
+            dontupdatemask=false;
+        });
+
         $.contextMenu({
             selector: '.listitem',
             build: function($trigger, e) {

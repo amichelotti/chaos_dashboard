@@ -6,11 +6,14 @@
 
 				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
 					<ul class="navbar-nav mr-auto">
+					<li class="nav-item active">
+        				<a class="nav-link" href="../index.php">Home <span class="sr-only">(current)</span></a>
+      					</li>
 						<li class="nav-item dropdown">
 							<a class="nav-link dropdown-toggle" id="app-setting"
 								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</a>
-							
 						</li>
+
 					</ul>
 				
 				</div>
