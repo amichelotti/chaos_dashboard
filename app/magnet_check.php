@@ -224,7 +224,7 @@
 
                             descs[name] = {};
                             if(ele.health.cuh_alarm_msk){
-                                if(ele.cu_alarms.hasOwnProperty("polarity_out_of_set_MASK")&&
+                                if(ele.hasOwnProperty("cu_alarms")&&ele.cu_alarms.hasOwnProperty("polarity_out_of_set_MASK")&&
                                    ele.cu_alarms.hasOwnProperty("current_out_of_set_MASK")&&
                                    ele.cu_alarms.hasOwnProperty("stby_out_of_set_MASK")){
                                        n_masked.push(name);
@@ -235,7 +235,7 @@
                                 l_bad[name]['desc'] = desc;
 
                             }
-                            if (ele.health.cuh_alarm_lvl) {
+                            if (ele.health.cuh_alarm_lvl&&ele.hasOwnProperty("cu_alarms")&&ele.hasOwnProperty("device_alarms")) {
                                 if (!ele.device_alarms.interlock && !ele.device_alarms.faulty_state && !ele.device_alarms.bad_state && !ele.device_alarms.unknown_state) {
                                     if (ele.cu_alarms.hasOwnProperty("polarity_out_of_set") && ele.cu_alarms.polarity_out_of_set) {
                                         desc['polarity_out_of_set'] = ele.cu_alarms.polarity_out_of_set;
