@@ -109,6 +109,10 @@
                         </div>
                     </div>
                     <div class="col-sm-1 align-self-center">
+                    <div class="row justify-content-center">
+                            <div class="row" id="magnum">TOT 0</div>
+
+                        </div>
                         <div class="row justify-content-center">
                             <button type="button" id="b_mask" class="btn btn-default btn-lg">
                                 <i class="fa fa-long-arrow-right fa-4x" aria-hidden="true"></i></span>
@@ -145,11 +149,11 @@
 
 
     <script>
-        var outofset = ["--"];
-        var outofpol = ["--"];
-        var outofstat = ["--"];
-        var fault = ["--"];
-        var bad = ["--"];
+        var outofset = [];
+        var outofpol = [];
+        var outofstat = [];
+        var fault = [];
+        var bad = [];
         var dontupdatemask=false;
         var masklist={};
         var unmasklist={};
@@ -164,7 +168,6 @@
         var selzone = "";
         var selclass = "";
         var selsearch = "";
-        
         function resetSearch() {
             outofset = [];
             outofpol = [];
@@ -189,7 +192,14 @@
             if (selsearch != "") {
                 search = search + "/" + selsearch;
             }
-            jchaos.search(search, "cu", true, { "interface": "powersupply" }, function (list_cu) {
+            $("#magnum").removeClass("bg-success");
+			var alive = ($("input[type=radio][name=search-alive]:checked").val()=="true");
+            l_outofpol = {};
+            l_outofset = {};
+            l_outofstat = {};
+            l_fault = {};
+            l_bad = {};
+            jchaos.search(search, "cu", alive, { "interface": "powersupply" }, function (list_cu) {
 
                 jchaos.getChannel(list_cu, 255, function (run_info) {
                     var n_outofset = [];
@@ -198,6 +208,9 @@
                     var n_fault = [];
                     var n_bad = [];
                     var n_masked=[];
+                    $("#magnum").html("TOT "+run_info.length);
+                    $("#magnum").addClass("bg-success");
+
                     run_info.forEach(ele => {
                         var desc = {};
 
@@ -217,6 +230,11 @@
                                        n_masked.push(name);
                                 }
                             }
+                            if(ele.health.nh_status!="Start"){
+                                desc['chaos_status']=ele.health.nh_status + " NOT MASKABLE";
+                                l_bad[name]['desc'] = desc;
+
+                            }
                             if (ele.health.cuh_alarm_lvl) {
                                 if (!ele.device_alarms.interlock && !ele.device_alarms.faulty_state && !ele.device_alarms.bad_state && !ele.device_alarms.unknown_state) {
                                     if (ele.cu_alarms.hasOwnProperty("polarity_out_of_set") && ele.cu_alarms.polarity_out_of_set) {
@@ -225,7 +243,7 @@
 
                                     }
                                     if (ele.cu_alarms.hasOwnProperty("current_out_of_set") && ele.cu_alarms.current_out_of_set) {
-                                        desc['c'] = ele.cu_alarms.current_out_of_set;
+                                        desc['current_out_of_set'] = ele.cu_alarms.current_out_of_set;
 
                                         l_outofset[name]['desc'] = desc;
                                     }
@@ -254,9 +272,9 @@
                                         l_bad[name]['desc'] = desc;
                                     }
                                 }
-                                descs[name] = desc;
-
                             }
+                            descs[name] = desc;
+
                         }
                     });
                     var updateset = false;
@@ -269,7 +287,7 @@
                         if (l_outofpol[k].hasOwnProperty("desc")) {
 
                             n_outofpol.push(k);
-                            if (outofpol.find((val) => { return (val == k) })) {
+                            if (!(outofpol.find((val) => { return (val == k) }))) {
                                 updatepol = true;
                             }
                         }
@@ -286,7 +304,7 @@
                         if (l_outofset[k].hasOwnProperty("desc")) {
 
                             n_outofset.push(k);
-                            if (outofset.find((val) => { return (val == k) })) {
+                            if (!(outofset.find((val) => { return (val == k) }))) {
                                 updateset = true;
                             }
                         }
@@ -295,7 +313,7 @@
                         if (l_fault[k].hasOwnProperty("desc")) {
 
                             n_fault.push(k);
-                            if (fault.find((val) => { return (val == k) })) {
+                            if (!(fault.find((val) => { return (val == k) }))) {
                                 updatefault = true;
                             }
                         }
@@ -303,33 +321,33 @@
                     for (const k in l_bad) {
                         if (l_bad[k].hasOwnProperty("desc")) {
 
-                            n_nad.push(k);
-                            if (baf.find((val) => { return (val == k) })) {
+                            n_bad.push(k);
+                            if (!(bad.find((val) => { return (val == k) }))) {
                                 updatebad = true;
                             }
                         }
                     }
-                    if (updateset || (outofset.length != n_outofset.length)) {
+                    if (updateset || (outofset.length != n_outofset.length)||(outofset.length==0)) {
                         outofset = n_outofset;
                         refreshList("outofset", "Out Of Set",outofset);
 
                     }
 
-                    if (updatestat || (outofstat.length != n_outofstat.length)) {
+                    if (updatestat || (outofstat.length != n_outofstat.length)||(outofstat.length==0)) {
                         outofstat = n_outofstat;
                         refreshList("outofstat","Out Of Status", outofstat);
                     }
 
-                    if (updatepol || (outofpol.length != n_outofpol.length)) {
+                    if (updatepol || (outofpol.length != n_outofpol.length)||(outofpol.length==0)) {
                         outofpol = n_outofpol;
                         refreshList("outofpol", "Out Of Polarity",outofpol);
 
                     }
-                    if (updatefault || (fault.length != n_fault.length)) {
+                    if (updatefault || (fault.length != n_fault.length)||(fault.length==0)) {
                         fault = n_fault;
-                        refreshList("fault", "Fault", fault);
+                        refreshList("fault", "Fault", fault,list_cu.length);
                     }
-                    if (updatebad || (bad.length != n_bad.length)) {
+                    if (updatebad || (bad.length != n_bad.length)||(bad.length==0)) {
                         bad = n_bad;
                         refreshList("bad","Bad Status", bad);
                     }
