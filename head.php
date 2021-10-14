@@ -49,7 +49,7 @@ function getUserIP() {
 			//echo '<link id="bootstrap-style" href="' .$main_dir. '/bootstrap-3.4.1-dist/css/bootstrap.min.css" rel="stylesheet">';
 			//echo '<script src="'.$main_dir.'/bootstrap-3.4.1-dist/js/bootstrap.min.js"></script>';
 			//echo '<script src="'.$main_dir.'/js/jquery-1.9.1.min.js"></script>';
-			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-ctrl.css" type="text/css" rel="stylesheet" />';;
+			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-ctrl.css" rel="stylesheet" />';
 
 			echo '<link id="base-style" href="' .$main_dir. '/css/style.css" rel="stylesheet">';
 			echo '<script src="'.$main_dir.'/js/jquery-3.5.1.min.js"></script>';
@@ -63,9 +63,9 @@ function getUserIP() {
 			
 		//	echo '<link id="base-style-responsive" href="' .$main_dir. '/css/style-responsive.css" rel="stylesheet">';
 			echo '<link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">';
-			echo '<link href="http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&subset=latin,cyrillic-ext,latin-ext" rel="stylesheet" type="text/css">';
+		//	echo '<link href="http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&subset=latin,cyrillic-ext,latin-ext" rel="stylesheet" type="text/css">';
 			//echo '<link id="ie-style" href="' .$main_dir. '/css/ie.css" rel="stylesheet">';
-			echo '<link id="ie9style" href="' .$main_dir. '/css/ie9.css" rel="stylesheet">';
+		//	echo '<link id="ie9style" href="' .$main_dir. '/css/ie9.css" rel="stylesheet">';
 			echo '<link href="' .$main_dir. '/css/highcharts.css" rel="stylesheet">';
 			
 			//echo '<link href="' .$main_dir. '/css/custom_style.css" rel="stylesheet">';
@@ -162,7 +162,12 @@ function getUserIP() {
 			console.log("RESTPORT:"+rport);
 
 		}
+		var ioloc="ws://";
+		if(location.protocol.includes("https")){
+			ioloc="wss://";
+		}
 		if(dashboard_settings.hasOwnProperty("defaultIOPort")){
+
 			if(!isNaN(dashboard_settings.defaultIOPort)){
 				ioport=":"+dashboard_settings.defaultIOPort;
 			} else {
@@ -170,16 +175,17 @@ function getUserIP() {
 			}
 			console.log("IOPORT="+ioport);
 		}
+		
 		if(address.length==1){
-			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":location.host+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":ioloc+location.host+ioport});
 
 		} else {
-			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":address[0]+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":ioloc+address[0]+ioport});
 
 		}
 
 
-		jchaos.ioconnect(address[0]+ioport,{
+		jchaos.ioconnect(ioloc+address[0]+ioport,{
 			query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":4000}
 		});
 		jchaos.options.io_onchat=(msg)=>{
@@ -189,21 +195,7 @@ function getUserIP() {
 				alert(msg.date+" ALARM FROM \""+msg.username+"\" MESSAGE:"+msg.msg);
 			}
 		}
-		/*const socket=io("ws://"+url_server+":4000",{transports: ['websocket']});
-		var ws_socket=null;
-		socket.on("connect", () => {
-			ws_socket=socket;
-		});
-		socket.on("connect", () => {
-			ws_socket=socket;
-			console.log("CONNECTED to "+"ws://"+url_server+":4000"+ " client id:"+socket.id);
-		});
-		socket.on("disconnect", () => {
-			ws_socket=null;
-			console.log("DISCONNECTED from "+"ws://"+url_server+":4000"+ " client id:"+socket.id);
-
-		});
-	*/
+		
 	</script>	
 	
 
