@@ -37,15 +37,8 @@ echo '<script src="'.$main_dir.'/js/socket.io.js"></script>';
 	<script>
 		var oldid=0;
 		var cams = ["FLAME/CLR/CAMERA/FLAOSCFF"];
-	/*	const socket=io("ws://localhost", {
-			transports: ['websocket'],
-			policyPort: 3000,
-			path:"",
-
-			
-  reconnectionDelayMax: 10000
-});*/
-const socket=io("ws://chaost-camera01.chaos.lnf.infn.it:4000",{transports: ['websocket']});
+	
+		const socket=io("ws://chaost-camera01.chaos.lnf.infn.it:4000",{transports: ['websocket']});
 		function rebuildCam(selectedCams, tmpObj) {
 
 			var cnt = 0;

@@ -61,6 +61,7 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/camera.js"></script>';
 
                     }
 					//jqccs.initSettings();
+					location.reload();
 
                 }, null);
 
