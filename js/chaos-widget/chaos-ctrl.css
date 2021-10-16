@@ -28,6 +28,11 @@ ul.json-dict, ol.json-array {
 .listitem {
   overflow: scroll !important;
   text-overflow: clip !important;
+  font-size: 10px !important;
+
+}
+.card-header {
+  font-size: 14px !important;
 
 }
 .json-literal {
