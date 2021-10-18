@@ -320,6 +320,19 @@
 					$('#desc-' + pid).find('a.json-toggle').click();
 
 				});
+				$("#hier-" + pid).bind("dblclick.jstree", function (evt,data) {
+   					//var node = $(event.target).closest("li");
+					//var node_data = data.instance.get_node(data.selected[0]).data;
+					var tree = $(this).jstree(); 			
+					var node = tree.get_node(evt.target); 
+   					// Do some action
+					if(node.data){
+						if(node.data.hasOwnProperty("name")){
+							runSynoptic(node.data);
+
+						}
+					}
+				});
 				$("body").removeClass("loading");
 
 				//$('#hier_view').jstree('load_node',ds);

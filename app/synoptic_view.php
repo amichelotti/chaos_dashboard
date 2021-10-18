@@ -102,8 +102,8 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/synoptic.js"></script>';
                                     if((synoptic instanceof Object) && synoptic.hasOwnProperty(settings.defaultSynoptic)){
                                         runSynoptic(synoptic[settings.defaultSynoptic]);
                                     } else {
-                                        jqccs.instantMessage("Cannot retrive default Synoptic ",settings.defaultSynoptic , 2000, false);
-
+                                       // jqccs.instantMessage("Cannot retrive default Synoptic ",settings.defaultSynoptic , 2000, false);
+                                        console.log("## cannot retrive default synoptic: "+settings.defaultSynoptic);
                                     }
                                    
                                 }, (bad) => {
