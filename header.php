@@ -147,7 +147,7 @@
 		jqccs.busyWindow(false);
 
 	};
-	$( <? php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
+	$(<?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
 	function triggerRefreshEdit() {
 		$("input[type=radio][name=search-alive]:checked").val(false);
 		$("input[type=radio][name=search-alive]").trigger("change");
