@@ -66,7 +66,7 @@ function getWidget() {
           html += "<td class='td_element' title='Restore Stanby/Operational' id='" + cuname + "_input_saved_stby'></td>";
           html += "<td class='td_element' title='Restore setpoint polarity' id='" + cuname + "_input_saved_polarity'></td>";
           html += "<td class='td_element' id='" + cuname + "_output_stby'></td>";
-          html += "<td class='td_element' id='" + cuname + "_output_polarity'></td>";
+          html += "<td class='td_element' id='" + cuname + "_output_polarity'><i class=\"material-icons\">close</i></td>";
           html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
           html += "<td class='td_element' id='" + cuname + "_system_busy'></td>";

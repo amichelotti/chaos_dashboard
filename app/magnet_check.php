@@ -144,7 +144,7 @@
     <footer>
         <?php require_once('footer.php');?>
         
-        <audio src="../audio/barking.mp3" width="0" height="0" id="bau"></audio>
+        <audio src="../audio/threeknocks.mp3" width="0" height="0" id="bau"></audio>
     </footer>
 
 
@@ -572,7 +572,7 @@
 
 
         });
-        $("#app-name").html("MAGNET CHECK");
+        $("#app-name").html("HUNTER DOG");
 
         $("#app-setting").on("click", function () {
             var templ = {
