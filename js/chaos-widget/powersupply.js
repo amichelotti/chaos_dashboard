@@ -34,6 +34,21 @@ function getWidget() {
       }
     }
     },
+    /*tableClickFn: function (tmpObj, e) {
+      //  rebuildCam(tmpObj);
+      console.log("Table click");
+      var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+      if(tmpObj)
+      jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
+        var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+
+        tmpObj.data[cindex] = cu[0];
+        jqccs.updateGenericTableDataset(tmpObj);
+        
+        jqccs.updateGenericControl(tmpObj,cu[0]);
+      })
+
+    },*/
     tableFn:function(tmpObj) {
         var cu=[];
         if(tmpObj['elems'] instanceof Array){
