@@ -34,6 +34,21 @@ function getWidget() {
       }
     }
     },
+    /*tableClickFn: function (tmpObj, e) {
+      //  rebuildCam(tmpObj);
+      console.log("Table click");
+      var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+      if(tmpObj)
+      jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
+        var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+
+        tmpObj.data[cindex] = cu[0];
+        jqccs.updateGenericTableDataset(tmpObj);
+        
+        jqccs.updateGenericControl(tmpObj,cu[0]);
+      })
+
+    },*/
     tableFn:function(tmpObj) {
         var cu=[];
         if(tmpObj['elems'] instanceof Array){
@@ -66,7 +81,7 @@ function getWidget() {
           html += "<td class='td_element' title='Restore Stanby/Operational' id='" + cuname + "_input_saved_stby'></td>";
           html += "<td class='td_element' title='Restore setpoint polarity' id='" + cuname + "_input_saved_polarity'></td>";
           html += "<td class='td_element' id='" + cuname + "_output_stby'></td>";
-          html += "<td class='td_element' id='" + cuname + "_output_polarity'></td>";
+          html += "<td class='td_element' id='" + cuname + "_output_polarity'><i class=\"material-icons\">close</i></td>";
           html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
           html += "<td class='td_element' id='" + cuname + "_system_busy'></td>";
