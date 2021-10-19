@@ -34,21 +34,21 @@ function getWidget() {
       }
     }
     },
-    /*tableClickFn: function (tmpObj, e) {
+    tableClickFn: function (tmpObj, e) {
       //  rebuildCam(tmpObj);
-      console.log("Table click");
       var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
-      if(tmpObj)
-      jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
-        var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+      if(!tmpObj.data[cindex].output.hasOwnProperty("polarity")){
+        var cuname = jchaos.encodeName(tmpObj.node_selected);
+        $(".pola").addClass("disabled");
+        //$(".pola").remove();
+        console.log("disable polarity for "+tmpObj.node_selected);
+      } else {
+        $(".pola").removeClass("disabled");
 
-        tmpObj.data[cindex] = cu[0];
-        jqccs.updateGenericTableDataset(tmpObj);
-        
-        jqccs.updateGenericControl(tmpObj,cu[0]);
-      })
+      }
+      
 
-    },*/
+    },
     tableFn:function(tmpObj) {
         var cu=[];
         if(tmpObj['elems'] instanceof Array){
@@ -125,15 +125,15 @@ function getWidget() {
         html += '</a>';
         html += '</div>';
         html += '<div class="row">';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola" title="Powersupply Polarity POS" cucmdvalue=1 >';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd pola" cucmdid="pola" title="Powersupply Polarity POS" cucmdvalue=1 >';
         html += '<i class="material-icons" style="color:red">add_circle</i>';
         html += '<p class="name-cmd">Pos</p>';
         html += '</a>';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity OPEN" cucmdvalue=0 >';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd pola" cucmdid="pola"  title="Powersupply Polarity OPEN" cucmdvalue=0 >';
         html += '<i class="material-icons">radio_button_unchecked</i>';
         html += '<p class="name-cmd">Open</p>';
         html += '</a>';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity NEGATIVE" cucmdvalue=-1 >';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd pola" cucmdid="pola"  title="Powersupply Polarity NEGATIVE" cucmdvalue=-1 >';
         html += '<i class="material-icons" style="color:blue">remove_circle</i>';
         html += '<p class="name-cmd">Neg</p>';
         html += '</a>';
