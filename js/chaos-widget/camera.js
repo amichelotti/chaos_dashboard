@@ -5,6 +5,7 @@ var cameraDriverDesc = {};
 var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
 var currzoomm = 1.0;
+var opt={};
 
 function checkRedrawReference(camid, domid, x, y, sx, sy, r) {
   jchaos.getChannel(camid, 1, (ele) => {
@@ -194,10 +195,60 @@ function buildCameraArray(id, opt) {
 }
 
 var cameralist = [], cameralistold = [];
+var pullInterval=null;
+var old_tim = {}, counter = {}, tcum = {};
 
-$.fn.buildCameraArray = function (opt) {
+function updateCamera(ds){
+  if (ds.dpck_ds_type == 0) {
+    // output
+    let freq, start, lat;
+    let id = mappedcamera[ds.ndk_uid];
+    let debug = opt.camera.debug;
+    let debug_html = "";
+    start = Date.now();
+    if (counter[id] == 0) {
+      checkRedrawReference(ds.ndk_uid, id);
+      counter[id] = 1;
+    }
+    if (debug) {
+      if (old_tim[id]) {
+        if ((counter[id] % 1000) == 0) {
+          tcum[id] = 0;
+          counter[id] = 1;
+        } else {
+          counter[id]++;
+        }
+        tcum[id] += (start - old_tim[id]);
+
+      }
+      freq = 1000.0 * counter[id] / tcum[id];
+      //  let freq = 1000.0 / (start-old_tim[id]);
+      old_tim[id] = start;
+      debug_html = " Hz:" + freq.toFixed(2);
+    }
+    lat = start - ds.dpck_ats;
+
+    if(ds.FRAMEBUFFER.hasOwnProperty("$binary")){
+      $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER.$binary.base64);
+    } else {
+      $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+    }
+    if (ds.WIDTH !== undefined) {
+      $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
+    } else {
+      $("#info-" + id).html("frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
+
+    }
+  } else if (ds.dpck_ds_type == 1) {
+    //  console.log("INPUT :"+JSON.stringify(ds));
+    let id = mappedcamera[ds.ndk_uid];
+
+    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO);
+  }
+}
+$.fn.buildCameraArray = function (op) {
+  opt=op;
   this.html(buildCameraArray("table-" + this.attr('id'), opt));
-  var old_tim = {}, counter = {}, tcum = {};
 
   $(".camselect").on("change", (ev) => {
     var vid = ev.currentTarget.id.split('-');
@@ -241,8 +292,9 @@ $.fn.buildCameraArray = function (opt) {
 
     }
     if (cameralist.length) {
+      var pe = $("#push_enable").is(":checked");
 
-      if ((jchaos.socket != null) && (jchaos.socket.connected)) {
+      if (pe&&(jchaos.socket != null) && (jchaos.socket.connected)) {
         if (cameralistold.length) {
           console.log("Unsubscribe " + JSON.stringify(cameralistold));
           jchaos.iosubscribeCU(cameralistold, false);
@@ -257,53 +309,17 @@ $.fn.buildCameraArray = function (opt) {
           jchaos.iosubscribeCU(cameralist, true);
         }
 
-        jchaos.options['io_onmessage'] = (ds) => {
-          if (ds.dpck_ds_type == 0) {
-            // output
-            let freq, start, lat;
-            let id = mappedcamera[ds.ndk_uid];
-            let debug = opt.camera.debug;
-            let debug_html = "";
-            start = Date.now();
-            if (counter[id] == 0) {
-              checkRedrawReference(ds.ndk_uid, id);
-              counter[id] = 1;
-            }
-            if (debug) {
-              if (old_tim[id]) {
-                if ((counter[id] % 1000) == 0) {
-                  tcum[id] = 0;
-                  counter[id] = 1;
-                } else {
-                  counter[id]++;
-                }
-                tcum[id] += (start - old_tim[id]);
+        jchaos.options['io_onmessage'] = updateCamera;
 
-              }
-              freq = 1000.0 * counter[id] / tcum[id];
-              //  let freq = 1000.0 / (start-old_tim[id]);
-              old_tim[id] = start;
-              debug_html = " Hz:" + freq.toFixed(2);
-            }
-            lat = start - ds.dpck_ats;
+      } else {
+        pullInterval=setInterval(()=>{
+          jchaos.getChannel(cameralist,0,(vds)=>{
+            vds.forEach(ele=>{
+              updateCamera(ele);
+            });
 
-            // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-            $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
-
-            if (ds.WIDTH !== undefined) {
-              $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
-            } else {
-              $("#info-" + id).html("frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
-
-            }
-          } else if (ds.dpck_ds_type == 1) {
-            //  console.log("INPUT :"+JSON.stringify(ds));
-            let id = mappedcamera[ds.ndk_uid];
-
-            redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO);
-          }
-        }
-
+          });
+        },opt.camera.cameraRefresh);
       }
     }
   });
@@ -736,22 +752,22 @@ function activateMenuShort() {
           'rotatep90': {
             name: "Rotate +90", cu: name,
             callback: function (itemKey, opt, e) {
-              // var name = opt.items[itemKey].cu;
-              zoomInOut(domid, 1.0, 90);
+               var name = opt.items.transforms.items["rotatep90"].cu;
+              rotateCamera(name, 90);
             }
           },
           'rotatem90': {
             name: "Rotate -90", cu: name,
             callback: function (itemKey, opt, e) {
-              // var name = opt.items[itemKey].cu;
-              zoomInOut(domid, 1.0, -90);
+              var name = opt.items.transforms.items["rotatem90"].cu;
+              rotateCamera(name, -90);
             }
           },
           'rotateReset': {
             name: "Rotate reset", cu: name,
             callback: function (itemKey, opt, e) {
-              // var name = opt.items[itemKey].cu;
-              zoomInOut(domid, 1.0, 0);
+               var name = opt.items.transforms.items['rotateReset'].cu;
+              rotateCamera(name, 0);
             }
           }
         }
@@ -819,9 +835,39 @@ function activateMenuShort() {
 
   });
 }
-function zoomInOut(name, incr, rot) {
+function rotateCamera(name,rot){
+
+  if (!cameraLayoutSettings.hasOwnProperty(name)) {
+    cameraLayoutSettings[name]={"rot":0};
+
+  } 
+  if(rot==0){
+    jchaos.setAttribute(name, "ROT", String(0), function () {
+      jqccs.instantMessage("Camera Rotate", "Reset Rotation" , 2000, true);
+      cameraLayoutSettings[name]["rot"]=0;
+  },(bad)=>{
+    jqccs.instantMessage("Camera Rotate", "FAILED: Reset rotation: "+JSON.stringify(bad) , 4000, false);
+
+  });
+  } else {
+    jchaos.getChannel(name,1,(ds)=>{
+      if(ds[0].hasOwnProperty("ROT")){
+        var r=ds[0].ROT+rot;
+        jchaos.setAttribute(name, "ROT", String(r), function () {
+          jqccs.instantMessage("Camera Rotate", "Rotation of " + r + " degree" , 2000, true);
+          cameraLayoutSettings[name]["rot"]=r;
+      },(bad)=>{
+        jqccs.instantMessage("Camera Rotate", "FAILED: Rotation of " + r + " degree: "+JSON.stringify(bad) , 4000, false);
+    
+      });
+
+      }
+    })
+  }
+  
+}
+function zoomInOut(name, incr) {
   var currzoom = 1.0;
-  var currrot = 0;
   if (cameraLayoutSettings.hasOwnProperty(name)) {
     if (cameraLayoutSettings[name].hasOwnProperty("zoom")) {
       currzoom = cameraLayoutSettings[name]["zoom"];
@@ -831,22 +877,14 @@ function zoomInOut(name, incr, rot) {
       cameraLayoutSettings[name]["ory"] = 0;
 
     }
-    if (cameraLayoutSettings[name].hasOwnProperty("rot")) {
-      currrot = cameraLayoutSettings[name]["rot"];
-    }
+    
   } else {
     cameraLayoutSettings[name] = { "zoom": currzoom, "orx": 0, "ory": 0 };
 
   }
   var x = mouseX;
   var y = mouseY;
-  if (typeof rot === "number") {
-    if (rot == 0) {
-      currrot = 0;
-    } else {
-      currrot += rot;
-    }
-  }
+  
   if (incr == 0) {
     currzoom = 1.0;
   } else {
@@ -855,21 +893,17 @@ function zoomInOut(name, incr, rot) {
 
   }
   cameraLayoutSettings[name]["zoom"] = currzoom;
-  cameraLayoutSettings[name]["rot"] = currrot;
 
   var encoden = jchaos.encodeName(name);
   var prop = null;
 
   //  $("#insideWrapper-"+encoden).css("transform","scale("+currzoom+")");
-
-  if ((currrot != 0) || (currzoom != 1.0)) {
+  
+  if ((currzoom != 1.0)) {
     const mirinosize = 100;
 
     var scaleorx = x - mirinosize;
     var scaleory = y - mirinosize;
-
-
-
 
     if (scaleorx < 0) {
       scaleorx = 0;
@@ -893,25 +927,28 @@ function zoomInOut(name, incr, rot) {
       prop["transform"] = "scale(" + currzoom + "," + currzoom + ")";
 
     }
-    if (currrot != 0) {
+   /* if (currrot != 0) {
       prop["transform"] = prop["transform"] + " rotate(" + currrot + "deg)";
     }
-
-    $("#cameraImage-" + encoden).css(prop);
-    $("#cameraImageCanv-" + encoden).css(prop);
-    console.log(name + " Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop));
-    cameraLayoutSettings[name]["css"] = prop;
-    if (currzoom != 1.0 && currrot != 0) {
+     if (currzoom != 1.0 && currrot != 0) {
       jqccs.instantMessage("WARNING Zoom+Rotate", "Are deprecated! may bring unexpected results, Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 4000, true);
 
     } else {
       jqccs.instantMessage("Transform", "Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 2000, true);
     }
 
+    */
+
+    $("#cameraImage-" + encoden).css(prop);
+    $("#cameraImageCanv-" + encoden).css(prop);
+   // console.log(name + " Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop));
+   console.log(name + " Zoom:" + currzoom );
+    cameraLayoutSettings[name]["css"] = prop;
+   
   } else {
     $("#cameraImage-" + encoden).css("transform", "scale(" + currzoom + ")");
     $("#cameraImageCanv-" + encoden).css("transform", "scale(" + currzoom + ")");
-    console.log(name + " Zoom:" + currzoom + " Rotate:" + currrot);
+    console.log(name + " Zoom:" + currzoom);
 
   }
   currzoomm = currzoom;
@@ -972,21 +1009,21 @@ function activateMenu(tmpObj) {
         name: "Rotate +90", cu: name,
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
-          zoomInOut(name, 1, 90);
+          rotateCamera(name, 90);
         }
       };
       tcuitem['rotatem90'] = {
         name: "Rotate -90", cu: name,
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
-          zoomInOut(name, 1, -90);
+          rotateCamera(name, -90);
         }
       };
       tcuitem['rotateReset'] = {
         name: "Rotate reset", cu: name,
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
-          zoomInOut(name, 1.0, 0);
+          rotateCamera(name, 0);
         }
       };
       cuitem['transforms'] = {
@@ -1736,7 +1773,9 @@ function getWidget() {
 
 
             // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-            $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+            
+             $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+            
             // let freq = 1000.0 * counter[id] / tcum[id];
             let freq = 1000.0 / (start - old_tim[id]);
             let lat = start - ds.dpck_ats;
