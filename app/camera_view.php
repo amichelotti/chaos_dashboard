@@ -37,12 +37,12 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/camera.js"></script>';
 	<script>
 		//localStorage.removeItem("camera_view-settings");
 
-		var settings=jqccs.initSettings("camera_view-settings","camera_view-settings.json");
+		var settings=jqccs.initSettings("camera_view-settings","../dashboard-settings.json");
 		
 		$("#app-name").html("CAMERA VIEW");
 		$("#app-setting").on("click", function () {
                 var templ = {
-                    $ref: "camera_view-settings.json",
+                    $ref: "../dashboard-settings.json",
                     format: "tabs"
                 }
 				var def={};
@@ -66,9 +66,27 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/camera.js"></script>';
                 }, null);
 
             });
-	
-		$("#main-dashboard").buildCameraArray(settings);
+		if(settings.hasOwnProperty("push")){
+			$("#push_enable").prop('checked',settings.push);
 
+		} else {
+			settings['push']=false;
+		}
+
+		$("#main-dashboard").buildCameraArray(settings);
+		$("#push_enable").change(function(e) {
+            var pe = $("#push_enable").is(":checked");
+            if (pe == false) {
+                // unsubscribe all
+                jchaos.ioclose();
+
+            }
+			settings['push']=pe;
+
+			$("#main-dashboard").buildCameraArray(settings);
+
+            //var tt =prompt('type value');
+        });
 	</script>
 
 

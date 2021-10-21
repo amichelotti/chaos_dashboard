@@ -6,6 +6,8 @@ var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
 var currzoomm = 1.0;
 var opt={};
+var pullInterval=null;
+var pullIntervalsec=null;
 
 function checkRedrawReference(camid, domid, x, y, sx, sy, r) {
   jchaos.getChannel(camid, 1, (ele) => {
@@ -155,7 +157,6 @@ function buildCameraArray(id, opt) {
   var hostHeight = $(window).height();
   var maxwidth = Math.trunc(hostWidth / tmpObj.maxCameraCol);
   var maxheight = Math.trunc(hostHeight / tmpObj.cameraPerRow);
-  var pe = $("#push_enable").is(":checked");
   console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth);
 
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
@@ -195,7 +196,6 @@ function buildCameraArray(id, opt) {
 }
 
 var cameralist = [], cameralistold = [];
-var pullInterval=null;
 var old_tim = {}, counter = {}, tcum = {};
 
 function updateCamera(ds){
@@ -292,9 +292,8 @@ $.fn.buildCameraArray = function (op) {
 
     }
     if (cameralist.length) {
-      var pe = $("#push_enable").is(":checked");
-
-      if (pe&&(jchaos.socket != null) && (jchaos.socket.connected)) {
+      
+      if (opt.push&&(jchaos.socket != null) && (jchaos.socket.connected)) {
         if (cameralistold.length) {
           console.log("Unsubscribe " + JSON.stringify(cameralistold));
           jchaos.iosubscribeCU(cameralistold, false);
@@ -312,6 +311,12 @@ $.fn.buildCameraArray = function (op) {
         jchaos.options['io_onmessage'] = updateCamera;
 
       } else {
+        if(pullInterval!=null){
+          clearInterval(pullInterval);
+        }
+        if(pullIntervalsec!=null){
+          clearInterval(pullIntervalsec);
+        }
         pullInterval=setInterval(()=>{
           jchaos.getChannel(cameralist,0,(vds)=>{
             vds.forEach(ele=>{
@@ -320,6 +325,14 @@ $.fn.buildCameraArray = function (op) {
 
           });
         },opt.camera.cameraRefresh);
+        pullIntervalsec=setInterval(()=>{
+          jchaos.getChannel(cameralist,1,(vds)=>{
+            vds.forEach(ele=>{
+              updateCamera(ele);
+            });
+
+          });
+        },1000);
       }
     }
   });
@@ -1235,9 +1248,8 @@ function rebuildCam(tmpObj) {
     var hostHeight = $(window).height();
     var maxwidth = Math.trunc(hostWidth / tmpObj.maxCameraCol);
     var maxheight = Math.trunc(hostHeight / tmpObj.cameraPerRow);
-    var pe = $("#push_enable").is(":checked");
 
-    if (pe && (jchaos.socket != null) && (jchaos.socket.connected)) {
+    if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
       jchaos.iosubscribeCU(tmpObj.elems, false);
       jchaos.iosubscribeCU(selectedCams, true);
 
@@ -1514,7 +1526,10 @@ function setRoi(cu, width, height, x, y, func) {
   }
   );
 }
-function getWidget() {
+function getWidget(options) {
+  if(options){
+    opt=options;
+  }
   var chaos =
   {
     dsFn: {
@@ -1580,9 +1595,8 @@ function getWidget() {
       if (tmpObj['elems'] instanceof Array) {
         cu = tmpObj.elems;
       }
-      var pe = $("#push_enable").is(":checked");
 
-      if ((pe == false) || (jchaos.socket == null) || (jchaos.socket.connected == false)) {
+      if ((opt.push == false) || (jchaos.socket == null) || (jchaos.socket.connected == false)) {
 
         if (tmpObj.node_multi_selected instanceof Array) {
 
@@ -1742,8 +1756,7 @@ function getWidget() {
       html += '</div>';
       html += '</div>';
       html += '</div>';
-      var pe = $("#push_enable").is(":checked");
-      if (pe && (jchaos.socket != null) && (jchaos.socket.connected)) {
+      if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
         jchaos.options['io_onconnect'] = (s) => {
           console.log("resubscribe ..")
 

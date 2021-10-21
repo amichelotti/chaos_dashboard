@@ -4683,7 +4683,7 @@
         if (tmpObj.type != "cu") {
             // if not generic view try to load widget
             $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function(data, textStatus, jqxhr) {
-                var w = getWidget();
+                var w = getWidget(dashboard_settings);
                 tmpObj['htmlFn'] = w.dsFn;
                 tmpObj['generateTableFn'] = w.tableFn;
                 if (w.hasOwnProperty('cmdFn')) {

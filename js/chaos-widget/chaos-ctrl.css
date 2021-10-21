@@ -37,11 +37,13 @@ ul.json-dict, ol.json-array {
   font-size: 14px !important;
 
 }
+
 a.disabled {
   opacity: 0.5;
   pointer-events: none;
   cursor: default;
 }
+
 .json-literal {
   color: #1A01CC;
   font-weight: bold;

@@ -18,7 +18,7 @@
 				
 				</div>
 				
-				<a class="navbar-brand col-sm-8" href="#">
+				<a class="navbar-brand col-sm-8">
 					<div class="row">
 						<h2 class="display2 col-sm align-items-left" id="app-name"></h2>
 						<div class="col-sm">
