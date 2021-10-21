@@ -7,8 +7,8 @@
 				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
 					<ul class="navbar-nav mr-auto">
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
-								aria-haspopup="true" aria-expanded="false">Chaos</a>
+							<div class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
+								aria-haspopup="true" aria-expanded="false">Chaos</div>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
 								<a class="dropdown-item" href="./index.php"><i class="fa fa-gamepad"
 										aria-hidden="true"></i> CU/EU</a>
@@ -24,8 +24,8 @@
 							</div>
 						</li>
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
-								aria-haspopup="true" aria-expanded="false">App</a>
+							<div class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
+								aria-haspopup="true" aria-expanded="false">App</div>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
 								<a class="dropdown-item" href="./app/camera_view.php"><i class="fa fa-video-camera"
 										aria-hidden="true"></i> Camera</a>
@@ -37,8 +37,8 @@
 							</div>
 						</li>
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
-								aria-haspopup="true" aria-expanded="false">Tools</a>
+							<div class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
+								aria-haspopup="true" aria-expanded="false">Tools</div>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
 								<a class="dropdown-item" href="javascript:handle_script()" id="hscript-management"><i
 										class="fa fa-cogs" aria-hidden="true"></i> Scripts</a>
@@ -54,8 +54,8 @@
 							</div>
 						</li>
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
-								aria-haspopup="true" aria-expanded="false">Settings</a>
+							<div class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
+								aria-haspopup="true" aria-expanded="false">Settings</div>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
 								<a class="dropdown-item" href="login.html"><i class="fa fa-sign-in"
 										aria-hidden="true"></i> Login</a>
@@ -64,8 +64,8 @@
 								<!-- <a class="dropdown-item" id="help-clients"><i class="halflings-icon off"></i>
 									Client
 									List..</a> -->
-								<a class="dropdown-item" id="help-about"><i class="fa fa-info" aria-hidden="true"></i>
-									About..</a>
+								<div class="dropdown-item" id="help-about"><i class="fa fa-info" aria-hidden="true"></i>
+									About..</div>
 
 							</div>
 						</li>
@@ -73,7 +73,7 @@
 
 				</div>
 
-				<a class="navbar-brand col-sm-8" href="#">
+				<div class="navbar-brand col-sm-8">
 					<div class="row">
 						<h2 class="display2 col-sm align-items-left">!CHAOS
 							Dashboard</h2>
@@ -82,7 +82,7 @@
 						</div>
 
 					</div>
-				</a>
+				</div>
 				<div class="col-sm-1 align-items-right">
 
 					<label class="checkbox-inline">

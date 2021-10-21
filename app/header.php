@@ -10,15 +10,15 @@
         				<a class="nav-link" href="../index.php">Home <span class="sr-only">(current)</span></a>
       					</li>
 						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" id="app-setting"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</a>
+							<div class="nav-link dropdown-toggle" id="app-setting"
+								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</div>
 						</li>
 
 					</ul>
 				
 				</div>
 				
-				<a class="navbar-brand col-sm-8">
+				<div class="navbar-brand col-sm-8">
 					<div class="row">
 						<h2 class="display2 col-sm align-items-left" id="app-name"></h2>
 						<div class="col-sm">
@@ -26,7 +26,7 @@
 						</div>
 						
 					</div>
-				</a>
+				</div>
 				<div class="col-sm-1 align-items-right">
 
 						<label class="checkbox-inline">
