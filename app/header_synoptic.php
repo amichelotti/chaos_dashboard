@@ -27,7 +27,7 @@
 				
 				</div>
 				
-				<a class="navbar-brand col-sm-8" href="#">
+				<div class="navbar-brand col-sm-8" href="#">
 					<div class="row">
 						<h2 class="display2 col-sm align-items-left" id="app-name"></h2>
 						<div class="col-sm">
@@ -35,7 +35,7 @@
 						</div>
 						
 					</div>
-				</a>
+				</div>
 				<div class="col-sm-1 align-items-right">
 
 						<label class="checkbox-inline">
