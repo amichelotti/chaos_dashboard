@@ -22,12 +22,10 @@ ul.json-dict, ol.json-array {
 .listview{
   max-height: 600px;
   margin-bottom: 10px;
-  overflow-y:hidden;
   overflow-x:hidden;
   -webkit-overflow-scrolling: touch;
 }
 .listitem {
-  overflow-y:hidden;
   overflow-x:hidden  !important;
   text-overflow: clip !important;
   font-size: 10px !important;
