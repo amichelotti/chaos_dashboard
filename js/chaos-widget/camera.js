@@ -171,7 +171,7 @@ function buildCameraArray(id, opt) {
       html += '<div class="col">';
 
       html += '<div class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
-      html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/logo_chaos_col_xMg_icon.ico" />';
+      html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/no_cam_trasp.svg" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '</div>';
 
@@ -741,16 +741,16 @@ function activateMenuShort() {
       redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO);
       cuitem['sep1'] = "---------";
       cuitem['transforms'] = {
-        "name": "Trasforms..",
+        "name": "Trasforms..",icon:"fa-cog",
         "items": {
           'zoom-in': {
-            name: "Zoom In ", cu: name,
+            name: "Zoom In ", cu: name,icon:"fa-search-plus",
             callback: function (itemKey, opt, e) {
               zoomInOut(domid, 2);
             }
           },
           'zoom-out': {
-            name: "Zoom Out ", cu: name,
+            name: "Zoom Out ", cu: name,icon:"fa-search-minus",
             callback: function (itemKey, opt, e) {
               zoomInOut(domid, 0.5);
             }
@@ -763,14 +763,14 @@ function activateMenuShort() {
             }
           },
           'rotatep90': {
-            name: "Rotate +90", cu: name,
+            name: "Rotate +90", cu: name,icon:"fa-undo",
             callback: function (itemKey, opt, e) {
                var name = opt.items.transforms.items["rotatep90"].cu;
               rotateCamera(name, 90);
             }
           },
           'rotatem90': {
-            name: "Rotate -90", cu: name,
+            name: "Rotate -90", cu: name,icon:"fa-repeat",
             callback: function (itemKey, opt, e) {
               var name = opt.items.transforms.items["rotatem90"].cu;
               rotateCamera(name, -90);
@@ -827,7 +827,7 @@ function activateMenuShort() {
         }
       }
       cuitem['fold2'] = {
-        "name": "Set..",
+        "name": "Set..",icon:"fa-wrench",
         "items": scuitem
     };
 
@@ -984,7 +984,7 @@ function activateMenu(tmpObj) {
       cuitem['sep1'] = "---------";
       var tcuitem={};
       tcuitem['zoom-in'] = {
-        name: "Zoom In ", cu: name,
+        name: "Zoom In ", cu: name,icon:"fa-search-plus",
         callback: function (itemKey, opt, e) {
           var name = opt.items['transforms'].items[itemKey].cu;
           var offset = $(this).offset();
@@ -996,7 +996,7 @@ function activateMenu(tmpObj) {
         }
       };
       tcuitem['zoom-out'] = {
-        name: "Zoom Out ", cu: name,
+        name: "Zoom Out ", cu: name,icon:"fa-search-minus",
         callback: function (itemKey, opt, e) {
           var name = opt.items['transforms'].items[itemKey].cu;
           var encoden = jchaos.encodeName(name);
@@ -1019,14 +1019,14 @@ function activateMenu(tmpObj) {
         }
       };
       tcuitem['rotatep90'] = {
-        name: "Rotate +90", cu: name,
+        name: "Rotate +90", cu: name,icon:"fa-undo",
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
           rotateCamera(name, 90);
         }
       };
       tcuitem['rotatem90'] = {
-        name: "Rotate -90", cu: name,
+        name: "Rotate -90", cu: name,icon:"fa-repeat",
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
           rotateCamera(name, -90);
@@ -1268,9 +1268,9 @@ function rebuildCam(tmpObj) {
       html += '<div class="insideWrapper cameraMenu" cuname="' + key + '" id="insideWrapper-' + encoden + '">';
 
       if (selectedCams.length > 1) {
-        html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
+        html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/no_cam_trasp.svg" />';
       } else {
-        html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/chaos_wait_big.gif" />';
+        html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/no_cam_trasp.svg" />';
       }
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '</div>';

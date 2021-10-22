@@ -2267,7 +2267,7 @@ function CreateConfigurationJson() {
             return;
         var CU = CUcreate(JSON.parse(currentCU));
         let des=CU.configuration;
-        alert(CU.Name+" des "+des);
+        
         return JSON.stringify(des);
        
 
@@ -2728,7 +2728,7 @@ function GenerateCUCodeAsSingleFolder() {
     AddCheckBox(US[2]);
    
     var conf=CreateConfigurationJson();
-    alert(conf);
+    
     zip.file("InstanceConfiguration.json",conf);
     AddCheckBox("InstanceConfiguration.json")
     zip.generateAsync({ type: "blob" }).then(function (content) {

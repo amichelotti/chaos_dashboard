@@ -14,7 +14,7 @@ require_once('header.php');
 ?>
 
 
-	<div id="chaos_content" class="container-fluid-full fill">
+	<div id="chaos_content" class="container-fluid-full">
 	
 		<div id="main-dashboard" class="container-fluid"></div>
 	</div>

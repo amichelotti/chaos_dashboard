@@ -12,8 +12,8 @@
 			require_once('header.php');
 ?>
 
-	<div class="container-fluid-full fill">
-		<div class="row fill">
+	<div class="container-fluid px-5">
+		<div class="row">
 
 
 
@@ -41,7 +41,7 @@
 						</select>
 					</div>
 
-					<div class="statbox purple col-sm-6">
+					<div class="statbox purple col-sm-7">
 
 						<div class="row">
 

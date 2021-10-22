@@ -32,7 +32,7 @@
                         </select>
                     </div>
 
-                    <div class="statbox purple col-sm-6">
+                    <div class="statbox purple col-sm-7">
                         <div class="row">
                             <div class="col-sm">
                                 <h3>Live</h3>
@@ -167,7 +167,7 @@
         var l_outofstat = {};
         var l_fault = {};
         var l_bad = {};
-
+        var old_mask_list=[];
         var descs = {};
         var selzone = "";
         var selclass = "";
@@ -385,9 +385,10 @@
                     }
                     
 
-                    if(!dontupdatemask){
+                    if(!dontupdatemask && (JSON.stringify(n_masked)!=JSON.stringify(old_mask_list))){
                         refreshList("masked", "Masked", n_masked);
                     }
+                    old_mask_list=n_masked;
                 });
 
             });
