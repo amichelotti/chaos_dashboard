@@ -12,7 +12,7 @@ $curr_page = "CONFIG";
 require_once('header.php');
 ?>
 
-	<div class="container-fluid">
+	<div class="container-fluid px-4">
 
 
 		<div class="row border">
@@ -107,12 +107,7 @@ require_once('header.php');
 
 
 					});
-				});
-			})
-
-		}
-		function pathToVariable(variable, str, value) {
-			var n = str.indexOf("/");
+				});class="container-fluid"");
 			if (n != -1) {
 				str = str.substring(n + 1);
 				n = str.indexOf("/");

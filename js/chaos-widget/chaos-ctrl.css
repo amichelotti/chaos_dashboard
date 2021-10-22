@@ -35,6 +35,9 @@ ul.json-dict, ol.json-array {
   font-size: 14px !important;
 
 }
+.navbar {
+  padding: .5rem !important;
+}
 
 a.disabled {
   opacity: 0.5;
@@ -46,6 +49,7 @@ a.disabled {
   color: #1A01CC;
   font-weight: bold;
 }
+
 .json-keyinput {
   display: none;
 
