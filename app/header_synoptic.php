@@ -6,6 +6,9 @@
 
 				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
 					<ul class="navbar-nav mr-auto">
+					<li class="nav-item active">
+        				<a class="nav-link" href="../index.php">Home <span class="sr-only">(current)</span></a>
+      					</li>
 						<li class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle"  id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Synoptic</a>
 							<div class="dropdown-menu" aria-labelledby="dropdown01">
@@ -24,7 +27,7 @@
 				
 				</div>
 				
-				<a class="navbar-brand col-sm-8" href="#">
+				<div class="navbar-brand col-sm-8" href="#">
 					<div class="row">
 						<h2 class="display2 col-sm align-items-left" id="app-name"></h2>
 						<div class="col-sm">
@@ -32,7 +35,7 @@
 						</div>
 						
 					</div>
-				</a>
+				</div>
 				<div class="col-sm-1 align-items-right">
 
 						<label class="checkbox-inline">
@@ -316,6 +319,19 @@
 					});
 					$('#desc-' + pid).find('a.json-toggle').click();
 
+				});
+				$("#hier-" + pid).bind("dblclick.jstree", function (evt,data) {
+   					//var node = $(event.target).closest("li");
+					//var node_data = data.instance.get_node(data.selected[0]).data;
+					var tree = $(this).jstree(); 			
+					var node = tree.get_node(evt.target); 
+   					// Do some action
+					if(node.data){
+						if(node.data.hasOwnProperty("name")){
+							runSynoptic(node.data);
+
+						}
+					}
 				});
 				$("body").removeClass("loading");
 

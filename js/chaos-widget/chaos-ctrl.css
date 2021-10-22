@@ -19,6 +19,31 @@ ul.json-dict, ol.json-array {
   background-color: yellow;
 }
 
+.listview{
+  max-height: 600px;
+  margin-bottom: 10px;
+  overflow-y:hidden;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.listitem {
+  overflow-y:hidden;
+  overflow-x:hidden  !important;
+  text-overflow: clip !important;
+  font-size: 10px !important;
+
+}
+.card-header {
+  font-size: 14px !important;
+
+}
+
+a.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
+}
+
 .json-literal {
   color: #1A01CC;
   font-weight: bold;
@@ -209,13 +234,12 @@ div.fill{
 .wait_modal {
   display:    none;
   position:   fixed;
-  z-index:    1000;
+  z-index:    2000;
   top:        0;
   left:       0;
   height:     100%;
   width:      100%;
-  background: rgba( 255, 255, 255, .8 ) 
-              url('/img/chaos_wait_big.gif') 
+  background: url('/img/rotatingBallWaiting.gif') 
               50% 50% 
               no-repeat;
 }
@@ -231,15 +255,17 @@ body.loading .wait_modal {
 body.loading .wait_modal {
   display: block;
 }
+
 div.loading .wait_modal {
   overflow: hidden;   
 }
 
-/* Anytime the body has the loading class, our
- modal element will be visible */
+
 div.loading .wait_modal {
   display: block;
 }
+
+
 .chaos_img {
   display: block;
 

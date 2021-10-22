@@ -34,6 +34,21 @@ function getWidget() {
       }
     }
     },
+    tableClickFn: function (tmpObj, e) {
+      //  rebuildCam(tmpObj);
+      var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+      if(!tmpObj.data[cindex].output.hasOwnProperty("polarity")){
+        var cuname = jchaos.encodeName(tmpObj.node_selected);
+        $(".pola").addClass("disabled");
+        //$(".pola").remove();
+        console.log("disable polarity for "+tmpObj.node_selected);
+      } else {
+        $(".pola").removeClass("disabled");
+
+      }
+      
+
+    },
     tableFn:function(tmpObj) {
         var cu=[];
         if(tmpObj['elems'] instanceof Array){
@@ -66,7 +81,7 @@ function getWidget() {
           html += "<td class='td_element' title='Restore Stanby/Operational' id='" + cuname + "_input_saved_stby'></td>";
           html += "<td class='td_element' title='Restore setpoint polarity' id='" + cuname + "_input_saved_polarity'></td>";
           html += "<td class='td_element' id='" + cuname + "_output_stby'></td>";
-          html += "<td class='td_element' id='" + cuname + "_output_polarity'></td>";
+          html += "<td class='td_element' id='" + cuname + "_output_polarity'><i class=\"material-icons\">close</i></td>";
           html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
           html += "<td class='td_element' id='" + cuname + "_system_busy'></td>";
@@ -110,15 +125,15 @@ function getWidget() {
         html += '</a>';
         html += '</div>';
         html += '<div class="row">';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola" title="Powersupply Polarity POS" cucmdvalue=1 >';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd pola" cucmdid="pola" title="Powersupply Polarity POS" cucmdvalue=1 >';
         html += '<i class="material-icons" style="color:red">add_circle</i>';
         html += '<p class="name-cmd">Pos</p>';
         html += '</a>';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity OPEN" cucmdvalue=0 >';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd pola" cucmdid="pola"  title="Powersupply Polarity OPEN" cucmdvalue=0 >';
         html += '<i class="material-icons">radio_button_unchecked</i>';
         html += '<p class="name-cmd">Open</p>';
         html += '</a>';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity NEGATIVE" cucmdvalue=-1 >';
+        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd pola" cucmdid="pola"  title="Powersupply Polarity NEGATIVE" cucmdvalue=-1 >';
         html += '<i class="material-icons" style="color:blue">remove_circle</i>';
         html += '<p class="name-cmd">Neg</p>';
         html += '</a>';

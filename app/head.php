@@ -44,24 +44,12 @@ function getUserIP() {
 
 			echo '<link id="base-style" href="' .$main_dir. '/../css/style.css" rel="stylesheet">';
 			echo '<script src="'.$main_dir.'/../js/jquery-3.5.1.min.js"></script>';
-			//		echo '<script src="'.$main_dir.'/../js/jquery-migrate-1.0.0.min.js"></script>';
 			echo '<script src="'.$main_dir.'/../js/jquery-ui/jquery-ui.min.js"></script>';
 			echo '<link href="' .$main_dir. '/../js/jquery-ui/jquery-ui.min.css" type="text/css" rel="stylesheet" />';;
 		
 			echo '<link id="bootstrap-style" href="' .$main_dir. '/../bootstrap-4.5.3-dist/css/bootstrap.min.css" rel="stylesheet">';
-		    echo '<script src="'.$main_dir.'/bootstrap-4.5.3-dist/../js/bootstrap.min.js"></script>';
-		//	echo '<link href="' .$main_dir. '/css/bootstrap-responsive.min.css" rel="stylesheet">';
-			
-		//	echo '<link id="base-style-responsive" href="' .$main_dir. '/css/style-responsive.css" rel="stylesheet">';
-			echo '<link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">';
-			echo '<link href="http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&subset=latin,cyrillic-ext,latin-ext" rel="stylesheet" type="text/css">';
-			echo '<link id="ie9style" href="' .$main_dir. '/css/ie9.css" rel="stylesheet">';
-			echo '<link href="' .$main_dir. '/../css/highcharts.css" rel="stylesheet">';
+		    echo '<script src="'.$main_dir.'/../bootstrap-4.5.3-dist/../js/bootstrap.min.js"></script>';			
 			echo '<link href="' .$main_dir. '/../css/jquery.contextMenu.min.css" rel="stylesheet">';
-			
-			
-			
-	
 			echo '<script src="'.$main_dir.'/../js/jchaos/jchaos.js"></script>';
 			echo '<script src="'.$main_dir.'/../js/highcharts.js"></script>';
 		
@@ -79,9 +67,6 @@ function getUserIP() {
 
 			echo '<link href="'.$main_dir.'/../js/cropper.min.css" media="screen" rel="stylesheet" type="text/css" />';
 			echo '<script src="'.$main_dir.'/../js/cropper.min.js"></script>';			
-			echo '<script src="'.$main_dir.'/../js/jquery.terminal/../js/jquery.terminal.min.js"></script>';
-			echo '<script src="'.$main_dir.'/../js/jquery.terminal/../js/jquery.mousewheel-min.js"></script>';
-			echo '<link href="' .$main_dir. '/../js/jquery.terminal/css/jquery.terminal.min.css" type="text/css" rel="stylesheet" />';;
 			echo '<link rel="stylesheet" href="/../js/jstree/dist/themes/default/style.min.css" />';
 
 			echo '<script src="'.$main_dir.'/../js/jstree/dist/jstree.min.js"></script>';
@@ -89,7 +74,7 @@ function getUserIP() {
 
 		?>
 	
-	<link rel="shortcut icon" href="./img/logo_chaos_col_xMg_icon.ico">
+	<link rel="shortcut icon" href="../img/logo_chaos_col_xMg_icon.ico">
 	
 		<div id="chat_incoming_message"></div>
 
@@ -101,7 +86,8 @@ function getUserIP() {
 		const address = location.host.split(':');
 		var rport=":8081";
 		var ioport=":4000";
-		var dashboard_settings=jqccs.initSettings();
+		var dashboard_settings=jqccs.initSettings("chaos_dashboard_settings","../dashboard-settings.json");
+
 		if(dashboard_settings.hasOwnProperty("defaultRestPort")){
 			if(!isNaN(dashboard_settings.defaultRestPort)){
 				rport=":"+dashboard_settings.defaultRestPort;
@@ -110,6 +96,10 @@ function getUserIP() {
 			}
 			console.log("RESTPORT:"+rport);
 
+		}
+		var ioloc="ws://";
+		if(location.protocol.includes("https")){
+			ioloc="wss://";
 		}
 		if(dashboard_settings.hasOwnProperty("defaultIOPort")){
 			if(!isNaN(dashboard_settings.defaultIOPort)){
@@ -120,14 +110,14 @@ function getUserIP() {
 			console.log("IOPORT="+ioport);
 		}
 		if(address.length==1){
-			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":location.host+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+location.host+rport,"socketio":ioloc+location.host+ioport});
 
 		} else {
-			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":address[0]+ioport});
+			jchaos.setOptions({"uri":location.protocol+"//"+address[0]+rport,"socketio":ioloc+address[0]+ioport});
 
 		}
 
-		jchaos.ioconnect(address[0]+ioport,{query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":1000}});
+		jchaos.ioconnect(ioloc+address[0]+ioport,{query: {"client_uid": localStorage['chaos_browser_uuid_cookie'],"discard_too_old":1000}});
 		jchaos.options.io_onchat=(msg)=>{
 			
 			chat_incoming_message.dispatchEvent(new CustomEvent("chat_incoming_message", {detail:msg}));

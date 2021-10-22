@@ -34,7 +34,8 @@ require_once('header.php');
 			collapsed: true,
 			withQuotes: true,
 			template: "cu",
-			Interval: 2000
+			Interval: 2000,
+			dashboard_settings:dashboard_settings
 
 		});
 	</script>

@@ -7,7 +7,7 @@
     // library jquery chaos control studio
     var jqccs = {};
     var json_editor;
-    var dashboard_settings = initSettings();
+    var dashboard_settings = {};
     var interface;
     var cu_copied = {};
     var us_copied = {};
@@ -2250,16 +2250,18 @@
         }
         return 0;
     }
-    jqccs.busyWindow = function(enable, timeoutms, timeofn) {
+    jqccs.busyWindow = function(enable, timeoutms, timeofn,completefn) {
+        var ele="body";
+        
         if (enable) {
-            $("div").addClass("loading");
+            $(ele).addClass("loading",completefn);
         } else {
-            $("div").removeClass("loading");
+            $(ele).removeClass("loading");
         }
         if (typeof timeoutms === "number") {
             setTimeout(() => {
-                if ($("div").hasClass("loading")) {
-                    $("div").removeClass("loading");
+                if ($(ele).hasClass("loading")) {
+                    $(ele).removeClass("loading");
                     if (typeof timeofn === "function") { timeofn(); }
                 }
             }, timeoutms);
@@ -2458,7 +2460,9 @@
         $("#mdl-jsonedit").modal("show");
         //json_editor.enable();
     }
-
+    jqccs.element_sel=function(field, arr, add_all) {
+        return element_sel(field, arr, add_all) ;
+    };
     function element_sel(field, arr, add_all) {
         $(field).empty();
         //$(field).append("<option value='ALL'>ALL</option>");
@@ -4679,7 +4683,7 @@
         if (tmpObj.type != "cu") {
             // if not generic view try to load widget
             $.getScript("/js/chaos-widget/" + tmpObj.type + ".js").done(function(data, textStatus, jqxhr) {
-                var w = getWidget();
+                var w = getWidget(dashboard_settings);
                 tmpObj['htmlFn'] = w.dsFn;
                 tmpObj['generateTableFn'] = w.tableFn;
                 if (w.hasOwnProperty('cmdFn')) {
@@ -8474,7 +8478,7 @@
     }
 
     function initializeTimePicker(queryfn, id) {
-        if (typeof query_params === "undefined") {
+        if ((typeof query_params === "undefined")|| isNaN(query_params.start)||isNaN(query_params.stop)) {
             query_params = {
                 page: dashboard_settings.defaultPage,
                 start: (new Date()).getTime() - 3600000,
@@ -8551,26 +8555,17 @@
     function createQueryDialog(querycb, opencb, gopt) {
         var dstart = new Date();
         dstart.setHours(0, 0, 0, 0);
-        if (typeof query_params === "undefined") {
+        if ((typeof query_params === "undefined")|| isNaN(query_params.start)||isNaN(query_params.stop)){
             query_params = {
                 page: dashboard_settings.defaultPage,
-                start: dstart.getTime(),
+                start: (new Date()).getTime() - 3600000,
                 stop: (new Date()).getTime(),
                 tag: "",
                 chunk: dashboard_settings.defaultChunk,
                 reduction: 1
             };
         }
-
-        /*var html = '<div class="modal fade draggable" id="dlg-query">';
-
-        html += '<div class="modal-header">';
-        html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-        html += '<h3>Query History</h3>';
-        html += '</div>';
-
-        html += '<div class="modal-body">';
-        */
+        
         var html = "";
         html += '<div class="row">';
 
@@ -8626,15 +8621,23 @@
             resizable: true
         }
         createCustomDialog(opt, html, "Run", function() {
+            if(!isNaN(Number($("#query-page").val()))){
+                query_params['page'] = Number($("#query-page").val());
+            }
+            if(!isNaN(Number($("#query-start").val()))){
+                query_params['start'] = Number($("#query-start").val());
+            }
+            if(!isNaN(Number($("#query-stop").val()))){
+                query_params['stop'] = Number($("#query-stop").val());
+            }
+            if(!isNaN(Number($("#query-chunk").val()))){
+                query_params['chunk'] = Number($("#query-chunk").val());
+            }
+            if(!isNaN(Number($("#query-reduction").val()))){
+                query_params['reduction'] = Number($("#query-reduction").val());
 
-            query_params['page'] = Number($("#query-page").val());
-            query_params['start'] = Number($("#query-start").val());
-
-            query_params['stop'] = Number($("#query-stop").val());
-
+            }
             query_params['tag'] = $("#query-tag").val();
-            query_params['chunk'] = Number($("#query-chunk").val());
-            query_params['reduction'] = Number($("#query-reduction").val());
 
             querycb(query_params)
 
@@ -10299,10 +10302,12 @@
                 id: "confirm-yes",
                 text: butyes,
                 click: function(e) {
+
                     if (typeof yeshandle === "function") {
                         yeshandle();
                     }
                     $(this).dialog("close");
+
                 }
             });
         }
@@ -10377,7 +10382,7 @@
         var opt = {
             modal: true,
             title: hmsg,
-            zIndex: 10000,
+            zIndex: 1000,
             autoOpen: true,
             width: 'auto',
             resizable: true
@@ -11609,6 +11614,9 @@
       for (var i = 1; i < interval_id; i++)
         clearInterval(i);
   */
+        if(opt.hasOwnProperty("dashboard_settings")){
+            dashboard_settings=opt.dashboard_settings;
+        }
         hostWidth = $(window).width();
         hostHeight = $(window).height();
         console.log("Window size:" + hostWidth + "x" + hostHeight);
@@ -11705,6 +11713,7 @@
 
                 templateObj.updateInterfaceFn = updateProcessInterface;
                 templateObj.updateFn = updateProcess;
+                templateObj['refresh_rate'] = dashboard_settings.processRefresh;
 
 
             }

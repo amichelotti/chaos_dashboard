@@ -4,7 +4,6 @@
     "id": "camera-settings",
     "format": "tab",
     "properties": {
-
         "cameraRefresh": {
             "type": "integer",
             "default": 1000,
@@ -29,6 +28,7 @@
             "required": true,
             "description": "Timeout of Rest ops (ms)"
         },
+
         "debug": {
             "type": "boolean",
             "default": false,
