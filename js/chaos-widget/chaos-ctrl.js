@@ -2421,12 +2421,8 @@
                     delete json_editor;
                 }
                 JSONEditor.defaults.options.theme = 'bootstrap4';
-                //JSONEditor.defaults.options.iconlib = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css";
-                JSONEditor.defaults.options.iconlib = 'fontawesome3';
-                // JSONEditor.defaults.options.iconlib ='fundation3';
-                //JSONEditor.defaults.options.theme = 'bootstrap3';
-                //JSONEditor.defaults.options.theme = 'jqueryui';
-                // JSONEditor.defaults.iconlib = 'bootstrap3';
+                JSONEditor.defaults.options.iconlib = 'fontawesome4';
+                
                 json_editor = new JSONEditor(element.get(0), jopt);
                 if (typeof eventFn === "function") {
                     // jopt['onEvent']=eventFn;
@@ -2454,10 +2450,9 @@
         if (json_editor != null) {
             delete json_editor;
         }
-        JSONEditor.defaults.options.theme = 'bootstrap2';
-        JSONEditor.defaults.options.iconlib = "bootstrap2";
+        JSONEditor.defaults.options.theme = 'bootstrap4';
+        JSONEditor.defaults.options.iconlib = 'fontawesome4';
 
-        //    JSONEditor.defaults.iconlib = 'fontawesome4';
         json_editor = new JSONEditor(element.get(0), jopt);
         $("#mdl-jsonedit").modal("show");
         //json_editor.enable();
