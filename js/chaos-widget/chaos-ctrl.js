@@ -512,10 +512,12 @@
             jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
         var html = "";
-        var lat = last_dataset.dpck_ts_diff / 1000.0;
-        html = "<label>CU-MDS Latency(ms):" + lat + "</label>";
-
+        if(last_dataset.hasOwnProperty('dpck_ts_diff')){
+            var lat = last_dataset.dpck_ts_diff;
+            html = "<label>CU-MDS Latency(ms):" + lat + "</label>";
+        }
         html += jsonhtml;
+
         $("#dataset-" + name).html(html);
 
         jsonSetup($("#dataset-" + name), tmpObj);
@@ -531,7 +533,7 @@
         var started = 0;
         var stop_update = false;
         var showformat = 0;
-        var showdataset = 8;
+        var showdataset = 9;// all default
         var vardir = "";
         var last_dataset = {};
         var name = jchaos.encodeName(cuname);
