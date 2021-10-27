@@ -107,7 +107,12 @@ require_once('header.php');
 
 
 					});
-				});class="container-fluid"");
+				});
+			})
+		}
+		function pathToVariable(variable, str, value) {
+			var n = str.indexOf("/");
+
 			if (n != -1) {
 				str = str.substring(n + 1);
 				n = str.indexOf("/");
