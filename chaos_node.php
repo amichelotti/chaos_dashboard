@@ -581,8 +581,10 @@
 						label: menu_str + "New Custom",
 						action: function () {
 							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
-							obj['control_unit_implementation'] = "---";// custom
-							addEditCU(cu, tree);
+							var objcu = Object.assign({}, cu);
+
+							objcu['control_unit_implementation'] = "---";// custom
+							addEditCU(objcu, tree);
 						}
 					}
 
