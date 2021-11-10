@@ -2,7 +2,7 @@
 <?php
 		require_once('head.php');
 
-		$curr_page = "MAGNET CHECK";
+		$curr_page = "Hunter Dog";
 
 ?>
 
@@ -32,7 +32,7 @@
                         </select>
                     </div>
 
-                    <div class="statbox purple col-sm-6">
+                    <div class="statbox purple col-sm-7">
                         <div class="row">
                             <div class="col-sm">
                                 <h3>Live</h3>
@@ -49,7 +49,9 @@
                                 <input class="input-xlarge focused" id="search-chaos" title="Free form Regex Search"
                                     type="text" value="">
                             </div>
-
+                            <label class="checkbox-inline">
+						        <input type="checkbox" id="audio_enable" data-toggle="toggle"> audio enable
+					        </label>
                         </div>
                     </div>
                 </div>
@@ -141,6 +143,8 @@
     </div>
     <footer>
         <?php require_once('footer.php');?>
+        
+        <audio src="../audio/threeknocks.mp3" width="0" height="0" id="bau"></audio>
     </footer>
 
 
@@ -163,7 +167,7 @@
         var l_outofstat = {};
         var l_fault = {};
         var l_bad = {};
-
+        var old_mask_list=[];
         var descs = {};
         var selzone = "";
         var selclass = "";
@@ -180,6 +184,18 @@
             l_fault = {};
             l_bad = {};
             refreshAll();
+        }
+        $("#audio_enable").click(()=>{
+                bau();
+
+        })
+        function bau() {
+            var audio = document.getElementById("bau");
+            var v=$("#audio_enable").is(":checked");
+            if(v){
+                audio.play();
+            }
+            
         }
         function refreshAll() {
             var search = "";
@@ -328,34 +344,51 @@
                         }
                     }
                     if (updateset || (outofset.length != n_outofset.length)||(outofset.length==0)) {
+                        if(n_outofset.length>outofset.length){
+                            bau();
+                        }
                         outofset = n_outofset;
                         refreshList("outofset", "Out Of Set",outofset);
-
+                        
                     }
 
                     if (updatestat || (outofstat.length != n_outofstat.length)||(outofstat.length==0)) {
+                        if(n_outofstat.length>outofstat.length){
+                            bau();
+                        }
                         outofstat = n_outofstat;
                         refreshList("outofstat","Out Of Status", outofstat);
+                        
                     }
 
                     if (updatepol || (outofpol.length != n_outofpol.length)||(outofpol.length==0)) {
+                        if(n_outofpol.length>outofpol.length){
+                            bau();
+                        }
                         outofpol = n_outofpol;
                         refreshList("outofpol", "Out Of Polarity",outofpol);
 
                     }
                     if (updatefault || (fault.length != n_fault.length)||(fault.length==0)) {
+                        if(n_fault.length>fault.length){
+                            bau();
+                        }
                         fault = n_fault;
                         refreshList("fault", "Fault", fault,list_cu.length);
                     }
                     if (updatebad || (bad.length != n_bad.length)||(bad.length==0)) {
+                        if(n_bad.length>bad.length){
+                            bau();
+                        }
                         bad = n_bad;
                         refreshList("bad","Bad Status", bad);
                     }
                     
 
-                    if(!dontupdatemask){
+                    if(!dontupdatemask && (JSON.stringify(n_masked)!=JSON.stringify(old_mask_list))){
                         refreshList("masked", "Masked", n_masked);
                     }
+                    old_mask_list=n_masked;
                 });
 
             });
@@ -540,7 +573,7 @@
 
 
         });
-        $("#app-name").html("MAGNET CHECK");
+        $("#app-name").html("HUNTER DOG");
 
         $("#app-setting").on("click", function () {
             var templ = {

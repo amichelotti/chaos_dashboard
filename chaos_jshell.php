@@ -15,8 +15,8 @@ $curr_page = "SHELL";
 require_once('header.php');
 ?>
 
-	<div class="container-fluid-full">
-		<div class="row-fluid">
+	<div class="container-fluid">
+		<div class="row-full">
 	
 			
 			<!-- start: Content -->

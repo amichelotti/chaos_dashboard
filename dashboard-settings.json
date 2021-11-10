@@ -1,5 +1,5 @@
 {
-    "title": "Dashboard Settings",
+    "title": "Settings",
     "type": "object",
     "id": "dashboard-settings",
     "format": "tab",
@@ -9,6 +9,12 @@
             "type": "integer",
             "default": 1000,
             "description": "General Refresh (ms)"
+        },
+        "push": {
+            "type": "boolean",
+            "default": false,
+            "required": true,
+            "description": "If server is active use push (less latency and higher refresh rate)"
         },
         "maxNodesPerPage": {
             "type": "integer",
@@ -66,7 +72,7 @@
             "description": "Default SocketIO port or io path"
         },
         "camera": {
-            "$ref": "camera-settings.json",
+            "$ref": "/camera-settings.json",
             "title": "Camera Settings"
 
         }

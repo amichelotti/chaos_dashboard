@@ -12,8 +12,8 @@
 			require_once('header.php');
 ?>
 
-	<div class="container-fluid-full fill">
-		<div class="row fill">
+	<div class="container-fluid px-5">
+		<div class="row">
 
 
 
@@ -41,7 +41,7 @@
 						</select>
 					</div>
 
-					<div class="statbox purple col-sm-6">
+					<div class="statbox purple col-sm-7">
 
 						<div class="row">
 
@@ -581,8 +581,10 @@
 						label: menu_str + "New Custom",
 						action: function () {
 							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
-							obj['control_unit_implementation'] = "---";// custom
-							addEditCU(cu, tree);
+							var objcu = Object.assign({}, cu);
+
+							objcu['control_unit_implementation'] = "---";// custom
+							addEditCU(objcu, tree);
 						}
 					}
 
@@ -998,7 +1000,7 @@
 													jchaos.node(node.data.ndk_parent, "desc", "all", (pd) => {
 														if (pd.ndk_type == "nt_agent") {
 															jchaos.node(node.data.ndk_parent, "del", "agent", selected_node, function (daa) {
-																instantMessage("Removed association " + selected_node, " OK", 2000, true);
+																jqccs.instantMessage("Removed association " + selected_node, " OK", 2000, true);
 
 															});
 														}
@@ -1094,22 +1096,7 @@
 						};
 
 					}
-					items['clralarm'] = {
-						"separator_before": false,
-						"separator_after": false,
-						label: "Clear Alarm",
-						action: function () {
-							var typ = jchaos.nodeTypeToHuman(type);
-
-							jchaos.node(selected_node, "nodeclralrm", typ, function () {
-								jqccs.instantMessage("Clear Alarms ", "Cleared " + selected_node + "", 2000, true);
-							}, function (err) {
-								jqccs.instantMessage("Error Clearing Alarms ", "Clearing " + selected_node + " " + JSON.stringify(err), 5000, false);
-							});
-
-
-						}
-					}
+					
 					items['shutdown'] = {
 						"separator_before": false,
 						"separator_after": true,
@@ -1137,20 +1124,173 @@
 						}
 					}
 					if (node.data.ndk_type !== undefined && ((node.data.ndk_type == "nt_root") || (node.data.ndk_type == "nt_control_unit"))) {
-						items['show-dataset'] = {
-							"separator_before": true,
-							"separator_after": false,
-							label: "Show Dataset",
-							action: function () {
-								var dashboard_settings = jqccs.initSettings();
+						var currsel = node.data.ndk_uid;
 
-								jqccs.showDataset(node.data.ndk_uid, node.data.ndk_uid, dashboard_settings['generalRefresh']);
+						
+						var sub_show= {
+								'show-dataset':{
+									label: "Show/Set/Plot Dataset",
+									action: function () {
+										jqccs.showDataset(currsel, currsel, dashboard_settings['generalRefresh']);
+									}
+								},
+								'show-desc': {
+									label: "Show Description",
+									action: function () {
+										jchaos.node(currsel, "desc", "all", function (data) {
 
-							}
+											jqccs.showJson("Description " + currsel, data);
+										});
+									}
+								},
+								'show-tags': {
+									label: "Show Tags info",
+									action: function () {
+										jchaos.variable("tags", "get", null, function (tags) {
+											var names = [];
+											for (var key in tags) {
+												var elems = tags[key].tag_elements;
+												elems.forEach(function (elem) {
+													if (elem == currsel) {
+														names.push(tags[key]);
+													}
+												});
+											}
+											if (names.length) {
+												jqccs.showJson("Tags of " + currsel, names);
+											} else {
+												alert("No tag associated to " + currsel);
+											}
+
+										});
+
+									}
+								},
+								'show-picture': {
+									label: "Show as Picture..",
+									action: function () {
+										jchaos.getChannel(currsel, -1, function (imdata) {
+											var cu = imdata[0];
+											var refresh = 1000;
+											if (cu.hasOwnProperty("health") && cu.health.hasOwnProperty("cuh_dso_prate")) {
+												refresh = 1000 / (cu.health.cuh_dso_prate);
+											}
+											if (cu && cu.hasOwnProperty("output") &&
+												cu.output.hasOwnProperty("FRAMEBUFFER") &&
+												cu.output.FRAMEBUFFER.hasOwnProperty("$binary") &&
+												cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
+												// $("#mdl-dataset").modal("hide");
+
+												jqccs.showPicture(currsel + " output", currsel, refresh);
+
+											} else {
+												alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
+											}
+											if (cu && cu.hasOwnProperty("custom") &&
+												cu.custom.hasOwnProperty("FRAMEBUFFER") &&
+												cu.custom.FRAMEBUFFER.hasOwnProperty("$binary") &&
+												cu.custom.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
+												// $("#mdl-dataset").modal("hide");
+
+												jqccs.showPicture(currsel + " custom", currsel, 0, 2);
+
+											}
+										}, function (err) {
+											console.log(err);
+										});
+
+									}
+								}
+							};
+
+						
+						items['show'] = {
+							label: "Show..",
+							submenu:sub_show
 						}
-						items['show-alarms'] = {
-							"separator_before": false,
-							"separator_after": false,
+						
+						var sub_prop= {
+								'driver-prop': {
+									label: "Driver properties",
+									action: function () {
+										jchaos.command(currsel, { "act_name": "cu_prop_drv_get" }, function (data) {
+
+											var origin_json = JSON.parse(JSON.stringify(data)); // not reference
+											jqccs.editJSON("Driver Properties " + currsel, data, (json, fupdate) => {
+
+												var changed = jchaos.jsonDiff(json, origin_json);
+												console.log("CHANGED:" + JSON.stringify(changed));
+												var msg = {
+													"act_msg": changed,
+													"act_name": "cu_prop_drv_set"
+												};
+												console.log("sending changed:" + JSON.stringify(changed));
+												jchaos.command(currsel, msg, function (data) {
+													jqccs.instantMessage("Setting driver prop:" + currsel, "OK", 5000, true);
+													jchaos.command(currsel, { "act_name": "cu_prop_drv_get" }, function (dd) {
+														//read back
+														fupdate(dd[0]);
+													});
+
+												}, (bad) => {
+													jqccs.instantMessage("Error Setting driver prop:" + currsel, "Error: " + JSON.stringify(bad), 5000, false);
+
+												});
+
+											});
+
+										}, function (data) {
+											jqccs.instantMessage("Getting driver prop:" + currsel, "Error:" + JSON.stringify(data), 5000, false);
+											//   $('.context-menu-list').trigger('contextmenu:hide')
+
+										});
+									}
+								},
+								'cu-prop': {
+									label: "CU/EU properties",
+									action: function () {
+										jchaos.command(currsel, { "act_name": "ndk_get_prop" }, function (data) {
+											var origin_json = JSON.parse(JSON.stringify(data)); // not reference
+											jqccs.editJSON("CU/EU Prop " + currsel, data, (json) => {
+
+												var changed = {};
+												for (var key in json) {
+
+													if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
+														changed[key] = json[key];
+
+													}
+												}
+												var msg = {
+													"act_msg": changed,
+													"act_name": "ndk_set_prop"
+												};
+												console.log("sending changed:" + JSON.stringify(changed));
+												jchaos.command(currsel, msg, function (data) {
+													jqccs.instantMessage("Setting driver prop:" + currsel, "OK", 5000, true);
+
+												}, (bad) => {
+													jqccs.instantMessage("Error Setting driver prop:" + currsel, "Error: " + JSON.stringify(bad), 5000, false);
+
+												});
+
+											});
+										}, function (data) {
+											jqccs.instantMessage("Getting Node prop:" + currsel, "Error:" + JSON.stringify(data), 5000, false);
+											//   $('.context-menu-list').trigger('contextmenu:hide')
+
+										});
+									}
+								}
+							};
+							items['properties'] = {
+							label: "Properties",
+							submenu:sub_prop
+						}
+						
+
+						var sub_alarm={
+							'show-alarms':{
 							label: "Show/Set Alarms",
 							action: function () {
 								jchaos.getChannel(node.data.ndk_uid, 255, function (run_info) {
@@ -1186,59 +1326,101 @@
 
 
 							}
+						},
+						'clralarm': {
+						label: "Clear Alarm",
+						action: function () {
+							var typ = jchaos.nodeTypeToHuman(type);
+
+							jchaos.node(selected_node, "nodeclralrm", typ, function () {
+								jqccs.instantMessage("Clear Alarms ", "Cleared " + selected_node + "", 2000, true);
+							}, function (err) {
+								jqccs.instantMessage("Error Clearing Alarms ", "Clearing " + selected_node + " " + JSON.stringify(err), 5000, false);
+							});
+
+
 						}
-						items['mask-alarms'] = {
-							"separator_before": false,
-							"separator_after": false,
+					},
+						'mask-cu-alarms' : {
 							label: "Mask Alarms",
 							action: function () {
 								var objects = tree.get_selected(true)
 
 								jchaos.getChannel(node.data.ndk_uid, 255, function (run_info) {
-									var obj = Object.assign({}, run_info[0].cu_alarms, run_info[0].device_alarms);
-									tmp = {
-
-										handler: function (e) {
-											if (e.keyCode == 13) {
-
-												var val = parseInt(e.target.value);
-												var attrname = e.target.name;
-												var desc = jchaos.decodeCUPath(attrname);
-												console.log("value:" + e.target.value + " name:" + desc.var);
-												var alrm = {
-													name: desc.var,
-													mask: val
-												}
-												if (objects instanceof Array) {
-													objects.forEach(ele => {
-														jchaos.command(ele.data.ndk_uid, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
-															jqccs.instantMessage(ele.data.ndk_uid, "Set Mask of " + desc.var + "=" + val + " on " + ele.data.ndk_uid, 4000, true);
-
-														}, function (bad) {
-															jqccs.instantMessage(ele.data.ndk_uid, "Error Setting Mask of " + desc.var + " " + JSON.stringify(bad), 4000, false);
-
-														});
-													})
-												} else {
-													jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
-														jqccs.instantMessage(node.data.ndk_uid, "Set Mask of " + desc.var + "=" + val + " on " + node.data.ndk_uid, 4000, true);
-
-													}, function (bad) {
-														jqccs.instantMessage(node.data.ndk_uid, "Error Setting Mask of " + desc.var + " " + JSON.stringify(bad), 4000, false);
-
-													});
-												}
-
-
-											}
+									var list_alarm=[];
+									for(var k in run_info[0].cu_alarms){
+										if((!jchaos.isReservedKey(k))&&(!k.includes("_MASK"))){
+											list_alarm.push(k);
 										}
 									}
-									jqccs.showJson("Mask Alarms (0x0 mask, 0xFF no mask)" + node.data.ndk_uid, jchaos.filterAlarmObject(obj), tmp);
+									for(var k in run_info[0].device_alarms){
+
+										if((!jchaos.isReservedKey(k))&&(!k.includes("_MASK"))){
+											list_alarm.push(k);
+										}
+									}
+									jqccs.getEntryWindow("Mask Alarm", "name", list_alarm, "MASK", function (n) {
+										var alrm = {
+													name: n,
+													mask: 0
+												}
+												jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
+															jqccs.instantMessage(node.data.ndk_uid, "Set Mask " + " on "+n, 4000, true);
+
+														}, function (bad) {
+															jqccs.instantMessage(node.data.ndk_uid, "Error Setting Mask on "+n+" err:" + JSON.stringify(bad), 4000, false);
+
+														});
+									});
+									
 
 								});
 
 
 							}
+						},
+						'unmask-cu-alarms' : {
+							label: "Unmask Alarms",
+							action: function () {
+								var objects = tree.get_selected(true)
+
+								jchaos.getChannel(node.data.ndk_uid, 255, function (run_info) {
+									var list_alarm=[];
+									for(var k in run_info[0].cu_alarms){
+										if((!jchaos.isReservedKey(k))&&(k.includes("_MASK"))){
+											list_alarm.push(k.replace("_MASK",""));
+										}
+									}
+									for(var k in run_info[0].device_alarms){
+
+										if((!jchaos.isReservedKey(k))&&(k.includes("_MASK"))){
+											list_alarm.push(k.replace("_MASK",""));
+										}
+									}
+									jqccs.getEntryWindow("UNMASK Alarm", "name", list_alarm, "UNMASK", function (n) {
+										var alrm = {
+													name: n,
+													mask: 0xFF
+												}
+												jchaos.command(node.data.ndk_uid, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
+															jqccs.instantMessage(node.data.ndk_uid, "UnMask "+n, 4000, true);
+
+														}, function (bad) {
+															jqccs.instantMessage(node.data.ndk_uid, "Error UnMasking "+n+" err:" + JSON.stringify(bad), 4000, false);
+
+														});
+									});
+									
+
+								});
+
+
+							}
+						}
+					}
+						items['alarms']={
+							label:"Alarms...",
+							submenu:sub_alarm
 						}
 						var subm_state = {};
 						if (node_state.hasOwnProperty(node.data.ndk_uid) && node_state[node.data.ndk_uid].hasOwnProperty("health")) {

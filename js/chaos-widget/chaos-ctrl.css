@@ -22,18 +22,34 @@ ul.json-dict, ol.json-array {
 .listview{
   max-height: 600px;
   margin-bottom: 10px;
-  overflow:scroll;
+  overflow-x:hidden;
   -webkit-overflow-scrolling: touch;
 }
 .listitem {
-  overflow: scroll !important;
+  overflow-x:hidden  !important;
   text-overflow: clip !important;
+  font-size: 10px !important;
 
 }
+.card-header {
+  font-size: 14px !important;
+
+}
+.navbar {
+  padding: .5rem !important;
+}
+
+a.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
+}
+
 .json-literal {
   color: #1A01CC;
   font-weight: bold;
 }
+
 .json-keyinput {
   display: none;
 

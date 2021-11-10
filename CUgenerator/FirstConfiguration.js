@@ -16,7 +16,7 @@ function isAnEU()
 
 function InitPage() {
     getJsonConfig();
-    jchaos.setOptions({"uri":"chaost-hawebui.lnf.infn.it"+":8081","socketio":"chaost-hawebui.lnf.infn.it"+":4000"});
+    /*jchaos.setOptions({"uri":"chaost-hawebui.lnf.infn.it"+":8081","socketio":"chaost-hawebui.lnf.infn.it"+":4000"});
     var USreturnList=jchaos.search("","us",false);
     
     const myArr = USreturnList.toString().split(",");
@@ -27,7 +27,7 @@ function InitPage() {
         opt.value = myArr[i];
         opt.innerHTML = myArr[i];
         USList.appendChild(opt);
-    }
+    }*/
 
     
 
@@ -35,6 +35,7 @@ function InitPage() {
 }
 function AddConfigurationToCU()
 {
+    
     var currentCU = localStorage.getItem('controlUnit');
     if (currentCU == null)
     {
@@ -44,9 +45,10 @@ function AddConfigurationToCU()
     let CUobject = JSON.parse(currentCU);
     let CU=CUcreate(CUobject);
     let configuration={};
+    
     for (var PR in jsonCUScheme.properties)
     {
-     
+       
         if (PR == "ndk_uid")
         {
             configuration.ndk_uid=document.getElementById("InstName").value;
@@ -70,7 +72,7 @@ function AddConfigurationToCU()
         }
         else if (PR == "ndk_type")
         {
-            if (isAnEU)
+            if (isAnEU())
                 configuration.ndk_type="nt_root";
             else
                 configuration.ndk_type="nt_control_unit";
@@ -91,7 +93,7 @@ function AddConfigurationToCU()
         {
             configuration.attribute_value_descriptions=[];
         }
-        else if (PR="cudk_driver_description")
+        else if (PR=="cudk_driver_description")
         {
             let driverJson={};
             driverJson.cudk_driver_description_name=CU.DriverName;
@@ -107,14 +109,19 @@ function AddConfigurationToCU()
         }
         else
         {
+            
             var tipo=jsonCUScheme.properties[PR].type;
+            //alert(PR + "is type" + tipo);
             let inst=document.getElementById(PR);
             if (inst!= null)
             {
                 if (tipo=="string")
                  configuration[PR] =inst.value;
                 else if (tipo=="boolean")
+                {
                  configuration[PR] = inst.checked;
+                 
+                }
                 else if (tipo=="integer")
                  configuration[PR]=parseInt(inst.value);
             }
@@ -123,6 +130,7 @@ function AddConfigurationToCU()
            
         }
         UpdateJsonCU("configuration",configuration);
+        alert("configuration added to CU");
         
        
 
