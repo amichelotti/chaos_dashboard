@@ -239,12 +239,13 @@ function updateCamera(ds){
       $("#info-" + id).html("frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
 
     }
+
   } else if (ds.dpck_ds_type == 1) {
     //  console.log("INPUT :"+JSON.stringify(ds));
-    let id = mappedcamera[ds.ndk_uid];
+    let id = mappedcameora[ds.ndk_uid];
 
     redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO);
-  }
+  } 
 }
 $.fn.buildCameraArray = function (op) {
   opt=op;
@@ -1697,9 +1698,9 @@ function getWidget(options) {
       html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
       html += '<thead class="box-header">';
       html += '<tr>';
-      html += '<th><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" id="selectAll">';
+      /*html += '<th><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" id="selectAll">';
       html += '<label class="custom-control-label" for="tableDefaultCheck1">Select All</label></div></th>';
-
+*/
       html += '<th>Name CU</th>';
       html += '<th colspan="3">Status</th>';
       html += '<th colspan="2">Mode</th>';
@@ -1707,7 +1708,10 @@ function getWidget(options) {
       html += '<th colspan="2">Gain</th>';
       html += '<th colspan="2">Brightness</th>';
       html += '<th colspan="2">Error</th>';
-      html += '<th colspan="2">Rate Hz-KB/s</th>';
+      html += '<th colspan="1">Hz</th>';
+      html += '<th colspan="1">KB/s</th>';
+      html += '<th colspan="1">Lat(ms)</th>';
+
       html += '</tr>';
 
 
@@ -1747,7 +1751,9 @@ function getWidget(options) {
 
         html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
         html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-        html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></td></tr>";
+        html += "<td id='" + cuname + "_health_prate'></td>";
+        html += "<td id='" + cuname + "_health_pband'></td>";
+        html += "<td id='" + cuname + "_output_dpck_ts_diff'></td></tr>";
 
 
       });
