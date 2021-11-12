@@ -1734,20 +1734,20 @@ function getWidget(options) {
         html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
 
         html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
-        html += "<td id='" + cuname + "'><select class='select_camera_mode col-md-6' id='" + cuname + "_select_camera_mode' name='" + cu[i] + "'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
+        html += "<td id='" + cuname + "'><select class='select_camera_mode form-control form-control-sm' id='" + cuname + "_select_camera_mode' name='" + cu[i] + "'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
 
         html += "<td id='" + cuname + "_output_SHUTTER'></td>";
 
 
-        html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_SHUTTER' name='" + cu[i] + "/input/SHUTTER'></input><div><span id='" + cuname + "_SHUTTER_INFO'></span></div></td>";
+        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_SHUTTER' name='" + cu[i] + "/input/SHUTTER'></input><div><span id='" + cuname + "_SHUTTER_INFO'></span></div></td>";
 
 
         html += "<td id='" + cuname + "_output_GAIN'></td>";
 
-        html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_GAIN' name='" + cu[i] + "/input/GAIN'></input><div><span id='" + cuname + "_GAIN_INFO'></span></div></td>";
+        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_GAIN' name='" + cu[i] + "/input/GAIN'></input><div><span id='" + cuname + "_GAIN_INFO'></span></div></td>";
 
         html += "<td id='" + cuname + "_output_BRIGHTNESS'></td>";
-        html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_BRIGHTNESS' name='" + cu[i] + "/input/BRIGHTNESS'></input></td>";
+        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_BRIGHTNESS' name='" + cu[i] + "/input/BRIGHTNESS'></input></td>";
 
         html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
         html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
