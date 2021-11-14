@@ -12,7 +12,7 @@
         },
         "push": {
             "type": "boolean",
-            "default": false,
+            "default": true,
             "required": true,
             "description": "If server is active use push (less latency and higher refresh rate)"
         },

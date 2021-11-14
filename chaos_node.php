@@ -581,8 +581,10 @@
 						label: menu_str + "New Custom",
 						action: function () {
 							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
-							obj['control_unit_implementation'] = "---";// custom
-							addEditCU(cu, tree);
+							var objcu = Object.assign({}, cu);
+
+							objcu['control_unit_implementation'] = "---";// custom
+							addEditCU(objcu, tree);
 						}
 					}
 
@@ -998,7 +1000,7 @@
 													jchaos.node(node.data.ndk_parent, "desc", "all", (pd) => {
 														if (pd.ndk_type == "nt_agent") {
 															jchaos.node(node.data.ndk_parent, "del", "agent", selected_node, function (daa) {
-																instantMessage("Removed association " + selected_node, " OK", 2000, true);
+																jqccs.instantMessage("Removed association " + selected_node, " OK", 2000, true);
 
 															});
 														}
@@ -1224,21 +1226,21 @@
 												};
 												console.log("sending changed:" + JSON.stringify(changed));
 												jchaos.command(currsel, msg, function (data) {
-													instantMessage("Setting driver prop:" + currsel, "OK", 5000, true);
+													jqccs.instantMessage("Setting driver prop:" + currsel, "OK", 5000, true);
 													jchaos.command(currsel, { "act_name": "cu_prop_drv_get" }, function (dd) {
 														//read back
 														fupdate(dd[0]);
 													});
 
 												}, (bad) => {
-													instantMessage("Error Setting driver prop:" + currsel, "Error: " + JSON.stringify(bad), 5000, false);
+													jqccs.instantMessage("Error Setting driver prop:" + currsel, "Error: " + JSON.stringify(bad), 5000, false);
 
 												});
 
 											});
 
 										}, function (data) {
-											instantMessage("Getting driver prop:" + currsel, "Error:" + JSON.stringify(data), 5000, false);
+											jqccs.instantMessage("Getting driver prop:" + currsel, "Error:" + JSON.stringify(data), 5000, false);
 											//   $('.context-menu-list').trigger('contextmenu:hide')
 
 										});
@@ -1265,16 +1267,16 @@
 												};
 												console.log("sending changed:" + JSON.stringify(changed));
 												jchaos.command(currsel, msg, function (data) {
-													instantMessage("Setting driver prop:" + currsel, "OK", 5000, true);
+													jqccs.instantMessage("Setting driver prop:" + currsel, "OK", 5000, true);
 
 												}, (bad) => {
-													instantMessage("Error Setting driver prop:" + currsel, "Error: " + JSON.stringify(bad), 5000, false);
+													jqccs.instantMessage("Error Setting driver prop:" + currsel, "Error: " + JSON.stringify(bad), 5000, false);
 
 												});
 
 											});
 										}, function (data) {
-											instantMessage("Getting Node prop:" + currsel, "Error:" + JSON.stringify(data), 5000, false);
+											jqccs.instantMessage("Getting Node prop:" + currsel, "Error:" + JSON.stringify(data), 5000, false);
 											//   $('.context-menu-list').trigger('contextmenu:hide')
 
 										});

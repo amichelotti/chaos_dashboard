@@ -239,12 +239,13 @@ function updateCamera(ds){
       $("#info-" + id).html("frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
 
     }
+
   } else if (ds.dpck_ds_type == 1) {
     //  console.log("INPUT :"+JSON.stringify(ds));
-    let id = mappedcamera[ds.ndk_uid];
+    let id = mappedcameora[ds.ndk_uid];
 
     redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO);
-  }
+  } 
 }
 $.fn.buildCameraArray = function (op) {
   opt=op;
@@ -1697,9 +1698,9 @@ function getWidget(options) {
       html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
       html += '<thead class="box-header">';
       html += '<tr>';
-      html += '<th><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" id="selectAll">';
+      /*html += '<th><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" id="selectAll">';
       html += '<label class="custom-control-label" for="tableDefaultCheck1">Select All</label></div></th>';
-
+*/
       html += '<th>Name CU</th>';
       html += '<th colspan="3">Status</th>';
       html += '<th colspan="2">Mode</th>';
@@ -1707,7 +1708,10 @@ function getWidget(options) {
       html += '<th colspan="2">Gain</th>';
       html += '<th colspan="2">Brightness</th>';
       html += '<th colspan="2">Error</th>';
-      html += '<th colspan="2">Rate Hz-KB/s</th>';
+      html += '<th colspan="1">Hz</th>';
+      html += '<th colspan="1">KB/s</th>';
+      html += '<th colspan="1">Lat(ms)</th>';
+
       html += '</tr>';
 
 
@@ -1730,24 +1734,26 @@ function getWidget(options) {
         html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
 
         html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
-        html += "<td id='" + cuname + "'><select class='select_camera_mode col-md-6' id='" + cuname + "_select_camera_mode' name='" + cu[i] + "'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
+        html += "<td id='" + cuname + "'><select class='select_camera_mode form-control form-control-sm' id='" + cuname + "_select_camera_mode' name='" + cu[i] + "'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
 
         html += "<td id='" + cuname + "_output_SHUTTER'></td>";
 
 
-        html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_SHUTTER' name='" + cu[i] + "/input/SHUTTER'></input><div><span id='" + cuname + "_SHUTTER_INFO'></span></div></td>";
+        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_SHUTTER' name='" + cu[i] + "/input/SHUTTER'></input><div><span id='" + cuname + "_SHUTTER_INFO'></span></div></td>";
 
 
         html += "<td id='" + cuname + "_output_GAIN'></td>";
 
-        html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_GAIN' name='" + cu[i] + "/input/GAIN'></input><div><span id='" + cuname + "_GAIN_INFO'></span></div></td>";
+        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_GAIN' name='" + cu[i] + "/input/GAIN'></input><div><span id='" + cuname + "_GAIN_INFO'></span></div></td>";
 
         html += "<td id='" + cuname + "_output_BRIGHTNESS'></td>";
-        html += "<td id='" + cuname + "'><input class='col-md-6 cucmdattr' id='" + cuname + "_BRIGHTNESS' name='" + cu[i] + "/input/BRIGHTNESS'></input></td>";
+        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_BRIGHTNESS' name='" + cu[i] + "/input/BRIGHTNESS'></input></td>";
 
         html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
         html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-        html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></td></tr>";
+        html += "<td id='" + cuname + "_health_prate'></td>";
+        html += "<td id='" + cuname + "_health_pband'></td>";
+        html += "<td id='" + cuname + "_output_dpck_ts_diff'></td></tr>";
 
 
       });

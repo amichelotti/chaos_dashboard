@@ -112,18 +112,21 @@
 </div>
 </div>
 <script>
+	if(dashboard_settings.hasOwnProperty('push')&&dashboard_settings.push){
+		$("#push_enable").prop('checked',true);
+	}
 	$("#push_enable").prop('disabled', true);
-
+	
 	function onConnectServer(s) {
 		$("#server-connection-status").removeClass("indicator-nok");
 		$("#server-connection-status").addClass("indicator-ok");
 		$("#push_enable").prop('disabled', false);
-
 	}
 	function onDisconnectServer() {
 		$("#server-connection-status").removeClass("indicator-ok");
 		$("#server-connection-status").addClass("indicator-nok");
 		$("#push_enable").prop('disabled', true);
+		$("#push_enable").prop('checked',false);
 
 	}
 	$("#client-connection-id").html("<font size=\"1\">" + localStorage['chaos_browser_uuid_cookie'].substr(localStorage['chaos_browser_uuid_cookie'].length - 5) + "</font>");
@@ -614,7 +617,7 @@
 				action: function () {
 					var snap_selected = node.data.name;
 
-					confirm("Delete Snapshot", "Your are deleting snapshot: " + snap_selected, "Ok", function () {
+					jqccs.confirm("Delete Snapshot", "Your are deleting snapshot: " + snap_selected, "Ok", function () {
 
 						jchaos.snapshot(snap_selected, "delete", "", function () {
 							jqccs.instantMessage(snap_selected + " deleted ", 1000, null, null, true);
