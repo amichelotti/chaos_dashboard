@@ -8,6 +8,11 @@ var currzoomm = 1.0;
 var opt={};
 var pullInterval=null;
 var pullIntervalsec=null;
+const TRIGGER_CONTINUOUS=0;
+const TRIGGER_PULSE=2;
+const TRIGGER_NOACQUIRE=5;
+const TRIGGER_LOHI=3;
+const TRIGGER_HILO=4;
 
 function checkRedrawReference(camid, domid, x, y, sx, sy, r) {
   jchaos.getChannel(camid, 1, (ele) => {
@@ -741,6 +746,57 @@ function activateMenuShort() {
       var el = ele[0];
       redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO);
       cuitem['sep1'] = "---------";
+      cuitem['state'] = {
+        "name": "Set Mode..",icon:"fa-plug",
+        "items": {
+          'no-acquire': {
+            name: "No Acquire", cu: name,icon:"fa-pause",
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_NOACQUIRE.toString(), function () {
+                jqccs.instantMessage("SET NO ACQUIRE", name, 3000, true);
+      
+              })
+            }
+          },
+          'continuos': {
+            name: "Continuous", cu: name,icon:"fa-play",
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_CONTINUOUS.toString(), function () {
+                jqccs.instantMessage("SET CONTINUOUS ", name, 3000, true);
+      
+              })
+            }
+          },
+          'lowhi': {
+            name: "Trigger LoHi", cu: name,icon:"fa-sort-asc",
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_LOHI.toString(), function () {
+                jqccs.instantMessage("SET LOW->HI ", name, 3000, true);
+      
+              })
+            }
+          },
+          'hilow': {
+            name: "Trigger HiLow", cu: name,icon:"fa-sort-desc",
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_HILO.toString(), function () {
+                jqccs.instantMessage("SET HI->LO ", name, 3000, true);
+      
+              })
+            }
+          },
+          'manual': {
+            name: "Trigger User", cu: name,icon:"fa-user",
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_PULSE.toString(), function () {
+                jqccs.instantMessage("SET Trigger User ", name, 3000, true);
+      
+              })
+            }
+          }
+          
+        }
+      };
       cuitem['transforms'] = {
         "name": "Trasforms..",icon:"fa-cog",
         "items": {
@@ -1537,15 +1593,15 @@ function getWidget(options) {
       output: {
         TRIGGER_MODE: function (val) {
           switch (val) {
-            case 0:
+            case TRIGGER_CONTINUOUS:
               return "Continuous";
-            case 2:
+            case TRIGGER_PULSE:
               return "Pulse";
-            case 5:
+            case TRIGGER_NOACQUIRE:
               return "No Acquire";
-            case 3:
+            case TRIGGER_LOHI:
               return "Trigger LOHI";
-            case 4:
+            case TRIGGER_HILO:
               return "Trigger HILO";
             default:
               return "--";
