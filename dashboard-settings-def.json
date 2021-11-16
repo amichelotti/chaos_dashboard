@@ -13,8 +13,8 @@
     "defaultGroup": "",
     "camera": {
         "cameraRefresh": 1000,
-        "cameraPerRow": 2,
-        "maxCameraCol": 8,
+        "cameraPerRow": 4,
+        "maxCameraRow": 2,
         "restTimeout": 6000,
         "debug": false
     }

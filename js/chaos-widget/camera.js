@@ -150,18 +150,18 @@ var mappedcamera = {};
 
 function buildCameraArray(id, opt) {
   var tablename = id;
-  var col = opt.camera['maxCameraCol'];
-  var row = opt.camera['cameraPerRow'];
+  var col = opt.camera['cameraPerRow'];
+  var row = opt.camera['maxCameraRow'];
   var tmpObj = {
-    maxCameraCol: col || 2,
-    cameraPerRow: row || 2
+    cameraPerRow: col || 2,
+    maxCameraRow: row || 2
   };
   // var html = '<table class="table" id="' + tablename + '">';
   var html = "";
   var hostWidth = $(window).width();
   var hostHeight = $(window).height();
-  var maxwidth = Math.trunc(hostWidth / tmpObj.maxCameraCol);
-  var maxheight = Math.trunc(hostHeight / tmpObj.cameraPerRow);
+  var maxwidth = Math.trunc(hostWidth / tmpObj.cameraPerRow);
+  var maxheight = Math.trunc(hostHeight / tmpObj.maxCameraRow);
   console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth);
 
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
