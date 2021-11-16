@@ -4667,7 +4667,7 @@
             tmpObj.type = "camera";
             tmpObj.upd_chan = -2;
 
-            tmpObj['maxCameraCol'] = dashboard_settings.camera.maxCameraCol;
+            tmpObj['maxCameraRow'] = dashboard_settings.camera.maxCameraRow;
             tmpObj['cameraPerRow'] = dashboard_settings.camera.cameraPerRow;
             tmpObj['refresh_rate'] = dashboard_settings.camera.cameraRefresh;
             jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });

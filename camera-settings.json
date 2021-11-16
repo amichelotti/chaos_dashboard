@@ -16,11 +16,17 @@
             "required": true,
             "description": "Number Of Cameras per row"
         },
-        "maxCameraCol": {
+        "maxCameraRow": {
             "type": "integer",
-            "default": 8,
+            "default": 2,
             "required": true,
-            "description": "Max Number of simultaneous cameras"
+            "description": "Number of camera rows"
+        },
+        "maxCameraRow": {
+            "type": "integer",
+            "default": 2,
+            "required": true,
+            "description": "Number of camera rows"
         },
         "restTimeout": {
             "type": "integer",
