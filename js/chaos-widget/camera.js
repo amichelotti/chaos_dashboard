@@ -14,20 +14,21 @@ const TRIGGER_NOACQUIRE=5;
 const TRIGGER_LOHI=3;
 const TRIGGER_HILO=4;
 
-function checkRedrawReference(camid, domid, x, y, sx, sy, r) {
+function checkRedrawReference(camid, domid, x, y, sx, sy, r,rt) {
   jchaos.getChannel(camid, 1, (ele) => {
-    let xx, yy, sxx, syy, rro;
+    let xx, yy, sxx, syy, rro,rot;
     xx = (typeof x === 'undefined') ? ele[0].REFX : x;
     yy = (typeof y === 'undefined') ? ele[0].REFY : y;
     sxx = (typeof sx === 'undefined') ? ele[0].REFSX : sx;
     syy = (typeof sy === 'undefined') ? ele[0].REFSY : sy;
     rro = (typeof r === 'undefined') ? ele[0].REFRHO : r;
+    rot = (typeof rt === 'undefined') ? ele[0].ROT : rt;
 
-    redrawReference(domid, xx, yy, sxx, syy, rro);
+    redrawReference(domid, xx, yy, sxx, syy, rro,rot);
 
   });
 }
-function redrawReference(domid, x, y, sx, sy, r) {
+function redrawReference(domid, x, y, sx, sy, r,rot) {
   const canvas = document.getElementById("cameraImageCanv-" + domid);
   if(canvas==null){
     return;
@@ -44,17 +45,30 @@ function redrawReference(domid, x, y, sx, sy, r) {
     let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
 
     const ctx = canvas.getContext('2d');
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    //  console.log("canvas width:"+canvas.width + " height:"+canvas.height+" original img size:"+natwidth+"x"+natheight+" offsetTop:" +canvas.offsetTop + " offsetLeft:"+canvas.offsetLeft+" offsetW:"+canvas.offsetWidth + " offsetH:"+canvas.offsetHeight);
     let ratiox = canvas.width / natwidth;
     let ratioy = canvas.height / natheight;
+
+    if(rot%360!=0){
+      ctx.translate(canvas.width/2, canvas.height/2); // set canvas context to center
+
+      x = (x-canvas.width/2) * ratiox, y = (y-canvas.height/2) * ratioy, sx = sx * ratiox, sy = sy * ratioy;
+
+      ctx.rotate((-rot)* Math.PI / 180);
+
+    } else {
+      x = x* ratiox, y = y* ratioy, sx = sx * ratiox, sy = sy * ratioy;
+
+    }
+    //  console.log("canvas width:"+canvas.width + " height:"+canvas.height+" original img size:"+natwidth+"x"+natheight+" offsetTop:" +canvas.offsetTop + " offsetLeft:"+canvas.offsetLeft+" offsetW:"+canvas.offsetWidth + " offsetH:"+canvas.offsetHeight);
+    
     /*ctx.fillStyle = 'rgb(200, 0, 0)';
         ctx.fillRect(1, 1, 50, 50);
 
        // ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
         ctx.fillRect(300, 200, 50, 50);
       */
-    x = x * ratiox, y = y * ratioy, sx = sx * ratiox, sy = sy * ratioy;
     ctx.beginPath();
     ctx.lineWidth = 3;
     //      r=Math.PI/2+r;
@@ -82,6 +96,7 @@ function redrawReference(domid, x, y, sx, sy, r) {
 
 
     ctx.stroke();
+   
     //  ctx.closePath();
     //   console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
   }
@@ -154,15 +169,15 @@ function buildCameraArray(id, opt) {
   var row = opt.camera['maxCameraRow'];
   var tmpObj = {
     cameraPerRow: col || 2,
-    maxCameraRow: row || 2
+    maxCameraRow: row || 2,
+    displayRatio: opt.camera['displayRatio'] || "4/3"
   };
   // var html = '<table class="table" id="' + tablename + '">';
   var html = "";
   var hostWidth = $(window).width();
   var hostHeight = $(window).height();
-  var maxwidth = Math.trunc(hostWidth / tmpObj.cameraPerRow);
-  var maxheight = Math.trunc(hostHeight / tmpObj.maxCameraRow);
-  console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth);
+  var maxwidth = Math.trunc((hostWidth-30) / tmpObj.cameraPerRow);
+  console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:"+tmpObj.displayRatio);
 
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
   var cnt = 0;
@@ -173,9 +188,10 @@ function buildCameraArray(id, opt) {
     for (var c = 0; c < col; c++, cnt++) {
       var encoden = r + "_" + c;
       // html += '<td id="camera-' + encoden + '">';
-      html += '<div class="col">';
+     // html += '<div class="col d-flex flex-column justify-content-center" style="aspect-ratio: '+tmpObj.displayRatio+';">';
+     html += '<div class="col-sm">';
 
-      html += '<div class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
+      html += '<div style="aspect-ratio: '+tmpObj.displayRatio+';width:'+maxwidth+'px;" class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
       html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/no_cam_trasp.svg" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '</div>';
@@ -183,7 +199,7 @@ function buildCameraArray(id, opt) {
       html += '<div id="info-' + encoden + '"></div>';
 
 
-      html += '<select class="camselect chaos_image" id="select-' + encoden + '" vid="' + encoden + '">';
+      html += '<select class="camselect" id="select-' + encoden + '" vid="' + encoden + '">';
       html += buildSelected(list_cu, cnt);
       html += '</select>';
 
@@ -246,10 +262,10 @@ function updateCamera(ds){
     }
 
   } else if (ds.dpck_ds_type == 1) {
-    //  console.log("INPUT :"+JSON.stringify(ds));
-    let id = mappedcameora[ds.ndk_uid];
+      console.log("INPUT :"+JSON.stringify(ds));
+    let id = mappedcamera[ds.ndk_uid];
 
-    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO);
+    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO,ds.ROT);
   } 
 }
 $.fn.buildCameraArray = function (op) {
@@ -263,7 +279,7 @@ $.fn.buildCameraArray = function (op) {
     if (ev.currentTarget.value == "NOCAMERA") {
       delete mappedcamera[mapcamera[vid[1]]];
       delete mapcamera[vid[1]];
-      $("#cameraImage-" + vid[1]).attr("src", "/../img/logo_chaos_col_xMg_icon.ico");
+      $("#cameraImage-" + vid[1]).attr("src", "/../img/no_cam_trasp.svg");
 
     } else {
       mapcamera[vid[1]] = ev.currentTarget.value;
@@ -729,6 +745,7 @@ function cropEnable(cu, tmpObj, func) {
     }
   });
 }
+// menu camera app
 function activateMenuShort() {
   $.contextMenu('destroy', '.cameraMenuShort');
   $.contextMenu({
@@ -744,7 +761,7 @@ function activateMenuShort() {
       }
       var ele = jchaos.getChannel(name, 1, null);
       var el = ele[0];
-      redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO);
+      redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
       cuitem['sep1'] = "---------";
       cuitem['state'] = {
         "name": "Set Mode..",icon:"fa-plug",
@@ -1024,6 +1041,7 @@ function zoomInOut(name, incr) {
   currzoomm = currzoom;
 
 }
+// menu camera inside dashboard
 function activateMenu(tmpObj) {
   $.contextMenu('destroy', '.cameraMenu');
   $.contextMenu({
@@ -1324,16 +1342,15 @@ function rebuildCam(tmpObj) {
       html += '<div class="col">';
       html += '<div class="insideWrapper cameraMenu" cuname="' + key + '" id="insideWrapper-' + encoden + '">';
 
-      if (selectedCams.length > 1) {
-        html += '<img class="chaos_image" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/no_cam_trasp.svg" />';
-      } else {
-        html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/no_cam_trasp.svg" />';
-      }
+      
+      html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/no_cam_trasp.svg" />';
+      
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
-      html += '</div>';
-
       html += '<div>' + key + '</div>';
       html += '<div id="info-' + encoden + '"></div>';
+      html += '</div>';
+
+      
       html += '</div>'; // close col
 
       cnt++;
@@ -1388,7 +1405,7 @@ function rebuildCam(tmpObj) {
               jchaos.setAttribute(key, "REFY", y.toString(), ok => {
                 console.log(key + " X Coordinate: " + x + " Y Coordinate: " + y);
                 jchaos.getChannel(key, 1, (ele) => {
-                  redrawReference(encoden, x, y, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO);
+                  redrawReference(encoden, x, y, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO,ele[0].ROT);
 
                 });
               });
@@ -1699,7 +1716,7 @@ function getWidget(options) {
 
                 jqccs.updateGenericTableDataset(tmpObj);
               }
-              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO);
+              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO,selected.input.ROT);
 
             }, function (d) {
               if (tmpObj.skip_fetch > 0)
@@ -1732,11 +1749,12 @@ function getWidget(options) {
       var cu = tmpObj.elems;
       var template = tmpObj.type;
 
-      var html = '<div class="row">';
+      //var html = '<div class="row">';
 
 
-      html += '<div class="container-fluid" id="cameraTable"></div>';
-      html += '</div>';
+     // html += '<div class="container-fluid" id="cameraTable"></div>';
+     var html = '<div class="row" id="cameraTable"></div>';
+      
 
       var cu = tmpObj.elems;
       var template = tmpObj.type;

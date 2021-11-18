@@ -45,6 +45,7 @@ function getUserIP() {
 			
 			//link style
 			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-ctrl.css" rel="stylesheet" />';
+
 			echo '<link id="base-style" href="' .$main_dir. '/css/style.css" rel="stylesheet">';
 			echo '<script src="'.$main_dir.'/js/jquery-3.5.1.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jquery-ui/jquery-ui.min.js"></script>';
@@ -78,6 +79,7 @@ function getUserIP() {
 
 			echo '<script src="'.$main_dir.'/js/jstree/dist/jstree.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/socket.io.js"></script>';
+
 
 		?>
 	
