@@ -28,6 +28,13 @@
             "required": true,
             "description": "Number of camera rows"
         },
+        
+        "displayRatio": {
+            "type": "string",
+            "default": "4/3",
+            "required": true,
+            "description": "width/height"
+        },
         "restTimeout": {
             "type": "integer",
             "default": 6000,
