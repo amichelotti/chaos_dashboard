@@ -8,11 +8,133 @@ var currzoomm = 1.0;
 var opt={};
 var pullInterval=null;
 var pullIntervalsec=null;
-const TRIGGER_CONTINUOUS=0;
+const TRIGGER_CONT=0;
 const TRIGGER_PULSE=2;
 const TRIGGER_NOACQUIRE=5;
 const TRIGGER_LOHI=3;
 const TRIGGER_HILO=4;
+
+
+
+var selection_canvas = null;//document.getElementById("canvas");
+var selection_ctx = null;//canvas.getContext("2d");
+//var selection_canvasOffset = null;//$("#canvas").offset();
+var selection_startX;
+var selection_startY;
+var selection_isDown = false;
+var selection_ellipse={};
+function drawOval(id,x, y) {
+    selection_ctx.clearRect(0, 0, selection_canvas.width, selection_canvas.height);
+    selection_ellipse[id]['x']=((selection_startX+x)/2);
+    selection_ellipse[id]['y']=((selection_startY+y)/2);
+    selection_ellipse[id]['w']=Math.abs((selection_startX-x)/2);
+    selection_ellipse[id]['h']=Math.abs((selection_startY-y)/2);
+
+  //  console.log("selection x:"+selection_startX+" y:"+(selection_startY + (y - selection_startY) / 2));
+   /* selection_ctx.beginPath();
+
+    selection_ctx.moveTo(selection_startX, selection_startY + (y - selection_startY) / 2);
+    selection_ctx.bezierCurveTo(selection_startX, selection_startY, x, selection_startY, x, selection_startY + (y - selection_startY) / 2);
+    selection_ctx.bezierCurveTo(x, y, selection_startX, y, selection_startX, selection_startY + (y - selection_startY) / 2);
+    selection_ctx.closePath();
+    selection_ctx.strokeStyle = 'orange';
+
+    selection_ctx.stroke();*/
+    selection_ctx.beginPath();
+    selection_ctx.strokeStyle = 'orange';
+
+    selection_ctx.ellipse(selection_ellipse[id]['x'], selection_ellipse[id]['y'], selection_ellipse[id]['w'], selection_ellipse[id]['h'], 0, 0, 2 * Math.PI);
+    selection_ctx.stroke();
+
+    selection_ctx.strokeRect(selection_ellipse[id]['x'],selection_ellipse[id]['y'],2,2);
+    selection_ctx.strokeRect(selection_ellipse[id]['x']-selection_ellipse[id]['w'],selection_ellipse[id]['y']-selection_ellipse[id]['h'],selection_ellipse[id]['w']*2,selection_ellipse[id]['h']*2);
+
+
+}
+
+function handleMouseDown(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if(e.which!=1){
+      return;
+    }
+    let offset = $("#"+e.currentTarget.id).offset();
+
+    let selection_offsetX = offset.left;
+    let selection_offsetY = offset.top;
+    selection_startX = parseInt(e.pageX - selection_offsetX);
+    selection_startY = parseInt(e.pageY - selection_offsetY);
+    let ww=$("#"+e.currentTarget.id).width();
+    let hh=$("#"+e.currentTarget.id).height();
+   if(selection_isDown==false){
+    let vid = e.currentTarget.id.split('-');
+
+    let id=vid[1];
+    console.log("start:"+selection_startX+","+selection_startY);
+    selection_ellipse[id]={
+      x:0,
+      y:0,
+      w:0,
+      h:0,
+      id:id,
+      ctx_width:ww,
+      ctx_height:hh,
+      ctx:e.currentTarget.getContext("2d")
+    }
+    
+   }
+    selection_isDown = true;
+
+    
+    //console.log("position start:"+selection_startX+","+selection_startY);
+}
+
+function handleMouseUp(e) {
+    if (!selection_isDown) {
+        return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    selection_isDown = false;
+    let vid = e.currentTarget.id.split('-');
+    let id=vid[1];
+    console.log("selection "+JSON.stringify(selection_ellipse[id]));
+    selection_ctx.beginPath();
+    selection_ctx.strokeStyle = 'green';
+   
+    selection_ctx.ellipse(selection_ellipse[id]['x'], selection_ellipse[id]['y'], selection_ellipse[id]['w'], selection_ellipse[id]['h'], 0, 0, 2 * Math.PI);
+    selection_ctx.stroke();
+}
+
+function handleMouseOut(e) {
+    if (!selection_isDown) {
+        return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    selection_isDown = false;
+}
+
+function handleMouseMove(e) {
+    if (!selection_isDown) {
+        return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    let offset = $("#"+e.currentTarget.id).offset();
+
+    let selection_offsetX = offset.left;
+    let selection_offsetY = offset.top;
+
+    let mouseX = parseInt(e.pageX - selection_offsetX);
+    let mouseY = parseInt(e.pageY - selection_offsetY);
+   // console.log("position end:"+mouseX+","+mouseY);
+   let vid = e.currentTarget.id.split('-');
+    let id=vid[1];
+
+    drawOval(id,mouseX, mouseY);
+}
+
 
 function checkRedrawReference(camid, domid, x, y, sx, sy, r,rt) {
   jchaos.getChannel(camid, 1, (ele) => {
@@ -30,23 +152,45 @@ function checkRedrawReference(camid, domid, x, y, sx, sy, r,rt) {
 }
 function redrawReference(domid, x, y, sx, sy, r,rot) {
   const canvas = document.getElementById("cameraImageCanv-" + domid);
+  const canvasSel = document.getElementById("selectionCanv-" + domid);
+
   if(canvas==null){
     return;
   }
-  if ($("#cameraImage-" + domid).length) {
-    canvas.width = $("#cameraImage-" + domid).width();
-    canvas.height = $("#cameraImage-" + domid).height();
+  if ($("#cameraImage-" + domid).length==0) {
+    return;
   }
+  let width=$("#cameraImage-" + domid).width();
+  let height=$("#cameraImage-" + domid).height();
+  if(canvasSel!=null){
+    canvasSel.width = width;
+    canvasSel.height =height;
+  }
+  
+  let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
+  canvas.width = width;
+  canvas.height =height;
+  if(natwidth>natheight){
+    $("#cameraImage-" + domid).removeClass("chaos_image_v");
+    $("#cameraImage-" + domid).removeClass("chaos_image");
+
+    $("#cameraImage-" + domid).addClass("chaos_image_h");
+  } else {
+    $("#cameraImage-" + domid).removeClass("chaos_image");
+
+    $("#cameraImage-" + domid).removeClass("chaos_image_h");
+    $("#cameraImage-" + domid).addClass("chaos_image_v");
+  }
+  const ctx = canvas.getContext('2d');
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (sx > 0 && sy > 0) {
     //let name=jchaos.encodeName(id);
 
-    let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
-    let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
-
-    const ctx = canvas.getContext('2d');
     
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     let ratiox = canvas.width / natwidth;
     let ratioy = canvas.height / natheight;
 
@@ -94,10 +238,10 @@ function redrawReference(domid, x, y, sx, sy, r,rot) {
     ctx.moveTo(cmx0, cmy0);
     ctx.lineTo(cmx1, cmy1);
 
-
+    ctx.closePath();
     ctx.stroke();
    
-    //  ctx.closePath();
+    // 
     //   console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
   }
 
@@ -176,7 +320,7 @@ function buildCameraArray(id, opt) {
   var html = "";
   var hostWidth = $(window).width();
   var hostHeight = $(window).height();
-  var maxwidth = Math.trunc((hostWidth-30) / tmpObj.cameraPerRow);
+  var maxwidth = Math.trunc((hostWidth-(40*tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
   console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:"+tmpObj.displayRatio);
 
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
@@ -194,6 +338,8 @@ function buildCameraArray(id, opt) {
       html += '<div style="aspect-ratio: '+tmpObj.displayRatio+';width:'+maxwidth+'px;" class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
       html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/no_cam_trasp.svg" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
+      html += '<canvas class="coveringCanvas selectionCanv" id="selectionCanv-' + encoden + '"/></canvas>';
+
       html += '</div>';
 
       html += '<div id="info-' + encoden + '"></div>';
@@ -227,10 +373,11 @@ function updateCamera(ds){
     let debug = opt.camera.debug;
     let debug_html = "";
     start = Date.now();
-    if (counter[id] == 0) {
+  /*  if (counter[id] == 0) {
       checkRedrawReference(ds.ndk_uid, id);
-      counter[id] = 1;
+      counter[id]=1;
     }
+*/
     if (debug) {
       if (old_tim[id]) {
         if ((counter[id] % 1000) == 0) {
@@ -261,6 +408,7 @@ function updateCamera(ds){
 
     }
 
+   
   } else if (ds.dpck_ds_type == 1) {
       console.log("INPUT :"+JSON.stringify(ds));
     let id = mappedcamera[ds.ndk_uid];
@@ -276,9 +424,19 @@ $.fn.buildCameraArray = function (op) {
     var vid = ev.currentTarget.id.split('-');
     console.log("change " + vid[1] + " :" + ev.currentTarget.value);
     $("#cameraImage-" + vid[1]).attr("src", "/../img/chaos_wait_big.gif");
+    $("#cameraImage-" + vid[1]).removeClass("chaos_image_v");
+    $("#cameraImage-" + vid[1]).removeClass("chaos_image_h");
+    $("#cameraImage-" + vid[1]).addClass("chaos_image");
+
+
     if (ev.currentTarget.value == "NOCAMERA") {
       delete mappedcamera[mapcamera[vid[1]]];
       delete mapcamera[vid[1]];
+      const canvas = document.getElementById("cameraImageCanv-" + vid[1]);
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
       $("#cameraImage-" + vid[1]).attr("src", "/../img/no_cam_trasp.svg");
 
     } else {
@@ -289,6 +447,31 @@ $.fn.buildCameraArray = function (op) {
         }
       }
       mappedcamera[ev.currentTarget.value] = vid[1];
+    //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
+      $("#cameraImage-" + vid[1]).on('load', function () {
+        let s=$("#cameraImage-" + vid[1]).attr('src');
+        if(s.includes("..")){
+          return;
+        }
+        //alert($('img.product_image').attr('src'));
+        console.log(ev.currentTarget.value+" = "+vid[1]);
+        $("#cameraImage-" + vid[1]).off('load');
+        let natwidth = $("#cameraImage-" + vid[1]).prop('naturalWidth');
+        let natheight = $("#cameraImage-" + vid[1]).prop('naturalHeight');
+        if(natwidth>natheight){
+          $("#cameraImage-" + vid[1]).removeClass("chaos_image_v");
+          $("#cameraImage-" + vid[1]).removeClass("chaos_image");
+      
+          $("#cameraImage-" + vid[1]).addClass("chaos_image_h");
+        } else {
+          $("#cameraImage-" + vid[1]).removeClass("chaos_image");
+      
+          $("#cameraImage-" + vid[1]).removeClass("chaos_image_h");
+          $("#cameraImage-" + vid[1]).addClass("chaos_image_v");
+        }
+        checkRedrawReference(ev.currentTarget.value, vid[1]);
+
+     });
       activateMenuShort();
       $("#cameraImageCanv-" + vid[1]).on("mousemove", function (e) {
         var offset = $(this).offset();
@@ -357,6 +540,26 @@ $.fn.buildCameraArray = function (op) {
         },1000);
       }
     }
+  });
+  $(".selectionCanv").mousedown(function (e) {
+    
+    if(selection_canvas!=e.currentTarget){
+       selection_canvas = e.currentTarget;
+     //  selection_canvasOffset=selection_canvas.offset();
+       selection_ctx=selection_canvas.getContext("2d");
+      console.log("changed canvas "+e.currentTarget.id);
+      selection_isDown=false;
+    }
+      handleMouseDown(e);
+  });
+  $(".selectionCanv").mousemove(function (e) {
+      handleMouseMove(e);
+  });
+  $(".selectionCanv").mouseup(function (e) {
+      handleMouseUp(e);
+  });
+  $(".selectionCanv").mouseout(function (e) {
+      handleMouseOut(e);
   });
 }
 
@@ -759,9 +962,11 @@ function activateMenuShort() {
       if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
         currzoomm = cameraLayoutSettings[domid]["zoom"];
       }
+      
       var ele = jchaos.getChannel(name, 1, null);
       var el = ele[0];
-      redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+      var selection=selection_ellipse[domid];
+     // redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
       cuitem['sep1'] = "---------";
       cuitem['state'] = {
         "name": "Set Mode..",icon:"fa-plug",
@@ -778,7 +983,7 @@ function activateMenuShort() {
           'continuos': {
             name: "Continuous", cu: name,icon:"fa-play",
             callback: function (itemKey, opt, e) {
-              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_CONTINUOUS.toString(), function () {
+              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_CONT.toString(), function () {
                 jqccs.instantMessage("SET CONTINUOUS ", name, 3000, true);
       
               })
@@ -817,25 +1022,6 @@ function activateMenuShort() {
       cuitem['transforms'] = {
         "name": "Trasforms..",icon:"fa-cog",
         "items": {
-          'zoom-in': {
-            name: "Zoom In ", cu: name,icon:"fa-search-plus",
-            callback: function (itemKey, opt, e) {
-              zoomInOut(domid, 2);
-            }
-          },
-          'zoom-out': {
-            name: "Zoom Out ", cu: name,icon:"fa-search-minus",
-            callback: function (itemKey, opt, e) {
-              zoomInOut(domid, 0.5);
-            }
-          },
-          'zoom-reset': {
-            name: "Zoom Reset", cu: name,
-            callback: function (itemKey, opt, e) {
-              // var name = opt.items[itemKey].cu;
-              zoomInOut(domid, 0);
-            }
-          },
           'rotatep90': {
             name: "Rotate +90", cu: name,icon:"fa-undo",
             callback: function (itemKey, opt, e) {
@@ -856,9 +1042,79 @@ function activateMenuShort() {
                var name = opt.items.transforms.items['rotateReset'].cu;
               rotateCamera(name, 0);
             }
+          },
+          'zoom-reset': {
+            name: "Zoom Reset", cu: name,
+            callback: function (itemKey, opt, e) {
+              // var name = opt.items[itemKey].cu;
+              zoomInOut(domid, 0);
+              redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+            }
           }
         }
       };
+      if(selection&&selection.hasOwnProperty('w')&&selection.hasOwnProperty('h')&&selection.hasOwnProperty('ctx_width')&&selection.h&&selection.w){
+        
+        cuitem['transforms']['items']['zoom-in']={
+          name: "Zoom In ", cu: name,icon:"fa-search-plus",
+          callback: function (itemKey, opt, e) {
+            zoomInOut(domid, selection.ctx_width/selection.w);
+            redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+          }
+        };
+        
+      }
+      if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid].hasOwnProperty("zoom")&&(cameraLayoutSettings[domid].zoom!=1.0)&&(cameraLayoutSettings[domid].hasOwnProperty("zoom_incr"))){
+        cuitem['transforms']['items']['zoom-out']={
+          name: "Zoom Out ", cu: name,icon:"fa-search-minus",
+          callback: function (itemKey, opt, e) {
+            zoomInOut(domid, 1/cameraLayoutSettings[domid].zoom_incr);
+            redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+          }
+        }
+      }
+      if(selection&&selection.hasOwnProperty('w')&&selection.hasOwnProperty('h')&&selection.h&&selection.w){
+        cuitem['transforms']['items']['set-reference']={
+          name: "Set Reference ", cu: name,icon:"fa-dot-circle-o",
+          callback: function (itemKey, opt, e) {
+            let x=selection['x'];
+            let y=selection['y'];
+            let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
+            let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
+            let width = $("#cameraImage-" + domid).width();
+            let height = $("#cameraImage-" + domid).height();
+            console.log("("+natwidth+","+natheight+")=>("+width+","+height+")");
+            let ratiox=natwidth/width;
+            let ratioy=natheight/height;
+
+            setReference(name, x*ratiox, y*ratioy, selection['w']*ratiox, selection['h']*ratioy);
+
+          }
+        }
+        cuitem['transforms']['items']['set-roi']={
+          name: "Set ROI ", cu: name,icon:"fa-scissors",
+          callback: function (itemKey, opt, e) {
+            let x=selection['x']-selection['w'];
+            let y=selection['y']-selection['h'];
+            let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
+            let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
+            let width = $("#cameraImage-" + domid).width();
+            let height = $("#cameraImage-" + domid).height();
+            console.log(" ROI ("+natwidth+","+natheight+")=>("+width+","+height+")");
+            let ratiox=natwidth/width;
+            let ratioy=natheight/height;
+            setRoi(name, selection['w']*2*ratiox, selection['h']*2*ratioy, x*ratiox, y*ratioy, () => {  });
+
+          }
+        }
+        cuitem['transforms']['items']['reset-roi']={
+          name: "Reset ROI ", cu: name,icon:"fa-square-o",
+          callback: function (itemKey, opt, e) {
+          resetRoi(name,()=>{});
+
+          }
+        }
+      }
       cuitem['sep2'] = "---------";
       var scuitem={};
       for (var k in el) {
@@ -909,7 +1165,12 @@ function activateMenuShort() {
       cuitem['sep3'] = "---------";
 
       cuitem['quit'] = {
-        name: "Quit", icon: function () {
+        name: "Quit",
+        callback:function(){
+          redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+
+        },
+         icon: function () {
           return 'context-menu-icon context-menu-icon-quit';
         }
 
@@ -969,8 +1230,6 @@ function zoomInOut(name, incr) {
     cameraLayoutSettings[name] = { "zoom": currzoom, "orx": 0, "ory": 0 };
 
   }
-  var x = mouseX;
-  var y = mouseY;
   
   if (incr == 0) {
     currzoom = 1.0;
@@ -980,6 +1239,8 @@ function zoomInOut(name, incr) {
 
   }
   cameraLayoutSettings[name]["zoom"] = currzoom;
+  cameraLayoutSettings[name]["zoom_incr"] = incr;
+
 
   var encoden = jchaos.encodeName(name);
   var prop = null;
@@ -989,15 +1250,10 @@ function zoomInOut(name, incr) {
   if ((currzoom != 1.0)) {
     const mirinosize = 100;
 
-    var scaleorx = x - mirinosize;
-    var scaleory = y - mirinosize;
+    var scaleorx = selection_ellipse[name]['x'];
+    var scaleory = selection_ellipse[name]['y'];
 
-    if (scaleorx < 0) {
-      scaleorx = 0;
-    }
-    if (scaleory < 0) {
-      scaleory = 0;
-    }
+   
     if ((currzoom != 1.0) && (incr != 1)) {
       cameraLayoutSettings[name]["orx"] = scaleorx;
       cameraLayoutSettings[name]["ory"] = scaleory;
@@ -1070,6 +1326,7 @@ function activateMenu(tmpObj) {
           zoomInOut(name, 2);
         }
       };
+    
       tcuitem['zoom-out'] = {
         name: "Zoom Out ", cu: name,icon:"fa-search-minus",
         callback: function (itemKey, opt, e) {
@@ -1086,6 +1343,7 @@ function activateMenu(tmpObj) {
           zoomInOut(name, 0.5);
         }
       };
+    
       tcuitem['zoom-reset'] = {
         name: "Zoom Reset", cu: name,
         callback: function (itemKey, opt, e) {
@@ -1413,6 +1671,7 @@ function rebuildCam(tmpObj) {
           }, "Cancel");
 
         });
+        
         $("#cameraImageCanv-" + encoden).on('mousemove', function (e) {
 
           var offset = $(this).offset();
@@ -1610,7 +1869,7 @@ function getWidget(options) {
       output: {
         TRIGGER_MODE: function (val) {
           switch (val) {
-            case TRIGGER_CONTINUOUS:
+            case TRIGGER_CONT:
               return "Continuous";
             case TRIGGER_PULSE:
               return "Pulse";
