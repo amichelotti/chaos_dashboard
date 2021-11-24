@@ -197,8 +197,9 @@ function redrawReference(domid, x, y, sx, sy, r,rot) {
     if(rot%360!=0){
       ctx.translate(canvas.width/2, canvas.height/2); // set canvas context to center
 
-      x = (x-canvas.width/2) * ratiox, y = (y-canvas.height/2) * ratioy, sx = sx * ratiox, sy = sy * ratioy;
-
+      //x = (x-canvas.width/2) * ratiox, y = (y-canvas.height/2) * ratioy, sx = sx * ratiox, sy = sy * ratioy;
+     x = x* ratiox, y = y* ratioy, sx = sx * ratiox, sy = sy * ratioy;
+      console.log("rot center:("+canvas.width/2+","+canvas.height/2+") ratiox:"+ratiox+" ratioy:"+ratioy+" ellipse center:("+x+","+y+") rot:"+rot);
       ctx.rotate((-rot)* Math.PI / 180);
 
     } else {
@@ -320,7 +321,7 @@ function buildCameraArray(id, opt) {
   var html = "";
   var hostWidth = $(window).width();
   var hostHeight = $(window).height();
-  var maxwidth = Math.trunc((hostWidth-(40*tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
+  var maxwidth = Math.trunc((hostWidth-(50*tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
   console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:"+tmpObj.displayRatio);
 
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
@@ -413,7 +414,7 @@ function updateCamera(ds){
       console.log("INPUT :"+JSON.stringify(ds));
     let id = mappedcamera[ds.ndk_uid];
 
-    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO,ds.ROT);
+    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO,-ds.ROT);
   } 
 }
 $.fn.buildCameraArray = function (op) {
@@ -1037,14 +1038,14 @@ function activateMenuShort() {
             }
           },
           'rotateReset': {
-            name: "Rotate reset", cu: name,
+            name: "Rotate reset", cu: name,icon:"fa-window-restore",
             callback: function (itemKey, opt, e) {
                var name = opt.items.transforms.items['rotateReset'].cu;
               rotateCamera(name, 0);
             }
           },
           'zoom-reset': {
-            name: "Zoom Reset", cu: name,
+            name: "Zoom Reset", cu: name,icon:"fa-arrows",
             callback: function (itemKey, opt, e) {
               // var name = opt.items[itemKey].cu;
               zoomInOut(domid, 0);
@@ -1088,9 +1089,11 @@ function activateMenuShort() {
             let ratioy=natheight/height;
 
             setReference(name, x*ratiox, y*ratioy, selection['w']*ratiox, selection['h']*ratioy);
+            delete selection_ellipse[domid];
 
           }
-        }
+        },
+        
         cuitem['transforms']['items']['set-roi']={
           name: "Set ROI ", cu: name,icon:"fa-scissors",
           callback: function (itemKey, opt, e) {
@@ -1104,15 +1107,23 @@ function activateMenuShort() {
             let ratiox=natwidth/width;
             let ratioy=natheight/height;
             setRoi(name, selection['w']*2*ratiox, selection['h']*2*ratioy, x*ratiox, y*ratioy, () => {  });
-
+            delete selection_ellipse[domid];
           }
         }
-        cuitem['transforms']['items']['reset-roi']={
-          name: "Reset ROI ", cu: name,icon:"fa-square-o",
-          callback: function (itemKey, opt, e) {
-          resetRoi(name,()=>{});
-
-          }
+        
+      }
+      cuitem['transforms']['items']['reset-reference']={
+        name: "Reset Reference ", cu: name,icon:"fa-times-circle-o",
+        callback: function (itemKey, opt, e) {
+          setReference(name, 0, 0, 0, 0);
+          delete selection_ellipse[domid];
+        }
+      }
+      cuitem['transforms']['items']['reset-roi']={
+        name: "Reset ROI ", cu: name,icon:"fa-square-o",
+        callback: function (itemKey, opt, e) {
+        resetRoi(name,()=>{});
+        delete selection_ellipse[domid];
         }
       }
       cuitem['sep2'] = "---------";
@@ -1235,11 +1246,11 @@ function zoomInOut(name, incr) {
     currzoom = 1.0;
   } else {
 
-    currzoom *= incr;
+    currzoom *= incr.toFixed(0);
 
   }
   cameraLayoutSettings[name]["zoom"] = currzoom;
-  cameraLayoutSettings[name]["zoom_incr"] = incr;
+  cameraLayoutSettings[name]["zoom_incr"] = incr.toFixed(0);
 
 
   var encoden = jchaos.encodeName(name);
@@ -1255,13 +1266,22 @@ function zoomInOut(name, incr) {
 
    
     if ((currzoom != 1.0) && (incr != 1)) {
-      cameraLayoutSettings[name]["orx"] = scaleorx;
-      cameraLayoutSettings[name]["ory"] = scaleory;
+      cameraLayoutSettings[name]["orx"] = scaleorx.toFixed(0);
+      cameraLayoutSettings[name]["ory"] = scaleory.toFixed(0);
     }
-    var scaleor = cameraLayoutSettings[name]["orx"] + "px " + cameraLayoutSettings[name]["ory"] + "px";
+    
 
     // var or=x + "px " +y+"px";
-
+    let left=$("#cameraImage-" + encoden).offset().left;
+    let top=$("#cameraImage-" + encoden).offset().left;
+    /*let w=$("#cameraImage-" + encoden).width();
+    let h=$("#cameraImage-" + encoden).height();
+    */
+    //let w=$("#cameraImage-" + encoden).prop('naturalWidth');
+   // let h=$("#cameraImage-" + encoden).prop('naturalHeight');
+    //var scaleor = cameraLayoutSettings[name]["orx"] + "px " + cameraLayoutSettings[name]["ory"] + "px";
+    //var scaleor = (w/2-left) + "px " + (h/2-top) + "px";
+    var scaleor = "0% 0%";
     prop = {
       "transform-origin": ((currzoom == 1.0) ? "center" : scaleor),
       "transform": ""
@@ -1270,6 +1290,8 @@ function zoomInOut(name, incr) {
       prop["transform"] = "scale(" + currzoom + "," + currzoom + ")";
 
     }
+    $("#insideWrapper-"+encoden).prop('scrollLeft',scaleorx*currzoom);
+    $("#insideWrapper-"+encoden).prop('scrollTop',scaleory*currzoom);
    /* if (currrot != 0) {
       prop["transform"] = prop["transform"] + " rotate(" + currrot + "deg)";
     }
@@ -1284,7 +1306,7 @@ function zoomInOut(name, incr) {
 
     $("#cameraImage-" + encoden).css(prop);
     $("#cameraImageCanv-" + encoden).css(prop);
-   // console.log(name + " Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop));
+    console.log(name + " Zoom:" + currzoom + " Rotate:" + currzoom + "left:"+left+" top:"+top+" width:"+w+" height:"+h+" CSS:" + JSON.stringify(prop));
    console.log(name + " Zoom:" + currzoom );
     cameraLayoutSettings[name]["css"] = prop;
    

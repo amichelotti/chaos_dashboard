@@ -10601,16 +10601,11 @@
 
     function updateCUMenu(tmpObj, name) {
         var items = {};
-        var cindex = tmpObj.node_name_to_index[name];
         var node_multi_selected = tmpObj.node_multi_selected;
         var currsel = tmpObj.node_multi_selected[0];
         var stat = jchaos.getChannel(currsel, 255);
-        for (var k in stat[0]) {
-            //update status
-            tmpObj.data[cindex][k] = stat[0][k];
-        }
-
-        var cu = tmpObj.data[cindex];
+        
+        var cu =stat[0];
 
         if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) { //if el health
             var status = cu.health.nh_status;
