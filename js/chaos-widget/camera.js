@@ -1290,8 +1290,8 @@ function zoomInOut(name, incr) {
       prop["transform"] = "scale(" + currzoom + "," + currzoom + ")";
 
     }
-    $("#insideWrapper-"+encoden).prop('scrollLeft',scaleorx*currzoom);
-    $("#insideWrapper-"+encoden).prop('scrollTop',scaleory*currzoom);
+    $("#insideWrapper-"+encoden).prop('scrollLeft',(scaleorx+left)*currzoom);
+    $("#insideWrapper-"+encoden).prop('scrollTop',(scaleory+top)*currzoom);
    /* if (currrot != 0) {
       prop["transform"] = prop["transform"] + " rotate(" + currrot + "deg)";
     }
