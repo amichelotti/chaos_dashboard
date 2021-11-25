@@ -5,14 +5,14 @@ var cameraDriverDesc = {};
 var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
 var currzoomm = 1.0;
-var opt={};
-var pullInterval=null;
-var pullIntervalsec=null;
-const TRIGGER_CONT=0;
-const TRIGGER_PULSE=2;
-const TRIGGER_NOACQUIRE=5;
-const TRIGGER_LOHI=3;
-const TRIGGER_HILO=4;
+var opt = {};
+var pullInterval = null;
+var pullIntervalsec = null;
+const TRIGGER_CONT = 0;
+const TRIGGER_PULSE = 2;
+const TRIGGER_NOACQUIRE = 5;
+const TRIGGER_LOHI = 3;
+const TRIGGER_HILO = 4;
 
 
 
@@ -22,123 +22,251 @@ var selection_ctx = null;//canvas.getContext("2d");
 var selection_startX;
 var selection_startY;
 var selection_isDown = false;
-var selection_ellipse={};
-function drawOval(id,x, y) {
-    selection_ctx.clearRect(0, 0, selection_canvas.width, selection_canvas.height);
-    selection_ellipse[id]['x']=((selection_startX+x)/2);
-    selection_ellipse[id]['y']=((selection_startY+y)/2);
-    selection_ellipse[id]['w']=Math.abs((selection_startX-x)/2);
-    selection_ellipse[id]['h']=Math.abs((selection_startY-y)/2);
+var selection_isGrab = false;
+var selection_isResize = false;
+
+var selection_resizableX = 0;
+var selection_resizableY = 0;
+
+var selection_grabbable = false;
+
+var selection_ellipse = {};
+function moveOval(id) {
+  selection_ctx.clearRect(0, 0, selection_canvas.width, selection_canvas.height);
+
+  selection_ctx.beginPath();
+  selection_ctx.strokeStyle = 'orange';
+
+  selection_ctx.ellipse(selection_ellipse[id]['x'], selection_ellipse[id]['y'], selection_ellipse[id]['w'], selection_ellipse[id]['h'], 0, 0, 2 * Math.PI);
+  selection_ctx.stroke();
+
+  selection_ctx.strokeRect(selection_ellipse[id]['x'], selection_ellipse[id]['y'], 2, 2);
+  selection_ctx.strokeStyle = 'green';
+
+  // fix 3/4
+  selection_ctx.strokeRect(selection_ellipse[id]['x'] - selection_ellipse[id]['w'], selection_ellipse[id]['y'] - selection_ellipse[id]['h'], selection_ellipse[id]['w'] * 2, selection_ellipse[id]['w'] * 1.5);
+
+}
+function drawOval(id, x, y) {
+  selection_ellipse[id]['x'] = ((selection_startX + x) / 2);
+  selection_ellipse[id]['y'] = ((selection_startY + y) / 2);
+  selection_ellipse[id]['w'] = Math.abs((selection_startX - x) / 2);
+  selection_ellipse[id]['h'] = Math.abs((selection_startY - y) / 2);
 
   //  console.log("selection x:"+selection_startX+" y:"+(selection_startY + (y - selection_startY) / 2));
-   /* selection_ctx.beginPath();
+  /* selection_ctx.beginPath();
 
-    selection_ctx.moveTo(selection_startX, selection_startY + (y - selection_startY) / 2);
-    selection_ctx.bezierCurveTo(selection_startX, selection_startY, x, selection_startY, x, selection_startY + (y - selection_startY) / 2);
-    selection_ctx.bezierCurveTo(x, y, selection_startX, y, selection_startX, selection_startY + (y - selection_startY) / 2);
-    selection_ctx.closePath();
-    selection_ctx.strokeStyle = 'orange';
+   selection_ctx.moveTo(selection_startX, selection_startY + (y - selection_startY) / 2);
+   selection_ctx.bezierCurveTo(selection_startX, selection_startY, x, selection_startY, x, selection_startY + (y - selection_startY) / 2);
+   selection_ctx.bezierCurveTo(x, y, selection_startX, y, selection_startX, selection_startY + (y - selection_startY) / 2);
+   selection_ctx.closePath();
+   selection_ctx.strokeStyle = 'orange';
 
-    selection_ctx.stroke();*/
-    selection_ctx.beginPath();
-    selection_ctx.strokeStyle = 'orange';
-
-    selection_ctx.ellipse(selection_ellipse[id]['x'], selection_ellipse[id]['y'], selection_ellipse[id]['w'], selection_ellipse[id]['h'], 0, 0, 2 * Math.PI);
-    selection_ctx.stroke();
-
-    selection_ctx.strokeRect(selection_ellipse[id]['x'],selection_ellipse[id]['y'],2,2);
-    selection_ctx.strokeRect(selection_ellipse[id]['x']-selection_ellipse[id]['w'],selection_ellipse[id]['y']-selection_ellipse[id]['h'],selection_ellipse[id]['w']*2,selection_ellipse[id]['h']*2);
-
+   selection_ctx.stroke();*/
+  moveOval(id);
 
 }
 
 function handleMouseDown(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if(e.which!=1){
-      return;
-    }
-    let offset = $("#"+e.currentTarget.id).offset();
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.which != 1) {
+    console.log("not left");
+    return;
+  }
+  let offset = $("#" + e.currentTarget.id).offset();
 
-    let selection_offsetX = offset.left;
-    let selection_offsetY = offset.top;
-    selection_startX = parseInt(e.pageX - selection_offsetX);
-    selection_startY = parseInt(e.pageY - selection_offsetY);
-    let ww=$("#"+e.currentTarget.id).width();
-    let hh=$("#"+e.currentTarget.id).height();
-   if(selection_isDown==false){
+  let selection_offsetX = offset.left;
+  let selection_offsetY = offset.top;
+  selection_startX = parseInt(e.pageX - selection_offsetX);
+  selection_startY = parseInt(e.pageY - selection_offsetY);
+  let ww = $("#" + e.currentTarget.id).width();
+  let hh = $("#" + e.currentTarget.id).height();
+  if (selection_grabbable) {
+    selection_isGrab = true;
+    $("#" + e.currentTarget.id).css("cursor", "grabbing");
+    return;
+  } else if ((selection_resizableX > 0) || (selection_resizableY > 0)) {
+    selection_isResize = true;
+    $("#" + e.currentTarget.id).css("cursor", "grabbing");
+    return;
+  }
+  if (selection_isDown == false) {
     let vid = e.currentTarget.id.split('-');
 
-    let id=vid[1];
-    console.log("start:"+selection_startX+","+selection_startY);
-    selection_ellipse[id]={
-      x:0,
-      y:0,
-      w:0,
-      h:0,
-      id:id,
-      ctx_width:ww,
-      ctx_height:hh,
-      ctx:e.currentTarget.getContext("2d")
+    let id = vid[1];
+    console.log("start:" + selection_startX + "," + selection_startY);
+    selection_ellipse[id] = {
+      x: 0,
+      y: 0,
+      w: 0,
+      h: 0,
+      id: id,
+      ctx_width: ww,
+      ctx_height: hh,
+      ctx: e.currentTarget.getContext("2d")
     }
-    
-   }
-    selection_isDown = true;
 
-    
-    //console.log("position start:"+selection_startX+","+selection_startY);
+  }
+  selection_isDown = true;
+
+
+  //console.log("position start:"+selection_startX+","+selection_startY);
 }
 
 function handleMouseUp(e) {
-    if (!selection_isDown) {
-        return;
-    }
-    e.preventDefault();
-    e.stopPropagation();
-    selection_isDown = false;
-    let vid = e.currentTarget.id.split('-');
-    let id=vid[1];
-    console.log("selection "+JSON.stringify(selection_ellipse[id]));
-    selection_ctx.beginPath();
-    selection_ctx.strokeStyle = 'green';
-   
-    selection_ctx.ellipse(selection_ellipse[id]['x'], selection_ellipse[id]['y'], selection_ellipse[id]['w'], selection_ellipse[id]['h'], 0, 0, 2 * Math.PI);
-    selection_ctx.stroke();
+  selection_isGrab = false;
+  selection_isResize = false;
+  selection_resizableX = 0;
+  selection_resizableY = 0;
+  selection_grabbable = false;
+
+  if (!selection_isDown) {
+    return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+  selection_isDown = false;
+
+  //console.log("selection "+JSON.stringify(selection_ellipse[id]));
 }
 
 function handleMouseOut(e) {
-    if (!selection_isDown) {
-        return;
-    }
-    e.preventDefault();
-    e.stopPropagation();
-    selection_isDown = false;
+  selection_grabbable = false;
+  selection_isGrab = false;
+
+  if (!selection_isDown) {
+    return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+  selection_isDown = false;
+  selection_resizableX = 0;
+  selection_resizableY = 0;
+
+
+  selection_isResize = false;
+
 }
 
 function handleMouseMove(e) {
-    if (!selection_isDown) {
+  let vid = e.currentTarget.id.split('-');
+  let id = vid[1];
+  let offset = $("#" + e.currentTarget.id).offset();
+
+  let selection_offsetX = offset.left;
+  let selection_offsetY = offset.top;
+
+  let mouseX = parseInt(e.pageX - selection_offsetX);
+  let mouseY = parseInt(e.pageY - selection_offsetY);
+
+  if (!selection_isDown) {
+    // check if
+
+    if (selection_ellipse.hasOwnProperty(id)) {
+      if (selection_isGrab) {
+        selection_ellipse[id]['x'] = mouseX;
+        selection_ellipse[id]['y'] = mouseY;
+        moveOval(id);
         return;
+      } else if (selection_isResize) {
+        if (selection_resizableX > 0) {
+          if (mouseX > selection_ellipse[id]['x']) {
+            if ((selection_ellipse[id]['w'] + (mouseX - selection_resizableX) > 0)) {
+              selection_ellipse[id]['w'] = selection_ellipse[id]['w'] + (mouseX - selection_resizableX);
+
+              selection_resizableX = mouseX;
+              moveOval(id);
+            }
+
+          } else {
+            if ((selection_ellipse[id]['w'] - (mouseX - selection_resizableX) > 0)) {
+              selection_ellipse[id]['w'] = selection_ellipse[id]['w'] - (mouseX - selection_resizableX);
+
+              selection_resizableX = mouseX;
+              moveOval(id);
+            }
+          }
+
+
+        } else if (selection_resizableY > 0) {
+          if (mouseY > selection_ellipse[id]['y']) {
+
+            if ((selection_ellipse[id]['h'] + (mouseY - selection_resizableY)) > 0) {
+              selection_ellipse[id]['h'] = selection_ellipse[id]['h'] + (mouseY - selection_resizableY);
+              selection_resizableY = mouseY;
+              moveOval(id);
+            }
+          } else {
+            if ((selection_ellipse[id]['h'] - (mouseY - selection_resizableY)) > 0) {
+              selection_ellipse[id]['h'] = selection_ellipse[id]['h'] - (mouseY - selection_resizableY);
+              selection_resizableY = mouseY;
+              moveOval(id);
+            }
+          }
+        }
+        return;
+      } else {
+        selection_resizableX = 0;
+        selection_resizableY = 0;
+
+
+        // check boundary first
+        if (((mouseX >= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] + 5))) &&
+          (mouseY >= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] + 5)
+          )) {
+          // check if in the center
+          if ((mouseY >= selection_ellipse[id]['y'] - 5) && (mouseY <= selection_ellipse[id]['y'] + 5) &&
+            (mouseX >= selection_ellipse[id]['x'] - 5) && (mouseX <= selection_ellipse[id]['x'] + 5)) {
+            $("#" + e.currentTarget.id).css("cursor", "grab");
+            console.log("grabmode");
+            selection_grabbable = true;
+            return;//
+          }
+        
+
+        //check border vertical
+        if (
+          (((mouseX >= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] + 5))) ||
+            (mouseX >= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] + 5)))) {
+          $("#" + e.currentTarget.id).css("cursor", "ew-resize");
+          selection_resizableX = mouseX;
+          return;
+          //check horizontal
+        } else if (((mouseY >= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] + 5))) ||
+          (mouseY >= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] + 5))) {
+          $("#" + e.currentTarget.id).css("cursor", "ns-resize");
+          selection_resizableY = mouseY;
+
+          return;
+
+        }
+      }
+
+      }
     }
-    e.preventDefault();
-    e.stopPropagation();
-    let offset = $("#"+e.currentTarget.id).offset();
+    selection_grabbable = false;
 
-    let selection_offsetX = offset.left;
-    let selection_offsetY = offset.top;
+    $("#" + e.currentTarget.id).css("cursor", "pointer");
 
-    let mouseX = parseInt(e.pageX - selection_offsetX);
-    let mouseY = parseInt(e.pageY - selection_offsetY);
-   // console.log("position end:"+mouseX+","+mouseY);
-   let vid = e.currentTarget.id.split('-');
-    let id=vid[1];
+    return;
+  }
+  $("#" + e.currentTarget.id).css("cursor", "move");
 
-    drawOval(id,mouseX, mouseY);
+  e.preventDefault();
+  e.stopPropagation();
+
+
+  // console.log("position end:"+mouseX+","+mouseY);
+
+
+  drawOval(id, mouseX, mouseY);
 }
 
 
-function checkRedrawReference(camid, domid, x, y, sx, sy, r,rt) {
+function checkRedrawReference(camid, domid, x, y, sx, sy, r, rt) {
   jchaos.getChannel(camid, 1, (ele) => {
-    let xx, yy, sxx, syy, rro,rot;
+    let xx, yy, sxx, syy, rro, rot;
     xx = (typeof x === 'undefined') ? ele[0].REFX : x;
     yy = (typeof y === 'undefined') ? ele[0].REFY : y;
     sxx = (typeof sx === 'undefined') ? ele[0].REFSX : sx;
@@ -146,32 +274,35 @@ function checkRedrawReference(camid, domid, x, y, sx, sy, r,rt) {
     rro = (typeof r === 'undefined') ? ele[0].REFRHO : r;
     rot = (typeof rt === 'undefined') ? ele[0].ROT : rt;
 
-    redrawReference(domid, xx, yy, sxx, syy, rro,rot);
+    redrawReference(domid, xx, yy, sxx, syy, rro, rot);
 
   });
 }
-function redrawReference(domid, x, y, sx, sy, r,rot) {
+function redrawReference(domid, x, y, sx, sy, r, rot) {
   const canvas = document.getElementById("cameraImageCanv-" + domid);
   const canvasSel = document.getElementById("selectionCanv-" + domid);
+  let currzoom = 1.0;
+  if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+    currzoom = cameraLayoutSettings[domid]["zoom"];
+  }
+  if (canvas == null) {
+    return;
+  }
+  if ($("#cameraImage-" + domid).length == 0) {
+    return;
+  }
+  let width = $("#cameraImage-" + domid).width();
+  let height = $("#cameraImage-" + domid).height();
+  if (canvasSel != null) {
+    canvasSel.width = width * currzoom;
+    canvasSel.height = height * currzoom;
+  }
 
-  if(canvas==null){
-    return;
-  }
-  if ($("#cameraImage-" + domid).length==0) {
-    return;
-  }
-  let width=$("#cameraImage-" + domid).width();
-  let height=$("#cameraImage-" + domid).height();
-  if(canvasSel!=null){
-    canvasSel.width = width;
-    canvasSel.height =height;
-  }
-  
   let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
   let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
-  canvas.width = width;
-  canvas.height =height;
-  if(natwidth>natheight){
+  canvas.width = width * currzoom;
+  canvas.height = height * currzoom;
+  if (natwidth > natheight) {
     $("#cameraImage-" + domid).removeClass("chaos_image_v");
     $("#cameraImage-" + domid).removeClass("chaos_image");
 
@@ -189,25 +320,25 @@ function redrawReference(domid, x, y, sx, sy, r,rot) {
   if (sx > 0 && sy > 0) {
     //let name=jchaos.encodeName(id);
 
-    
-    
+
+
     let ratiox = canvas.width / natwidth;
     let ratioy = canvas.height / natheight;
 
-    if(rot%360!=0){
-      ctx.translate(canvas.width/2, canvas.height/2); // set canvas context to center
+    if (rot % 360 != 0) {
+      ctx.translate(canvas.width / 2, canvas.height / 2); // set canvas context to center
 
       //x = (x-canvas.width/2) * ratiox, y = (y-canvas.height/2) * ratioy, sx = sx * ratiox, sy = sy * ratioy;
-     x = x* ratiox, y = y* ratioy, sx = sx * ratiox, sy = sy * ratioy;
-      console.log("rot center:("+canvas.width/2+","+canvas.height/2+") ratiox:"+ratiox+" ratioy:"+ratioy+" ellipse center:("+x+","+y+") rot:"+rot);
-      ctx.rotate((-rot)* Math.PI / 180);
+      x = x * ratiox, y = y * ratioy, sx = sx * ratiox, sy = sy * ratioy;
+      console.log("rot center:(" + canvas.width / 2 + "," + canvas.height / 2 + ") ratiox:" + ratiox + " ratioy:" + ratioy + " ellipse center:(" + x + "," + y + ") rot:" + rot);
+      ctx.rotate((-rot) * Math.PI / 180);
 
     } else {
-      x = x* ratiox, y = y* ratioy, sx = sx * ratiox, sy = sy * ratioy;
+      x = x * ratiox, y = y * ratioy, sx = sx * ratiox, sy = sy * ratioy;
 
     }
     //  console.log("canvas width:"+canvas.width + " height:"+canvas.height+" original img size:"+natwidth+"x"+natheight+" offsetTop:" +canvas.offsetTop + " offsetLeft:"+canvas.offsetLeft+" offsetW:"+canvas.offsetWidth + " offsetH:"+canvas.offsetHeight);
-    
+
     /*ctx.fillStyle = 'rgb(200, 0, 0)';
         ctx.fillRect(1, 1, 50, 50);
 
@@ -241,7 +372,7 @@ function redrawReference(domid, x, y, sx, sy, r,rot) {
 
     ctx.closePath();
     ctx.stroke();
-   
+
     // 
     //   console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
   }
@@ -321,8 +452,8 @@ function buildCameraArray(id, opt) {
   var html = "";
   var hostWidth = $(window).width();
   var hostHeight = $(window).height();
-  var maxwidth = Math.trunc((hostWidth-(50*tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
-  console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:"+tmpObj.displayRatio);
+  var maxwidth = Math.trunc((hostWidth - (50 * tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
+  console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:" + tmpObj.displayRatio);
 
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
   var cnt = 0;
@@ -333,10 +464,10 @@ function buildCameraArray(id, opt) {
     for (var c = 0; c < col; c++, cnt++) {
       var encoden = r + "_" + c;
       // html += '<td id="camera-' + encoden + '">';
-     // html += '<div class="col d-flex flex-column justify-content-center" style="aspect-ratio: '+tmpObj.displayRatio+';">';
-     html += '<div class="col-sm">';
+      // html += '<div class="col d-flex flex-column justify-content-center" style="aspect-ratio: '+tmpObj.displayRatio+';">';
+      html += '<div class="col-sm">';
 
-      html += '<div style="aspect-ratio: '+tmpObj.displayRatio+';width:'+maxwidth+'px;" class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
+      html += '<div style="aspect-ratio: ' + tmpObj.displayRatio + ';width:' + maxwidth + 'px;" class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
       html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/no_cam_trasp.svg" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '<canvas class="coveringCanvas selectionCanv" id="selectionCanv-' + encoden + '"/></canvas>';
@@ -366,7 +497,7 @@ function buildCameraArray(id, opt) {
 var cameralist = [], cameralistold = [];
 var old_tim = {}, counter = {}, tcum = {};
 
-function updateCamera(ds){
+function updateCamera(ds) {
   if (ds.dpck_ds_type == 0) {
     // output
     let freq, start, lat;
@@ -374,11 +505,11 @@ function updateCamera(ds){
     let debug = opt.camera.debug;
     let debug_html = "";
     start = Date.now();
-  /*  if (counter[id] == 0) {
-      checkRedrawReference(ds.ndk_uid, id);
-      counter[id]=1;
-    }
-*/
+    /*  if (counter[id] == 0) {
+        checkRedrawReference(ds.ndk_uid, id);
+        counter[id]=1;
+      }
+  */
     if (debug) {
       if (old_tim[id]) {
         if ((counter[id] % 1000) == 0) {
@@ -397,7 +528,7 @@ function updateCamera(ds){
     }
     lat = start - ds.dpck_ats;
 
-    if(ds.FRAMEBUFFER.hasOwnProperty("$binary")){
+    if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
       $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER.$binary.base64);
     } else {
       $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
@@ -409,16 +540,16 @@ function updateCamera(ds){
 
     }
 
-   
+
   } else if (ds.dpck_ds_type == 1) {
-      console.log("INPUT :"+JSON.stringify(ds));
+    console.log("INPUT :" + JSON.stringify(ds));
     let id = mappedcamera[ds.ndk_uid];
 
-    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO,-ds.ROT);
-  } 
+    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT);
+  }
 }
 $.fn.buildCameraArray = function (op) {
-  opt=op;
+  opt = op;
   this.html(buildCameraArray("table-" + this.attr('id'), opt));
 
   $(".camselect").on("change", (ev) => {
@@ -437,7 +568,7 @@ $.fn.buildCameraArray = function (op) {
       const ctx = canvas.getContext('2d');
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
       $("#cameraImage-" + vid[1]).attr("src", "/../img/no_cam_trasp.svg");
 
     } else {
@@ -448,31 +579,31 @@ $.fn.buildCameraArray = function (op) {
         }
       }
       mappedcamera[ev.currentTarget.value] = vid[1];
-    //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
+      //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
       $("#cameraImage-" + vid[1]).on('load', function () {
-        let s=$("#cameraImage-" + vid[1]).attr('src');
-        if(s.includes("..")){
+        let s = $("#cameraImage-" + vid[1]).attr('src');
+        if (s.includes("..")) {
           return;
         }
         //alert($('img.product_image').attr('src'));
-        console.log(ev.currentTarget.value+" = "+vid[1]);
+        console.log(ev.currentTarget.value + " = " + vid[1]);
         $("#cameraImage-" + vid[1]).off('load');
         let natwidth = $("#cameraImage-" + vid[1]).prop('naturalWidth');
         let natheight = $("#cameraImage-" + vid[1]).prop('naturalHeight');
-        if(natwidth>natheight){
+        if (natwidth > natheight) {
           $("#cameraImage-" + vid[1]).removeClass("chaos_image_v");
           $("#cameraImage-" + vid[1]).removeClass("chaos_image");
-      
+
           $("#cameraImage-" + vid[1]).addClass("chaos_image_h");
         } else {
           $("#cameraImage-" + vid[1]).removeClass("chaos_image");
-      
+
           $("#cameraImage-" + vid[1]).removeClass("chaos_image_h");
           $("#cameraImage-" + vid[1]).addClass("chaos_image_v");
         }
         checkRedrawReference(ev.currentTarget.value, vid[1]);
 
-     });
+      });
       activateMenuShort();
       $("#cameraImageCanv-" + vid[1]).on("mousemove", function (e) {
         var offset = $(this).offset();
@@ -498,8 +629,8 @@ $.fn.buildCameraArray = function (op) {
 
     }
     if (cameralist.length) {
-      
-      if (opt.push&&(jchaos.socket != null) && (jchaos.socket.connected)) {
+
+      if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
         if (cameralistold.length) {
           console.log("Unsubscribe " + JSON.stringify(cameralistold));
           jchaos.iosubscribeCU(cameralistold, false);
@@ -517,50 +648,50 @@ $.fn.buildCameraArray = function (op) {
         jchaos.options['io_onmessage'] = updateCamera;
 
       } else {
-        if(pullInterval!=null){
+        if (pullInterval != null) {
           clearInterval(pullInterval);
         }
-        if(pullIntervalsec!=null){
+        if (pullIntervalsec != null) {
           clearInterval(pullIntervalsec);
         }
-        pullInterval=setInterval(()=>{
-          jchaos.getChannel(cameralist,0,(vds)=>{
-            vds.forEach(ele=>{
+        pullInterval = setInterval(() => {
+          jchaos.getChannel(cameralist, 0, (vds) => {
+            vds.forEach(ele => {
               updateCamera(ele);
             });
 
           });
-        },opt.camera.cameraRefresh);
-        pullIntervalsec=setInterval(()=>{
-          jchaos.getChannel(cameralist,1,(vds)=>{
-            vds.forEach(ele=>{
+        }, opt.camera.cameraRefresh);
+        pullIntervalsec = setInterval(() => {
+          jchaos.getChannel(cameralist, 1, (vds) => {
+            vds.forEach(ele => {
               updateCamera(ele);
             });
 
           });
-        },1000);
+        }, 1000);
       }
     }
   });
   $(".selectionCanv").mousedown(function (e) {
-    
-    if(selection_canvas!=e.currentTarget){
-       selection_canvas = e.currentTarget;
-     //  selection_canvasOffset=selection_canvas.offset();
-       selection_ctx=selection_canvas.getContext("2d");
-      console.log("changed canvas "+e.currentTarget.id);
-      selection_isDown=false;
+
+    if (selection_canvas != e.currentTarget) {
+      selection_canvas = e.currentTarget;
+      //  selection_canvasOffset=selection_canvas.offset();
+      selection_ctx = selection_canvas.getContext("2d");
+      console.log("changed canvas " + e.currentTarget.id);
+      selection_isDown = false;
     }
-      handleMouseDown(e);
+    handleMouseDown(e);
   });
   $(".selectionCanv").mousemove(function (e) {
-      handleMouseMove(e);
+    handleMouseMove(e);
   });
   $(".selectionCanv").mouseup(function (e) {
-      handleMouseUp(e);
+    handleMouseUp(e);
   });
   $(".selectionCanv").mouseout(function (e) {
-      handleMouseOut(e);
+    handleMouseOut(e);
   });
 }
 
@@ -963,89 +1094,89 @@ function activateMenuShort() {
       if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
         currzoomm = cameraLayoutSettings[domid]["zoom"];
       }
-      
+
       var ele = jchaos.getChannel(name, 1, null);
       var el = ele[0];
-      var selection=selection_ellipse[domid];
-     // redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+      var selection = selection_ellipse[domid];
+      // redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
       cuitem['sep1'] = "---------";
       cuitem['state'] = {
-        "name": "Set Mode..",icon:"fa-plug",
+        "name": "Set Mode..", icon: "fa-plug",
         "items": {
           'no-acquire': {
-            name: "No Acquire", cu: name,icon:"fa-pause",
+            name: "No Acquire", cu: name, icon: "fa-pause",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_NOACQUIRE.toString(), function () {
                 jqccs.instantMessage("SET NO ACQUIRE", name, 3000, true);
-      
+
               })
             }
           },
           'continuos': {
-            name: "Continuous", cu: name,icon:"fa-play",
+            name: "Continuous", cu: name, icon: "fa-play",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_CONT.toString(), function () {
                 jqccs.instantMessage("SET CONTINUOUS ", name, 3000, true);
-      
+
               })
             }
           },
           'lowhi': {
-            name: "Trigger LoHi", cu: name,icon:"fa-sort-asc",
+            name: "Trigger LoHi", cu: name, icon: "fa-sort-asc",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_LOHI.toString(), function () {
                 jqccs.instantMessage("SET LOW->HI ", name, 3000, true);
-      
+
               })
             }
           },
           'hilow': {
-            name: "Trigger HiLow", cu: name,icon:"fa-sort-desc",
+            name: "Trigger HiLow", cu: name, icon: "fa-sort-desc",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_HILO.toString(), function () {
                 jqccs.instantMessage("SET HI->LO ", name, 3000, true);
-      
+
               })
             }
           },
           'manual': {
-            name: "Trigger User", cu: name,icon:"fa-user",
+            name: "Trigger User", cu: name, icon: "fa-user",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_PULSE.toString(), function () {
                 jqccs.instantMessage("SET Trigger User ", name, 3000, true);
-      
+
               })
             }
           }
-          
+
         }
       };
       cuitem['transforms'] = {
-        "name": "Trasforms..",icon:"fa-cog",
+        "name": "Trasforms..", icon: "fa-cog",
         "items": {
           'rotatep90': {
-            name: "Rotate +90", cu: name,icon:"fa-undo",
+            name: "Rotate +90", cu: name, icon: "fa-undo",
             callback: function (itemKey, opt, e) {
-               var name = opt.items.transforms.items["rotatep90"].cu;
+              var name = opt.items.transforms.items["rotatep90"].cu;
               rotateCamera(name, 90);
             }
           },
           'rotatem90': {
-            name: "Rotate -90", cu: name,icon:"fa-repeat",
+            name: "Rotate -90", cu: name, icon: "fa-repeat",
             callback: function (itemKey, opt, e) {
               var name = opt.items.transforms.items["rotatem90"].cu;
               rotateCamera(name, -90);
             }
           },
           'rotateReset': {
-            name: "Rotate reset", cu: name,icon:"fa-window-restore",
+            name: "Rotate reset", cu: name, icon: "fa-window-restore",
             callback: function (itemKey, opt, e) {
-               var name = opt.items.transforms.items['rotateReset'].cu;
+              var name = opt.items.transforms.items['rotateReset'].cu;
               rotateCamera(name, 0);
             }
           },
           'zoom-reset': {
-            name: "Zoom Reset", cu: name,icon:"fa-arrows",
+            name: "Zoom Reset", cu: name, icon: "fa-arrows",
             callback: function (itemKey, opt, e) {
               // var name = opt.items[itemKey].cu;
               zoomInOut(domid, 0);
@@ -1054,80 +1185,92 @@ function activateMenuShort() {
           }
         }
       };
-      if(selection&&selection.hasOwnProperty('w')&&selection.hasOwnProperty('h')&&selection.hasOwnProperty('ctx_width')&&selection.h&&selection.w){
-        
-        cuitem['transforms']['items']['zoom-in']={
-          name: "Zoom In ", cu: name,icon:"fa-search-plus",
+      if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.hasOwnProperty('ctx_width') && selection.h && selection.w) {
+
+        cuitem['transforms']['items']['zoom-in'] = {
+          name: "Zoom In ", cu: name, icon: "fa-search-plus",
           callback: function (itemKey, opt, e) {
-            zoomInOut(domid, selection.ctx_width/selection.w);
+            zoomInOut(domid, selection.ctx_width / selection.w);
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
         };
-        
+
       }
-      if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid].hasOwnProperty("zoom")&&(cameraLayoutSettings[domid].zoom!=1.0)&&(cameraLayoutSettings[domid].hasOwnProperty("zoom_incr"))){
-        cuitem['transforms']['items']['zoom-out']={
-          name: "Zoom Out ", cu: name,icon:"fa-search-minus",
+      if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom") && (cameraLayoutSettings[domid].zoom != 1.0) && (cameraLayoutSettings[domid].hasOwnProperty("zoom_incr"))) {
+        cuitem['transforms']['items']['zoom-out'] = {
+          name: "Zoom Out ", cu: name, icon: "fa-search-minus",
           callback: function (itemKey, opt, e) {
-            zoomInOut(domid, 1/cameraLayoutSettings[domid].zoom_incr);
+            zoomInOut(domid, 1 / cameraLayoutSettings[domid].zoom_incr);
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
         }
       }
-      if(selection&&selection.hasOwnProperty('w')&&selection.hasOwnProperty('h')&&selection.h&&selection.w){
-        cuitem['transforms']['items']['set-reference']={
-          name: "Set Reference ", cu: name,icon:"fa-dot-circle-o",
+      if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.h && selection.w) {
+        cuitem['transforms']['items']['set-reference'] = {
+          name: "Set Reference ", cu: name, icon: "fa-dot-circle-o",
           callback: function (itemKey, opt, e) {
-            let x=selection['x'];
-            let y=selection['y'];
+            let x = selection['x'];
+            let y = selection['y'];
             let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
             let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
             let width = $("#cameraImage-" + domid).width();
             let height = $("#cameraImage-" + domid).height();
-            console.log("("+natwidth+","+natheight+")=>("+width+","+height+")");
-            let ratiox=natwidth/width;
-            let ratioy=natheight/height;
+            console.log("(" + natwidth + "," + natheight + ")=>(" + width + "," + height + ")");
+            let ratiox = natwidth / width;
+            let ratioy = natheight / height;
+            let currzoom = 1.0;
+            if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+              currzoom = cameraLayoutSettings[domid]["zoom"];
+            }
+            ratiox = ratiox / currzoom;
+            ratioy = ratioy / currzoom;
 
-            setReference(name, x*ratiox, y*ratioy, selection['w']*ratiox, selection['h']*ratioy);
+            setReference(name, x * ratiox, y * ratioy, selection['w'] * ratiox, selection['h'] * ratioy);
             delete selection_ellipse[domid];
 
           }
         },
-        
-        cuitem['transforms']['items']['set-roi']={
-          name: "Set ROI ", cu: name,icon:"fa-scissors",
-          callback: function (itemKey, opt, e) {
-            let x=selection['x']-selection['w'];
-            let y=selection['y']-selection['h'];
-            let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
-            let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
-            let width = $("#cameraImage-" + domid).width();
-            let height = $("#cameraImage-" + domid).height();
-            console.log(" ROI ("+natwidth+","+natheight+")=>("+width+","+height+")");
-            let ratiox=natwidth/width;
-            let ratioy=natheight/height;
-            setRoi(name, selection['w']*2*ratiox, selection['h']*2*ratioy, x*ratiox, y*ratioy, () => {  });
-            delete selection_ellipse[domid];
+
+          cuitem['transforms']['items']['set-roi'] = {
+            name: "Set ROI ", cu: name, icon: "fa-scissors",
+            callback: function (itemKey, opt, e) {
+              let x = selection['x'] - selection['w'];
+              let y = selection['y'] - selection['h'];
+              let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
+              let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
+              let width = $("#cameraImage-" + domid).width();
+              let height = $("#cameraImage-" + domid).height();
+              console.log(" ROI (" + natwidth + "," + natheight + ")=>(" + width + "," + height + ")");
+              let ratiox = natwidth / width;
+              let ratioy = natheight / height;
+              let currzoom = 1.0;
+              if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+                currzoom = cameraLayoutSettings[domid]["zoom"];
+              }
+              ratiox = ratiox / currzoom;
+              ratioy = ratioy / currzoom;
+              setRoi(name, selection['w'] * 2 * ratiox, selection['w'] * 1.5 * ratioy, x * ratiox, y * ratioy, () => { });
+              delete selection_ellipse[domid];
+            }
           }
-        }
-        
+
       }
-      cuitem['transforms']['items']['reset-reference']={
-        name: "Reset Reference ", cu: name,icon:"fa-times-circle-o",
+      cuitem['transforms']['items']['reset-reference'] = {
+        name: "Reset Reference ", cu: name, icon: "fa-times-circle-o",
         callback: function (itemKey, opt, e) {
           setReference(name, 0, 0, 0, 0);
           delete selection_ellipse[domid];
         }
       }
-      cuitem['transforms']['items']['reset-roi']={
-        name: "Reset ROI ", cu: name,icon:"fa-square-o",
+      cuitem['transforms']['items']['reset-roi'] = {
+        name: "Reset ROI ", cu: name, icon: "fa-square-o",
         callback: function (itemKey, opt, e) {
-        resetRoi(name,()=>{});
-        delete selection_ellipse[domid];
+          resetRoi(name, () => { });
+          delete selection_ellipse[domid];
         }
       }
       cuitem['sep2'] = "---------";
-      var scuitem={};
+      var scuitem = {};
       for (var k in el) {
         if (!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk"))) {
           var val = el[k];
@@ -1168,20 +1311,20 @@ function activateMenuShort() {
         }
       }
       cuitem['fold2'] = {
-        "name": "Set..",icon:"fa-wrench",
+        "name": "Set..", icon: "fa-wrench",
         "items": scuitem
-    };
+      };
 
 
       cuitem['sep3'] = "---------";
 
       cuitem['quit'] = {
         name: "Quit",
-        callback:function(){
+        callback: function () {
           redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
 
         },
-         icon: function () {
+        icon: function () {
           return 'context-menu-icon context-menu-icon-quit';
         }
 
@@ -1194,36 +1337,36 @@ function activateMenuShort() {
 
   });
 }
-function rotateCamera(name,rot){
+function rotateCamera(name, rot) {
 
   if (!cameraLayoutSettings.hasOwnProperty(name)) {
-    cameraLayoutSettings[name]={"rot":0};
+    cameraLayoutSettings[name] = { "rot": 0 };
 
-  } 
-  if(rot==0){
+  }
+  if (rot == 0) {
     jchaos.setAttribute(name, "ROT", String(0), function () {
-      jqccs.instantMessage("Camera Rotate", "Reset Rotation" , 2000, true);
-      cameraLayoutSettings[name]["rot"]=0;
-  },(bad)=>{
-    jqccs.instantMessage("Camera Rotate", "FAILED: Reset rotation: "+JSON.stringify(bad) , 4000, false);
+      jqccs.instantMessage("Camera Rotate", "Reset Rotation", 2000, true);
+      cameraLayoutSettings[name]["rot"] = 0;
+    }, (bad) => {
+      jqccs.instantMessage("Camera Rotate", "FAILED: Reset rotation: " + JSON.stringify(bad), 4000, false);
 
-  });
+    });
   } else {
-    jchaos.getChannel(name,1,(ds)=>{
-      if(ds[0].hasOwnProperty("ROT")){
-        var r=ds[0].ROT+rot;
+    jchaos.getChannel(name, 1, (ds) => {
+      if (ds[0].hasOwnProperty("ROT")) {
+        var r = ds[0].ROT + rot;
         jchaos.setAttribute(name, "ROT", String(r), function () {
-          jqccs.instantMessage("Camera Rotate", "Rotation of " + r + " degree" , 2000, true);
-          cameraLayoutSettings[name]["rot"]=r;
-      },(bad)=>{
-        jqccs.instantMessage("Camera Rotate", "FAILED: Rotation of " + r + " degree: "+JSON.stringify(bad) , 4000, false);
-    
-      });
+          jqccs.instantMessage("Camera Rotate", "Rotation of " + r + " degree", 2000, true);
+          cameraLayoutSettings[name]["rot"] = r;
+        }, (bad) => {
+          jqccs.instantMessage("Camera Rotate", "FAILED: Rotation of " + r + " degree: " + JSON.stringify(bad), 4000, false);
+
+        });
 
       }
     })
   }
-  
+
 }
 function zoomInOut(name, incr) {
   var currzoom = 1.0;
@@ -1236,12 +1379,12 @@ function zoomInOut(name, incr) {
       cameraLayoutSettings[name]["ory"] = 0;
 
     }
-    
+
   } else {
     cameraLayoutSettings[name] = { "zoom": currzoom, "orx": 0, "ory": 0 };
 
   }
-  
+
   if (incr == 0) {
     currzoom = 1.0;
   } else {
@@ -1257,28 +1400,30 @@ function zoomInOut(name, incr) {
   var prop = null;
 
   //  $("#insideWrapper-"+encoden).css("transform","scale("+currzoom+")");
-  
+
   if ((currzoom != 1.0)) {
     const mirinosize = 100;
 
     var scaleorx = selection_ellipse[name]['x'];
     var scaleory = selection_ellipse[name]['y'];
+    var scaleorw = selection_ellipse[name]['w'];
+    var scaleorh = selection_ellipse[name]['h'];
 
-   
+
     if ((currzoom != 1.0) && (incr != 1)) {
       cameraLayoutSettings[name]["orx"] = scaleorx.toFixed(0);
       cameraLayoutSettings[name]["ory"] = scaleory.toFixed(0);
     }
-    
+
 
     // var or=x + "px " +y+"px";
-    let left=$("#cameraImage-" + encoden).offset().left;
-    let top=$("#cameraImage-" + encoden).offset().left;
-    /*let w=$("#cameraImage-" + encoden).width();
-    let h=$("#cameraImage-" + encoden).height();
-    */
+    let left = $("#cameraImage-" + encoden).offset().left;
+    let top = $("#cameraImage-" + encoden).offset().top;
+    let w = $("#cameraImage-" + encoden).width();
+    let h = $("#cameraImage-" + encoden).height();
+
     //let w=$("#cameraImage-" + encoden).prop('naturalWidth');
-   // let h=$("#cameraImage-" + encoden).prop('naturalHeight');
+    // let h=$("#cameraImage-" + encoden).prop('naturalHeight');
     //var scaleor = cameraLayoutSettings[name]["orx"] + "px " + cameraLayoutSettings[name]["ory"] + "px";
     //var scaleor = (w/2-left) + "px " + (h/2-top) + "px";
     var scaleor = "0% 0%";
@@ -1290,26 +1435,40 @@ function zoomInOut(name, incr) {
       prop["transform"] = "scale(" + currzoom + "," + currzoom + ")";
 
     }
-    $("#insideWrapper-"+encoden).prop('scrollLeft',(scaleorx+left)*currzoom);
-    $("#insideWrapper-"+encoden).prop('scrollTop',(scaleory+top)*currzoom);
-   /* if (currrot != 0) {
-      prop["transform"] = prop["transform"] + " rotate(" + currrot + "deg)";
-    }
-     if (currzoom != 1.0 && currrot != 0) {
-      jqccs.instantMessage("WARNING Zoom+Rotate", "Are deprecated! may bring unexpected results, Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 4000, true);
 
-    } else {
-      jqccs.instantMessage("Transform", "Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 2000, true);
-    }
-
-    */
+    /* if (currrot != 0) {
+       prop["transform"] = prop["transform"] + " rotate(" + currrot + "deg)";
+     }
+      if (currzoom != 1.0 && currrot != 0) {
+       jqccs.instantMessage("WARNING Zoom+Rotate", "Are deprecated! may bring unexpected results, Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 4000, true);
+ 
+     } else {
+       jqccs.instantMessage("Transform", "Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 2000, true);
+     }
+ 
+     */
 
     $("#cameraImage-" + encoden).css(prop);
-    $("#cameraImageCanv-" + encoden).css(prop);
-    console.log(name + " Zoom:" + currzoom + " Rotate:" + currzoom + "left:"+left+" top:"+top+" width:"+w+" height:"+h+" CSS:" + JSON.stringify(prop));
-   console.log(name + " Zoom:" + currzoom );
+    //$("#cameraImageCanv-" + encoden).css(prop);
+    $("#insideWrapper-" + encoden).scrollLeft((scaleorx) * currzoom - w / 2);
+    $("#insideWrapper-" + encoden).scrollTop((scaleory) * currzoom - h / 2);
+    w = $("#cameraImage-" + encoden).width();
+    h = $("#cameraImage-" + encoden).height();
+    const canvas = document.getElementById("cameraImageCanv-" + encoden);
+    const canvasSel = document.getElementById("selectionCanv-" + encoden);
+    canvas.width = w * currzoom;
+    canvas.height = h * currzoom;
+    canvasSel.width = w * currzoom;
+    canvasSel.height = h * currzoom;
+    /* $("#cameraImageCanv-" + encoden).width(w*currzoom);
+     $("#cameraImageCanv-" + encoden).height(h*currzoom);
+     $("#selectionCanv-" + encoden).width(w*currzoom);
+     $("#selectionCanv-" + encoden).height(h*currzoom);
+ */
+    console.log(name + " Zoom:" + currzoom + " Rotate:" + currzoom + "left:" + left + " top:" + top + " width:" + w + " height:" + h + " scrollx:" + $("#insideWrapper-" + encoden).scrollLeft() + " CSS:" + JSON.stringify(prop));
+    console.log(name + " Zoom:" + currzoom);
     cameraLayoutSettings[name]["css"] = prop;
-   
+
   } else {
     $("#cameraImage-" + encoden).css("transform", "scale(" + currzoom + ")");
     $("#cameraImageCanv-" + encoden).css("transform", "scale(" + currzoom + ")");
@@ -1333,11 +1492,11 @@ function activateMenu(tmpObj) {
         currzoomm = cameraLayoutSettings[name]["zoom"];
       }
 
-      
+
       cuitem['sep1'] = "---------";
-      var tcuitem={};
+      var tcuitem = {};
       tcuitem['zoom-in'] = {
-        name: "Zoom In ", cu: name,icon:"fa-search-plus",
+        name: "Zoom In ", cu: name, icon: "fa-search-plus",
         callback: function (itemKey, opt, e) {
           var name = opt.items['transforms'].items[itemKey].cu;
           var offset = $(this).offset();
@@ -1348,9 +1507,9 @@ function activateMenu(tmpObj) {
           zoomInOut(name, 2);
         }
       };
-    
+
       tcuitem['zoom-out'] = {
-        name: "Zoom Out ", cu: name,icon:"fa-search-minus",
+        name: "Zoom Out ", cu: name, icon: "fa-search-minus",
         callback: function (itemKey, opt, e) {
           var name = opt.items['transforms'].items[itemKey].cu;
           var encoden = jchaos.encodeName(name);
@@ -1365,7 +1524,7 @@ function activateMenu(tmpObj) {
           zoomInOut(name, 0.5);
         }
       };
-    
+
       tcuitem['zoom-reset'] = {
         name: "Zoom Reset", cu: name,
         callback: function (itemKey, opt, e) {
@@ -1374,14 +1533,14 @@ function activateMenu(tmpObj) {
         }
       };
       tcuitem['rotatep90'] = {
-        name: "Rotate +90", cu: name,icon:"fa-undo",
+        name: "Rotate +90", cu: name, icon: "fa-undo",
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
           rotateCamera(name, 90);
         }
       };
       tcuitem['rotatem90'] = {
-        name: "Rotate -90", cu: name,icon:"fa-repeat",
+        name: "Rotate -90", cu: name, icon: "fa-repeat",
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
           rotateCamera(name, -90);
@@ -1399,7 +1558,7 @@ function activateMenu(tmpObj) {
         "items": tcuitem
       };
       cuitem['sep2'] = "---------";
-      var rcuitem={};
+      var rcuitem = {};
 
       rcuitem['select-area'] = {
         name: "Select Area..",
@@ -1437,7 +1596,7 @@ function activateMenu(tmpObj) {
 
         }
       };
-      
+
       if (tmpObj.hasOwnProperty('crop')) {
         var crop_obj = tmpObj['crop'][name];
         if (typeof crop_obj === "object") {
@@ -1501,7 +1660,7 @@ function activateMenu(tmpObj) {
       };
 
       cuitem['sep3'] = "---------";
-      var scuitem={};
+      var scuitem = {};
       var ele = jchaos.getChannel(name, 1, null);
       var el = ele[0];
       redrawReference(jchaos.encodeName(name), ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO);
@@ -1548,7 +1707,7 @@ function activateMenu(tmpObj) {
       }
 
 
-    cuitem['fold3'] = {
+      cuitem['fold3'] = {
         "name": "Set..",
         "items": scuitem
       };
@@ -1567,7 +1726,7 @@ function activateMenu(tmpObj) {
         }
 
       };
-      
+
 
       return {
         items: cuitem
@@ -1622,15 +1781,15 @@ function rebuildCam(tmpObj) {
       html += '<div class="col">';
       html += '<div class="insideWrapper cameraMenu" cuname="' + key + '" id="insideWrapper-' + encoden + '">';
 
-      
+
       html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/no_cam_trasp.svg" />';
-      
+
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '<div>' + key + '</div>';
       html += '<div id="info-' + encoden + '"></div>';
       html += '</div>';
 
-      
+
       html += '</div>'; // close col
 
       cnt++;
@@ -1685,7 +1844,7 @@ function rebuildCam(tmpObj) {
               jchaos.setAttribute(key, "REFY", y.toString(), ok => {
                 console.log(key + " X Coordinate: " + x + " Y Coordinate: " + y);
                 jchaos.getChannel(key, 1, (ele) => {
-                  redrawReference(encoden, x, y, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO,ele[0].ROT);
+                  redrawReference(encoden, x, y, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
 
                 });
               });
@@ -1693,7 +1852,7 @@ function rebuildCam(tmpObj) {
           }, "Cancel");
 
         });
-        
+
         $("#cameraImageCanv-" + encoden).on('mousemove', function (e) {
 
           var offset = $(this).offset();
@@ -1882,8 +2041,8 @@ function setRoi(cu, width, height, x, y, func) {
   );
 }
 function getWidget(options) {
-  if(options){
-    opt=options;
+  if (options) {
+    opt = options;
   }
   var chaos =
   {
@@ -1916,8 +2075,8 @@ function getWidget(options) {
 
         tmpObj.data[cindex] = cu[0];
         jqccs.updateGenericTableDataset(tmpObj);
-        
-        jqccs.updateGenericControl(tmpObj,cu[0]);
+
+        jqccs.updateGenericControl(tmpObj, cu[0]);
       })
 
     },
@@ -1997,7 +2156,7 @@ function getWidget(options) {
 
                 jqccs.updateGenericTableDataset(tmpObj);
               }
-              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO,selected.input.ROT);
+              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO, selected.input.ROT);
 
             }, function (d) {
               if (tmpObj.skip_fetch > 0)
@@ -2033,9 +2192,9 @@ function getWidget(options) {
       //var html = '<div class="row">';
 
 
-     // html += '<div class="container-fluid" id="cameraTable"></div>';
-     var html = '<div class="row" id="cameraTable"></div>';
-      
+      // html += '<div class="container-fluid" id="cameraTable"></div>';
+      var html = '<div class="row" id="cameraTable"></div>';
+
 
       var cu = tmpObj.elems;
       var template = tmpObj.type;
@@ -2147,9 +2306,9 @@ function getWidget(options) {
 
 
             // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-            
-             $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
-            
+
+            $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+
             // let freq = 1000.0 * counter[id] / tcum[id];
             let freq = 1000.0 / (start - old_tim[id]);
             let lat = start - ds.dpck_ats;
@@ -2191,6 +2350,7 @@ function getWidget(options) {
   return chaos;
 }
 function setReference(cu, x, y, width, height) {
+
   /*var currzoomm=1.0;
   if(cameraLayoutSettings.hasOwnProperty(key)&&cameraLayoutSettings[key].hasOwnProperty("zoom")){
     currzoomm=cameraLayoutSettings[key]["zoom"];
