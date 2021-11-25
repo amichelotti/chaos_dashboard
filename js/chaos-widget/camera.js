@@ -74,6 +74,17 @@ function handleMouseDown(e) {
     console.log("not left");
     return;
   }
+  let vid = e.currentTarget.id.split('-');
+  let id = vid[1];
+  if(!mapcamera.hasOwnProperty(id)){
+    $("#" + e.currentTarget.id).css("cursor", "default");
+    selection_isGrab = false;
+    selection_isResize = false;
+    selection_resizableX = 0;
+    selection_resizableY = 0;
+    selection_grabbable = false;
+    return;
+  }
   let offset = $("#" + e.currentTarget.id).offset();
 
   let selection_offsetX = offset.left;
@@ -92,9 +103,7 @@ function handleMouseDown(e) {
     return;
   }
   if (selection_isDown == false) {
-    let vid = e.currentTarget.id.split('-');
-
-    let id = vid[1];
+    
     console.log("start:" + selection_startX + "," + selection_startY);
     selection_ellipse[id] = {
       x: 0,
@@ -152,6 +161,16 @@ function handleMouseOut(e) {
 function handleMouseMove(e) {
   let vid = e.currentTarget.id.split('-');
   let id = vid[1];
+
+  if(!mapcamera.hasOwnProperty(id)){
+    $("#" + e.currentTarget.id).css("cursor", "default");
+    selection_isGrab = false;
+    selection_isResize = false;
+    selection_resizableX = 0;
+    selection_resizableY = 0;
+    selection_grabbable = false;
+    return;
+  }
   let offset = $("#" + e.currentTarget.id).offset();
 
   let selection_offsetX = offset.left;
@@ -278,30 +297,16 @@ function checkRedrawReference(camid, domid, x, y, sx, sy, r, rt) {
 
   });
 }
-function redrawReference(domid, x, y, sx, sy, r, rot) {
+function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
   const canvas = document.getElementById("cameraImageCanv-" + domid);
   const canvasSel = document.getElementById("selectionCanv-" + domid);
-  let currzoom = 1.0;
-  if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
-    currzoom = cameraLayoutSettings[domid]["zoom"];
-  }
-  if (canvas == null) {
-    return;
-  }
-  if ($("#cameraImage-" + domid).length == 0) {
-    return;
-  }
-  let width = $("#cameraImage-" + domid).width();
-  let height = $("#cameraImage-" + domid).height();
-  if (canvasSel != null) {
-    canvasSel.width = width * currzoom;
-    canvasSel.height = height * currzoom;
-  }
 
-  let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
-  let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
-  canvas.width = width * currzoom;
-  canvas.height = height * currzoom;
+  if ((canvas == null)||($("#cameraImage-" + domid).length == 0)) {
+    return;
+  }
+  const ctx = canvas.getContext('2d');
+  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
   if (natwidth > natheight) {
     $("#cameraImage-" + domid).removeClass("chaos_image_v");
     $("#cameraImage-" + domid).removeClass("chaos_image");
@@ -313,15 +318,32 @@ function redrawReference(domid, x, y, sx, sy, r, rot) {
     $("#cameraImage-" + domid).removeClass("chaos_image_h");
     $("#cameraImage-" + domid).addClass("chaos_image_v");
   }
-  const ctx = canvas.getContext('2d');
 
+  $("#cameraImage-" + domid).on('load', function () {
+  $("#cameraImage-" + domid).off('load');
+
+  
+  let currzoom = 1.0;
+  if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+    currzoom = cameraLayoutSettings[domid]["zoom"];
+  }
+ 
+ 
+  let width = $("#cameraImage-" + domid).width();
+  let height = $("#cameraImage-" + domid).height();
+  if (canvasSel != null) {
+    canvasSel.width = width * currzoom;
+    canvasSel.height = height * currzoom;
+  }
+
+  
+  canvas.width = width * currzoom;
+  canvas.height = height * currzoom;
+  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (sx > 0 && sy > 0) {
-    //let name=jchaos.encodeName(id);
-
-
-
+    //let name=jchaos.encodeName(id);./ch
     let ratiox = canvas.width / natwidth;
     let ratioy = canvas.height / natheight;
 
@@ -331,7 +353,7 @@ function redrawReference(domid, x, y, sx, sy, r, rot) {
       //x = (x-canvas.width/2) * ratiox, y = (y-canvas.height/2) * ratioy, sx = sx * ratiox, sy = sy * ratioy;
       x = x * ratiox, y = y * ratioy, sx = sx * ratiox, sy = sy * ratioy;
       console.log("rot center:(" + canvas.width / 2 + "," + canvas.height / 2 + ") ratiox:" + ratiox + " ratioy:" + ratioy + " ellipse center:(" + x + "," + y + ") rot:" + rot);
-      ctx.rotate((-rot) * Math.PI / 180);
+      ctx.rotate((rot) * Math.PI / 180);
 
     } else {
       x = x * ratiox, y = y * ratioy, sx = sx * ratiox, sy = sy * ratioy;
@@ -377,7 +399,7 @@ function redrawReference(domid, x, y, sx, sy, r, rot) {
     //   console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
   }
 
-
+  });
 
 }
 function getCameraDesc(cul) {
@@ -496,7 +518,7 @@ function buildCameraArray(id, opt) {
 
 var cameralist = [], cameralistold = [];
 var old_tim = {}, counter = {}, tcum = {};
-
+var old_size={};
 function updateCamera(ds) {
   if (ds.dpck_ds_type == 0) {
     // output
@@ -539,7 +561,17 @@ function updateCamera(ds) {
       $("#info-" + id).html("frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
 
     }
-
+    if(old_size.hasOwnProperty(id)){
+      if((old_size[id].WIDTH!=ds.WIDTH)||(old_size[id].HEIGHT!=ds.HEIGHT)){
+        redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
+      }
+    } else {
+      old_size[id]={WIDTH:0,HEIGH:0};
+      
+    }
+    old_size[id]['WIDTH']=ds.WIDTH;
+    old_size[id]['HEIGHT']=ds.HEIGHT;
+      
 
   } else if (ds.dpck_ds_type == 1) {
     console.log("INPUT :" + JSON.stringify(ds));
@@ -566,6 +598,10 @@ $.fn.buildCameraArray = function (op) {
       delete mapcamera[vid[1]];
       const canvas = document.getElementById("cameraImageCanv-" + vid[1]);
       const ctx = canvas.getContext('2d');
+      const canvasSel = document.getElementById("selectionCanv-" + vid[1]);
+      const ctxSel = canvasSel.getContext('2d');
+
+      ctxSel.clearRect(0, 0, canvasSel.width, canvasSel.height);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -682,6 +718,7 @@ $.fn.buildCameraArray = function (op) {
       console.log("changed canvas " + e.currentTarget.id);
       selection_isDown = false;
     }
+
     handleMouseDown(e);
   });
   $(".selectionCanv").mousemove(function (e) {
@@ -1269,6 +1306,159 @@ function activateMenuShort() {
           delete selection_ellipse[domid];
         }
       }
+      cuitem['savenode'] = {
+        "name": "Save", icon: "fa-save",
+        "items": {
+            'save-default': {
+                name: "Save Setpoint as Default",icon:"fa-sign-in",
+                callback: function(itemKey, opt, e) {
+                    jchaos.saveSetPointAsDefault(name, 1, (ok) => {
+                        jqccs.instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+                    }, (bad) => {
+                        jqccs.instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false);
+
+                    });
+                }
+            },
+            'save-readout-default': {
+                name: "Save ReadOut as Default",icon:"fa-sign-out",
+                callback: function(itemKey, opt, e) {
+                    jchaos.saveSetPointAsDefault(name, 0, (ok) => {
+                        instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+                    }, (bad) => {
+                        instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false);
+
+                    });
+                }
+            },
+            'driver-prop-save': {
+                name: "Save Driver properties as Default",icon:"fa-usb",
+                callback: function(itemKey, opt, e) {
+                    jchaos.command(name, { "act_name": "cu_prop_drv_get" }, function(data) {
+
+                        jqccs.editJSON("Save Driver Prop " + name, data, (json, fupdate) => {
+
+                            var props = [];
+                            for (var key in json) {
+                                props.push({ name: key, value: json[key].value });
+                            }
+                            jchaos.node(name, "get", "cu", function(data) {
+                                if (data != null) {
+                                    if (data.hasOwnProperty('cudk_driver_description')) {
+                                        data['cudk_driver_description'][0]['cudk_driver_prop'] = props;
+                                        jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data, (okk) => {
+                                            instantMessage("Saved driver prop:" + tmpObj.node_multi_selected, "OK", 5000, true);
+
+                                        }, (bad) => {
+                                            instantMessage("Saved driver prop:" + tmpObj.node_multi_selected, "Error:" + JSON.stringify(bad), 5000, false);
+
+                                        });
+
+                                    }
+                                }
+                            })
+
+                        });
+
+                    }, function(data) {
+                        instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
+                        //   $('.context-menu-list').trigger('contextmenu:hide')
+
+                    });
+                }
+            },
+            'node-prop-save': {
+                name: "Save CU/EU properties as Default",icon:"fa-wrench",
+                callback: function(itemKey, opt, e) {
+                    jchaos.command(name, { "act_name": "ndk_get_prop" }, function(data) {
+
+                        jqccs.editJSON("Save CU/EU Properties " + name, data, (json, fupdate) => {
+
+                            var props = [];
+                            for (var key in json) {
+                                props.push({ name: key, value: json[key].value });
+                            }
+                            jchaos.node(name, "get", "cu", function(data) {
+                                if (data != null) {
+                                    data['cudk_prop'] = props;
+                                    jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data, (okk) => {
+                                        instantMessage("Saved CU/EU properties:" + tmpObj.node_multi_selected, "OK", 5000, true);
+
+                                    }, (bad) => {
+                                        instantMessage("Saving CU/EU properties:" + tmpObj.node_multi_selected, "Error:" + JSON.stringify(bad), 5000, false);
+
+                                    });
+
+
+                                }
+                            })
+
+                        });
+
+                    }, function(data) {
+                        instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Error :" + JSON.stringify(data), 5000, false);
+                        //   $('.context-menu-list').trigger('contextmenu:hide')
+
+                    });
+                }
+            }
+        }
+
+    };
+    cuitem['show'] = {
+      "name": "Show",icon:"fa-eye",
+      "items": {
+          'show-dataset': {
+              name: "Show/Set/Plot Dataset",icon:"fa-list",
+              callback: function(itemKey, opt, e) {
+                  var dashboard_settings = jqccs.initSettings();
+
+                  jqccs.showDataset(name, name, dashboard_settings['generalRefresh']);
+              }
+          },
+          'show-desc': {
+              name: "Show Description",icon:"fa-database",
+              callback: function(itemKey, opt, e) {
+                  jchaos.node(name, "desc", "all", function(data) {
+
+                    jqccs.showJson("Description " + name, data);
+                  });
+              }
+          },
+          'show-tags': {
+              name: "Show Tags info",icon:"fa-tags",
+              callback: function(itemKey, opt, e) {
+                  jchaos.variable("tags", "get", null, function(tags) {
+                      var names = [];
+                      for (var key in tags) {
+                          var elems = tags[key].tag_elements;
+                          elems.forEach(function(elem) {
+                              if (elem == name) {
+                                  names.push(tags[key]);
+                              }
+                          });
+                      }
+                      if (names.length) {
+                          jqccs.showJson("Tags of " + name, names);
+                      } else {
+                          alert("No tag associated to " + name);
+                      }
+
+                  });
+
+              }
+          }
+         
+      }
+
+  };
+      /*cuitem['save']= {
+        name: "Save Default", cu: name, icon: "fa-save",
+        callback: function (itemKey, opt, e) {
+
+          delete selection_ellipse[domid];
+        }
+      }*/
       cuitem['sep2'] = "---------";
       var scuitem = {};
       for (var k in el) {
@@ -1471,9 +1661,10 @@ function zoomInOut(name, incr) {
 
   } else {
     $("#cameraImage-" + encoden).css("transform", "scale(" + currzoom + ")");
-    $("#cameraImageCanv-" + encoden).css("transform", "scale(" + currzoom + ")");
+    //$("#cameraImageCanv-" + encoden).css("transform", "scale(" + currzoom + ")");
     console.log(name + " Zoom:" + currzoom);
-
+    $("#insideWrapper-" + encoden).scrollLeft(0);
+    $("#insideWrapper-" + encoden).scrollTop(0);
   }
   currzoomm = currzoom;
 
@@ -2156,7 +2347,7 @@ function getWidget(options) {
 
                 jqccs.updateGenericTableDataset(tmpObj);
               }
-              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO, selected.input.ROT);
+              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO, selected.input.ROT,selected.output.WIDTH,selected.output.HEIGHT);
 
             }, function (d) {
               if (tmpObj.skip_fetch > 0)
