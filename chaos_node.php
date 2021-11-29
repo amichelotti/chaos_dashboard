@@ -582,7 +582,7 @@
 						action: function () {
 							//cu["ndk_uid"] = node.data["zone"] + "/MYGROUP/NewName" + (new Date()).getTime();
 							var objcu = Object.assign({}, cu);
-
+							objcu['ndk_parent']=node.data.ndk_uid;
 							objcu['control_unit_implementation'] = "---";// custom
 							addEditCU(objcu, tree);
 						}
