@@ -10601,16 +10601,11 @@
 
     function updateCUMenu(tmpObj, name) {
         var items = {};
-        var cindex = tmpObj.node_name_to_index[name];
         var node_multi_selected = tmpObj.node_multi_selected;
         var currsel = tmpObj.node_multi_selected[0];
         var stat = jchaos.getChannel(currsel, 255);
-        for (var k in stat[0]) {
-            //update status
-            tmpObj.data[cindex][k] = stat[0][k];
-        }
-
-        var cu = tmpObj.data[cindex];
+        
+        var cu =stat[0];
 
         if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) { //if el health
             var status = cu.health.nh_status;
@@ -10700,10 +10695,10 @@
         if (tmpObj.node_multi_selected.length == 1) {
 
             items['savenode'] = {
-                "name": "Save",
+                "name": "Save",icon: "fa-save",
                 "items": {
                     'save-default': {
-                        name: "Save Setpoint as Default",
+                        name: "Save Setpoint as Default", icon:"fa-sign-in",
                         callback: function(itemKey, opt, e) {
                             jchaos.saveSetPointAsDefault(currsel, 1, (ok) => {
                                 instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
@@ -10714,7 +10709,7 @@
                         }
                     },
                     'save-readout-default': {
-                        name: "Save ReadOut as Default",
+                        name: "Save ReadOut as Default",icon:"fa-sign-out",
                         callback: function(itemKey, opt, e) {
                             jchaos.saveSetPointAsDefault(currsel, 0, (ok) => {
                                 instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
@@ -10725,7 +10720,7 @@
                         }
                     },
                     'driver-prop-save': {
-                        name: "Save Driver properties as Default",
+                        name: "Save Driver properties as Default",icon:"fa-usb",
                         callback: function(itemKey, opt, e) {
                             jchaos.command(currsel, { "act_name": "cu_prop_drv_get" }, function(data) {
 
@@ -10761,7 +10756,7 @@
                         }
                     },
                     'node-prop-save': {
-                        name: "Save CU/EU properties as Default",
+                        name: "Save CU/EU properties as Default",icon:"fa-wrench",
                         callback: function(itemKey, opt, e) {
                             jchaos.command(currsel, { "act_name": "ndk_get_prop" }, function(data) {
 
@@ -10817,10 +10812,10 @@
             };
 
             items['fold3'] = {
-                "name": "Show",
+                "name": "Show",icon:"fa-eye",
                 "items": {
                     'show-dataset': {
-                        name: "Show/Set/Plot Dataset",
+                        name: "Show/Set/Plot Dataset",icon:"fa-list",
                         callback: function(itemKey, opt, e) {
                             var dashboard_settings = jqccs.initSettings();
 
@@ -10828,7 +10823,7 @@
                         }
                     },
                     'show-desc': {
-                        name: "Show Description",
+                        name: "Show Description",icon:"fa-database",
                         callback: function(itemKey, opt, e) {
                             jchaos.node(currsel, "desc", "all", function(data) {
                                 tmpObj.node_name_to_desc[currsel] = data;
@@ -10838,7 +10833,7 @@
                         }
                     },
                     'show-tags': {
-                        name: "Show Tags info",
+                        name: "Show Tags info",icon:"fa-tags",
                         callback: function(itemKey, opt, e) {
                             jchaos.variable("tags", "get", null, function(tags) {
                                 var names = [];

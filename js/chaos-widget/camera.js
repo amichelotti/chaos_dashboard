@@ -5,18 +5,309 @@ var cameraDriverDesc = {};
 var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
 var currzoomm = 1.0;
-var opt={};
-var pullInterval=null;
-var pullIntervalsec=null;
-const TRIGGER_CONTINUOUS=0;
-const TRIGGER_PULSE=2;
-const TRIGGER_NOACQUIRE=5;
-const TRIGGER_LOHI=3;
-const TRIGGER_HILO=4;
+var opt = {};
+var pullInterval = null;
+var pullIntervalsec = null;
+const TRIGGER_CONT = 0;
+const TRIGGER_PULSE = 2;
+const TRIGGER_NOACQUIRE = 5;
+const TRIGGER_LOHI = 3;
+const TRIGGER_HILO = 4;
 
-function checkRedrawReference(camid, domid, x, y, sx, sy, r,rt) {
+
+
+var selection_canvas = null;//document.getElementById("canvas");
+var selection_ctx = null;//canvas.getContext("2d");
+//var selection_canvasOffset = null;//$("#canvas").offset();
+var selection_startX;
+var selection_startY;
+var selection_isDown = false;
+var selection_isGrab = false;
+var selection_isResize = false;
+
+var selection_resizableX = 0;
+var selection_resizableY = 0;
+
+var selection_grabbable = false;
+
+var selection_ellipse = {};
+function moveOval(id) {
+  selection_ctx.clearRect(0, 0, selection_canvas.width, selection_canvas.height);
+
+  selection_ctx.beginPath();
+  selection_ctx.strokeStyle = 'orange';
+
+  selection_ctx.ellipse(selection_ellipse[id]['x'], selection_ellipse[id]['y'], selection_ellipse[id]['w'], selection_ellipse[id]['h'], 0, 0, 2 * Math.PI);
+  selection_ctx.stroke();
+
+  selection_ctx.strokeRect(selection_ellipse[id]['x'], selection_ellipse[id]['y'], 2, 2);
+  selection_ctx.strokeStyle = 'green';
+
+  // fix 3/4
+  selection_ctx.strokeRect(selection_ellipse[id]['x'] - selection_ellipse[id]['w'], selection_ellipse[id]['y'] - selection_ellipse[id]['h'], selection_ellipse[id]['w'] * 2, selection_ellipse[id]['w'] * 1.5);
+
+}
+function drawOval(id, x, y) {
+  selection_ellipse[id]['x'] = ((selection_startX + x) / 2);
+  selection_ellipse[id]['y'] = ((selection_startY + y) / 2);
+  selection_ellipse[id]['w'] = Math.abs((selection_startX - x) / 2);
+  selection_ellipse[id]['h'] = Math.abs((selection_startY - y) / 2);
+
+  //  console.log("selection x:"+selection_startX+" y:"+(selection_startY + (y - selection_startY) / 2));
+  /* selection_ctx.beginPath();
+
+   selection_ctx.moveTo(selection_startX, selection_startY + (y - selection_startY) / 2);
+   selection_ctx.bezierCurveTo(selection_startX, selection_startY, x, selection_startY, x, selection_startY + (y - selection_startY) / 2);
+   selection_ctx.bezierCurveTo(x, y, selection_startX, y, selection_startX, selection_startY + (y - selection_startY) / 2);
+   selection_ctx.closePath();
+   selection_ctx.strokeStyle = 'orange';
+
+   selection_ctx.stroke();*/
+  moveOval(id);
+
+}
+
+function handleMouseDown(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.which != 1) {
+    console.log("not left");
+    return;
+  }
+  let vid = e.currentTarget.id.split('-');
+  let id = vid[1];
+  if(!mapcamera.hasOwnProperty(id)){
+    $("#" + e.currentTarget.id).css("cursor", "default");
+    selection_isGrab = false;
+    selection_isResize = false;
+    selection_resizableX = 0;
+    selection_resizableY = 0;
+    selection_grabbable = false;
+    return;
+  }
+  if(cameraLayoutSettings&&cameraLayoutSettings.hasOwnProperty(id)&&cameraLayoutSettings[id].hasOwnProperty('rot')&&cameraLayoutSettings[id].rot){
+    // no selection on image rotated
+    $("#" + e.currentTarget.id).css("cursor", "no-drop");
+
+    selection_isGrab = false;
+    selection_isResize = false;
+    selection_resizableX = 0;
+    selection_resizableY = 0;
+    selection_grabbable = false;
+    return;
+  }
+  let offset = $("#" + e.currentTarget.id).offset();
+
+  let selection_offsetX = offset.left;
+  let selection_offsetY = offset.top;
+  selection_startX = parseInt(e.pageX - selection_offsetX);
+  selection_startY = parseInt(e.pageY - selection_offsetY);
+  let ww = $("#" + e.currentTarget.id).width();
+  let hh = $("#" + e.currentTarget.id).height();
+  if (selection_grabbable) {
+    selection_isGrab = true;
+    $("#" + e.currentTarget.id).css("cursor", "grabbing");
+    return;
+  } else if ((selection_resizableX > 0) || (selection_resizableY > 0)) {
+    selection_isResize = true;
+    $("#" + e.currentTarget.id).css("cursor", "grabbing");
+    return;
+  }
+  if (selection_isDown == false) {
+    
+    console.log("start:" + selection_startX + "," + selection_startY);
+    selection_ellipse[id] = {
+      x: 0,
+      y: 0,
+      w: 0,
+      h: 0,
+      id: id,
+      ctx_width: ww,
+      ctx_height: hh,
+      ctx: e.currentTarget.getContext("2d")
+    }
+
+  }
+  selection_isDown = true;
+
+
+  //console.log("position start:"+selection_startX+","+selection_startY);
+}
+
+function handleMouseUp(e) {
+  selection_isGrab = false;
+  selection_isResize = false;
+  selection_resizableX = 0;
+  selection_resizableY = 0;
+  selection_grabbable = false;
+
+  if (!selection_isDown) {
+    return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+  selection_isDown = false;
+
+  //console.log("selection "+JSON.stringify(selection_ellipse[id]));
+}
+
+function handleMouseOut(e) {
+  selection_grabbable = false;
+  selection_isGrab = false;
+
+  if (!selection_isDown) {
+    return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+  selection_isDown = false;
+  selection_resizableX = 0;
+  selection_resizableY = 0;
+
+
+  selection_isResize = false;
+
+}
+
+function handleMouseMove(e) {
+  let vid = e.currentTarget.id.split('-');
+  let id = vid[1];
+
+  if(!mapcamera.hasOwnProperty(id)){
+    $("#" + e.currentTarget.id).css("cursor", "default");
+    selection_isGrab = false;
+    selection_isResize = false;
+    selection_resizableX = 0;
+    selection_resizableY = 0;
+    selection_grabbable = false;
+    return;
+  }
+  if(cameraLayoutSettings&&cameraLayoutSettings.hasOwnProperty(id)&&cameraLayoutSettings[id].hasOwnProperty('rot')&&cameraLayoutSettings[id].rot){
+    // no selection on image rotated
+    $("#" + e.currentTarget.id).css("cursor", "no-drop");
+
+    selection_isGrab = false;
+    selection_isResize = false;
+    selection_resizableX = 0;
+    selection_resizableY = 0;
+    selection_grabbable = false;
+    return;
+  }
+  let offset = $("#" + e.currentTarget.id).offset();
+
+  let selection_offsetX = offset.left;
+  let selection_offsetY = offset.top;
+
+  let mouseX = parseInt(e.pageX - selection_offsetX);
+  let mouseY = parseInt(e.pageY - selection_offsetY);
+
+  if (!selection_isDown) {
+    // check if
+
+    if (selection_ellipse.hasOwnProperty(id)) {
+      if (selection_isGrab) {
+        selection_ellipse[id]['x'] = mouseX;
+        selection_ellipse[id]['y'] = mouseY;
+        moveOval(id);
+        return;
+      } else if (selection_isResize) {
+        if (selection_resizableX > 0) {
+          if (mouseX > selection_ellipse[id]['x']) {
+            if ((selection_ellipse[id]['w'] + (mouseX - selection_resizableX) > 0)) {
+              selection_ellipse[id]['w'] = selection_ellipse[id]['w'] + (mouseX - selection_resizableX);
+
+              selection_resizableX = mouseX;
+              moveOval(id);
+            }
+
+          } else {
+            if ((selection_ellipse[id]['w'] - (mouseX - selection_resizableX) > 0)) {
+              selection_ellipse[id]['w'] = selection_ellipse[id]['w'] - (mouseX - selection_resizableX);
+
+              selection_resizableX = mouseX;
+              moveOval(id);
+            }
+          }
+
+
+        } else if (selection_resizableY > 0) {
+          if (mouseY > selection_ellipse[id]['y']) {
+
+            if ((selection_ellipse[id]['h'] + (mouseY - selection_resizableY)) > 0) {
+              selection_ellipse[id]['h'] = selection_ellipse[id]['h'] + (mouseY - selection_resizableY);
+              selection_resizableY = mouseY;
+              moveOval(id);
+            }
+          } else {
+            if ((selection_ellipse[id]['h'] - (mouseY - selection_resizableY)) > 0) {
+              selection_ellipse[id]['h'] = selection_ellipse[id]['h'] - (mouseY - selection_resizableY);
+              selection_resizableY = mouseY;
+              moveOval(id);
+            }
+          }
+        }
+        return;
+      } else {
+        selection_resizableX = 0;
+        selection_resizableY = 0;
+
+
+        // check boundary first
+        if (((mouseX >= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] + 5))) &&
+          (mouseY >= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] + 5)
+          )) {
+          // check if in the center
+          if ((mouseY >= selection_ellipse[id]['y'] - 5) && (mouseY <= selection_ellipse[id]['y'] + 5) &&
+            (mouseX >= selection_ellipse[id]['x'] - 5) && (mouseX <= selection_ellipse[id]['x'] + 5)) {
+            $("#" + e.currentTarget.id).css("cursor", "grab");
+            console.log("grabmode");
+            selection_grabbable = true;
+            return;//
+          }
+        
+
+        //check border vertical
+        if (
+          (((mouseX >= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] + 5))) ||
+            (mouseX >= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] + 5)))) {
+          $("#" + e.currentTarget.id).css("cursor", "ew-resize");
+          selection_resizableX = mouseX;
+          return;
+          //check horizontal
+        } else if (((mouseY >= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] + 5))) ||
+          (mouseY >= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] + 5))) {
+          $("#" + e.currentTarget.id).css("cursor", "ns-resize");
+          selection_resizableY = mouseY;
+
+          return;
+
+        }
+      }
+
+      }
+    }
+    selection_grabbable = false;
+
+    $("#" + e.currentTarget.id).css("cursor", "pointer");
+
+    return;
+  }
+  $("#" + e.currentTarget.id).css("cursor", "move");
+
+  e.preventDefault();
+  e.stopPropagation();
+
+
+  // console.log("position end:"+mouseX+","+mouseY);
+
+
+  drawOval(id, mouseX, mouseY);
+}
+
+
+function checkRedrawReference(camid, domid, x, y, sx, sy, r, rt) {
   jchaos.getChannel(camid, 1, (ele) => {
-    let xx, yy, sxx, syy, rro,rot;
+    let xx, yy, sxx, syy, rro, rot;
     xx = (typeof x === 'undefined') ? ele[0].REFX : x;
     yy = (typeof y === 'undefined') ? ele[0].REFY : y;
     sxx = (typeof sx === 'undefined') ? ele[0].REFSX : sx;
@@ -24,53 +315,89 @@ function checkRedrawReference(camid, domid, x, y, sx, sy, r,rt) {
     rro = (typeof r === 'undefined') ? ele[0].REFRHO : r;
     rot = (typeof rt === 'undefined') ? ele[0].ROT : rt;
 
-    redrawReference(domid, xx, yy, sxx, syy, rro,rot);
+    redrawReference(domid, xx, yy, sxx, syy, rro, rot);
 
   });
 }
-function redrawReference(domid, x, y, sx, sy, r,rot) {
+function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
   const canvas = document.getElementById("cameraImageCanv-" + domid);
-  if(canvas==null){
+  const canvasSel = document.getElementById("selectionCanv-" + domid);
+
+  if ((canvas == null)||($("#cameraImage-" + domid).length == 0)) {
     return;
   }
-  if ($("#cameraImage-" + domid).length) {
-    canvas.width = $("#cameraImage-" + domid).width();
-    canvas.height = $("#cameraImage-" + domid).height();
+  const ctx = canvas.getContext('2d');
+  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
+  if (natwidth > natheight) {
+    $("#cameraImage-" + domid).removeClass("chaos_image_v");
+    $("#cameraImage-" + domid).removeClass("chaos_image");
+
+    $("#cameraImage-" + domid).addClass("chaos_image_h");
+  } else {
+    $("#cameraImage-" + domid).removeClass("chaos_image");
+
+    $("#cameraImage-" + domid).removeClass("chaos_image_h");
+    $("#cameraImage-" + domid).addClass("chaos_image_v");
   }
+
+  $("#cameraImage-" + domid).on('load', function () {
+  $("#cameraImage-" + domid).off('load');
+
+  
+  let currzoom = 1.0;
+  if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+    currzoom = cameraLayoutSettings[domid]["zoom"];
+  }
+ 
+ 
+  let width = $("#cameraImage-" + domid).width();
+  let height = $("#cameraImage-" + domid).height();
+  if (canvasSel != null) {
+    canvasSel.width = width * currzoom;
+    canvasSel.height = height * currzoom;
+  }
+
+  
+  canvas.width = width * currzoom;
+  canvas.height = height * currzoom;
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (sx > 0 && sy > 0) {
     //let name=jchaos.encodeName(id);
-
-    let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
-    let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
-
-    const ctx = canvas.getContext('2d');
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     let ratiox = canvas.width / natwidth;
     let ratioy = canvas.height / natheight;
 
-    if(rot%360!=0){
-      ctx.translate(canvas.width/2, canvas.height/2); // set canvas context to center
-
-      x = (x-canvas.width/2) * ratiox, y = (y-canvas.height/2) * ratioy, sx = sx * ratiox, sy = sy * ratioy;
-
-      ctx.rotate((-rot)* Math.PI / 180);
-
-    } else {
-      x = x* ratiox, y = y* ratioy, sx = sx * ratiox, sy = sy * ratioy;
+   /*
+    if (rot % 360 != 0) {
+      ctx.translate(canvas.width / 2, canvas.height / 2); // set canvas context to center
+      console.log("rot center:(" + canvas.width / 2 + "," + canvas.height / 2 + ") ratiox:" + ratiox + " ratioy:" + ratioy + " ellipse center:(" + x + "," + y + ") rot:" + rot);
+      ctx.rotate((-rot) * Math.PI / 180);
+      ctx.translate(-canvas.width / 2, -canvas.height / 2); // set canvas context to center
 
     }
-    //  console.log("canvas width:"+canvas.width + " height:"+canvas.height+" original img size:"+natwidth+"x"+natheight+" offsetTop:" +canvas.offsetTop + " offsetLeft:"+canvas.offsetLeft+" offsetW:"+canvas.offsetWidth + " offsetH:"+canvas.offsetHeight);
-    
-    /*ctx.fillStyle = 'rgb(200, 0, 0)';
-        ctx.fillRect(1, 1, 50, 50);
+    */ 
+   /*let r=rot%360
+    if (r != 0) {
+      ctx.translate(canvas.width / 2, canvas.height / 2); // set canvas context to center
 
-       // ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
-        ctx.fillRect(300, 200, 50, 50);
-      */
+      if(r==-90){
+        let tmpx=x* ratiox-canvas.width / 2,tmpy=y* ratioy-canvas.height / 2,tmpsx=sx* ratiox,tmpsy=sy* ratioy;
+        x = -tmpy , y = tmpx , sx = tmpsy , sy = tmpsx ;
+       } else if(r==90){
+        let tmpx=x* ratiox,tmpy=y* ratioy,tmpsx=sx* ratiox,tmpsy=sy* ratioy;
+        x = tmpy , y = -tmpx , sx = tmpsy , sy = tmpsx ;
+       }
+    
+    } else*/ {
+      x = x * ratiox, y = y * ratioy, sx = sx * ratiox, sy = sy * ratioy;
+    }
+    
+    console.log("rot:"+r+" ellipse:("+x+","+y+") sx:"+sx+" sy:"+sy);
+
     ctx.beginPath();
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 1;
     //      r=Math.PI/2+r;
     ctx.ellipse(x, y, sx, sy, r, 0, 2 * Math.PI);
     ctx.strokeStyle = 'red';
@@ -94,14 +421,14 @@ function redrawReference(domid, x, y, sx, sy, r,rot) {
     ctx.moveTo(cmx0, cmy0);
     ctx.lineTo(cmx1, cmy1);
 
-
+    ctx.closePath();
     ctx.stroke();
-   
-    //  ctx.closePath();
+
+    // 
     //   console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
   }
 
-
+  });
 
 }
 function getCameraDesc(cul) {
@@ -176,8 +503,8 @@ function buildCameraArray(id, opt) {
   var html = "";
   var hostWidth = $(window).width();
   var hostHeight = $(window).height();
-  var maxwidth = Math.trunc((hostWidth-30) / tmpObj.cameraPerRow);
-  console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:"+tmpObj.displayRatio);
+  var maxwidth = Math.trunc((hostWidth - (50 * tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
+  console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:" + tmpObj.displayRatio);
 
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
   var cnt = 0;
@@ -188,12 +515,14 @@ function buildCameraArray(id, opt) {
     for (var c = 0; c < col; c++, cnt++) {
       var encoden = r + "_" + c;
       // html += '<td id="camera-' + encoden + '">';
-     // html += '<div class="col d-flex flex-column justify-content-center" style="aspect-ratio: '+tmpObj.displayRatio+';">';
-     html += '<div class="col-sm">';
+      // html += '<div class="col d-flex flex-column justify-content-center" style="aspect-ratio: '+tmpObj.displayRatio+';">';
+      html += '<div class="col-sm">';
 
-      html += '<div style="aspect-ratio: '+tmpObj.displayRatio+';width:'+maxwidth+'px;" class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
+      html += '<div style="aspect-ratio: ' + tmpObj.displayRatio + ';width:' + maxwidth + 'px;" class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
       html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/no_cam_trasp.svg" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
+      html += '<canvas class="coveringCanvas selectionCanv" id="selectionCanv-' + encoden + '"/></canvas>';
+
       html += '</div>';
 
       html += '<div id="info-' + encoden + '"></div>';
@@ -218,8 +547,8 @@ function buildCameraArray(id, opt) {
 
 var cameralist = [], cameralistold = [];
 var old_tim = {}, counter = {}, tcum = {};
-
-function updateCamera(ds){
+var old_size={};
+function updateCamera(ds) {
   if (ds.dpck_ds_type == 0) {
     // output
     let freq, start, lat;
@@ -227,10 +556,11 @@ function updateCamera(ds){
     let debug = opt.camera.debug;
     let debug_html = "";
     start = Date.now();
-    if (counter[id] == 0) {
-      checkRedrawReference(ds.ndk_uid, id);
-      counter[id] = 1;
-    }
+    /*  if (counter[id] == 0) {
+        checkRedrawReference(ds.ndk_uid, id);
+        counter[id]=1;
+      }
+  */
     if (debug) {
       if (old_tim[id]) {
         if ((counter[id] % 1000) == 0) {
@@ -249,7 +579,7 @@ function updateCamera(ds){
     }
     lat = start - ds.dpck_ats;
 
-    if(ds.FRAMEBUFFER.hasOwnProperty("$binary")){
+    if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
       $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER.$binary.base64);
     } else {
       $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
@@ -260,25 +590,52 @@ function updateCamera(ds){
       $("#info-" + id).html("frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
 
     }
+    if(old_size.hasOwnProperty(id)){
+      if((old_size[id].WIDTH!=ds.WIDTH)||(old_size[id].HEIGHT!=ds.HEIGHT)){
+        redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
+      }
+    } else {
+      old_size[id]={WIDTH:0,HEIGH:0};
+      
+    }
+    old_size[id]['WIDTH']=ds.WIDTH;
+    old_size[id]['HEIGHT']=ds.HEIGHT;
+      
 
   } else if (ds.dpck_ds_type == 1) {
-      console.log("INPUT :"+JSON.stringify(ds));
+    console.log("INPUT :" + JSON.stringify(ds));
     let id = mappedcamera[ds.ndk_uid];
 
-    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO,ds.ROT);
-  } 
+    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT);
+  }
 }
 $.fn.buildCameraArray = function (op) {
-  opt=op;
+  opt = op;
   this.html(buildCameraArray("table-" + this.attr('id'), opt));
 
   $(".camselect").on("change", (ev) => {
     var vid = ev.currentTarget.id.split('-');
     console.log("change " + vid[1] + " :" + ev.currentTarget.value);
     $("#cameraImage-" + vid[1]).attr("src", "/../img/chaos_wait_big.gif");
+    $("#cameraImage-" + vid[1]).removeClass("chaos_image_v");
+    $("#cameraImage-" + vid[1]).removeClass("chaos_image_h");
+    $("#cameraImage-" + vid[1]).addClass("chaos_image");
+    const canvas = document.getElementById("cameraImageCanv-" + vid[1]);
+    const ctx = canvas.getContext('2d');
+    const canvasSel = document.getElementById("selectionCanv-" + vid[1]);
+    const ctxSel = canvasSel.getContext('2d');
+
+    ctxSel.clearRect(0, 0, canvasSel.width, canvasSel.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if(selection_ellipse.hasOwnProperty(vid[1])){
+      delete selection_ellipse[vid[1]];
+    }
+
+
     if (ev.currentTarget.value == "NOCAMERA") {
       delete mappedcamera[mapcamera[vid[1]]];
       delete mapcamera[vid[1]];
+      
       $("#cameraImage-" + vid[1]).attr("src", "/../img/no_cam_trasp.svg");
 
     } else {
@@ -289,6 +646,31 @@ $.fn.buildCameraArray = function (op) {
         }
       }
       mappedcamera[ev.currentTarget.value] = vid[1];
+      //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
+      $("#cameraImage-" + vid[1]).on('load', function () {
+        let s = $("#cameraImage-" + vid[1]).attr('src');
+        if (s.includes("..")) {
+          return;
+        }
+        //alert($('img.product_image').attr('src'));
+        console.log(ev.currentTarget.value + " = " + vid[1]);
+        $("#cameraImage-" + vid[1]).off('load');
+        let natwidth = $("#cameraImage-" + vid[1]).prop('naturalWidth');
+        let natheight = $("#cameraImage-" + vid[1]).prop('naturalHeight');
+        if (natwidth > natheight) {
+          $("#cameraImage-" + vid[1]).removeClass("chaos_image_v");
+          $("#cameraImage-" + vid[1]).removeClass("chaos_image");
+
+          $("#cameraImage-" + vid[1]).addClass("chaos_image_h");
+        } else {
+          $("#cameraImage-" + vid[1]).removeClass("chaos_image");
+
+          $("#cameraImage-" + vid[1]).removeClass("chaos_image_h");
+          $("#cameraImage-" + vid[1]).addClass("chaos_image_v");
+        }
+        checkRedrawReference(ev.currentTarget.value, vid[1]);
+
+      });
       activateMenuShort();
       $("#cameraImageCanv-" + vid[1]).on("mousemove", function (e) {
         var offset = $(this).offset();
@@ -314,8 +696,8 @@ $.fn.buildCameraArray = function (op) {
 
     }
     if (cameralist.length) {
-      
-      if (opt.push&&(jchaos.socket != null) && (jchaos.socket.connected)) {
+
+      if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
         if (cameralistold.length) {
           console.log("Unsubscribe " + JSON.stringify(cameralistold));
           jchaos.iosubscribeCU(cameralistold, false);
@@ -333,30 +715,51 @@ $.fn.buildCameraArray = function (op) {
         jchaos.options['io_onmessage'] = updateCamera;
 
       } else {
-        if(pullInterval!=null){
+        if (pullInterval != null) {
           clearInterval(pullInterval);
         }
-        if(pullIntervalsec!=null){
+        if (pullIntervalsec != null) {
           clearInterval(pullIntervalsec);
         }
-        pullInterval=setInterval(()=>{
-          jchaos.getChannel(cameralist,0,(vds)=>{
-            vds.forEach(ele=>{
+        pullInterval = setInterval(() => {
+          jchaos.getChannel(cameralist, 0, (vds) => {
+            vds.forEach(ele => {
               updateCamera(ele);
             });
 
           });
-        },opt.camera.cameraRefresh);
-        pullIntervalsec=setInterval(()=>{
-          jchaos.getChannel(cameralist,1,(vds)=>{
-            vds.forEach(ele=>{
+        }, opt.camera.cameraRefresh);
+        pullIntervalsec = setInterval(() => {
+          jchaos.getChannel(cameralist, 1, (vds) => {
+            vds.forEach(ele => {
               updateCamera(ele);
             });
 
           });
-        },1000);
+        }, 1000);
       }
     }
+  });
+  $(".selectionCanv").mousedown(function (e) {
+
+    if (selection_canvas != e.currentTarget) {
+      selection_canvas = e.currentTarget;
+      //  selection_canvasOffset=selection_canvas.offset();
+      selection_ctx = selection_canvas.getContext("2d");
+      console.log("changed canvas " + e.currentTarget.id);
+      selection_isDown = false;
+    }
+
+    handleMouseDown(e);
+  });
+  $(".selectionCanv").mousemove(function (e) {
+    handleMouseMove(e);
+  });
+  $(".selectionCanv").mouseup(function (e) {
+    handleMouseUp(e);
+  });
+  $(".selectionCanv").mouseout(function (e) {
+    handleMouseOut(e);
   });
 }
 
@@ -759,108 +1162,383 @@ function activateMenuShort() {
       if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
         currzoomm = cameraLayoutSettings[domid]["zoom"];
       }
+
       var ele = jchaos.getChannel(name, 1, null);
       var el = ele[0];
-      redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+      var selection = selection_ellipse[domid];
+      // redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
       cuitem['sep1'] = "---------";
       cuitem['state'] = {
-        "name": "Set Mode..",icon:"fa-plug",
+        "name": "Set Mode..", icon: "fa-plug",
         "items": {
           'no-acquire': {
-            name: "No Acquire", cu: name,icon:"fa-pause",
+            name: "No Acquire", cu: name, icon: "fa-pause",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_NOACQUIRE.toString(), function () {
                 jqccs.instantMessage("SET NO ACQUIRE", name, 3000, true);
-      
+
               })
             }
           },
           'continuos': {
-            name: "Continuous", cu: name,icon:"fa-play",
+            name: "Continuous", cu: name, icon: "fa-play",
             callback: function (itemKey, opt, e) {
-              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_CONTINUOUS.toString(), function () {
+              jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_CONT.toString(), function () {
                 jqccs.instantMessage("SET CONTINUOUS ", name, 3000, true);
-      
+
               })
             }
           },
           'lowhi': {
-            name: "Trigger LoHi", cu: name,icon:"fa-sort-asc",
+            name: "Trigger LoHi", cu: name, icon: "fa-sort-asc",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_LOHI.toString(), function () {
                 jqccs.instantMessage("SET LOW->HI ", name, 3000, true);
-      
+
               })
             }
           },
           'hilow': {
-            name: "Trigger HiLow", cu: name,icon:"fa-sort-desc",
+            name: "Trigger HiLow", cu: name, icon: "fa-sort-desc",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_HILO.toString(), function () {
                 jqccs.instantMessage("SET HI->LO ", name, 3000, true);
-      
+
               })
             }
           },
           'manual': {
-            name: "Trigger User", cu: name,icon:"fa-user",
+            name: "Trigger User", cu: name, icon: "fa-user",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_PULSE.toString(), function () {
                 jqccs.instantMessage("SET Trigger User ", name, 3000, true);
-      
+
               })
             }
           }
-          
+
         }
       };
       cuitem['transforms'] = {
-        "name": "Trasforms..",icon:"fa-cog",
+        "name": "Trasforms..", icon: "fa-cog",
         "items": {
-          'zoom-in': {
-            name: "Zoom In ", cu: name,icon:"fa-search-plus",
+          'rotate_image':{
+            "name":"Rotate Image", icon: "fa-picture-o",
+            "items":{
+                'rotateimagep90': {
+            name: "Rotate Image 90", cu: name, icon: "fa-undo",
             callback: function (itemKey, opt, e) {
-              zoomInOut(domid, 2);
+              //rotateCamera(name, 90);
+              if((!cameraLayoutSettings.hasOwnProperty(domid))||!cameraLayoutSettings[domid].hasOwnProperty('rot')){
+                cameraLayoutSettings[domid]={rot:-90};
+              } else {
+                cameraLayoutSettings[domid]['rot']=(cameraLayoutSettings[domid]['rot']-90)%360;;
+              }
+
+              zoomInOut(domid,1.0);
+              
             }
           },
-          'zoom-out': {
-            name: "Zoom Out ", cu: name,icon:"fa-search-minus",
+          'rotateimagem90': {
+            name: "Rotate Image -90", cu: name, icon: "fa-repeat",
             callback: function (itemKey, opt, e) {
-              zoomInOut(domid, 0.5);
+              //rotateCamera(name, 90);
+              if((!cameraLayoutSettings.hasOwnProperty(domid))||!cameraLayoutSettings[domid].hasOwnProperty('rot')){
+                cameraLayoutSettings[domid]={rot:90};
+              } else {
+                cameraLayoutSettings[domid]['rot']=(cameraLayoutSettings[domid]['rot']+90)%360;
+              }
+
+              zoomInOut(domid,1.0);
+              
             }
-          },
-          'zoom-reset': {
-            name: "Zoom Reset", cu: name,
+          },'rotateimagereset': {
+            name: "Rotate Image Reset", cu: name, icon: "fa-window-restore",
             callback: function (itemKey, opt, e) {
-              // var name = opt.items[itemKey].cu;
-              zoomInOut(domid, 0);
+              //rotateCamera(name, 90);
+              if((!cameraLayoutSettings.hasOwnProperty(domid))||!cameraLayoutSettings[domid].hasOwnProperty('rot')){
+                cameraLayoutSettings[domid]={rot:0};
+              } else {
+                cameraLayoutSettings[domid]['rot']=0;
+              }
+
+              zoomInOut(domid,1.0);
+              
             }
-          },
+          }}},
+          'rotate_camera':{
+            "name":"Rotate Camera", icon: "fa-camera",
+            "items":{
           'rotatep90': {
-            name: "Rotate +90", cu: name,icon:"fa-undo",
+            name: "Rotate Camera +90", cu: name, icon: "fa-undo",
             callback: function (itemKey, opt, e) {
-               var name = opt.items.transforms.items["rotatep90"].cu;
+              var name = opt.items.transforms.items["rotate_camera"].items["rotatep90"].cu;
               rotateCamera(name, 90);
             }
           },
           'rotatem90': {
-            name: "Rotate -90", cu: name,icon:"fa-repeat",
+            name: "Rotate Camera -90", cu: name, icon: "fa-repeat",
             callback: function (itemKey, opt, e) {
-              var name = opt.items.transforms.items["rotatem90"].cu;
+              var name = opt.items.transforms.items["rotate_camera"].items["rotatem90"].cu;
               rotateCamera(name, -90);
             }
           },
           'rotateReset': {
-            name: "Rotate reset", cu: name,
+            name: "Rotate Camera reset", cu: name, icon: "fa-window-restore",
             callback: function (itemKey, opt, e) {
-               var name = opt.items.transforms.items['rotateReset'].cu;
+              var name = opt.items.transforms.items["rotate_camera"].items['rotateReset'].cu;
               rotateCamera(name, 0);
+            }
+          }}},
+          'zoom-reset': {
+            name: "Zoom Reset", cu: name, icon: "fa-arrows",
+            callback: function (itemKey, opt, e) {
+              // var name = opt.items[itemKey].cu;
+              zoomInOut(domid, 0);
+              redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
             }
           }
         }
       };
+      if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.hasOwnProperty('ctx_width') && selection.h && selection.w) {
+
+        cuitem['transforms']['items']['zoom-in'] = {
+          name: "Zoom In ", cu: name, icon: "fa-search-plus",
+          callback: function (itemKey, opt, e) {
+            zoomInOut(domid, selection.ctx_width / selection.w);
+            redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+          }
+        };
+
+      }
+      if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom") && (cameraLayoutSettings[domid].zoom != 1.0) && (cameraLayoutSettings[domid].hasOwnProperty("zoom_incr"))) {
+        cuitem['transforms']['items']['zoom-out'] = {
+          name: "Zoom Out ", cu: name, icon: "fa-search-minus",
+          callback: function (itemKey, opt, e) {
+            zoomInOut(domid, 1 / cameraLayoutSettings[domid].zoom_incr);
+            redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+          }
+        }
+      }
+      if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.h && selection.w) {
+        cuitem['transforms']['items']['set-reference'] = {
+          name: "Set Reference ", cu: name, icon: "fa-dot-circle-o",
+          callback: function (itemKey, opt, e) {
+            let x = selection['x'];
+            let y = selection['y'];
+            let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
+            let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
+            let width = $("#cameraImage-" + domid).width();
+            let height = $("#cameraImage-" + domid).height();
+            console.log("(" + natwidth + "," + natheight + ")=>(" + width + "," + height + ")");
+            let ratiox = natwidth / width;
+            let ratioy = natheight / height;
+            let currzoom = 1.0;
+            if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+              currzoom = cameraLayoutSettings[domid]["zoom"];
+            }
+            ratiox = ratiox / currzoom;
+            ratioy = ratioy / currzoom;
+
+            setReference(name, x * ratiox, y * ratioy, selection['w'] * ratiox, selection['h'] * ratioy);
+            delete selection_ellipse[domid];
+
+          }
+        },
+
+          cuitem['transforms']['items']['set-roi'] = {
+            name: "Set ROI ", cu: name, icon: "fa-scissors",
+            callback: function (itemKey, opt, e) {
+              let x = selection['x'] - selection['w'];
+              let y = selection['y'] - selection['h'];
+              let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
+              let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
+              let width = $("#cameraImage-" + domid).width();
+              let height = $("#cameraImage-" + domid).height();
+              console.log(" ROI (" + natwidth + "," + natheight + ")=>(" + width + "," + height + ")");
+              let ratiox = natwidth / width;
+              let ratioy = natheight / height;
+              let currzoom = 1.0;
+              if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+                currzoom = cameraLayoutSettings[domid]["zoom"];
+              }
+              ratiox = ratiox / currzoom;
+              ratioy = ratioy / currzoom;
+              setRoi(name, selection['w'] * 2 * ratiox, selection['w'] * 1.5 * ratioy, x * ratiox, y * ratioy, () => { });
+              delete selection_ellipse[domid];
+            }
+          }
+
+      }
+      cuitem['transforms']['items']['reset-reference'] = {
+        name: "Reset Reference ", cu: name, icon: "fa-times-circle-o",
+        callback: function (itemKey, opt, e) {
+          setReference(name, 0, 0, 0, 0);
+          delete selection_ellipse[domid];
+        }
+      }
+      cuitem['transforms']['items']['reset-roi'] = {
+        name: "Reset ROI ", cu: name, icon: "fa-square-o",
+        callback: function (itemKey, opt, e) {
+          resetRoi(name, () => { });
+          delete selection_ellipse[domid];
+        }
+      }
+      cuitem['savenode'] = {
+        "name": "Save", icon: "fa-save",
+        "items": {
+            'save-default': {
+                name: "Save Setpoint as Default",icon:"fa-sign-in",
+                callback: function(itemKey, opt, e) {
+                    jchaos.saveSetPointAsDefault(name, 1, (ok) => {
+                        jqccs.instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+                    }, (bad) => {
+                        jqccs.instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false);
+
+                    });
+                }
+            },
+            'save-readout-default': {
+                name: "Save ReadOut as Default",icon:"fa-sign-out",
+                callback: function(itemKey, opt, e) {
+                    jchaos.saveSetPointAsDefault(name, 0, (ok) => {
+                        instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+                    }, (bad) => {
+                        instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false);
+
+                    });
+                }
+            },
+            'driver-prop-save': {
+                name: "Save Driver properties as Default",icon:"fa-usb",
+                callback: function(itemKey, opt, e) {
+                    jchaos.command(name, { "act_name": "cu_prop_drv_get" }, function(data) {
+
+                        jqccs.editJSON("Save Driver Prop " + name, data, (json, fupdate) => {
+
+                            var props = [];
+                            for (var key in json) {
+                                props.push({ name: key, value: json[key].value });
+                            }
+                            jchaos.node(name, "get", "cu", function(data) {
+                                if (data != null) {
+                                    if (data.hasOwnProperty('cudk_driver_description')) {
+                                        data['cudk_driver_description'][0]['cudk_driver_prop'] = props;
+                                        jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data, (okk) => {
+                                            instantMessage("Saved driver prop:" + tmpObj.node_multi_selected, "OK", 5000, true);
+
+                                        }, (bad) => {
+                                            instantMessage("Saved driver prop:" + tmpObj.node_multi_selected, "Error:" + JSON.stringify(bad), 5000, false);
+
+                                        });
+
+                                    }
+                                }
+                            })
+
+                        });
+
+                    }, function(data) {
+                        instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
+                        //   $('.context-menu-list').trigger('contextmenu:hide')
+
+                    });
+                }
+            },
+            'node-prop-save': {
+                name: "Save CU/EU properties as Default",icon:"fa-wrench",
+                callback: function(itemKey, opt, e) {
+                    jchaos.command(name, { "act_name": "ndk_get_prop" }, function(data) {
+
+                        jqccs.editJSON("Save CU/EU Properties " + name, data, (json, fupdate) => {
+
+                            var props = [];
+                            for (var key in json) {
+                                props.push({ name: key, value: json[key].value });
+                            }
+                            jchaos.node(name, "get", "cu", function(data) {
+                                if (data != null) {
+                                    data['cudk_prop'] = props;
+                                    jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data, (okk) => {
+                                        instantMessage("Saved CU/EU properties:" + tmpObj.node_multi_selected, "OK", 5000, true);
+
+                                    }, (bad) => {
+                                        instantMessage("Saving CU/EU properties:" + tmpObj.node_multi_selected, "Error:" + JSON.stringify(bad), 5000, false);
+
+                                    });
+
+
+                                }
+                            })
+
+                        });
+
+                    }, function(data) {
+                        instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Error :" + JSON.stringify(data), 5000, false);
+                        //   $('.context-menu-list').trigger('contextmenu:hide')
+
+                    });
+                }
+            }
+        }
+
+    };
+    cuitem['show'] = {
+      "name": "Show",icon:"fa-eye",
+      "items": {
+          'show-dataset': {
+              name: "Show/Set/Plot Dataset",icon:"fa-list",
+              callback: function(itemKey, opt, e) {
+                  var dashboard_settings = jqccs.initSettings();
+
+                  jqccs.showDataset(name, name, dashboard_settings['generalRefresh']);
+              }
+          },
+          'show-desc': {
+              name: "Show Description",icon:"fa-database",
+              callback: function(itemKey, opt, e) {
+                  jchaos.node(name, "desc", "all", function(data) {
+
+                    jqccs.showJson("Description " + name, data);
+                  });
+              }
+          },
+          'show-tags': {
+              name: "Show Tags info",icon:"fa-tags",
+              callback: function(itemKey, opt, e) {
+                  jchaos.variable("tags", "get", null, function(tags) {
+                      var names = [];
+                      for (var key in tags) {
+                          var elems = tags[key].tag_elements;
+                          elems.forEach(function(elem) {
+                              if (elem == name) {
+                                  names.push(tags[key]);
+                              }
+                          });
+                      }
+                      if (names.length) {
+                          jqccs.showJson("Tags of " + name, names);
+                      } else {
+                          alert("No tag associated to " + name);
+                      }
+
+                  });
+
+              }
+          }
+         
+      }
+
+  };
+      /*cuitem['save']= {
+        name: "Save Default", cu: name, icon: "fa-save",
+        callback: function (itemKey, opt, e) {
+
+          delete selection_ellipse[domid];
+        }
+      }*/
       cuitem['sep2'] = "---------";
-      var scuitem={};
+      var scuitem = {};
       for (var k in el) {
         if (!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk"))) {
           var val = el[k];
@@ -901,15 +1579,20 @@ function activateMenuShort() {
         }
       }
       cuitem['fold2'] = {
-        "name": "Set..",icon:"fa-wrench",
+        "name": "Set..", icon: "fa-wrench",
         "items": scuitem
-    };
+      };
 
 
       cuitem['sep3'] = "---------";
 
       cuitem['quit'] = {
-        name: "Quit", icon: function () {
+        name: "Quit",
+        callback: function () {
+          redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+
+        },
+        icon: function () {
           return 'context-menu-icon context-menu-icon-quit';
         }
 
@@ -922,36 +1605,36 @@ function activateMenuShort() {
 
   });
 }
-function rotateCamera(name,rot){
+function rotateCamera(name, rot) {
 
   if (!cameraLayoutSettings.hasOwnProperty(name)) {
-    cameraLayoutSettings[name]={"rot":0};
+    cameraLayoutSettings[name] = { "rot": 0 };
 
-  } 
-  if(rot==0){
+  }
+  if (rot == 0) {
     jchaos.setAttribute(name, "ROT", String(0), function () {
-      jqccs.instantMessage("Camera Rotate", "Reset Rotation" , 2000, true);
-      cameraLayoutSettings[name]["rot"]=0;
-  },(bad)=>{
-    jqccs.instantMessage("Camera Rotate", "FAILED: Reset rotation: "+JSON.stringify(bad) , 4000, false);
+      jqccs.instantMessage("Camera Rotate", "Reset Rotation", 2000, true);
+      cameraLayoutSettings[name]["rot"] = 0;
+    }, (bad) => {
+      jqccs.instantMessage("Camera Rotate", "FAILED: Reset rotation: " + JSON.stringify(bad), 4000, false);
 
-  });
+    });
   } else {
-    jchaos.getChannel(name,1,(ds)=>{
-      if(ds[0].hasOwnProperty("ROT")){
-        var r=ds[0].ROT+rot;
+    jchaos.getChannel(name, 1, (ds) => {
+      if (ds[0].hasOwnProperty("ROT")) {
+        var r = ds[0].ROT + rot;
         jchaos.setAttribute(name, "ROT", String(r), function () {
-          jqccs.instantMessage("Camera Rotate", "Rotation of " + r + " degree" , 2000, true);
-          cameraLayoutSettings[name]["rot"]=r;
-      },(bad)=>{
-        jqccs.instantMessage("Camera Rotate", "FAILED: Rotation of " + r + " degree: "+JSON.stringify(bad) , 4000, false);
-    
-      });
+          jqccs.instantMessage("Camera Rotate", "Rotation of " + r + " degree", 2000, true);
+          cameraLayoutSettings[name]["rot"] = r;
+        }, (bad) => {
+          jqccs.instantMessage("Camera Rotate", "FAILED: Rotation of " + r + " degree: " + JSON.stringify(bad), 4000, false);
+
+        });
 
       }
     })
   }
-  
+
 }
 function zoomInOut(name, incr) {
   var currzoom = 1.0;
@@ -964,79 +1647,124 @@ function zoomInOut(name, incr) {
       cameraLayoutSettings[name]["ory"] = 0;
 
     }
-    
+
   } else {
     cameraLayoutSettings[name] = { "zoom": currzoom, "orx": 0, "ory": 0 };
 
   }
-  var x = mouseX;
-  var y = mouseY;
-  
+
   if (incr == 0) {
     currzoom = 1.0;
   } else {
 
-    currzoom *= incr;
+    currzoom *= incr.toFixed(0);
 
   }
   cameraLayoutSettings[name]["zoom"] = currzoom;
+  cameraLayoutSettings[name]["zoom_incr"] = incr.toFixed(0);
+
 
   var encoden = jchaos.encodeName(name);
-  var prop = null;
-
+  var prop = {
+    "transform-origin": ((currzoom == 1.0) ? "center" : "0% 0%"),
+    "transform": "scale(1)"
+  };
   //  $("#insideWrapper-"+encoden).css("transform","scale("+currzoom+")");
-  
+
   if ((currzoom != 1.0)) {
     const mirinosize = 100;
 
-    var scaleorx = x - mirinosize;
-    var scaleory = y - mirinosize;
+    var scaleorx = selection_ellipse[name]['x'];
+    var scaleory = selection_ellipse[name]['y'];
+    var scaleorw = selection_ellipse[name]['w'];
+    var scaleorh = selection_ellipse[name]['h'];
 
-    if (scaleorx < 0) {
-      scaleorx = 0;
-    }
-    if (scaleory < 0) {
-      scaleory = 0;
-    }
+
     if ((currzoom != 1.0) && (incr != 1)) {
-      cameraLayoutSettings[name]["orx"] = scaleorx;
-      cameraLayoutSettings[name]["ory"] = scaleory;
+      cameraLayoutSettings[name]["orx"] = scaleorx.toFixed(0);
+      cameraLayoutSettings[name]["ory"] = scaleory.toFixed(0);
     }
-    var scaleor = cameraLayoutSettings[name]["orx"] + "px " + cameraLayoutSettings[name]["ory"] + "px";
+
 
     // var or=x + "px " +y+"px";
+    let left = $("#cameraImage-" + encoden).offset().left;
+    let top = $("#cameraImage-" + encoden).offset().top;
+    let w = $("#cameraImage-" + encoden).width();
+    let h = $("#cameraImage-" + encoden).height();
 
-    prop = {
-      "transform-origin": ((currzoom == 1.0) ? "center" : scaleor),
-      "transform": ""
-    };
+    //let w=$("#cameraImage-" + encoden).prop('naturalWidth');
+    // let h=$("#cameraImage-" + encoden).prop('naturalHeight');
+    //var scaleor = cameraLayoutSettings[name]["orx"] + "px " + cameraLayoutSettings[name]["ory"] + "px";
+    //var scaleor = (w/2-left) + "px " + (h/2-top) + "px";
+   // var scaleor = "0% 0%";
+    
     if (currzoom != 1.0) {
       prop["transform"] = "scale(" + currzoom + "," + currzoom + ")";
 
     }
-   /* if (currrot != 0) {
-      prop["transform"] = prop["transform"] + " rotate(" + currrot + "deg)";
-    }
-     if (currzoom != 1.0 && currrot != 0) {
-      jqccs.instantMessage("WARNING Zoom+Rotate", "Are deprecated! may bring unexpected results, Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 4000, true);
+    if(cameraLayoutSettings[name].hasOwnProperty('rot')&&(cameraLayoutSettings[name].rot)){
+      prop["transform"] = prop["transform"] + " rotate(" + cameraLayoutSettings[name]['rot'] + "deg)";
+      $("#cameraImageCanv-" + encoden).css("transform","rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
+      $("#selectionCanv-" + encoden).css("transform","rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
 
-    } else {
-      jqccs.instantMessage("Transform", "Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 2000, true);
-    }
+    } else{
+      $("#cameraImageCanv-" + encoden).css("transform","");
+      $("#selectionCanv-" + encoden).css("transform","");
 
-    */
+    }
+    /* if (currrot != 0) {
+       prop["transform"] = prop["transform"] + " rotate(" + currrot + "deg)";
+     }
+      if (currzoom != 1.0 && currrot != 0) {
+       jqccs.instantMessage("WARNING Zoom+Rotate", "Are deprecated! may bring unexpected results, Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 4000, true);
+ 
+     } else {
+       jqccs.instantMessage("Transform", "Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop), 2000, true);
+     }
+ 
+     */
 
     $("#cameraImage-" + encoden).css(prop);
-    $("#cameraImageCanv-" + encoden).css(prop);
-   // console.log(name + " Zoom:" + currzoom + " Rotate:" + currrot + " CSS:" + JSON.stringify(prop));
-   console.log(name + " Zoom:" + currzoom );
-    cameraLayoutSettings[name]["css"] = prop;
-   
-  } else {
-    $("#cameraImage-" + encoden).css("transform", "scale(" + currzoom + ")");
-    $("#cameraImageCanv-" + encoden).css("transform", "scale(" + currzoom + ")");
+    //$("#cameraImageCanv-" + encoden).css(prop);
+    $("#insideWrapper-" + encoden).scrollLeft((scaleorx) * currzoom - w / 2);
+    $("#insideWrapper-" + encoden).scrollTop((scaleory) * currzoom - h / 2);
+    w = $("#cameraImage-" + encoden).width();
+    h = $("#cameraImage-" + encoden).height();
+    const canvas = document.getElementById("cameraImageCanv-" + encoden);
+    const canvasSel = document.getElementById("selectionCanv-" + encoden);
+    canvas.width = w * currzoom;
+    canvas.height = h * currzoom;
+    canvasSel.width = w * currzoom;
+    canvasSel.height = h * currzoom;
+    /* $("#cameraImageCanv-" + encoden).width(w*currzoom);
+     $("#cameraImageCanv-" + encoden).height(h*currzoom);
+     $("#selectionCanv-" + encoden).width(w*currzoom);
+     $("#selectionCanv-" + encoden).height(h*currzoom);
+ */
+    console.log(name + " Zoom:" + currzoom + " left:" + left + " top:" + top + " width:" + w + " height:" + h + " scrollx:" + $("#insideWrapper-" + encoden).scrollLeft() + " CSS:" + JSON.stringify(prop));
     console.log(name + " Zoom:" + currzoom);
+    cameraLayoutSettings[name]["css"] = prop;
 
+  } else {
+    if(cameraLayoutSettings[name].hasOwnProperty('rot')&&cameraLayoutSettings[name].rot){
+      prop["transform"] = prop["transform"] + " rotate(" + cameraLayoutSettings[name]['rot'] + "deg)";
+      $("#cameraImageCanv-" + encoden).css("transform","rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
+      $("#selectionCanv-" + encoden).css("transform","rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
+
+    }else{
+      $("#cameraImageCanv-" + encoden).css("transform","");
+      $("#selectionCanv-" + encoden).css("transform","");
+
+
+    }
+  
+    $("#cameraImage-" + encoden).css(prop);
+
+  //  $("#cameraImage-" + encoden).css("transform", "scale(" + currzoom + ")");
+    //$("#cameraImageCanv-" + encoden).css("transform", "scale(" + currzoom + ")");
+    console.log(name + " Zoom:" + currzoom);
+    $("#insideWrapper-" + encoden).scrollLeft(0);
+    $("#insideWrapper-" + encoden).scrollTop(0);
   }
   currzoomm = currzoom;
 
@@ -1055,11 +1783,11 @@ function activateMenu(tmpObj) {
         currzoomm = cameraLayoutSettings[name]["zoom"];
       }
 
-      
+
       cuitem['sep1'] = "---------";
-      var tcuitem={};
+      var tcuitem = {};
       tcuitem['zoom-in'] = {
-        name: "Zoom In ", cu: name,icon:"fa-search-plus",
+        name: "Zoom In ", cu: name, icon: "fa-search-plus",
         callback: function (itemKey, opt, e) {
           var name = opt.items['transforms'].items[itemKey].cu;
           var offset = $(this).offset();
@@ -1070,8 +1798,9 @@ function activateMenu(tmpObj) {
           zoomInOut(name, 2);
         }
       };
+
       tcuitem['zoom-out'] = {
-        name: "Zoom Out ", cu: name,icon:"fa-search-minus",
+        name: "Zoom Out ", cu: name, icon: "fa-search-minus",
         callback: function (itemKey, opt, e) {
           var name = opt.items['transforms'].items[itemKey].cu;
           var encoden = jchaos.encodeName(name);
@@ -1086,6 +1815,7 @@ function activateMenu(tmpObj) {
           zoomInOut(name, 0.5);
         }
       };
+
       tcuitem['zoom-reset'] = {
         name: "Zoom Reset", cu: name,
         callback: function (itemKey, opt, e) {
@@ -1094,14 +1824,14 @@ function activateMenu(tmpObj) {
         }
       };
       tcuitem['rotatep90'] = {
-        name: "Rotate +90", cu: name,icon:"fa-undo",
+        name: "Rotate +90", cu: name, icon: "fa-undo",
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
           rotateCamera(name, 90);
         }
       };
       tcuitem['rotatem90'] = {
-        name: "Rotate -90", cu: name,icon:"fa-repeat",
+        name: "Rotate -90", cu: name, icon: "fa-repeat",
         callback: function (itemKey, opt, e) {
           // var name = opt.items[itemKey].cu;
           rotateCamera(name, -90);
@@ -1119,7 +1849,7 @@ function activateMenu(tmpObj) {
         "items": tcuitem
       };
       cuitem['sep2'] = "---------";
-      var rcuitem={};
+      var rcuitem = {};
 
       rcuitem['select-area'] = {
         name: "Select Area..",
@@ -1157,7 +1887,7 @@ function activateMenu(tmpObj) {
 
         }
       };
-      
+
       if (tmpObj.hasOwnProperty('crop')) {
         var crop_obj = tmpObj['crop'][name];
         if (typeof crop_obj === "object") {
@@ -1221,7 +1951,7 @@ function activateMenu(tmpObj) {
       };
 
       cuitem['sep3'] = "---------";
-      var scuitem={};
+      var scuitem = {};
       var ele = jchaos.getChannel(name, 1, null);
       var el = ele[0];
       redrawReference(jchaos.encodeName(name), ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO);
@@ -1268,7 +1998,7 @@ function activateMenu(tmpObj) {
       }
 
 
-    cuitem['fold3'] = {
+      cuitem['fold3'] = {
         "name": "Set..",
         "items": scuitem
       };
@@ -1287,7 +2017,7 @@ function activateMenu(tmpObj) {
         }
 
       };
-      
+
 
       return {
         items: cuitem
@@ -1342,15 +2072,15 @@ function rebuildCam(tmpObj) {
       html += '<div class="col">';
       html += '<div class="insideWrapper cameraMenu" cuname="' + key + '" id="insideWrapper-' + encoden + '">';
 
-      
+
       html += '<img class="chaos_image_max" id="cameraImage-' + encoden + '" cuname="' + key + '" src="/img/no_cam_trasp.svg" />';
-      
+
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '<div>' + key + '</div>';
       html += '<div id="info-' + encoden + '"></div>';
       html += '</div>';
 
-      
+
       html += '</div>'; // close col
 
       cnt++;
@@ -1405,7 +2135,7 @@ function rebuildCam(tmpObj) {
               jchaos.setAttribute(key, "REFY", y.toString(), ok => {
                 console.log(key + " X Coordinate: " + x + " Y Coordinate: " + y);
                 jchaos.getChannel(key, 1, (ele) => {
-                  redrawReference(encoden, x, y, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO,ele[0].ROT);
+                  redrawReference(encoden, x, y, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
 
                 });
               });
@@ -1413,6 +2143,7 @@ function rebuildCam(tmpObj) {
           }, "Cancel");
 
         });
+
         $("#cameraImageCanv-" + encoden).on('mousemove', function (e) {
 
           var offset = $(this).offset();
@@ -1601,8 +2332,8 @@ function setRoi(cu, width, height, x, y, func) {
   );
 }
 function getWidget(options) {
-  if(options){
-    opt=options;
+  if (options) {
+    opt = options;
   }
   var chaos =
   {
@@ -1610,7 +2341,7 @@ function getWidget(options) {
       output: {
         TRIGGER_MODE: function (val) {
           switch (val) {
-            case TRIGGER_CONTINUOUS:
+            case TRIGGER_CONT:
               return "Continuous";
             case TRIGGER_PULSE:
               return "Pulse";
@@ -1635,8 +2366,8 @@ function getWidget(options) {
 
         tmpObj.data[cindex] = cu[0];
         jqccs.updateGenericTableDataset(tmpObj);
-        
-        jqccs.updateGenericControl(tmpObj,cu[0]);
+
+        jqccs.updateGenericControl(tmpObj, cu[0]);
       })
 
     },
@@ -1716,7 +2447,7 @@ function getWidget(options) {
 
                 jqccs.updateGenericTableDataset(tmpObj);
               }
-              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO,selected.input.ROT);
+              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO, selected.input.ROT,selected.output.WIDTH,selected.output.HEIGHT);
 
             }, function (d) {
               if (tmpObj.skip_fetch > 0)
@@ -1752,9 +2483,9 @@ function getWidget(options) {
       //var html = '<div class="row">';
 
 
-     // html += '<div class="container-fluid" id="cameraTable"></div>';
-     var html = '<div class="row" id="cameraTable"></div>';
-      
+      // html += '<div class="container-fluid" id="cameraTable"></div>';
+      var html = '<div class="row" id="cameraTable"></div>';
+
 
       var cu = tmpObj.elems;
       var template = tmpObj.type;
@@ -1866,9 +2597,9 @@ function getWidget(options) {
 
 
             // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-            
-             $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
-            
+
+            $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+
             // let freq = 1000.0 * counter[id] / tcum[id];
             let freq = 1000.0 / (start - old_tim[id]);
             let lat = start - ds.dpck_ats;
@@ -1910,6 +2641,7 @@ function getWidget(options) {
   return chaos;
 }
 function setReference(cu, x, y, width, height) {
+
   /*var currzoomm=1.0;
   if(cameraLayoutSettings.hasOwnProperty(key)&&cameraLayoutSettings[key].hasOwnProperty("zoom")){
     currzoomm=cameraLayoutSettings[key]["zoom"];

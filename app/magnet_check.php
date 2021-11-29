@@ -240,9 +240,10 @@
 
                             descs[name] = {};
                             if(ele.health.cuh_alarm_msk){
-                                if(ele.hasOwnProperty("cu_alarms")&&ele.cu_alarms.hasOwnProperty("polarity_out_of_set_MASK")&&
-                                   ele.cu_alarms.hasOwnProperty("current_out_of_set_MASK")&&
-                                   ele.cu_alarms.hasOwnProperty("stby_out_of_set_MASK")){
+                                if((ele.hasOwnProperty("cu_alarms")&&(ele.cu_alarms.hasOwnProperty("polarity_out_of_set_MASK")||
+                                   ele.cu_alarms.hasOwnProperty("current_out_of_set_MASK")|| ele.cu_alarms.hasOwnProperty("stby_out_of_set_MASK")))||(
+                                    (ele.hasOwnProperty("device_alarms")&&(ele.device_alarms.hasOwnProperty("interlock_MASK")||ele.device_alarms.hasOwnProperty("bad_state_MASK"))))
+                                   ){
                                        n_masked.push(name);
                                 }
                             }

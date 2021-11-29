@@ -982,6 +982,13 @@
 													});
 												}, "Cancel");
 
+											} else {
+												jchaos.node(selected_node, "deletenode", "all", function () {
+																	console.log("deleting US " + selected_node);
+																	tree.delete_node(node);
+																	triggerRefreshEdit();
+
+																});
 											}
 										});
 									}
