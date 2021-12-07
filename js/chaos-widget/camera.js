@@ -8,6 +8,8 @@ var currzoomm = 1.0;
 var opt = {};
 var pullInterval = null;
 var pullIntervalsec = null;
+var pullIntervalHealth = null;
+
 const TRIGGER_CONT = 0;
 const TRIGGER_PULSE = 2;
 const TRIGGER_NOACQUIRE = 5;
@@ -31,6 +33,22 @@ var selection_resizableY = 0;
 var selection_grabbable = false;
 
 var selection_ellipse = {};
+function modeToString(val){
+  switch (val) {
+    case TRIGGER_CONT:
+      return "Continuous";
+    case TRIGGER_PULSE:
+      return "Pulse";
+    case TRIGGER_NOACQUIRE:
+      return "No Acquire";
+    case TRIGGER_LOHI:
+      return "Trigger LOHI";
+    case TRIGGER_HILO:
+      return "Trigger HILO";
+    default:
+      return "--";
+  }
+}
 function moveOval(id) {
   selection_ctx.clearRect(0, 0, selection_canvas.width, selection_canvas.height);
 
@@ -322,6 +340,7 @@ function checkRedrawReference(camid, domid, x, y, sx, sy, r, rt) {
 function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
   const canvas = document.getElementById("cameraImageCanv-" + domid);
   const canvasSel = document.getElementById("selectionCanv-" + domid);
+ 
 
   if ((canvas == null)||($("#cameraImage-" + domid).length == 0)) {
     return;
@@ -350,7 +369,12 @@ function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
     currzoom = cameraLayoutSettings[domid]["zoom"];
   }
  
- 
+  if(currzoom!=1.0){
+    $("#zoom_enable-" + domid).html('<i class="fa fa-check-square-o" aria-hidden="true"></i>');
+  } else {
+    $("#zoom_enable-" + domid).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
+
+  }
   let width = $("#cameraImage-" + domid).width();
   let height = $("#cameraImage-" + domid).height();
   if (canvasSel != null) {
@@ -431,47 +455,58 @@ function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
   });
 
 }
-function getCameraDesc(cul) {
-  jchaos.command(cul, { "act_name": "cu_prop_drv_get" }, data => {
+function getCameraProps(ele,domid) {
+  var pub = {};
 
-    data.forEach((ele, cnt) => {
-      var pub = {};
-      for (k in ele) {
-        var bname = jchaos.encodeName(cul[cnt]);
+  for (k in ele) {
 
-        if (ele[k].hasOwnProperty("pubname")) {
-          pub[ele[k].pubname] = ele[k];
-          var html = "NA:NA";
-          if (ele[k].pubname == "SHUTTER") {
-            if (ele[k].max != undefined) {
-              html = ele[k].max.toFixed(2) + ":" + ele[k].min.toFixed(2);
-            }
-            $("#" + bname + "_SHUTTER_INFO").html(html);
-          }
-          if (ele[k].pubname == "GAIN") {
-            if (ele[k].max != undefined) {
-              html = ele[k].max.toFixed(2) + ":" + ele[k].min.toFixed(2);
-            }
-            $("#" + bname + "_GAIN_INFO").html(html);
-          }
-
+    if (ele[k].hasOwnProperty("pubname")) {
+      pub[ele[k].pubname] = ele[k];
+      var html = "NA:NA";
+      if (ele[k].pubname == "SHUTTER") {
+        if (ele[k].max != undefined) {
+          $("#"+domid+"_SHUTTER_MAX").html(ele[k].max.toFixed(2));
         }
-        if (k == "SerialNumber") {
-          if (ele[k].hasOwnProperty("VAL")) {
-            $("#" + bname + "_INFO").html(ele[k].VAL);
-            console.log("Serial:" + ele[k].VAL);
-          } else if (ele[k].hasOwnProperty("VAL")) {
-            $("#" + bname + "_INFO").html(ele[k].VAL);
-            console.log("Serial:" + ele[k].VAL);
-
-          }
-          cameraDriverDesc[cul[cnt]] = pub;
-
+        if (ele[k].min != undefined) {
+          $("#"+domid+"_SHUTTER_MIN").html(ele[k].min.toFixed(2));
         }
       }
-      // console.log(cul[cnt]+" ->"+JSON.stringify(pub));
+      if (ele[k].pubname == "GAIN") {
+        if (ele[k].max != undefined) {
+          $("#"+domid+"_GAIN_MAX").html(ele[k].max.toFixed(2));
+        }
+        if (ele[k].min != undefined) {
+          $("#"+domid+"_GAIN_MIN").html(ele[k].min.toFixed(2));
+        }
+      }
 
-    });
+    }
+    if (k == "SerialNumber") {
+      if (ele[k].hasOwnProperty("VAL")) {
+        console.log("Serial:" + ele[k].VAL);
+      } else if (ele[k].hasOwnProperty("VAL")) {
+        console.log("Serial:" + ele[k].VAL);
+
+      }
+     // cameraDriverDesc[cul[cnt]] = pub;
+
+    }
+  }
+};
+
+function getCameraDesc(cul,domid) {
+  jchaos.command(cul, { "act_name": "cu_prop_drv_get" }, data => {
+    if (data instanceof Array){
+      data.forEach((ele, cnt) => {
+        getCameraProps(ele);
+        // console.log(cul[cnt]+" ->"+JSON.stringify(pub));
+  
+      });
+    } else {
+      getCameraProps(data,domid);
+
+    } 
+    
   });
 }
 function buildSelected(list, sel) {
@@ -519,21 +554,79 @@ function buildCameraArray(id, opt) {
       html += '<div class="col-sm">';
 
       html += '<div style="aspect-ratio: ' + tmpObj.displayRatio + ';width:' + maxwidth + 'px;" class="insideWrapper cameraMenuShort" cuindex="' + encoden + '" id="insideWrapper-' + encoden + '">';
-      html += '<img class="chaos_image" id="cameraImage-' + encoden + '" src="/../img/no_cam_trasp.svg" />';
+      html += '<img class="chaos_image border" id="cameraImage-' + encoden + '" src="/../img/no_cam_trasp.svg" />';
       html += '<canvas class="coveringCanvas" id="cameraImageCanv-' + encoden + '"/></canvas>';
       html += '<canvas class="coveringCanvas selectionCanv" id="selectionCanv-' + encoden + '"/></canvas>';
 
       html += '</div>';
-
-      html += '<div id="info-' + encoden + '"></div>';
-
-
+      
+      html += '<div class="row infocam">';
+      html += '<div class="col-sm-5">';
       html += '<select class="camselect" id="select-' + encoden + '" vid="' + encoden + '">';
       html += buildSelected(list_cu, cnt);
       html += '</select>';
+      html += '</div>';
+      html += '<div class="col-sm"><label>Size:</label><span id="size-' + encoden + '" class="minmax">0</span></div>';
+      html += '<div class="col-sm"><label>Freq:</label><span id="freq-' + encoden + '" class="minmax">0</span></div>';
+      html += '<div class="col-sm"><label>Lat:</label><span id="lat-' + encoden + '" class="minmax">0</span></div>';
+      html += '</div>'; //row
 
-      //html += '</td>';
-      html += '</div>'; //col
+      html += '<div class="row infocam">';
+      html += '<div class="col-sm-2"><label>State:</label><span id="state-' + encoden + '"><i class="fa fa-question" aria-hidden="true"></i></span></div>';
+      html += '<div class="col-sm"><label>Seq:</label><span id="seq-' + encoden + '" class="minmax">0</span></div>';
+      html += '<div class="col-sm"><label>M/s:</label><span id="mbs-' + encoden + '" class="minmax">0</span></div>';
+      html += '<div class="col-sm"><label>Zoom:</label><span id="zoom_enable-' + encoden + '"><i class="fa fa-square-o" aria-hidden="true"></i></span></div>';
+      html += '<div class="col-sm"><label>Rot:</label><span id="rot_enable-' + encoden + '"><i class="fa fa-square-o" aria-hidden="true"></i></span></div>';
+
+      html += '</div>'; //row
+
+      html += '<div class="row infocam">';
+      html += '<div class="col-sm-2">Trigger Mode</div>';
+      html += '<div class="col-sm-3 maxmin" id="' + encoden + 'TRIGGER_MODE"></div>';
+      html += '<div class="col-sm-7" id="' + encoden + '"><select class="select_camera_mode form-control form-control-sm" id="' + encoden + '_select_camera_mode" name="' + encoden + '"><option value="0">Continuous</option><option value="3">TriggeredLOHI</option><option value="4">TriggeredHILO</option><option value="2">Pulse</option><option value="5">No Acquire</option></select></div>';
+      html += '</div>';
+
+      html += '<div class="row infocam">';
+      html += '<div class="col-sm-2">Shutter</div>';      
+      html += '<div class="col-sm-3 maxmin" id="' + encoden + 'SHUTTER"></div>';
+      
+      html += '<div class="input-group col-sm-7">';
+      html += '<span class="maxmin infocam"  id="' + encoden + '_SHUTTER_MIN">0</span>';
+      html += '<input class="cucmdattr form-control form-control-sm" id="' + encoden + '_SHUTTER" name="' + encoden + '/input/SHUTTER"></input>';
+      html += '<span class="maxmin infocam"  id="' + encoden + '_SHUTTER_MAX">0</span>';
+      html += '</div>';
+      html += '</div>';
+
+     
+      html += '<div class="row infocam">';
+      html += '<div class="col-sm-2">Gain</div>';      
+      html += '<div class="col-sm-3 maxmin" id="' + encoden + 'GAIN"></div>';
+      
+      html += '<div class="input-group col-sm-7">';
+      html += '<span class="maxmin infocam"  id="' + encoden + '_GAIN_MIN">0</span>';
+      html += '<input class="cucmdattr form-control form-control-sm" id="' + encoden + '_GAIN" name="' + encoden + '/input/GAIN"></input>';
+      html += '<span class="maxmin infocam"  id="' + encoden + '_GAIN_MAX">0</span>';
+      html += '</div>';
+      html += '</div>'; //row
+
+
+      
+    /*  html += '<div class="row">'; 
+    
+      html += '<div class="col-sm border" id="' + encoden + '_output_TRIGGER_MODE"></div>';
+      html += '<div class="col-sm" id="' + encoden + '"><select class="select_camera_mode form-control form-control-sm" id="' + encoden + '_select_camera_mode" name="' + encoden + '"><option value="0">Continuous</option><option value="3">TriggeredLOHI</option><option value="4">TriggeredHILO</option><option value="2">Pulse</option><option value="5">No Acquire</option></select></div>';
+      html += '</div>';
+
+      html += '<div class="row">';      
+      html += '<div class="col-sm border" id="' + encoden + '"_output_SHUTTER"></div>';
+      html += '<div class="col-sm" id="' + encoden + '"><input class="cucmdattr form-control form-control-sm" id="' + encoden + '_SHUTTER" name="' + encoden + '/input/SHUTTER></input><span id="' + encoden + '_SHUTTER_INFO"></span></div>';
+      html += '</div>'; //row
+      html += '<div class="row">';      
+      html += '<div class="col-sm border" id="' + encoden + '_output_GAIN"></div>';
+      html += '<div class="col-sm" id="' + encoden + '"><input class="cucmdattr form-control form-control-sm" id="' + encoden + '_GAIN" name="' + encoden + '/input/GAIN"></input><span id="' + encoden + '_GAIN_INFO"></span></div>';
+      html += '</div>'; //row
+      */
+      html += '</div>'; // column (camera)
 
     }
     // html += "</tr>";
@@ -585,28 +678,103 @@ function updateCamera(ds) {
       $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
     }
     if (ds.WIDTH !== undefined) {
-      $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
-    } else {
-      $("#info-" + id).html("frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
-
+      $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
+     // $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
     }
+    $("#lat-" + id).html(lat);
+    $("#seq-" + id).html(ds.dpck_seq_id);
+    $("#"+id+"SHUTTER").html(ds.SHUTTER);
+    $("#"+id+"GAIN").html(ds.GAIN);
+    $("#"+id+"TRIGGER_MODE").html(modeToString(ds.TRIGGER_MODE));
     if(old_size.hasOwnProperty(id)){
       if((old_size[id].WIDTH!=ds.WIDTH)||(old_size[id].HEIGHT!=ds.HEIGHT)){
         redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
       }
     } else {
-      old_size[id]={WIDTH:0,HEIGH:0};
+      old_size[id]={WIDTH:0,HEIGH:0,MODE:0};
       
     }
     old_size[id]['WIDTH']=ds.WIDTH;
     old_size[id]['HEIGHT']=ds.HEIGHT;
-      
+    old_size[id]['TRIGGER_MODE']=ds.TRIGGER_MODE;
+
 
   } else if (ds.dpck_ds_type == 1) {
-    console.log("INPUT :" + JSON.stringify(ds));
+  //  console.log("INPUT :" + JSON.stringify(ds));
     let id = mappedcamera[ds.ndk_uid];
+    
+      if(ds.hasOwnProperty("ROT")&&(ds.ROT%360)){
+        $("#rot_enable-" + id).html('<i class="fa fa-check-square-o" aria-hidden="true"></i>');
+      } else {
+        $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
+    
+      }
+      if(!old_size.hasOwnProperty(id)){
+        old_size[id]={};
+      }
+      if((!old_size[id].hasOwnProperty('dpck_seq_id'))||(old_size[id].dpck_seq_id<ds.dpck_seq_id)){
+          redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
+      } 
+      old_size[id]['dpck_seq_id']=ds.dpck_seq_id;
+        
+      
+   
+  } else if (ds.dpck_ds_type == 4) {
+    //HEALTH
+    let id = mappedcamera[ds.ndk_uid];
+    $("#freq-" + id).html(ds.cuh_dso_prate.toFixed(1));
+    var band =  Number(ds.cuh_dso_size) / (1024*1024);
 
-    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT);
+    $("#mbs-" + id).html(band.toFixed(2));
+   let status=ds.nh_status;
+   var mode="";
+  if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("TRIGGER_MODE")){
+    switch (old_size[id].TRIGGER_MODE) {
+      case TRIGGER_CONT:
+        mode= '<i class="fa fa-video-camera"  title="Continuous" aria-hidden="true"></i>';
+        break;
+      case TRIGGER_PULSE:
+        mode = '<i class="fa fa-hand-rock-o" title="Trigger Manual (pulse)" aria-hidden="true"></i>';
+
+        break;
+      case TRIGGER_NOACQUIRE:
+        mode = '<i class="fa fa-pause" title="No Acquire" aria-hidden="true"></i>';
+        break;
+      case TRIGGER_LOHI:
+        mode = '<i class="fa fa-level-up" title="Trigger low high"  aria-hidden="true"></i>';
+        break;
+      case TRIGGER_HILO:
+        mode = '<i class="fa fa-level-down" title="Trigger high low" aria-hidden="true"></i>';
+        break;
+      default:
+        mode = '<i class="fa fa-question" title="Trigger Uknown" aria-hidden="true"></i>';
+        break;
+  }
+}
+  if (status == 'Start') {
+      $("#state-" + id).html('<i class="fa fa-play" title="CU is Started" style="color:green"></i>'+mode);
+  } else if (status == 'Stop') {
+      $("#state-" + id).html('<i class="fa fa-stop" title="CU is Stopped" style="color:orange"></i>');
+  } else if (status == 'Calibrating') {
+      $("#state-" + id).html('<i class="material-icons" title="CU is Calibrating" style="color:green">assessment</i>');
+  } else if (status == 'Init') {
+    $("#state-" + id).html('<i class="material-icons" title="CU is initialized" style="color:yellow">trending_up</i>');
+
+  } else if (status == 'Deinit') {
+    $("#state-" + id).html('<i class="material-icons"  title="CU is de-initialized" style="color:red">trending_down</i>');
+
+  } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
+    $("#state-" + id).html('<a id="Error-' + id + '" cuname="' + name_device_db + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
+    $("#state-" + id).attr('title', "Device status:'" + status + "' " + ds.nh_lem);
+
+  } else if (status == "Unload") {
+    $("#state-" + id).html('<i class="material-icons"  title="CU is Unloaded" style="color:red">power</i>');
+
+
+  } else if (status == "Load") {
+    $("#state-" + id).html('<i class="material-icons verde"  title="CU is Loaded" style="color:green">power</i>');
+
+  }
   }
 }
 $.fn.buildCameraArray = function (op) {
@@ -633,9 +801,23 @@ $.fn.buildCameraArray = function (op) {
 
 
     if (ev.currentTarget.value == "NOCAMERA") {
-      delete mappedcamera[mapcamera[vid[1]]];
-      delete mapcamera[vid[1]];
-      
+      let id=vid[1];
+      delete mappedcamera[mapcamera[id]];
+      delete mapcamera[id];
+      $("#state-" + id).html('<i class="fa fa-question" aria-hidden="true"></i>');
+      $("#seq-" + id).html(0);
+      $("#mbs-" + id).html(0);
+      $("#lat-" + id).html(0);
+      $("#freq-" + id).html(0);
+      $("#size-" + id).html('');
+      $("#"+id+"_SHUTTER_MAX").html(0);
+      $("#"+id+"_SHUTTER_MIN").html(0);
+      $("#"+id+"_GAIN_MAX").html(0);
+      $("#"+id+"_GAIN_MIN").html(0);
+
+      $("#zoom_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
+      $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
+
       $("#cameraImage-" + vid[1]).attr("src", "/../img/no_cam_trasp.svg");
 
     } else {
@@ -646,6 +828,9 @@ $.fn.buildCameraArray = function (op) {
         }
       }
       mappedcamera[ev.currentTarget.value] = vid[1];
+      getCameraDesc(ev.currentTarget.value,vid[1]);
+      $("#"+id+"_SHUTTER").attr("name",ev.currentTarget.value+ '/input/SHUTTER');
+
       //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
       $("#cameraImage-" + vid[1]).on('load', function () {
         let s = $("#cameraImage-" + vid[1]).attr('src');
@@ -721,6 +906,9 @@ $.fn.buildCameraArray = function (op) {
         if (pullIntervalsec != null) {
           clearInterval(pullIntervalsec);
         }
+        if (pullIntervalHealth != null) {
+          clearInterval(pullIntervalHealth);
+        }
         pullInterval = setInterval(() => {
           jchaos.getChannel(cameralist, 0, (vds) => {
             vds.forEach(ele => {
@@ -737,6 +925,14 @@ $.fn.buildCameraArray = function (op) {
 
           });
         }, 1000);
+        pullIntervalHealth = setInterval(() => {
+          jchaos.getChannel(cameralist, 4, (vds) => {
+            vds.forEach(ele => {
+              updateCamera(ele);
+            });
+
+          });
+        }, 5000);
       }
     }
   });
@@ -761,6 +957,38 @@ $.fn.buildCameraArray = function (op) {
   $(".selectionCanv").mouseout(function (e) {
     handleMouseOut(e);
   });
+  $(".cucmdattr").on("keypress", function(e) {
+    if (e.keyCode == 13) {
+        var value = e.target.value;
+        var attrname = e.target.name;
+        var desc = jchaos.decodeCUPath(attrname);
+        let cu=mapcamera[desc.cu];
+        jchaos.setAttribute(cu, desc.var, value, function() {
+            jqccs.instantMessage(cu + " Attribute " + desc.dir, "\"" + desc.var+"\"=\"" + value + "\" sent", 1000, null, null, true)
+
+        }, function() {
+          jqccs.instantMessage(cu + " Attribute Error " + desc.dir, "\"" + desc.var+"\"=\"" + value + "\" sent", 1000, null, null, false)
+
+        });
+
+        return false;
+    }
+    //var tt =prompt('type value');
+    return this;
+});
+$(".select_camera_mode").change(function (e) {
+  var value = e.currentTarget.value;
+  let cu=mapcamera[e.currentTarget.name];
+
+  console.log("name=" +cu + " value=" + value);
+  jchaos.setAttribute(cu, "TRIGGER_MODE", value, function () {
+    jqccs.instantMessage("SET MODE " + cu, value, 3000, true);
+
+  },(bad)=>{
+    jqccs.instantMessage("Error SETTING MODE " + cu+" err:"+bad, value, 4000, false);
+
+  })
+})
 }
 
 function showHisto(msghead, cuname, refresh, channel) {
@@ -1208,10 +1436,10 @@ function activateMenuShort() {
             }
           },
           'manual': {
-            name: "Trigger User", cu: name, icon: "fa-user",
+            name: "Trigger Pulse (manual)", cu: name, icon: "fa-user",
             callback: function (itemKey, opt, e) {
               jchaos.setAttribute(name, "TRIGGER_MODE", TRIGGER_PULSE.toString(), function () {
-                jqccs.instantMessage("SET Trigger User ", name, 3000, true);
+                jqccs.instantMessage("SET Trigger Pulse ", name, 3000, true);
 
               })
             }
@@ -1305,7 +1533,12 @@ function activateMenuShort() {
         cuitem['transforms']['items']['zoom-in'] = {
           name: "Zoom In ", cu: name, icon: "fa-search-plus",
           callback: function (itemKey, opt, e) {
-            zoomInOut(domid, selection.ctx_width / selection.w);
+            if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
+              zoomInOut(domid, 1.5);
+
+            } else {
+              zoomInOut(domid, selection.ctx_width / selection.w);
+            }
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
         };
@@ -1397,7 +1630,8 @@ function activateMenuShort() {
 
                     });
                 }
-            },
+            }
+            /*,
             'save-readout-default': {
                 name: "Save ReadOut as Default",icon:"fa-sign-out",
                 callback: function(itemKey, opt, e) {
@@ -1479,7 +1713,7 @@ function activateMenuShort() {
 
                     });
                 }
-            }
+            }*/
         }
 
     };
@@ -1540,7 +1774,7 @@ function activateMenuShort() {
       cuitem['sep2'] = "---------";
       var scuitem = {};
       for (var k in el) {
-        if (!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk"))) {
+        if ((!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk")))&&(k.startsWith("REF")||k.startsWith("ROT")||k.startsWith("WIDTH")||k.startsWith("HEIGHT")||k.startsWith("OFFSET"))) {
           var val = el[k];
           if (typeof el[k] === "object") {
             val = JSON.stringify(el[k]);

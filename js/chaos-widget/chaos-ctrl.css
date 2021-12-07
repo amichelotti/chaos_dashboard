@@ -239,6 +239,24 @@ a:hover {
   width: auto;
 }
 
+.infocam {
+  font-size: x-small;
+  margin-left:0 !important;
+  margin-right:0 !important;
+  padding:0;
+}
+.maxmin {
+  display: flex;
+  background: #c6c8ca;
+  font-size: xx-small;
+  border: 1px;
+  text-align:center;
+  padding: 0 !important;
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+
 .insideWrapper{ 
  /* width:100%; 
   height:100%;*/
