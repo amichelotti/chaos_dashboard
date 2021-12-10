@@ -11,7 +11,9 @@ var pullIntervalsec = null;
 var pullIntervalHealth = null;
 
 const TRIGGER_CONT = 0;
-const TRIGGER_PULSE = 2;
+const TRIGGER_PULSE = 1;
+
+const TRIGGER_SOFT= 2;
 const TRIGGER_NOACQUIRE = 5;
 const TRIGGER_LOHI = 3;
 const TRIGGER_HILO = 4;
@@ -37,6 +39,8 @@ function modeToString(val){
   switch (val) {
     case TRIGGER_CONT:
       return "Continuous";
+    case TRIGGER_SOFT:
+        return "Software";
     case TRIGGER_PULSE:
       return "Pulse";
     case TRIGGER_NOACQUIRE:
@@ -561,12 +565,12 @@ function buildCameraArray(id, opt) {
       html += '</div>';
       
       html += '<div class="row infocam">';
-      html += '<div class="col-sm-5">';
+      html += '<div class="col-sm-6">';
       html += '<select class="camselect" id="select-' + encoden + '" vid="' + encoden + '">';
       html += buildSelected(list_cu, cnt);
       html += '</select>';
       html += '</div>';
-      html += '<div class="col-sm"><label>Size:</label><span id="size-' + encoden + '" class="minmax">0</span></div>';
+    //  html += '<div class="col-sm"><label>Size:</label><span id="size-' + encoden + '" class="minmax">0</span></div>';
       html += '<div class="col-sm"><label>Freq:</label><span id="freq-' + encoden + '" class="minmax">0</span></div>';
       html += '<div class="col-sm"><label>Lat:</label><span id="lat-' + encoden + '" class="minmax">0</span></div>';
       html += '</div>'; //row
@@ -583,7 +587,7 @@ function buildCameraArray(id, opt) {
       html += '<div class="row infocam">';
       html += '<div class="col-sm-2">Trigger Mode</div>';
       html += '<div class="col-sm-3 maxmin" id="' + encoden + 'TRIGGER_MODE"></div>';
-      html += '<div class="col-sm-7" id="' + encoden + '"><select class="select_camera_mode form-control form-control-sm" id="' + encoden + '_select_camera_mode" name="' + encoden + '"><option value="0">Continuous</option><option value="3">TriggeredLOHI</option><option value="4">TriggeredHILO</option><option value="2">Pulse</option><option value="5">No Acquire</option></select></div>';
+      html += '<div class="col-sm-7" id="' + encoden + '"><select class="select_camera_mode form-control form-control-sm" id="' + encoden + '_select_camera_mode" name="' + encoden + '"><option value="0">Continuous</option><option value="3">TriggeredLOHI</option><option value="4">TriggeredHILO</option><option value="1">Pulse</option><option value="5">No Acquire</option><option value="2">Software</option></select></div>';
       html += '</div>';
 
       html += '<div class="row infocam">';
@@ -677,10 +681,9 @@ function updateCamera(ds) {
     } else {
       $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
     }
-    if (ds.WIDTH !== undefined) {
+    /*if (ds.WIDTH !== undefined) {
       $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
-     // $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " lat:" + lat + debug_html);
-    }
+    }*/
     $("#lat-" + id).html(lat);
     $("#seq-" + id).html(ds.dpck_seq_id);
     $("#"+id+"SHUTTER").html(ds.SHUTTER);
@@ -728,6 +731,9 @@ function updateCamera(ds) {
     $("#mbs-" + id).html(band.toFixed(2));
    let status=ds.nh_status;
    var mode="";
+   if(!old_size.hasOwnProperty(id)){
+     old_size[id]=ds;
+   }
   if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("TRIGGER_MODE")){
     switch (old_size[id].TRIGGER_MODE) {
       case TRIGGER_CONT:
@@ -735,7 +741,9 @@ function updateCamera(ds) {
         break;
       case TRIGGER_PULSE:
         mode = '<i class="fa fa-hand-rock-o" title="Trigger Manual (pulse)" aria-hidden="true"></i>';
-
+        break;
+      case TRIGGER_SOFT:
+          mode = '<i class="fa fa-band" title="Trigger Software" aria-hidden="true"></i>';
         break;
       case TRIGGER_NOACQUIRE:
         mode = '<i class="fa fa-pause" title="No Acquire" aria-hidden="true"></i>';
@@ -751,8 +759,23 @@ function updateCamera(ds) {
         break;
   }
 }
+  if(ds.cuh_alarm_lvl){
+    if(ds.cuh_alarm_lvl==1){
+      mode += '<i class="fa fa-exclamation" title="Warning" style="color:orange"</i>';
+
+    } else {
+      mode += '<i class="fa fa-exclamation-triangle" title="Error" style="color:red"</i>';
+
+    }
+  }
+
   if (status == 'Start') {
-      $("#state-" + id).html('<i class="fa fa-play" title="CU is Started" style="color:green"></i>'+mode);
+    if((old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty('dpck_ats'))&&(( ds.dpck_ats-  old_size[id]['dpck_ats'])>10000)){
+      $("#state-" + id).html('<i class="fa fa-play" style="color:red" title="CU is Started" style="color:green"></i>'+mode);
+
+    } else {
+      $("#state-" + id).html('<i class="fa fa-play" style="color:green" title="CU is Started" style="color:green"></i>'+mode);
+    }
   } else if (status == 'Stop') {
       $("#state-" + id).html('<i class="fa fa-stop" title="CU is Stopped" style="color:orange"></i>');
   } else if (status == 'Calibrating') {
@@ -768,14 +791,17 @@ function updateCamera(ds) {
     $("#state-" + id).attr('title', "Device status:'" + status + "' " + ds.nh_lem);
 
   } else if (status == "Unload") {
-    $("#state-" + id).html('<i class="material-icons"  title="CU is Unloaded" style="color:red">power</i>');
+    $("#state-" + id).html('<i class="fa fa-power-off" style="color:red" aria-hidden="true"></i>');
 
 
   } else if (status == "Load") {
-    $("#state-" + id).html('<i class="material-icons verde"  title="CU is Loaded" style="color:green">power</i>');
+    $("#state-" + id).html('<i class="fa fa-power-off" style="color:green" aria-hidden="true"></i>');
 
   }
+  old_size[id]['dpck_ats']=ds.dpck_ats;
+
   }
+
 }
 $.fn.buildCameraArray = function (op) {
   opt = op;
@@ -2574,20 +2600,8 @@ function getWidget(options) {
     dsFn: {
       output: {
         TRIGGER_MODE: function (val) {
-          switch (val) {
-            case TRIGGER_CONT:
-              return "Continuous";
-            case TRIGGER_PULSE:
-              return "Pulse";
-            case TRIGGER_NOACQUIRE:
-              return "No Acquire";
-            case TRIGGER_LOHI:
-              return "Trigger LOHI";
-            case TRIGGER_HILO:
-              return "Trigger HILO";
-            default:
-              return "--";
-          }
+          return modeToString(val);
+          
 
         }
       }
@@ -2773,7 +2787,7 @@ function getWidget(options) {
         html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
 
         html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
-        html += "<td id='" + cuname + "'><select class='select_camera_mode form-control form-control-sm' id='" + cuname + "_select_camera_mode' name='" + cu[i] + "'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='2'>Pulse</option><option value='5'>No Acquire</option></select></td>";
+        html += "<td id='" + cuname + "'><select class='select_camera_mode form-control form-control-sm' id='" + cuname + "_select_camera_mode' name='" + cu[i] + "'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='1'>Pulse</option><option value='5'>No Acquire</option><option value='2'>Software</option></select></td>";
 
         html += "<td id='" + cuname + "_output_SHUTTER'></td>";
 
