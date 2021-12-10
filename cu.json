@@ -79,7 +79,7 @@
         },
         "dsndk_storage_history_ageing": {
             "type": "integer",
-            "default": 36000,
+            "default": 0,
             "description": "Time in Seconds before the data will be wiped out (0=disabled)"
 
         },
