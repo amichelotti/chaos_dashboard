@@ -543,7 +543,7 @@ function buildCameraArray(id, opt) {
   var html = "";
   var hostWidth = $(window).width();
   var hostHeight = $(window).height();
-  var maxwidth = Math.trunc((hostWidth - (50 * tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
+  var maxwidth = Math.round((hostWidth - (50 * tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
   console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:" + tmpObj.displayRatio);
 
   var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
@@ -1575,7 +1575,15 @@ function activateMenuShort() {
         cuitem['transforms']['items']['zoom-out'] = {
           name: "Zoom Out ", cu: name, icon: "fa-search-minus",
           callback: function (itemKey, opt, e) {
-            zoomInOut(domid, 1 / cameraLayoutSettings[domid].zoom_incr);
+            if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom_incr']&&(cameraLayoutSettings[domid]['zoom_incr']>0)){
+              zoomInOut(domid, 1/cameraLayoutSettings[domid]['zoom_incr']);
+
+            } else if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
+              zoomInOut(domid, (cameraLayoutSettings[domid]['zoom']-1)/cameraLayoutSettings[domid]['zoom']);
+            } else {
+              zoomInOut(domid, selection.w/selection.ctx_width);
+
+            }
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
         }
@@ -1921,9 +1929,17 @@ function zoomInOut(name, incr) {
     currzoom *= incr;
 
   }
-  currzoom=Math.trunc(currzoom);
+  currzoom=Math.round(currzoom);
+  if(currzoom==0){
+    currzoom=1;
+  }
   cameraLayoutSettings[name]["zoom"] = currzoom;
-  cameraLayoutSettings[name]["zoom_incr"] = incr;
+  if(incr>1){
+    cameraLayoutSettings[name]["zoom_incr"] = incr;
+  } else {
+    cameraLayoutSettings[name]["zoom_incr"] = 0;
+
+  }
 
 
   var encoden = jchaos.encodeName(name);
@@ -1943,8 +1959,8 @@ function zoomInOut(name, incr) {
 
 
     if ((currzoom != 1.0) && (incr != 1)) {
-      cameraLayoutSettings[name]["orx"] = scaleorx.toFixed(0);
-      cameraLayoutSettings[name]["ory"] = scaleory.toFixed(0);
+      cameraLayoutSettings[name]["orx"] = Math.round(scaleorx);
+      cameraLayoutSettings[name]["ory"] = Math.round(scaleory);
     }
 
 
@@ -1988,8 +2004,11 @@ function zoomInOut(name, incr) {
 
     $("#cameraImage-" + encoden).css(prop);
     //$("#cameraImageCanv-" + encoden).css(prop);
-    $("#insideWrapper-" + encoden).scrollLeft((scaleorx+top) * currzoom - w / 2);
-    $("#insideWrapper-" + encoden).scrollTop((scaleory+left) * currzoom - h / 2);
+    let scrollx=(((scaleorx) /** currzoom*/)/*+ w / 2*/)+left;
+    let scrolly=(((scaleory) /** currzoom*/)/*+ h / 2*/)+top;
+
+    $("#insideWrapper-" + encoden).scrollLeft(scrollx );
+    $("#insideWrapper-" + encoden).scrollTop(scrolly);
     w = $("#cameraImage-" + encoden).width();
     h = $("#cameraImage-" + encoden).height();
     const canvas = document.getElementById("cameraImageCanv-" + encoden);
@@ -2003,7 +2022,7 @@ function zoomInOut(name, incr) {
      $("#selectionCanv-" + encoden).width(w*currzoom);
      $("#selectionCanv-" + encoden).height(h*currzoom);
  */
-    console.log(name + "origin:"+scaleorx+","+scaleory+" Zoom:" + currzoom + " left:" + left + " top:" + top + " width:" + w + " height:" + h + " scrollx:" + $("#insideWrapper-" + encoden).scrollLeft() + " CSS:" + JSON.stringify(prop));
+    console.log(name + "origin:("+scaleorx+","+scaleory+") offset:("+left+","+top+") Zoom:" + currzoom  + " width:" + w + " height:" + h + " calc scroll:("+scrollx+","+scrolly+") scroll:(" + $("#insideWrapper-" + encoden).scrollLeft() + ","+ $("#insideWrapper-" + encoden).scrollTop()+") CSS:" + JSON.stringify(prop));
     cameraLayoutSettings[name]["css"] = prop;
 
   } else {
@@ -2312,8 +2331,8 @@ function rebuildCam(tmpObj) {
   if (selectedCams instanceof Array) {
     var hostWidth = $(window).width();
     var hostHeight = $(window).height();
-    var maxwidth = Math.trunc(hostWidth / tmpObj.maxCameraCol);
-    var maxheight = Math.trunc(hostHeight / tmpObj.cameraPerRow);
+    var maxwidth = Math.round(hostWidth / tmpObj.maxCameraCol);
+    var maxheight = Math.round(hostHeight / tmpObj.cameraPerRow);
 
     if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
       jchaos.iosubscribeCU(tmpObj.elems, false);
