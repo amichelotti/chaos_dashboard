@@ -65,8 +65,9 @@ function moveOval(id) {
   selection_ctx.strokeRect(selection_ellipse[id]['x'], selection_ellipse[id]['y'], 2, 2);
   selection_ctx.strokeStyle = 'green';
 
-  // fix 3/4
-  selection_ctx.strokeRect(selection_ellipse[id]['x'] - selection_ellipse[id]['w'], selection_ellipse[id]['y'] - selection_ellipse[id]['h'], selection_ellipse[id]['w'] * 2, selection_ellipse[id]['w'] * 1.5);
+  // fix 3/4 width
+  let h=selection_ellipse[id]['w'] * 0.75;
+  selection_ctx.strokeRect(selection_ellipse[id]['x'] - selection_ellipse[id]['w'], selection_ellipse[id]['y'] - h, selection_ellipse[id]['w'] * 2, h * 2);
 
 }
 function drawOval(id, x, y) {
@@ -1560,7 +1561,7 @@ function activateMenuShort() {
           name: "Zoom In ", cu: name, icon: "fa-search-plus",
           callback: function (itemKey, opt, e) {
             if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
-              zoomInOut(domid, 1.5);
+              zoomInOut(domid, (cameraLayoutSettings[domid]['zoom']+1)/cameraLayoutSettings[domid]['zoom']);
 
             } else {
               zoomInOut(domid, selection.ctx_width / selection.w);
@@ -1917,11 +1918,12 @@ function zoomInOut(name, incr) {
     currzoom = 1.0;
   } else {
 
-    currzoom *= incr.toFixed(0);
+    currzoom *= incr;
 
   }
+  currzoom=Math.trunc(currzoom);
   cameraLayoutSettings[name]["zoom"] = currzoom;
-  cameraLayoutSettings[name]["zoom_incr"] = incr.toFixed(0);
+  cameraLayoutSettings[name]["zoom_incr"] = incr;
 
 
   var encoden = jchaos.encodeName(name);
@@ -1986,8 +1988,8 @@ function zoomInOut(name, incr) {
 
     $("#cameraImage-" + encoden).css(prop);
     //$("#cameraImageCanv-" + encoden).css(prop);
-    $("#insideWrapper-" + encoden).scrollLeft((scaleorx) * currzoom - w / 2);
-    $("#insideWrapper-" + encoden).scrollTop((scaleory) * currzoom - h / 2);
+    $("#insideWrapper-" + encoden).scrollLeft((scaleorx+top) * currzoom - w / 2);
+    $("#insideWrapper-" + encoden).scrollTop((scaleory+left) * currzoom - h / 2);
     w = $("#cameraImage-" + encoden).width();
     h = $("#cameraImage-" + encoden).height();
     const canvas = document.getElementById("cameraImageCanv-" + encoden);
@@ -2001,8 +2003,7 @@ function zoomInOut(name, incr) {
      $("#selectionCanv-" + encoden).width(w*currzoom);
      $("#selectionCanv-" + encoden).height(h*currzoom);
  */
-    console.log(name + " Zoom:" + currzoom + " left:" + left + " top:" + top + " width:" + w + " height:" + h + " scrollx:" + $("#insideWrapper-" + encoden).scrollLeft() + " CSS:" + JSON.stringify(prop));
-    console.log(name + " Zoom:" + currzoom);
+    console.log(name + "origin:"+scaleorx+","+scaleory+" Zoom:" + currzoom + " left:" + left + " top:" + top + " width:" + w + " height:" + h + " scrollx:" + $("#insideWrapper-" + encoden).scrollLeft() + " CSS:" + JSON.stringify(prop));
     cameraLayoutSettings[name]["css"] = prop;
 
   } else {
