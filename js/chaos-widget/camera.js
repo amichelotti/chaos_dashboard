@@ -1474,6 +1474,51 @@ function activateMenuShort() {
 
         }
       };
+      cuitem['operation'] = {
+        "name": "Operations", icon: "fa-cog",
+        "items": {
+          'calibration': {
+            name: "Calibration On", cu: name, icon: "fa-bar-chart",
+            callback: function (itemKey, opt, e) {
+              jchaos.command(name, { "act_name": "calibrateNodeUnit" }, function(data) {
+                jqccs.instantMessage("Calibration of:" + name, "OK", 1000, true);
+            }, function(data) {
+              jqccs.instantMessage("ERROR Calibrating:" + name, "Error :" + JSON.stringify(data), 5000, false);
+
+            });
+              
+            }
+          },
+          'calibration-off': {
+            name: "Calibration Off", cu: name, icon: "fa-camera",
+            callback: function (itemKey, opt, e) {
+          var msg = {
+            "act_msg": {"apply_calib":false,"performCalib":false},
+            "act_name": "ndk_set_prop"
+        };
+        jchaos.command(name, msg, function(data) {
+            jqccs.instantMessage("Disabling calibration", "OK", 5000, true);
+
+        }, (bad) => {
+            jqccs.instantMessage("Error Disabling calibration" , "Error: " + JSON.stringify(bad), 5000, false);
+
+        });
+      }},
+          'restart': {
+            name: "Restart", cu: name, icon: "fa-refresh",
+            callback: function (itemKey, opt, e) {
+              jchaos.restart(name, function(data) {
+                jqccs.instantMessage("Restarting :" + name, "OK", 1000, true);
+            }, function(data) {
+              jqccs.instantMessage("ERROR Restarting:" + name, "Error :" + JSON.stringify(data), 5000, false);
+
+            });
+              
+            }
+          }
+          
+          }
+      };
       cuitem['transforms'] = {
         "name": "Trasforms..", icon: "fa-cog",
         "items": {
@@ -1588,6 +1633,22 @@ function activateMenuShort() {
           }
         }
       }
+      cuitem['transforms']['items']['set-auto-reference'] = {
+        name: "Set Auto Reference ", cu: name, icon: "fa-magic",
+        callback: function (itemKey, opt, e) {
+
+        jqccs.getEntryWindow("Threashold", "Threashold", 10, "Perform Reference", function (th) {
+          jchaos.command(name, { "act_name": "calibrateNodeUnit", "act_msg": { "autoreference": true, "threshold": parseInt(th) } }, function (data) {
+            jqccs.instantMessage("Performing autoreference:" + name, "Sent", 2000, true);
+
+          }, function (data) {
+            jqccs.instantMessage("ERROR Performing autoreference:" + name, "Error:" + JSON.stringify(data), 5000, false);
+
+          });
+
+
+        }, "Cancel");
+      }}
       if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.h && selection.w) {
         cuitem['transforms']['items']['set-reference'] = {
           name: "Set Reference ", cu: name, icon: "fa-dot-circle-o",
@@ -1612,7 +1673,8 @@ function activateMenuShort() {
             delete selection_ellipse[domid];
 
           }
-        },
+        }
+        
 
           cuitem['transforms']['items']['set-roi'] = {
             name: "Set ROI ", cu: name, icon: "fa-scissors",
@@ -1653,7 +1715,7 @@ function activateMenuShort() {
         }
       }
       cuitem['savenode'] = {
-        "name": "Save", icon: "fa-save",
+        "name": "Save/Restore", icon: "fa-save",
         "items": {
             'save-default': {
                 name: "Save Setpoint as Default",icon:"fa-sign-in",
@@ -1665,7 +1727,18 @@ function activateMenuShort() {
 
                     });
                 }
-            }
+            },
+            'restore-default': {
+              name: "Restore Default",icon:"fa-sign-out",
+              callback: function(itemKey, opt, e) {
+                jchaos.saveDefaultAsSetpoint(name, (ok) => {
+                  jqccs.instantMessage("Default setpoint restored successfully", "", 2000, true);
+              }, (bad) => {
+                  jqccs.instantMessage("Error restoring setpoint:", JSON.stringify(bad), 4000, false);
+
+              });
+              }
+          }
             /*,
             'save-readout-default': {
                 name: "Save ReadOut as Default",icon:"fa-sign-out",
