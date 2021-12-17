@@ -274,10 +274,10 @@
                                         desc['interlock'] = ele.device_alarms.interlock;
                                         l_fault[name]['desc'] = desc;
                                     }
-                                   /* if (ele.device_alarms.hasOwnProperty("faulty_state") && ele.device_alarms.faulty_state) {
+                                    if (ele.device_alarms.hasOwnProperty("faulty_state") && ele.device_alarms.faulty_state) {
                                         desc["faulty_state"] = ele.device_alarms.faulty_state;
-                                        l_bad[name]['desc'] = desc;
-                                    }*/
+                                        l_fault[name]['desc'] = desc;
+                                    }
                                     if (ele.device_alarms.hasOwnProperty("bad_state") && ele.device_alarms.bad_state) {
                                         desc["bad_state"] = ele.device_alarms.bad_state;
 
