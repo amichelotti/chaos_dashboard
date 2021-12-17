@@ -125,8 +125,12 @@ function handleMouseDown(e) {
   let selection_offsetY = offset.top;
   selection_startX = parseInt(e.pageX - selection_offsetX);
   selection_startY = parseInt(e.pageY - selection_offsetY);
-  let ww = $("#" + e.currentTarget.id).width();
-  let hh = $("#" + e.currentTarget.id).height();
+  //let ww = $("#" + e.currentTarget.id).width();
+  //let hh = $("#" + e.currentTarget.id).height();
+ 
+  let ww = $("#cameraImage-" + id).prop('naturalWidth');
+  let hh = $("#cameraImage-" + id).prop('naturalHeight');
+
   if (selection_grabbable) {
     selection_isGrab = true;
     $("#" + e.currentTarget.id).css("cursor", "grabbing");
@@ -762,10 +766,10 @@ function updateCamera(ds) {
 }
   if(ds.cuh_alarm_lvl){
     if(ds.cuh_alarm_lvl==1){
-      mode += '<i class="fa fa-exclamation" title="Warning" style="color:orange"</i>';
+      mode += '<i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>';
 
     } else {
-      mode += '<i class="fa fa-exclamation-triangle" title="Error" style="color:red"</i>';
+      mode += '<i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i>';
 
     }
   }
@@ -1605,12 +1609,14 @@ function activateMenuShort() {
         cuitem['transforms']['items']['zoom-in'] = {
           name: "Zoom In ", cu: name, icon: "fa-search-plus",
           callback: function (itemKey, opt, e) {
-            if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
+           /* if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
               zoomInOut(domid, (cameraLayoutSettings[domid]['zoom']+1)/cameraLayoutSettings[domid]['zoom']);
 
             } else {
               zoomInOut(domid, selection.ctx_width / selection.w);
-            }
+            }*/
+            zoomInOut(domid, selection.ctx_width / selection.w);
+
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
         };
@@ -2025,17 +2031,20 @@ function zoomInOut(name, incr) {
   if ((currzoom != 1.0)) {
     const mirinosize = 100;
 
-    var scaleorx = selection_ellipse[name]['x'];
-    var scaleory = selection_ellipse[name]['y'];
-    var scaleorw = selection_ellipse[name]['w'];
-    var scaleorh = selection_ellipse[name]['h'];
-
-
-    if ((currzoom != 1.0) && (incr != 1)) {
-      cameraLayoutSettings[name]["orx"] = Math.round(scaleorx);
-      cameraLayoutSettings[name]["ory"] = Math.round(scaleory);
+    var scaleorx; 
+    var scaleory; 
+    if(incr>1){
+      //zoom in
+      scaleorx= selection_ellipse[name]['x'];
+      scaleory = selection_ellipse[name]['y'];
+     
+    } else {
+      scaleorx= cameraLayoutSettings[name]["orx"];
+      scaleory = cameraLayoutSettings[name]["ory"];
     }
 
+    cameraLayoutSettings[name]["orx"] = scaleorx*incr;
+    cameraLayoutSettings[name]["ory"] =  scaleory*incr;
 
     // var or=x + "px " +y+"px";
     let left = $("#cameraImage-" + encoden).offset().left;
@@ -2077,8 +2086,8 @@ function zoomInOut(name, incr) {
 
     $("#cameraImage-" + encoden).css(prop);
     //$("#cameraImageCanv-" + encoden).css(prop);
-    let scrollx=(((scaleorx) /** currzoom*/)/*+ w / 2*/)+left;
-    let scrolly=(((scaleory) /** currzoom*/)/*+ h / 2*/)+top;
+    let scrollx=(((scaleorx) * incr)- w / 2)//+left;
+    let scrolly=(((scaleory) * incr)- h / 2)//+top;
 
     $("#insideWrapper-" + encoden).scrollLeft(scrollx );
     $("#insideWrapper-" + encoden).scrollTop(scrolly);
@@ -2095,7 +2104,7 @@ function zoomInOut(name, incr) {
      $("#selectionCanv-" + encoden).width(w*currzoom);
      $("#selectionCanv-" + encoden).height(h*currzoom);
  */
-    console.log(name + "origin:("+scaleorx+","+scaleory+") offset:("+left+","+top+") Zoom:" + currzoom  + " width:" + w + " height:" + h + " calc scroll:("+scrollx+","+scrolly+") scroll:(" + $("#insideWrapper-" + encoden).scrollLeft() + ","+ $("#insideWrapper-" + encoden).scrollTop()+") CSS:" + JSON.stringify(prop));
+    console.log(name + "origin:("+scaleorx+","+scaleory+")=>("+((scaleorx) * incr)+","+((scaleory) * incr)+") incr:"+incr+" offset:("+left+","+top+") Zoom:" + currzoom  + " width:" + w + " height:" + h + " calc scroll:("+scrollx+","+scrolly+") scroll:(" + $("#insideWrapper-" + encoden).scrollLeft() + ","+ $("#insideWrapper-" + encoden).scrollTop()+") CSS:" + JSON.stringify(prop));
     cameraLayoutSettings[name]["css"] = prop;
 
   } else {
