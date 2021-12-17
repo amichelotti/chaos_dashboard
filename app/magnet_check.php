@@ -242,8 +242,18 @@
                             if(ele.health.cuh_alarm_msk){
                                 if((ele.hasOwnProperty("cu_alarms")&&(ele.cu_alarms.hasOwnProperty("polarity_out_of_set_MASK")||
                                    ele.cu_alarms.hasOwnProperty("current_out_of_set_MASK")|| ele.cu_alarms.hasOwnProperty("stby_out_of_set_MASK")))||(
-                                    (ele.hasOwnProperty("device_alarms")&&(ele.device_alarms.hasOwnProperty("interlock_MASK")||ele.device_alarms.hasOwnProperty("bad_state_MASK"))))
+                                    (ele.hasOwnProperty("device_alarms")&&(ele.device_alarms.hasOwnProperty("faulty_state_MASK")||ele.device_alarms.hasOwnProperty("bad_state_MASK"))))
                                    ){
+                                     for(var k in ele.cu_alarms){
+                                         if(ele.cu_alarms.hasOwnProperty(k+"_MASK")){
+                                            desc[k]= "MASKED";
+                                         }
+                                     }
+                                     for(var k in ele.device_alarms){
+                                         if(ele.device_alarms.hasOwnProperty(k+"_MASK")){
+                                            desc[k]= "MASKED";
+                                         }
+                                     }
                                        n_masked.push(name);
                                 }
                             }
@@ -395,19 +405,21 @@
             });
 
         }
-        function maskUnMask(dev,maskunmask){
+        function maskUnMask(dev,maskunmask,mob){
             var mvalue= ((maskunmask)?0:0xFF);
-            var alrm = {
-                all: true,
-                mask: mvalue
-            }
-            jchaos.command(dev, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
-                jqccs.instantMessage(dev, "Set Mask on " + dev  + "=" + mvalue, 2000, true);
+            for(var k in mob){
+                var alrm = {
+                    name: k,
+                    mask: mvalue
+                }
+                jchaos.command(dev, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
+                    jqccs.instantMessage(dev, "Set Mask on " + dev  + "/"+k+" = " + mvalue, 2000, true);
 
-            }, function (bad) {
-                jqccs.instantMessage(dev,  "ERROR: Setting Mask on " + dev  + "=" + mvalue +", error:"+ JSON.stringify(bad), 4000, false);
+                }, function (bad) {
+                    jqccs.instantMessage(dev,  "ERROR: Setting Mask on " + dev  + "/"+k+ " =" + mvalue +", error:"+ JSON.stringify(bad), 4000, false);
 
-            });
+                });
+        }
             
         }
         function refreshList(dom, t,l) {
@@ -450,9 +462,11 @@
                     console.log("CHECK "+cuname);
                     if(dom=="masked"){
                         unmasklist[cuname]=descs[cuname];
+                        console.log("selected to be unmasked:"+JSON.stringify(unmasklist[cuname]));
 
                     } else {
                         masklist[cuname]=descs[cuname];
+                        console.log("selected to be masked:"+JSON.stringify(masklist[cuname]));
                     }
 
                 },
@@ -500,7 +514,7 @@
             //var l=[];
             for(var k in masklist){
            //     l.push(k);
-                maskUnMask(k,true);
+                maskUnMask(k,true,masklist[k]);
             }
             //refreshList("masked", "Masked", l);
 
@@ -509,7 +523,7 @@
             console.log("unmasking: "+JSON.stringify(unmasklist));
             var l=[];
             for(var k in unmasklist){
-                maskUnMask(k,false);
+                maskUnMask(k,false,unmasklist[k]);
 
                 delete masklist[k];
             }
