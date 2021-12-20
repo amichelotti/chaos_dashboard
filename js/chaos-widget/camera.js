@@ -549,8 +549,11 @@ function buildCameraArray(id, opt) {
   var hostHeight = $(window).height();
   var maxwidth = Math.round((hostWidth - (50 * tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
   console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:" + tmpObj.displayRatio);
-
-  var list_cu = jchaos.search("", "ceu", true, { 'interface': "camera" });
+  var search="";
+  if(opt.hasOwnProperty("search")){
+    search=opt['search'];
+  }
+  var list_cu = jchaos.search(search, "ceu", true, { 'interface': "camera" });
   var cnt = 0;
   for (var r = 0; r < row; r++) {
     html += '<div class="row">';
@@ -726,7 +729,8 @@ function updateCamera(ds) {
       old_size[id]['dpck_seq_id']=ds.dpck_seq_id;
         
       
-   
+      jqccs.updateSingleNode({input:ds});
+
   } else if (ds.dpck_ds_type == 4) {
     //HEALTH
     let id = mappedcamera[ds.ndk_uid];
@@ -734,11 +738,16 @@ function updateCamera(ds) {
     var band =  Number(ds.cuh_dso_size) / (1024*1024);
 
     $("#mbs-" + id).html(band.toFixed(2));
+    //jqccs.updateGenericTableDataset(tmpObj);
+
    let status=ds.nh_status;
    var mode="";
    if(!old_size.hasOwnProperty(id)){
      old_size[id]=ds;
    }
+   jqccs.updateSingleNode({health:ds});
+   jqccs.updateGenericControl(null, {health:ds});
+
   if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("TRIGGER_MODE")){
     switch (old_size[id].TRIGGER_MODE) {
       case TRIGGER_CONT:
@@ -805,167 +814,215 @@ function updateCamera(ds) {
   }
   old_size[id]['dpck_ats']=ds.dpck_ats;
 
+  } else {
+    var obj={};
+    obj[jchaos.channelToString(ds.dpck_ds_type)]=ds;
+    jqccs.updateSingleNode(obj);
+    jqccs.updateGenericControl(null, obj);
+
+
   }
 
+}
+$.fn.save_config = function () {
+  
+  var obj={
+    col: opt.camera['cameraPerRow'],
+    row: opt.camera['maxCameraRow'],
+    w2cam: mappedcamera
+  }
+  jqccs.getEntryWindow("Save current configuration", "Name", "noname", "Save", function (name) {
+    jchaos.variable("camera_view","get",(d)=>{
+      if(typeof d !== "undefined"){
+        d[name]=obj;
+        jchaos.variable("camera_view","set",d,(g)=>{
+          console.log("Saving "+name+" "+JSON.stringify(d[name]));
+          jqccs.instantMessage("Configuration " + name, "Saved", 2000, true);
+
+        },(error)=>{
+          jqccs.instantMessage("ERROR Saving Configuration:" + name, "Error:" + JSON.stringify(error), 5000, false);
+
+        });
+      }
+    },(error)=>{
+      jqccs.instantMessage("ERROR Retriving configuration", "Error:" + JSON.stringify(error), 5000, false);
+
+    });
+  }, "Cancel");
+}
+function mapAssociation(vid,cam){
+  $("#cameraImage-" + vid).attr("src", "/../img/chaos_wait_big.gif");
+  $("#cameraImage-" + vid).removeClass("chaos_image_v");
+  $("#cameraImage-" + vid).removeClass("chaos_image_h");
+  $("#cameraImage-" + vid).addClass("chaos_image");
+  const canvas = document.getElementById("cameraImageCanv-" + vid);
+  const ctx = canvas.getContext('2d');
+  const canvasSel = document.getElementById("selectionCanv-" + vid);
+  const ctxSel = canvasSel.getContext('2d');
+  ctxSel.clearRect(0, 0, canvasSel.width, canvasSel.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if(selection_ellipse.hasOwnProperty(vid)){
+    delete selection_ellipse[vid];
+  }
+  if (cam == "NOCAMERA") {
+    let id=vid;
+    delete mappedcamera[mapcamera[id]];
+    delete mapcamera[id];
+    $("#state-" + id).html('<i class="fa fa-question" aria-hidden="true"></i>');
+    $("#seq-" + id).html(0);
+    $("#mbs-" + id).html(0);
+    $("#lat-" + id).html(0);
+    $("#freq-" + id).html(0);
+    $("#size-" + id).html('');
+    $("#"+id+"_SHUTTER_MAX").html(0);
+    $("#"+id+"_SHUTTER_MIN").html(0);
+    $("#"+id+"_GAIN_MAX").html(0);
+    $("#"+id+"_GAIN_MIN").html(0);
+
+    $("#zoom_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
+    $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
+
+    $("#cameraImage-" + vid[1]).attr("src", "/../img/no_cam_trasp.svg");
+
+  } else {
+    mapcamera[vid] = cam;
+    for (var k in mappedcamera) {
+      if (mappedcamera[k] == vid) {
+        delete mappedcamera[k];
+      }
+    }
+    mappedcamera[cam] = vid;
+    getCameraDesc(cam,vid);
+    $("#"+vid+"_SHUTTER").attr("name",cam+ '/input/SHUTTER');
+
+    //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
+    $("#cameraImage-" + vid).on('load', function () {
+      let s = $("#cameraImage-" + vid).attr('src');
+      if (s.includes("..")) {
+        return;
+      }
+      //alert($('img.product_image').attr('src'));
+      console.log(cam + " = " + vid);
+      $("#cameraImage-" + vid).off('load');
+      let natwidth = $("#cameraImage-" + vid).prop('naturalWidth');
+      let natheight = $("#cameraImage-" + vid).prop('naturalHeight');
+      if (natwidth > natheight) {
+        $("#cameraImage-" + vid).removeClass("chaos_image_v");
+        $("#cameraImage-" + vid).removeClass("chaos_image");
+
+        $("#cameraImage-" + vid).addClass("chaos_image_h");
+      } else {
+        $("#cameraImage-" + vid).removeClass("chaos_image");
+
+        $("#cameraImage-" + vid).removeClass("chaos_image_h");
+        $("#cameraImage-" + vid).addClass("chaos_image_v");
+      }
+      checkRedrawReference(cam, vid);
+
+    });
+    activateMenuShort();
+    $("#cameraImageCanv-" + vid).on("mousemove", function (e) {
+      var offset = $(this).offset();
+      var x = (e.pageX - offset.left) / currzoomm;
+      var y = (e.pageY - offset.top) / currzoomm;
+      //  console.log("POS "+ev.currentTarget.value+" "+x+","+y)
+      mouseX = x;
+      mouseY = y;
+
+    });
+    // console.log(JSON.stringify(mapcamera));
+    // checkRedrawReference(ev.currentTarget.value,vid[1]);
+
+  }
+}
+function activateCameraFetch(){
+  cameralist = [];
+  for (var k in mappedcamera) {
+    var id = mappedcamera[k];
+
+    cameralist.push(k);
+    old_tim[id] = 0;
+    counter[id] = 0;
+    tcum[id] = 0;
+
+  }
+  if (cameralist.length) {
+
+    if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
+      if (cameralistold.length) {
+        console.log("Unsubscribe " + JSON.stringify(cameralistold));
+        jchaos.iosubscribeCU(cameralistold, false);
+      }
+      console.log("Subscribe " + JSON.stringify(cameralist));
+
+      jchaos.iosubscribeCU(cameralist, true);
+      cameralistold = cameralist;
+      jchaos.options['io_onconnect'] = (s) => {
+        console.log("resubscribe ..")
+
+        jchaos.iosubscribeCU(cameralist, true);
+      }
+
+      jchaos.options['io_onmessage'] = updateCamera;
+
+    } else {
+      if (pullInterval != null) {
+        clearInterval(pullInterval);
+      }
+      if (pullIntervalsec != null) {
+        clearInterval(pullIntervalsec);
+      }
+      if (pullIntervalHealth != null) {
+        clearInterval(pullIntervalHealth);
+      }
+      pullInterval = setInterval(() => {
+        jchaos.getChannel(cameralist, 0, (vds) => {
+          vds.forEach(ele => {
+            updateCamera(ele);
+          });
+
+        });
+      }, opt.camera.cameraRefresh);
+      pullIntervalsec = setInterval(() => {
+        jchaos.getChannel(cameralist, 1, (vds) => {
+          vds.forEach(ele => {
+            updateCamera(ele);
+          });
+
+        });
+      }, 1000);
+      pullIntervalHealth = setInterval(() => {
+        jchaos.getChannel(cameralist, 4, (vds) => {
+          vds.forEach(ele => {
+            updateCamera(ele);
+          });
+
+        });
+      }, 5000);
+    }
+  }
 }
 $.fn.buildCameraArray = function (op) {
   opt = op;
   this.html(buildCameraArray("table-" + this.attr('id'), opt));
 
+  if(opt.hasOwnProperty("map")){
+    console.log("map:"+JSON.stringify(opt['map']));
+    for(var k in opt['map']){
+      mapAssociation(opt['map'][k],k);
+      $('#select-'+opt['map'][k]+' option[value="'+k+'"]').attr("selected",true);
+
+    }
+    activateCameraFetch();
+  }
+
   $(".camselect").on("change", (ev) => {
     var vid = ev.currentTarget.id.split('-');
     console.log("change " + vid[1] + " :" + ev.currentTarget.value);
-    $("#cameraImage-" + vid[1]).attr("src", "/../img/chaos_wait_big.gif");
-    $("#cameraImage-" + vid[1]).removeClass("chaos_image_v");
-    $("#cameraImage-" + vid[1]).removeClass("chaos_image_h");
-    $("#cameraImage-" + vid[1]).addClass("chaos_image");
-    const canvas = document.getElementById("cameraImageCanv-" + vid[1]);
-    const ctx = canvas.getContext('2d');
-    const canvasSel = document.getElementById("selectionCanv-" + vid[1]);
-    const ctxSel = canvasSel.getContext('2d');
-
-    ctxSel.clearRect(0, 0, canvasSel.width, canvasSel.height);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if(selection_ellipse.hasOwnProperty(vid[1])){
-      delete selection_ellipse[vid[1]];
-    }
-
-
-    if (ev.currentTarget.value == "NOCAMERA") {
-      let id=vid[1];
-      delete mappedcamera[mapcamera[id]];
-      delete mapcamera[id];
-      $("#state-" + id).html('<i class="fa fa-question" aria-hidden="true"></i>');
-      $("#seq-" + id).html(0);
-      $("#mbs-" + id).html(0);
-      $("#lat-" + id).html(0);
-      $("#freq-" + id).html(0);
-      $("#size-" + id).html('');
-      $("#"+id+"_SHUTTER_MAX").html(0);
-      $("#"+id+"_SHUTTER_MIN").html(0);
-      $("#"+id+"_GAIN_MAX").html(0);
-      $("#"+id+"_GAIN_MIN").html(0);
-
-      $("#zoom_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
-      $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
-
-      $("#cameraImage-" + vid[1]).attr("src", "/../img/no_cam_trasp.svg");
-
-    } else {
-      mapcamera[vid[1]] = ev.currentTarget.value;
-      for (var k in mappedcamera) {
-        if (mappedcamera[k] == vid[1]) {
-          delete mappedcamera[k];
-        }
-      }
-      mappedcamera[ev.currentTarget.value] = vid[1];
-      getCameraDesc(ev.currentTarget.value,vid[1]);
-      $("#"+id+"_SHUTTER").attr("name",ev.currentTarget.value+ '/input/SHUTTER');
-
-      //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
-      $("#cameraImage-" + vid[1]).on('load', function () {
-        let s = $("#cameraImage-" + vid[1]).attr('src');
-        if (s.includes("..")) {
-          return;
-        }
-        //alert($('img.product_image').attr('src'));
-        console.log(ev.currentTarget.value + " = " + vid[1]);
-        $("#cameraImage-" + vid[1]).off('load');
-        let natwidth = $("#cameraImage-" + vid[1]).prop('naturalWidth');
-        let natheight = $("#cameraImage-" + vid[1]).prop('naturalHeight');
-        if (natwidth > natheight) {
-          $("#cameraImage-" + vid[1]).removeClass("chaos_image_v");
-          $("#cameraImage-" + vid[1]).removeClass("chaos_image");
-
-          $("#cameraImage-" + vid[1]).addClass("chaos_image_h");
-        } else {
-          $("#cameraImage-" + vid[1]).removeClass("chaos_image");
-
-          $("#cameraImage-" + vid[1]).removeClass("chaos_image_h");
-          $("#cameraImage-" + vid[1]).addClass("chaos_image_v");
-        }
-        checkRedrawReference(ev.currentTarget.value, vid[1]);
-
-      });
-      activateMenuShort();
-      $("#cameraImageCanv-" + vid[1]).on("mousemove", function (e) {
-        var offset = $(this).offset();
-        var x = (e.pageX - offset.left) / currzoomm;
-        var y = (e.pageY - offset.top) / currzoomm;
-        //  console.log("POS "+ev.currentTarget.value+" "+x+","+y)
-        mouseX = x;
-        mouseY = y;
-
-      });
-      // console.log(JSON.stringify(mapcamera));
-      // checkRedrawReference(ev.currentTarget.value,vid[1]);
-
-    }
-    cameralist = [];
-    for (var k in mappedcamera) {
-      var id = mappedcamera[k];
-
-      cameralist.push(k);
-      old_tim[id] = 0;
-      counter[id] = 0;
-      tcum[id] = 0;
-
-    }
-    if (cameralist.length) {
-
-      if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
-        if (cameralistold.length) {
-          console.log("Unsubscribe " + JSON.stringify(cameralistold));
-          jchaos.iosubscribeCU(cameralistold, false);
-        }
-        console.log("Subscribe " + JSON.stringify(cameralist));
-
-        jchaos.iosubscribeCU(cameralist, true);
-        cameralistold = cameralist;
-        jchaos.options['io_onconnect'] = (s) => {
-          console.log("resubscribe ..")
-
-          jchaos.iosubscribeCU(cameralist, true);
-        }
-
-        jchaos.options['io_onmessage'] = updateCamera;
-
-      } else {
-        if (pullInterval != null) {
-          clearInterval(pullInterval);
-        }
-        if (pullIntervalsec != null) {
-          clearInterval(pullIntervalsec);
-        }
-        if (pullIntervalHealth != null) {
-          clearInterval(pullIntervalHealth);
-        }
-        pullInterval = setInterval(() => {
-          jchaos.getChannel(cameralist, 0, (vds) => {
-            vds.forEach(ele => {
-              updateCamera(ele);
-            });
-
-          });
-        }, opt.camera.cameraRefresh);
-        pullIntervalsec = setInterval(() => {
-          jchaos.getChannel(cameralist, 1, (vds) => {
-            vds.forEach(ele => {
-              updateCamera(ele);
-            });
-
-          });
-        }, 1000);
-        pullIntervalHealth = setInterval(() => {
-          jchaos.getChannel(cameralist, 4, (vds) => {
-            vds.forEach(ele => {
-              updateCamera(ele);
-            });
-
-          });
-        }, 5000);
-      }
-    }
+    mapAssociation(vid[1],ev.currentTarget.value);
+    
+    
+    activateCameraFetch();
   });
   $(".selectionCanv").mousedown(function (e) {
 
@@ -2403,7 +2460,30 @@ function activateMenu(tmpObj) {
 
 
 }
-function rebuildCam(tmpObj) {
+function rebuildCam(tmpObj){
+  var col = opt.camera['cameraPerRow'];
+  var row = opt.camera['maxCameraRow'];
+  var m={};
+  var siz=0;
+  if (selectedCams instanceof Array) {
+  
+  for(var r=0;r<row;r++){
+    for(var c=0;c<col;c++){
+      if(siz<selectedCams.length){
+        var id=r+"_"+c;
+        m[selectedCams[siz]]=id;
+        siz++;
+      }
+    }
+  }
+  mappedcamera={};
+  mapcamera={};
+  opt['map']=m;
+  $("#cameraTable").buildCameraArray(opt);
+}
+
+}
+/*function rebuildCam(tmpObj) {
 
   var cnt = 0;
   var tablename = "main_table-" + tmpObj.template;
@@ -2539,7 +2619,7 @@ function rebuildCam(tmpObj) {
 
   });
 
-}
+}*/
 function updatelist(checkboxElem) {
   var ename = checkboxElem.name;
   if (checkboxElem.checked) {
@@ -2711,15 +2791,17 @@ function getWidget(options) {
     tableClickFn: function (tmpObj, e) {
       //  rebuildCam(tmpObj);
       console.log("Table click");
-      jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
+    /*  jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
         var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
-
+        if(!tmpObj.hasOwnProperty("data")){
+          tmpObj['data']={};
+        }
         tmpObj.data[cindex] = cu[0];
         jqccs.updateGenericTableDataset(tmpObj);
 
         jqccs.updateGenericControl(tmpObj, cu[0]);
       })
-
+*/
     },
     updateInterfaceFn: function (tmpObj) {
       console.log("UpdateInterfaceFn ");
@@ -2824,7 +2906,9 @@ function getWidget(options) {
     },
     tableFn: function (tmpObj) {
       console.log("TableFn ");
-
+      var html = '<div class="row" id="cameraTable"></div>';
+      html+=jqccs.generateGenericTable(tmpObj,true);
+      return html;
       var old_tim = {}, counter = {}, tcum = {};
 
       var cu = tmpObj.elems;

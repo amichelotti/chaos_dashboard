@@ -61,7 +61,7 @@
                             <div class="col-sm">
                                 <div class="card list-group ">
                                     <div id="outofset_h" class="card-header">
-                                        Out Of Set
+                                        Set
                                     </div>
                                     <ul id="outofset" class="listview">
 
@@ -71,7 +71,7 @@
                             <div class="col-sm">
                                 <div class="card list-group">
                                     <div id="outofpol_h" class="card-header">
-                                        Out Of Polarity
+                                        Polarity
                                     </div>
                                     <ul id="outofpol" class="listview">
 
@@ -81,7 +81,7 @@
                             <div class="col-sm">
                                 <div class="card">
                                     <div id="outofstat_h" class="card-header">
-                                        Out Of Status
+                                        Status
                                     </div>
                                     <ul id="outofstat" class="listview">
 
@@ -144,7 +144,7 @@
     <footer>
         <?php require_once('footer.php');?>
         
-        <audio src="../audio/threeknocks.mp3" width="0" height="0" id="bau"></audio>
+        <audio src="../audio/twoknocks.mp3" width="0" height="0" id="bau"></audio>
     </footer>
 
 
@@ -153,6 +153,7 @@
 
 
     <script>
+        var fontsize="10px";
         var outofset = [];
         var outofpol = [];
         var outofstat = [];
@@ -359,7 +360,7 @@
                             bau();
                         }
                         outofset = n_outofset;
-                        refreshList("outofset", "Out Of Set",outofset);
+                        refreshList("outofset", "Set",outofset);
                         
                     }
 
@@ -368,7 +369,7 @@
                             bau();
                         }
                         outofstat = n_outofstat;
-                        refreshList("outofstat","Out Of Status", outofstat);
+                        refreshList("outofstat","Status", outofstat);
                         
                     }
 
@@ -377,7 +378,7 @@
                             bau();
                         }
                         outofpol = n_outofpol;
-                        refreshList("outofpol", "Out Of Polarity",outofpol);
+                        refreshList("outofpol", "Polarity",outofpol);
 
                     }
                     if (updatefault || (fault.length != n_fault.length)||(fault.length==0)) {
@@ -429,7 +430,7 @@
                 var n = jchaos.encodeName(item);
                 var t = (JSON.stringify(descs[item])).replaceAll("\"", "");
                 // var l = "<li class=\"list-group-item list-group-item-action\" title=\""+t+"\" id=\""+n+"\">"+item+"</li>";
-                var l = "<li class=\"listitem\" title=\"" + t + "\" id=\"" + n + "\" cu=\""+item+"\">" + item + "</li>";
+                var l = "<li class=\"listitem\" style=\"font-size:"+dashboard_settings['fontSize']+" !important\" title=\"" + t + "\" id=\"" + n + "\" cu=\""+item+"\">" + item + "</li>";
                 $("#" + dom).append(l);
             });
             $("#"+dom+"_h").html("<b>"+t+"</b> " + l.length);
@@ -490,6 +491,12 @@
         jchaos.search("", "class", true, function (ll) {
             jqccs.element_sel('#classes', ll, 1);
         });
+        if(dashboard_settings.hasOwnProperty('fontSize')){
+            $(".listview").css("font-size", dashboard_settings['fontSize']);
+            $(".listitem").css("font-size", dashboard_settings['fontSize']);
+
+            console.log("changing font to:"+dashboard_settings['fontSize']);
+	    }
         $(".listview").simsCheckbox();
 
         refreshAll();

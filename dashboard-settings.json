@@ -10,6 +10,11 @@
             "default": 1000,
             "description": "General Refresh (ms)"
         },
+        "fontSize": {
+            "type": "string",
+            "default": "12px",
+            "description": "Font Size"
+        },
         "push": {
             "type": "boolean",
             "default": true,

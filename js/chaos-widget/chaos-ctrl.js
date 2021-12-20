@@ -7433,9 +7433,11 @@
     }
 
 
-
+    jqccs.generateGenericTable=function(tmpObj,selbox){
+        return generateGenericTable(tmpObj,selbox);
+    }
     /********************* */
-    function generateGenericTable(tmpObj) {
+    function generateGenericTable(tmpObj,selbox) {
         var cu = [];
         if (tmpObj['elems'] instanceof Array) {
             cu = tmpObj.elems;
@@ -7455,6 +7457,9 @@
         html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
+        if(typeof selbox === "boolean" && selbox){
+            html += '<th>Sel</th>';
+        }
         html += '<th>Name CU</th>';
         html += '<th colspan="3">Status</th>';
         html += '<th>Timestamp</th>';
@@ -7472,6 +7477,9 @@
         $(cu).each(function(i) {
             var cuname = jchaos.encodeName(cu[i]);
             html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
+            if(typeof selbox === "boolean" && selbox){
+                html += '<td><div><input type="checkbox" onchange="updatelist(this)" name="' + cu[i] + '" id="s-' + cuname + '"></td>';
+            }
             html += "<td class='name_element'>" + cu[i] + "</td>";
             html += "<td id='" + cuname + "_health_status'></td>";
             html += "<td id='" + cuname + "_system_busy'></td>";
@@ -11261,6 +11269,7 @@
 
             }
         }
+        if(tmpObj!=null){
         if (tmpObj.node_selected != tmpObj['oldselected']) {
             tmpObj['oldselected'] = tmpObj.node_selected;
             $("#cu_full_commands").empty();
@@ -11277,6 +11286,7 @@
                 });
             }
         }
+    }
     }
 
     function populateSnapList(tmpObj, snaplist) {

@@ -5,15 +5,19 @@
 
 
 				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
-					<ul class="navbar-nav mr-auto">
+					<ul class="navbar-nav mr-auto" id="appmenu">
 					<li class="nav-item active">
-        				<a class="nav-link" href="../index.php">Home <span class="sr-only">(current)</span></a>
+        				<a class="nav-link" href="../index.php"><i class="fa fa-home" aria-hidden="true"></i> Home <span class="sr-only">(current)</span></a>
       				</li>
 					<li class="nav-item dropdown">
-							<div class="nav-link dropdown-toggle" id="app-setting"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</div>
+							<div class="nav-link" id="app-setting"
+								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-cogs" aria-hidden="true"></i> Settings</div>
 					</li>
-						<div id="appmenu"></div>
+					<li class="nav-item dropdown">
+							<div class="nav-link cappmenu"
+								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Config</div>
+					</li>
+
 					</ul>
 				
 				</div>
@@ -1113,5 +1117,19 @@
                     alert("Cannot retrive Client List");
                 });
             });
-	
+			$('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
+  if (!$(this).next().hasClass('show')) {
+    $(this).parents('.dropdown-menu').first().find('.show').removeClass('show');
+  }
+  var $subMenu = $(this).next('.dropdown-menu');
+  $subMenu.toggleClass('show');
+
+
+  $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function(e) {
+    $('.dropdown-submenu .show').removeClass('show');
+  });
+
+
+  return false;
+});
 </script>
