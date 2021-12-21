@@ -856,6 +856,10 @@ function mapAssociation(vid,cam){
   $("#cameraImage-" + vid).removeClass("chaos_image_h");
   $("#cameraImage-" + vid).addClass("chaos_image");
   const canvas = document.getElementById("cameraImageCanv-" + vid);
+  if(canvas==null){
+    console.error("canvas null "+vid+ " cam:"+cam);
+    return;
+  }
   const ctx = canvas.getContext('2d');
   const canvasSel = document.getElementById("selectionCanv-" + vid);
   const ctxSel = canvasSel.getContext('2d');
@@ -1008,9 +1012,15 @@ $.fn.buildCameraArray = function (op) {
 
   if(opt.hasOwnProperty("map")){
     console.log("map:"+JSON.stringify(opt['map']));
+    mappedcamera={};
+    mapcamera={};
+    var cnt=0;
     for(var k in opt['map']){
+      cnt++;
+     
       mapAssociation(opt['map'][k],k);
       $('#select-'+opt['map'][k]+' option[value="'+k+'"]').attr("selected",true);
+    
 
     }
     activateCameraFetch();
