@@ -22,12 +22,6 @@
             "required": true,
             "description": "Number of camera rows"
         },
-        "maxCameraRow": {
-            "type": "integer",
-            "default": 2,
-            "required": true,
-            "description": "Number of camera rows"
-        },
         
         "displayRatio": {
             "type": "string",

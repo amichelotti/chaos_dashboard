@@ -1432,6 +1432,11 @@
 						var subm_state = {};
 						if (node_state.hasOwnProperty(node.data.ndk_uid) && node_state[node.data.ndk_uid].hasOwnProperty("health")) {
 							var stat = node_state[node.data.ndk_uid].health.nh_status;
+							var now = (new Date()).getTime();
+
+							if(now-node_state[node.data.ndk_uid].health.dpck_ats>10000){
+								stat="offline";
+							}
 							if (stat == "Start") {
 								subm_state['stop'] = {
 									"separator_before": false,

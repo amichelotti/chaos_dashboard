@@ -31,10 +31,10 @@ ul.json-dict, ol.json-array {
   font-size: 10px !important;
 
 }
-.card-header {
+/*.card-header {
   font-size: 14px !important;
 
-}
+}*/
 .navbar {
   padding: .5rem !important;
 }
@@ -238,6 +238,24 @@ a:hover {
 .camselect {
   width: auto;
 }
+
+.infocam {
+  font-size: x-small;
+  margin-left:0 !important;
+  margin-right:0 !important;
+  padding:0;
+}
+.maxmin {
+  display: flex;
+  background: #c6c8ca;
+  font-size: xx-small;
+  border: 1px;
+  text-align:center;
+  padding: 0 !important;
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
 
 .insideWrapper{ 
  /* width:100%; 
@@ -518,3 +536,20 @@ input[type="range"] {
   ;
 }
 /** histo*/
+.dropdown-submenu {
+  position: relative;
+}
+
+.dropdown-submenu a::after {
+  transform: rotate(-90deg);
+  position: absolute;
+  right: 6px;
+  top: .8em;
+}
+
+.dropdown-submenu .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-left: .1rem;
+  margin-right: .1rem;
+}

@@ -61,7 +61,7 @@
                             <div class="col-sm">
                                 <div class="card list-group ">
                                     <div id="outofset_h" class="card-header">
-                                        Out Of Set
+                                        Set
                                     </div>
                                     <ul id="outofset" class="listview">
 
@@ -71,7 +71,7 @@
                             <div class="col-sm">
                                 <div class="card list-group">
                                     <div id="outofpol_h" class="card-header">
-                                        Out Of Polarity
+                                        Polarity
                                     </div>
                                     <ul id="outofpol" class="listview">
 
@@ -81,7 +81,7 @@
                             <div class="col-sm">
                                 <div class="card">
                                     <div id="outofstat_h" class="card-header">
-                                        Out Of Status
+                                        Status
                                     </div>
                                     <ul id="outofstat" class="listview">
 
@@ -144,7 +144,7 @@
     <footer>
         <?php require_once('footer.php');?>
         
-        <audio src="../audio/threeknocks.mp3" width="0" height="0" id="bau"></audio>
+        <audio src="../audio/twoknocks.mp3" width="0" height="0" id="bau"></audio>
     </footer>
 
 
@@ -153,6 +153,7 @@
 
 
     <script>
+        var fontsize="10px";
         var outofset = [];
         var outofpol = [];
         var outofstat = [];
@@ -242,8 +243,18 @@
                             if(ele.health.cuh_alarm_msk){
                                 if((ele.hasOwnProperty("cu_alarms")&&(ele.cu_alarms.hasOwnProperty("polarity_out_of_set_MASK")||
                                    ele.cu_alarms.hasOwnProperty("current_out_of_set_MASK")|| ele.cu_alarms.hasOwnProperty("stby_out_of_set_MASK")))||(
-                                    (ele.hasOwnProperty("device_alarms")&&(ele.device_alarms.hasOwnProperty("interlock_MASK")||ele.device_alarms.hasOwnProperty("bad_state_MASK"))))
+                                    (ele.hasOwnProperty("device_alarms")&&(ele.device_alarms.hasOwnProperty("faulty_state_MASK")||ele.device_alarms.hasOwnProperty("bad_state_MASK"))))
                                    ){
+                                     for(var k in ele.cu_alarms){
+                                         if(ele.cu_alarms.hasOwnProperty(k+"_MASK")){
+                                            desc[k]= "MASKED";
+                                         }
+                                     }
+                                     for(var k in ele.device_alarms){
+                                         if(ele.device_alarms.hasOwnProperty(k+"_MASK")){
+                                            desc[k]= "MASKED";
+                                         }
+                                     }
                                        n_masked.push(name);
                                 }
                             }
@@ -276,7 +287,7 @@
                                     }
                                     if (ele.device_alarms.hasOwnProperty("faulty_state") && ele.device_alarms.faulty_state) {
                                         desc["faulty_state"] = ele.device_alarms.faulty_state;
-                                        l_bad[name]['desc'] = desc;
+                                        l_fault[name]['desc'] = desc;
                                     }
                                     if (ele.device_alarms.hasOwnProperty("bad_state") && ele.device_alarms.bad_state) {
                                         desc["bad_state"] = ele.device_alarms.bad_state;
@@ -349,7 +360,7 @@
                             bau();
                         }
                         outofset = n_outofset;
-                        refreshList("outofset", "Out Of Set",outofset);
+                        refreshList("outofset", "Set",outofset);
                         
                     }
 
@@ -358,7 +369,7 @@
                             bau();
                         }
                         outofstat = n_outofstat;
-                        refreshList("outofstat","Out Of Status", outofstat);
+                        refreshList("outofstat","Status", outofstat);
                         
                     }
 
@@ -367,7 +378,7 @@
                             bau();
                         }
                         outofpol = n_outofpol;
-                        refreshList("outofpol", "Out Of Polarity",outofpol);
+                        refreshList("outofpol", "Polarity",outofpol);
 
                     }
                     if (updatefault || (fault.length != n_fault.length)||(fault.length==0)) {
@@ -395,19 +406,21 @@
             });
 
         }
-        function maskUnMask(dev,maskunmask){
+        function maskUnMask(dev,maskunmask,mob){
             var mvalue= ((maskunmask)?0:0xFF);
-            var alrm = {
-                all: true,
-                mask: mvalue
-            }
-            jchaos.command(dev, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
-                jqccs.instantMessage(dev, "Set Mask on " + dev  + "=" + mvalue, 2000, true);
+            for(var k in mob){
+                var alrm = {
+                    name: k,
+                    mask: mvalue
+                }
+                jchaos.command(dev, { "act_name": "cu_set_alarm", "act_msg": alrm }, function (data) {
+                    jqccs.instantMessage(dev, "Set Mask on " + dev  + "/"+k+" = " + mvalue, 2000, true);
 
-            }, function (bad) {
-                jqccs.instantMessage(dev,  "ERROR: Setting Mask on " + dev  + "=" + mvalue +", error:"+ JSON.stringify(bad), 4000, false);
+                }, function (bad) {
+                    jqccs.instantMessage(dev,  "ERROR: Setting Mask on " + dev  + "/"+k+ " =" + mvalue +", error:"+ JSON.stringify(bad), 4000, false);
 
-            });
+                });
+        }
             
         }
         function refreshList(dom, t,l) {
@@ -417,7 +430,7 @@
                 var n = jchaos.encodeName(item);
                 var t = (JSON.stringify(descs[item])).replaceAll("\"", "");
                 // var l = "<li class=\"list-group-item list-group-item-action\" title=\""+t+"\" id=\""+n+"\">"+item+"</li>";
-                var l = "<li class=\"listitem\" title=\"" + t + "\" id=\"" + n + "\" cu=\""+item+"\">" + item + "</li>";
+                var l = "<li class=\"listitem\" style=\"font-size:"+dashboard_settings['fontSize']+" !important\" title=\"" + t + "\" id=\"" + n + "\" cu=\""+item+"\">" + item + "</li>";
                 $("#" + dom).append(l);
             });
             $("#"+dom+"_h").html("<b>"+t+"</b> " + l.length);
@@ -450,9 +463,11 @@
                     console.log("CHECK "+cuname);
                     if(dom=="masked"){
                         unmasklist[cuname]=descs[cuname];
+                        console.log("selected to be unmasked:"+JSON.stringify(unmasklist[cuname]));
 
                     } else {
                         masklist[cuname]=descs[cuname];
+                        console.log("selected to be masked:"+JSON.stringify(masklist[cuname]));
                     }
 
                 },
@@ -476,6 +491,12 @@
         jchaos.search("", "class", true, function (ll) {
             jqccs.element_sel('#classes', ll, 1);
         });
+        if(dashboard_settings.hasOwnProperty('fontSize')){
+            $(".listview").css("font-size", dashboard_settings['fontSize']);
+            $(".listitem").css("font-size", dashboard_settings['fontSize']);
+
+            console.log("changing font to:"+dashboard_settings['fontSize']);
+	    }
         $(".listview").simsCheckbox();
 
         refreshAll();
@@ -500,7 +521,7 @@
             //var l=[];
             for(var k in masklist){
            //     l.push(k);
-                maskUnMask(k,true);
+                maskUnMask(k,true,masklist[k]);
             }
             //refreshList("masked", "Masked", l);
 
@@ -509,7 +530,7 @@
             console.log("unmasking: "+JSON.stringify(unmasklist));
             var l=[];
             for(var k in unmasklist){
-                maskUnMask(k,false);
+                maskUnMask(k,false,unmasklist[k]);
 
                 delete masklist[k];
             }

@@ -1,5 +1,6 @@
 {
     "generalRefresh": 1000,
+    "fontSize":"12",
     "generalControlRefresh": 500,
     "processRefresh": 5000,
     "checkLive": 10000,

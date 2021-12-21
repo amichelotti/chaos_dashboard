@@ -226,7 +226,10 @@ $(document).ready(function() {
             for(var k in navigator ){
                 platform[k]=JSON.stringify(navigator[k]);
             }
-            let ver=VERSION||"unknown";
+            let ver="unknown";
+            if(typeof VERSION !== "undefined"){
+                ver=VERSION;
+            } 
             t['dashboard_ver']=ver;
             t['platform']=platform;
             if(type=="bug"){
