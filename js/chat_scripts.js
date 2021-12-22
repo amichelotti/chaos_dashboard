@@ -211,10 +211,15 @@ $(document).ready(function() {
     
     }();
     function sendim(type){
-        let messageText = $('#input-text').val();
-        if(messageText==""){
-            alert("Message cannot be empty");
-            return;
+        let messageText ="";
+        if(type!="info"){
+             messageText =$('#input-text').val();
+            if(messageText==""){
+                alert("Message cannot be empty");
+                return;
+            }
+        }else {
+            messageText="info";
         }
         var t={
             username:$('#loggedInUID').val(),
@@ -258,6 +263,9 @@ $(document).ready(function() {
     });
     $("#send-bug").on("click",(e)=>{
        sendim("bug");
+    });
+    $("#send-info").on("click",(e)=>{
+       sendim("info");
     });
     // Send message
     $('#message-form').submit(function(e) {    
