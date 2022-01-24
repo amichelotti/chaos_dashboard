@@ -4672,7 +4672,7 @@
             tmpObj['refresh_rate'] = dashboard_settings.camera.cameraRefresh;
             jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
         } else if ((cutype.indexOf("bpm") != -1)) {
-            tmpObj.type = "SCLibera";
+            tmpObj.type = "bpm";
             tmpObj.upd_chan = -1;
 
 

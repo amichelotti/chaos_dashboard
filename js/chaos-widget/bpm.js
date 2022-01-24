@@ -1,4 +1,5 @@
 function getWidget() {
+  console.log("BPM widget");
     var chaos = 
      {
        dsFn:{
@@ -10,6 +11,7 @@ function getWidget() {
       },
       tableFn:function (tmpObj) {
         var cu=[];
+        
         if(tmpObj['elems'] instanceof Array){
              cu = tmpObj.elems;
         }        
@@ -227,7 +229,7 @@ function getWidget() {
                   chart.series[1].addPoint([now, elem.output.VB], false, shift);
                   chart.series[2].addPoint([now, elem.output.VC], false, shift);
                   chart.series[3].addPoint([now, elem.output.VD], false, shift);
-                  chart.series[3].addPoint([now, elem.output.SUM], false, shift);
+                  chart.series[4].addPoint([now, elem.output.SUM], false, shift);
                 }
                 chart.redraw();
     
