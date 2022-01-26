@@ -897,8 +897,6 @@ function mapAssociation(vid,cam){
     }
     mappedcamera[cam] = vid;
     getCameraDesc(cam,vid);
-    $("#"+vid+"_SHUTTER").attr("name",cam+ '/input/SHUTTER');
-
     //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
     $("#cameraImage-" + vid).on('load', function () {
       let s = $("#cameraImage-" + vid).attr('src');
