@@ -6287,15 +6287,17 @@
     }
 
     function makeDynamicGraphTable(tmpObj, graph_table_name, highchartOpt, culist) {
+        var hostWidth =$("#" + graph_table_name).width();
+        var hostHeight =$("#" + graph_table_name).height();
         var cnt = 0;
-        var num_chart = 3;
-        var hostWidth = $(window).width();
-        var hostHeight = $(window).height();
+        var num_chart = highchartOpt['chart_per_row']||3;
+        //var hostWidth = $(window).width();
+        //var hostHeight = $(window).height();
         var server_charts = {};
         var html = "";
         $("#" + graph_table_name).find("tr:gt(0)").remove();
-        highchartOpt['chart']['height'] = (1 / (num_chart) * 100) + '%';
-        highchartOpt['chart']['width'] = (hostWidth / (num_chart + 1));
+     //   highchartOpt['chart']['height'] = (1 / (num_chart) * 100) + '%';
+        highchartOpt['chart']['width'] = (hostWidth / (num_chart ));
         culist.forEach(function(key) {
             var encoden = jchaos.encodeName(key);
             if ((cnt % num_chart) == 0) {

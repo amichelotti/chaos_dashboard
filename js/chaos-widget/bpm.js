@@ -122,6 +122,7 @@ function getWidget() {
         var cu = tmpObj.data;
         if (JSON.stringify(tmpObj['elems']) !== JSON.stringify(tmpObj['old_elems'])) {
           var chart_options = {
+            chart_per_row:3,
             maxpoints: 10,
             npoints: 0,
             chart: {
