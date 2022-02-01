@@ -801,7 +801,7 @@ function updateCamera(ds) {
     $("#state-" + id).html('<i class="material-icons"  title="CU is de-initialized" style="color:red">trending_down</i>');
 
   } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
-    $("#state-" + id).html('<a id="Error-' + id + '" cuname="' + name_device_db + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
+    $("#state-" + id).html('<a id="Error-' + id + '" cuname="' + ds.ndk_uid + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
     $("#state-" + id).attr('title', "Device status:'" + status + "' " + ds.nh_lem);
 
   } else if (status == "Unload") {
@@ -897,8 +897,6 @@ function mapAssociation(vid,cam){
     }
     mappedcamera[cam] = vid;
     getCameraDesc(cam,vid);
-    $("#"+vid+"_SHUTTER").attr("name",cam+ '/input/SHUTTER');
-
     //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
     $("#cameraImage-" + vid).on('load', function () {
       let s = $("#cameraImage-" + vid).attr('src');
@@ -1548,8 +1546,8 @@ function activateMenuShort() {
       cuitem['operation'] = {
         "name": "Operations", icon: "fa-cog",
         "items": {
-          'calibration': {
-            name: "Calibration On", cu: name, icon: "fa-bar-chart",
+          'perform-calibration': {
+            name: "Perform Calibration", cu: name, icon: "fa-bar-chart",
             callback: function (itemKey, opt, e) {
               jchaos.command(name, { "act_name": "calibrateNodeUnit" }, function(data) {
                 jqccs.instantMessage("Calibration of:" + name, "OK", 1000, true);
@@ -1560,8 +1558,23 @@ function activateMenuShort() {
               
             }
           },
+          'calibration-on': {
+            name: "Calibration ON", cu: name, icon: "fa-camera-retro",
+            callback: function (itemKey, opt, e) {
+          var msg = {
+            "act_msg": {"apply_calib":true,"performCalib":false},
+            "act_name": "ndk_set_prop"
+        };
+        jchaos.command(name, msg, function(data) {
+            jqccs.instantMessage("Enabling calibration", "OK", 5000, true);
+
+        }, (bad) => {
+            jqccs.instantMessage("Error Enabling calibration" , "Error: " + JSON.stringify(bad), 5000, false);
+
+        });
+      }},
           'calibration-off': {
-            name: "Calibration Off", cu: name, icon: "fa-camera",
+            name: "Calibration OFF", cu: name, icon: "fa-camera",
             callback: function (itemKey, opt, e) {
           var msg = {
             "act_msg": {"apply_calib":false,"performCalib":false},
