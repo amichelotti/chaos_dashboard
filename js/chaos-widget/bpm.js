@@ -1,3 +1,75 @@
+var selectedElems = [];
+var stateObj = {};
+
+function updatelist(checkboxElem) {
+  var ename = checkboxElem.name;
+  if (checkboxElem.checked) {
+    selectedElems.push(ename);
+  } else {
+    selectedElems = selectedElems.filter((e) => { return (e != ename) })
+  }
+  console.log("list:" + JSON.stringify(selectedElems));
+  stateObj.node_multi_selected = selectedElems;
+  stateObj['elems']=selectedElems;
+  let min=Math.min(selectedElems.length,3);
+
+  var chart_options = {
+      chart_per_row: min,
+      maxpoints: 10,
+      npoints: 0,
+      chart: {
+
+      },
+      title: {
+        text: ''
+      },
+
+      xAxis: {
+        type: "datetime",
+        title: {
+          text: 'Time'
+        }
+      },
+      yAxis: {
+        title: {
+          text: 'V'
+        }
+
+      },
+      legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle'
+      },
+
+      plotOptions: {
+        series: {
+          label: {
+            connectorAllowed: false
+          },
+        }
+      },
+      series: [{
+        name: 'VA',
+        data: []
+      }, {
+        name: 'VB',
+        data: []
+      }, {
+        name: 'VC',
+        data: []
+      }, {
+        name: 'VD',
+        data: []
+      }, {
+        name: 'SUM',
+        data: []
+      }]
+    };
+    jqccs.makeDynamicGraphTable(stateObj, "graph_table_BPM", chart_options, selectedElems);
+    stateObj['old_elems'] = stateObj['elems'];
+
+}
 function getWidget() {
   console.log("BPM widget");
     var chaos = 
@@ -7,6 +79,9 @@ function getWidget() {
          
   
         }
+      
+      }, tableClickFn: function (tmpObj, e) {
+        console.log("Table click");
       
       },
       tableFn:function (tmpObj) {
@@ -23,9 +98,10 @@ function getWidget() {
         html += '<div class="row">';
         html += '<div class="box col-md-12">';
         html += '<div class="box-content">';
-        html += '<table class="table table-striped" id="main_table-' + template + '">';
+        html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
         html += '<thead class="box-header">';
         html += '<tr>';
+        html += '<th>Sel</th>';
         html += '<th>Element</th>';
         html += '<th colspan="3">Status</th>';
         html += '<th>X</th>';
@@ -43,7 +119,10 @@ function getWidget() {
     
         $(cu).each(function (i) {
           var cuname = jchaos.encodeName(cu[i]);
+
           html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
+          html += '<td><div><input type="checkbox" onchange="updatelist(this)" name="' + cu[i] + '" id="s-' + cuname + '"></td>';
+
           html += "<td class='td_element td_name'>" + cu[i] + "</td>";
           html += "<td id='" + cuname + "_health_status'></td>";
           html += "<td id='" + cuname + "_system_busy'></td>";
@@ -55,7 +134,7 @@ function getWidget() {
           html += "<td title='VC' id='" + cuname + "_output_VC'></td>";
           html += "<td title='VD' id='" + cuname + "_output_VD'></td>";
           html += "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
-          html += "<td title='Samples' id='" + cuname + "_input_SAMPLES'></td>";
+          html += "<td title='Samples' id='" + cuname + "_output_SAMPLES'></td>";
           html += "<td title='Trigger' id='" + cuname + "_input_TRIGGER'></td>";
     
           html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
@@ -117,74 +196,24 @@ function getWidget() {
         html += '</div>';
     
         return html;
+      },    
+      updateInterfaceFn: function (tmpObj) {
+        stateObj = tmpObj;
+        jqccs.updateInterfaceCU(tmpObj);
+
       },
       updateFn:function(tmpObj) {
         var cu = tmpObj.data;
-        if (JSON.stringify(tmpObj['elems']) !== JSON.stringify(tmpObj['old_elems'])) {
-          var chart_options = {
-            chart_per_row:3,
-            maxpoints: 10,
-            npoints: 0,
-            chart: {
-    
-            },
-            title: {
-              text: ''
-            },
-    
-            xAxis: {
-              type: "datetime",
-              title: {
-                text: 'Time'
-              }
-            },
-            yAxis: {
-              title: {
-                text: 'V'
-              }
-    
-            },
-            legend: {
-              layout: 'vertical',
-              align: 'right',
-              verticalAlign: 'middle'
-            },
-    
-            plotOptions: {
-              series: {
-                label: {
-                  connectorAllowed: false
-                },
-              }
-            },
-            series: [{
-              name: 'VA',
-              data: []
-            }, {
-              name: 'VB',
-              data: []
-            }, {
-              name: 'VC',
-              data: []
-            }, {
-              name: 'VD',
-              data: []
-            }, {
-              name: 'SUM',
-              data: []
-            }]
-          };
-          jqccs.makeDynamicGraphTable(tmpObj, "graph_table_BPM", chart_options, tmpObj['elems']);
-          tmpObj['old_elems'] = tmpObj['elems'];
-        }
-        var now = (new Date()).getTime();
-        jqccs.updateGenericTableDataset(tmpObj);
+        
+        
+       // var now = (new Date()).getTime();
+        jqccs.updateGenericTableDataset(stateObj);
     
         cu.forEach(function (elem) {
           if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
-    
+            var now=elem.output.dpck_ats;
             var cuname = jchaos.encodeName(elem.health.ndk_uid);
-            if ((tmpObj.node_selected != null) && (elem.health.ndk_uid == tmpObj.node_selected)) {
+            if ((stateObj.node_selected != null) && (elem.health.ndk_uid == stateObj.node_selected)) {
               $("#BPM_STATUS").html(elem.output.STATUS);
             }
             $("#" + cuname + "_output_X").html(elem.output.X.toFixed(3));
@@ -194,20 +223,20 @@ function getWidget() {
             $("#" + cuname + "_output_VC").html(elem.output.VC);
             $("#" + cuname + "_output_VD").html(elem.output.VD);
             $("#" + cuname + "_output_SUM").html(elem.output.SUM);
-            $("#" + cuname + "_input_SAMPLES").html(elem.input.SAMPLES);
+            $("#" + cuname + "_output_SAMPLES").html(elem.output.SAMPLES);
             if (elem.input.TRIGGER) {
               $("#" + cuname + "_input_TRIGGER").html("Triggered");
             } else {
               $("#" + cuname + "_input_TRIGGER").html("No Trigger");
             }
-            if (tmpObj.hasOwnProperty("graph_table_BPM")) {
-              var chart = tmpObj['graph_table_BPM'][cuname];
+            if (stateObj.hasOwnProperty("graph_table_BPM")&&stateObj['graph_table_BPM'].hasOwnProperty(cuname)) {
+              var chart = stateObj['graph_table_BPM'][cuname];
               if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
                 var shift = false;
-                if (tmpObj['graph_table_BPM'][cuname].options.npoints > tmpObj['graph_table_BPM'][cuname].options.maxpoints) {
+                if (stateObj['graph_table_BPM'][cuname].options.npoints > stateObj['graph_table_BPM'][cuname].options.maxpoints) {
                   shift = true;
                 }
-                tmpObj['graph_table_BPM'][cuname].options.npoints++;
+                stateObj['graph_table_BPM'][cuname].options.npoints++;
                 if ((elem.output.MODE & 0x1) && (elem.output.hasOwnProperty("SUM_ACQ"))) {
                   var arrv = [];
                   arrv[0] = jqccs.convertBinaryToArrays(elem.output.VA_ACQ);

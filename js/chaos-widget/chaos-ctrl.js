@@ -6295,7 +6295,11 @@
         //var hostHeight = $(window).height();
         var server_charts = {};
         var html = "";
-        $("#" + graph_table_name).find("tr:gt(0)").remove();
+        //$("#" + graph_table_name).find("tr:gt(0)").remove();
+        $("#" + graph_table_name).find("tr").remove();
+        if(culist.length==0){
+            return;
+        }
      //   highchartOpt['chart']['height'] = (1 / (num_chart) * 100) + '%';
         highchartOpt['chart']['width'] = (hostWidth / (num_chart ));
         culist.forEach(function(key) {
