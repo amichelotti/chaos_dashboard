@@ -1430,6 +1430,7 @@
 							submenu:sub_alarm
 						}
 						var subm_state = {};
+
 						if (node_state.hasOwnProperty(node.data.ndk_uid) && node_state[node.data.ndk_uid].hasOwnProperty("health")) {
 							var stat = node_state[node.data.ndk_uid].health.nh_status;
 							var now = (new Date()).getTime();
@@ -1437,11 +1438,28 @@
 							if(now-node_state[node.data.ndk_uid].health.dpck_ats>10000){
 								stat="offline";
 							}
+							subm_state['restart']={
+										"separator_before": false,
+										"separator_after": true,
+										label: "Restart",
+										icon: "fa fa-refresh",
+										action: function () {
+											let name=node.data.ndk_uid;
+											jchaos.restart(name, function(data) {
+													jqccs.instantMessage("Restarting :" + name, "OK", 1000, true);
+												}, function(data) {
+												jqccs.instantMessage("ERROR Restarting:" + name, "Error :" + JSON.stringify(data), 5000, false);
+
+												});
+											
+										}
+									};
 							if (stat == "Start") {
 								subm_state['stop'] = {
 									"separator_before": false,
 									"separator_after": false,
 									label: "Stop",
+									icon: "fa fa-stop",
 									action: function () {
 										jchaos.node(node.data.ndk_uid, "stop", "cu", function () {
 											jqccs.instantMessage(node.data.ndk_uid, "Stopping  ", 2000, true);
@@ -1455,6 +1473,8 @@
 									"separator_before": false,
 									"separator_after": false,
 									label: "Start",
+									icon: "fa fa-play",
+
 									action: function () {
 										jchaos.node(node.data.ndk_uid, "start", "cu", function () {
 											jqccs.instantMessage(node.data.ndk_uid, "Starting  ", 2000, true);
@@ -1561,6 +1581,7 @@
 
 							} else {
 								subm_state = {
+									
 									'start': {
 										"separator_before": false,
 										"separator_after": false,
@@ -1647,6 +1668,7 @@
 								}
 
 							}
+							
 							items['set-state'] = {
 								"label": "Set State..",
 								"submenu": subm_state

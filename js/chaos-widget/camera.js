@@ -1549,12 +1549,15 @@ function activateMenuShort() {
           'perform-calibration': {
             name: "Perform Calibration", cu: name, icon: "fa-bar-chart",
             callback: function (itemKey, opt, e) {
-              jchaos.command(name, { "act_name": "calibrateNodeUnit" }, function(data) {
-                jqccs.instantMessage("Calibration of:" + name, "OK", 1000, true);
+              jqccs.getEntryWindow("Calibration", "Samples", 10, "Calibrate", function (th) {
+
+              jchaos.command(name, { "act_name": "calibrateNodeUnit","samples":th }, function(data) {
+                jqccs.instantMessage("Calibration of:" + name, "using "+th+" images", 1000, true);
             }, function(data) {
-              jqccs.instantMessage("ERROR Calibrating:" + name, "Error :" + JSON.stringify(data), 5000, false);
+                jqccs.instantMessage("ERROR Calibrating:" + name, "Error :" + JSON.stringify(data), 5000, false);
 
             });
+            })
               
             }
           },
