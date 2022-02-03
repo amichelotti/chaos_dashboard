@@ -770,98 +770,101 @@
             if (opt !== undefined) {
                 options = opt;
             }
+            var buttons=[{
+                text: "Format",
+                id: 'dataset-radix-' + name,
+                click: function(e) {
+                    // var interval=$(this).attr("refresh_time");
+                    showformat++;
+                    switch (showformat) {
+                        case 0:
+                            $(e.target).text("Dec(s)");
+                            break;
+                        case 1:
+                            $(e.target).text("Dec(u)");
+                            break;
+                        case 2:
+                            $(e.target).text("Hex");
+                            break;
+                        case 3:
+                            $(e.target).text("Bin");
+                            break;
+                        default:
+                            showformat = 0;
+                            $(e.target).text("Dec(s)");
+                    }
+                    if (showformat == 1) {
+                        options["format"] = 10 + 0x100;
+                    } else if (showformat == 2) {
+                        options["format"] = 16;
+                    } else if (showformat == 3) {
+                        options["format"] = 2;
+                    } else {
+                        options["format"] = 10;
+                    }
+                    var converted = convertBinaryToArrays(json);
+
+                    var jsonhtml = json2html(converted, options, "");
+                    $("#dataset-" + name).html(jsonhtml);
+
+                    // $(instant).dialog("close");
+                }
+            },
+            {
+                text: "Save to Disk",
+                click: function(e) {
+                    var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
+                    saveAs(blob, name + ".json");
+                }
+            },
+            {
+                text: "Upload From Disk",
+                click: function(e) {
+                    getFile("Upload", "upload the json", function(obj) {
+                        json = obj;
+                        var converted = convertBinaryToArrays(json);
+                        var jsonhtml = json2html(converted, options, "");
+                        $("#dataset-" + name).html(jsonhtml);
+                    });
+
+                }
+            },
+            {
+                text: "close",
+                click: function(e) {
+                    // var interval=$(this).attr("refresh_time");
+                    $("#dataset-" + name).dialog('close');
+                    $(this).remove();
+
+                }
+            }
+
+
+        ];
+        if (typeof applyfunc === "function") {
+            buttons.push({
+                text: "Update",
+                id: 'update-' + name,
+                click: function(e) {
+                        applyfunc(json, function(newjson) {
+                            if (typeof newjson === "object") {
+                                var converted = convertBinaryToArrays(newjson);
+                                var jsonhtml = json2html(converted, options, "");
+                                $("#dataset-" + name).html(jsonhtml);
+                            }
+                        });
+
+                }
+            
+            })
+        }
             var instant = $('<div id=dataset-' + name + '></div>').dialog({
                 minWidth: hostWidth / 4,
                 minHeight: hostHeight / 4,
                 closeOnEscape: true,
                 title: msghead,
                 resizable: true,
-                buttons: [{
-                        text: "Format",
-                        id: 'dataset-radix-' + name,
-                        click: function(e) {
-                            // var interval=$(this).attr("refresh_time");
-                            showformat++;
-                            switch (showformat) {
-                                case 0:
-                                    $(e.target).text("Dec(s)");
-                                    break;
-                                case 1:
-                                    $(e.target).text("Dec(u)");
-                                    break;
-                                case 2:
-                                    $(e.target).text("Hex");
-                                    break;
-                                case 3:
-                                    $(e.target).text("Bin");
-                                    break;
-                                default:
-                                    showformat = 0;
-                                    $(e.target).text("Dec(s)");
-                            }
-                            if (showformat == 1) {
-                                options["format"] = 10 + 0x100;
-                            } else if (showformat == 2) {
-                                options["format"] = 16;
-                            } else if (showformat == 3) {
-                                options["format"] = 2;
-                            } else {
-                                options["format"] = 10;
-                            }
-                            var converted = convertBinaryToArrays(json);
-
-                            var jsonhtml = json2html(converted, options, "");
-                            $("#dataset-" + name).html(jsonhtml);
-
-                            // $(instant).dialog("close");
-                        }
-                    },
-                    {
-                        text: "Save to Disk",
-                        click: function(e) {
-                            var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
-                            saveAs(blob, name + ".json");
-                        }
-                    },
-                    {
-                        text: "Upload From Disk",
-                        click: function(e) {
-                            getFile("Upload", "upload the json", function(obj) {
-                                json = obj;
-                                var converted = convertBinaryToArrays(json);
-                                var jsonhtml = json2html(converted, options, "");
-                                $("#dataset-" + name).html(jsonhtml);
-                            });
-
-                        }
-                    }, {
-                        text: "Apply",
-                        id: 'apply-' + name,
-                        click: function(e) {
-                            if (typeof applyfunc === "function") {
-                                applyfunc(json, function(newjson) {
-                                    if (typeof newjson === "object") {
-                                        var converted = convertBinaryToArrays(newjson);
-                                        var jsonhtml = json2html(converted, options, "");
-                                        $("#dataset-" + name).html(jsonhtml);
-                                    }
-                                });
-                            }
-
-                        }
-                    },
-                    {
-                        text: "close",
-                        click: function(e) {
-                            // var interval=$(this).attr("refresh_time");
-                            $("#dataset-" + name).dialog('close');
-                            $(this).remove();
-
-                        }
-                    }
-
-
-                ],
+                buttons: buttons,
                 close: function(event, ui) {
 
                     $(this).remove();
@@ -900,14 +903,26 @@
                             var desc = jchaos.decodeCUPath(attrname);
 
                             var obj = jchaos.changejsonfrompath(json, attrname, value);
-                            var converted = convertBinaryToArrays(json);
 
-                            var jsonhtml = json2html(converted, options, "");
-                            if (jchaos.isCollapsable(converted)) {
-                                jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                           
+                            if (typeof applyfunc === "function") {
+                                applyfunc(json, function(newjson) {
+                                    if (typeof newjson === "object") {
+                                        var converted = convertBinaryToArrays(newjson);
+                                        var jsonhtml = json2html(converted, options, "");
+                                        $("#dataset-" + name).html(jsonhtml);
+                                    }
+                                });
+                            } else {
+                                var converted = convertBinaryToArrays(json);
+
+                                var jsonhtml = json2html(converted, options, "");
+                                if (jchaos.isCollapsable(converted)) {
+                                    jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+                                }
+    
+                                $("#dataset-" + name).html(jsonhtml);
                             }
-
-                            $("#dataset-" + name).html(jsonhtml);
                         }
                     })
 
@@ -10921,6 +10936,7 @@
 
                                     var changed = jchaos.jsonDiff(json, origin_json);
                                     console.log("CHANGED:" + JSON.stringify(changed));
+                                    origin_json=json;
                                     /*for (var key in json) {
                 
                                         if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
@@ -10932,18 +10948,32 @@
                                         "act_msg": changed,
                                         "act_name": "cu_prop_drv_set"
                                     };
-                                    console.log("sending changed:" + JSON.stringify(changed));
-                                    jchaos.command(tmpObj.node_multi_selected, msg, function(data) {
-                                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "OK", 5000, true);
+                                    if(Object.keys(changed).length==0){
+                                        console.log("NO CHANGED");
+
                                         jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function(dd) {
                                             //read back
+                                            console.log("read back "+tmpObj.node_multi_selected+": "+JSON.stringify(dd[0]));
                                             fupdate(dd[0]);
                                         });
+                                    } else {
+                                    console.log("CHANGED sending changed:" + JSON.stringify(changed));
+                                    jchaos.command(tmpObj.node_multi_selected, msg, function(data) {
+                                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "OK", 2000, true);
+                                        setTimeout(()=>{
+
+                                            jchaos.command(tmpObj.node_multi_selected, { "act_name": "cu_prop_drv_get" }, function(dd) {
+                                            //read back
+                                            console.log("read back "+tmpObj.node_multi_selected+": "+JSON.stringify(dd[0]));
+                                            fupdate(dd[0]);
+                                        });
+                                    },100);
 
                                     }, (bad) => {
                                         instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Error: " + JSON.stringify(bad), 5000, false);
 
                                     });
+                                }
 
                                 });
 
@@ -10960,28 +10990,41 @@
                         callback: function(itemKey, opt, e) {
                             jchaos.command(tmpObj.node_multi_selected, { "act_name": "ndk_get_prop" }, function(data) {
                                 var origin_json = JSON.parse(JSON.stringify(data[0])); // not reference
-                                jqccs.editJSON("CU/EU Prop " + currsel, data[0], (json) => {
+                                jqccs.editJSON("CU/EU Prop " + currsel, data[0], (json, fupdate) => {
+                                    var changed = jchaos.jsonDiff(json, origin_json);
+                                    console.log("CHANGED:" + JSON.stringify(changed));
+                                    origin_json=json;
 
-                                    var changed = {};
-                                    for (var key in json) {
-
-                                        if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
-                                            changed[key] = json[key];
-
-                                        }
-                                    }
+                                    
                                     var msg = {
                                         "act_msg": changed,
                                         "act_name": "ndk_set_prop"
                                     };
                                     console.log("sending changed:" + JSON.stringify(changed));
-                                    jchaos.command(tmpObj.node_multi_selected, msg, function(data) {
-                                        instantMessage("Setting driver prop:" + tmpObj.node_multi_selected, "OK", 5000, true);
+                                    if(Object.keys(changed).length==0){
+                                        console.log("NO CHANGED");
 
+                                        jchaos.command(tmpObj.node_multi_selected, { "act_name": "ndk_get_prop" }, function(dd) {
+                                            //read back
+                                            console.log("read back "+tmpObj.node_multi_selected+": "+JSON.stringify(dd[0]));
+                                            fupdate(dd[0]);
+                                        });
+                                    } else {
+                                    jchaos.command(tmpObj.node_multi_selected, msg, function(data) {
+                                        instantMessage("Setting CU prop:" + tmpObj.node_multi_selected, "OK", 2000, true);
+                                        setTimeout(()=>{
+
+                                            jchaos.command(tmpObj.node_multi_selected, { "act_name": "ndk_get_prop" }, function(dd) {
+                                            //read back
+                                            console.log("read back "+tmpObj.node_multi_selected+": "+JSON.stringify(dd[0]));
+                                            fupdate(dd[0]);
+                                        });
+                                    },100);
                                     }, (bad) => {
-                                        instantMessage("Error Setting driver prop:" + tmpObj.node_multi_selected, "Error: " + JSON.stringify(bad), 5000, false);
+                                        instantMessage("Error Setting CU prop:" + tmpObj.node_multi_selected, "Error: " + JSON.stringify(bad), 5000, false);
 
                                     });
+                                }
 
                                 });
                             }, function(data) {
