@@ -251,7 +251,7 @@ function getWidget() {
                         setp.push([now + n, elem]);
     
                       });
-                      chart.series[i].setData(setp, true, true, true);
+                      chart.series[i].setData(setp, false, false, false);
                     }
                   }
                 } else {

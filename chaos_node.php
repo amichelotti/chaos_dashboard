@@ -1580,9 +1580,7 @@
 								}
 
 							} else {
-								subm_state = {
-									
-									'start': {
+								subm_state['start']= {
 										"separator_before": false,
 										"separator_after": false,
 										label: "Start",
@@ -1593,8 +1591,8 @@
 												jqccs.instantMessage(node.data.ndk_uid, "Error Starting  error: " + JSON.stringify(bad), 4000, false);
 											});
 										}
-									},
-									'stop': {
+								}
+								subm_state['stop']= {
 										"separator_before": false,
 										"separator_after": false,
 										label: "Stop",
@@ -1605,8 +1603,9 @@
 												jqccs.instantMessage(node.data.ndk_uid, "Error Stopping  error: " + JSON.stringify(bad), 4000, false);
 											});
 										}
-									},
-									'init': {
+									};
+
+									subm_state['init']= {
 										"separator_before": false,
 										"separator_after": false,
 										label: "Init",
@@ -1623,7 +1622,7 @@
 
 										}
 									},
-									'deinit': {
+									subm_state['deinit']= {
 										"separator_before": false,
 										"separator_after": false,
 										label: "Deinit",
@@ -1634,8 +1633,8 @@
 												jqccs.instantMessage(node.data.ndk_uid, "Error Deinitializing  error: " + JSON.stringify(bad), 4000, false);
 											});
 										}
-									},
-									'load': {
+									};
+									subm_state['load']= {
 										"separator_before": false,
 										"separator_after": false,
 										label: "Load",
@@ -1649,8 +1648,8 @@
 											});
 
 										}
-									},
-									'unload': {
+									};
+									subm_state['unload']= {
 										"separator_before": false,
 										"separator_after": true,
 										label: "Unload",
@@ -1665,7 +1664,7 @@
 
 										}
 									}
-								}
+								
 
 							}
 							
