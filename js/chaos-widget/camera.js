@@ -1551,7 +1551,7 @@ function activateMenuShort() {
             callback: function (itemKey, opt, e) {
               jqccs.getEntryWindow("Calibration", "Samples", 10, "Calibrate", function (th) {
 
-              jchaos.command(name, { "act_name": "calibrateNodeUnit","samples":th }, function(data) {
+              jchaos.command(name, { "act_name": "calibrateNodeUnit","act_msg": {"samples":th}}, function(data) {
                 jqccs.instantMessage("Calibration of:" + name, "using "+th+" images", 1000, true);
             }, function(data) {
                 jqccs.instantMessage("ERROR Calibrating:" + name, "Error :" + JSON.stringify(data), 5000, false);

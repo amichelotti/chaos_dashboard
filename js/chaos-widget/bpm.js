@@ -158,10 +158,10 @@ function getWidget() {
         html += '</div>';
         html += '<div class="box-content">';
         html += '<div class="row">';
-        html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
-        html += '<i class="material-icons verde">trending_down</i>';
-        html += '<p class="name-cmd">SlowAcquisition</p>';
-        html += '</a>';
+        //html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
+        //html += '<i class="material-icons verde">trending_down</i>';
+       // html += '<p class="name-cmd">SlowAcquisition</p>';
+       // html += '</a>';
         html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="bpm_acquire_da"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":1,\"loops\":-1,\"samples\":1024}>';
         html += '<i class="material-icons verde">trending_up</i>';
         html += '<p class="name-cmd">DataOnDemand</p>';
@@ -251,7 +251,7 @@ function getWidget() {
                         setp.push([now + n, elem]);
     
                       });
-                      chart.series[i].setData(setp, true, true, true);
+                      chart.series[i].setData(setp, false, false, false);
                     }
                   }
                 } else {

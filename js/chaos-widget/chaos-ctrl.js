@@ -10638,65 +10638,81 @@
 
         if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) { //if el health
             var status = cu.health.nh_status;
+            items['setstate'] = {
+                "name": "Set State...",
+                "items": {
+                    'restart':{ name: "Restart",icon: "fa-refresh",callback:function () {
+                        jchaos.restart(currsel, function(data) {
+                                jqccs.instantMessage("Restarting :" + currsel, "OK", 1000, true);
+                            }, function(data) {
+                            jqccs.instantMessage("ERROR Restarting:" + currsel, "Error :" + JSON.stringify(data), 5000, false);
+    
+                            });
+                        
+                    } }
+
+                }
+            };
             if ((tmpObj.off_line[cu.health.ndk_uid] == 0)) {
+               
 
                 if (status == 'Start') {
-                    items['stop'] = { name: "Stop", icon: "stop" };
+                    items['setstate'].items['stop'] = { name: "Stop", icon: "fa-stop" };
                     items['sep1'] = "---------";
-                    items['snapshot-cu'] = { name: "Take Snapshot", icon: "snapshot" };
-                    items['calibrate'] = { name: "Calibrate", icon: "tag" };
+                    items['snapshot-cu'] = { name: "Take Snapshot", icon: "fa-tag" };
+                    items['calibrate'] = { name: "Calibrate", icon: "fa-bar-chart" };
                 } else if (status == 'Stop') {
-                    items['start'] = { name: "Start", icon: "start" };
-                    items['deinit'] = { name: "Deinit", icon: "deinit" };
+                    items['setstate'].items['start'] = { name: "Start", icon: "fa-play" };
+                    items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
                     items['sep1'] = "---------";
                 } else if (status == 'Init') {
-                    items['start'] = { name: "Start", icon: "start" };
-                    items['deinit'] = { name: "Deinit", icon: "deinit" };
+                    items['setstate'].items['start'] = { name: "Start", icon: "fa-play" };
+                    items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
                     items['sep1'] = "---------";
                 } else if (status == 'Deinit') {
-                    items['unload'] = { name: "Unload", icon: "unload" };
-                    items['init'] = { name: "Init", icon: "init" };
+                    items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
+                    items['setstate'].items['init'] = { name: "Init", icon: "init" };
                     items['sep1'] = "---------";
                 } else if (status == 'Recoverable Error') {
                     items['recover'] = { name: "Recover", icon: "recover" };
-                    items['unload'] = { name: "Unload", icon: "unload" };
-                    items['deinit'] = { name: "Deinit", icon: "deinit" };
-                    items['stop'] = { name: "Stop", icon: "stop" };
+                    items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
+                    items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
+                    items['setstate']. items['stop'] = { name: "Stop", icon: "fa-stop" };
 
                     items['sep1'] = "---------";
                 } else if (status == 'Fatal Error') {
-                    items['load'] = { name: "Load", icon: "load" };
-                    items['deinit'] = { name: "Deinit", icon: "deinit" };
-                    items['init'] = { name: "Init", icon: "init" };
-                    items['unload'] = { name: "Unload", icon: "unload" };
+                    items['setstate'].items['load'] = { name: "Load", icon: "load" };
+                    items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
+                    items['setstate'].items['init'] = { name: "Init", icon: "init" };
+                    items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
                     items['sep1'] = "---------";
                 } else if (status == "Unload") {
                     items['load'] = { name: "Load", icon: "load" };
                     items['sep1'] = "---------";
                 } else if (status == "Load") {
-                    items['unload'] = { name: "Unload", icon: "unload" };
-                    items['init'] = { name: "Init", icon: "init" };
+                    items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
+                    items['setstate'].items['init'] = { name: "Init", icon: "init" };
                     items['sep1'] = "---------";
                 } else {
-                    items['load'] = { name: "Load", icon: "load" };
-                    items['init'] = { name: "Init", icon: "init" };
-                    items['unload'] = { name: "Unload", icon: "unload" };
-                    items['deinit'] = { name: "Deinit", icon: "deinit" };
+                    items['setstate'].items['load'] = { name: "Load", icon: "load" };
+                    items['setstate'].items['init'] = { name: "Init", icon: "init" };
+                    items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
+                    items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
                     items['sep1'] = "---------";
 
                 }
 
             } else {
-                items['load'] = { name: "Load", icon: "load" };
-                items['init'] = { name: "Init", icon: "init" };
-                items['unload'] = { name: "Unload", icon: "unload" };
-                items['deinit'] = { name: "Deinit", icon: "deinit" };
+                items['setstate'].items['load'] = { name: "Load", icon: "load" };
+                items['setstate'].items['init'] = { name: "Init", icon: "init" };
+                items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
+                items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
             }
         } else if (name != null && name != "") {
-            items['load'] = { name: "Load", icon: "load" };
-            items['init'] = { name: "Init", icon: "init" };
-            items['unload'] = { name: "Unload", icon: "unload" };
-            items['deinit'] = { name: "Deinit", icon: "deinit" };
+            items['setstate'].items['load'] = { name: "Load", icon: "load" };
+            items['setstate'].items['init'] = { name: "Init", icon: "init" };
+            items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
+            items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
         }
 
         items['sep2'] = "---------";
