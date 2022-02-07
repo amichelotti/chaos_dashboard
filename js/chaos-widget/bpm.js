@@ -127,8 +127,8 @@ function getWidget() {
           html += "<td id='" + cuname + "_health_status'></td>";
           html += "<td id='" + cuname + "_system_busy'></td>";
           html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-          html += "<td title='Calculated X position' id='" + cuname + "_output_X'></td>";
-          html += "<td title='Calculated Y position' id='" + cuname + "_output_Y'></td>";
+          html += "<td title='Calculated X position' digits='3' id='" + cuname + "_output_X'></td>";
+          html += "<td title='Calculated Y position' digits='3' id='" + cuname + "_output_Y'></td>";
           html += "<td title='VA' id='" + cuname + "_output_VA'></td>";
           html += "<td title='VB' id='" + cuname + "_output_VB'></td>";
           html += "<td title='VC' id='" + cuname + "_output_VC'></td>";
