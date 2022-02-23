@@ -202,10 +202,10 @@
 											title += ", in :" + healt.nh_led;
 
 										}
-										if (elem['lives']) {
+									//	if (elem['lives']) {
 											setTextClasses(iname, "text-danger");
 
-										}
+									//	}
 
 									} else if (elem['lives']) {
 										if (healt.nh_status != 'Start') {
