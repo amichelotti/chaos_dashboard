@@ -1145,7 +1145,12 @@
                 jchaos.node(d.ndk_parent, "get", "agent", uid, null, function(data) {
                     console.log("getConsoleByUid->" + JSON.stringify(data));
                     jchaos.node(d.ndk_parent, "desc", "all", (dd) => {
-                        var server = dd.ndk_host_name + ":" + dd.ndk_rest_port;
+                        var server;
+                        if(dd.hasOwnProperty("ndk_ip_addr")){
+                            server=  dd.ndk_ip_addr + ":" + dd.ndk_rest_port;    
+                        } else {
+                           server = dd.ndk_host_name + ":" + dd.ndk_rest_port;   
+                        }
                         if (data.node_log_on_console) {
                             getConsole(msghead, data.association_uid, server, 2, 1, 1000);
                         } else {
@@ -1856,58 +1861,7 @@
 
         return html;
     }
-    /*
-                function generateProcessTable(tmpObj) {
-                    var cu = tmpObj.elems;
-                    var template = tmpObj.type;
-                    var html = "";
-                    html += '<div class="row">';
-                    html += '<table class="table table-striped" id="graph_table-' + template + '">';
-                    html += '</table></div>';
-    
-    
-                   // html += '<div class="box col-md" id="container-main-table">';
-                    html += '<div class="row"><label class="col-md-1">Search:</label><input class="input-xlarge focused" id="process_search" class="col-md-5" type="text" title="Search a Process" value=""></div>';
-                    html += '<div class="row">';
-                    html += '<div class="col-md">';
-    
-                    html += '<table class="table table-striped" id="main_table-' + template + '">';
-                    html += '<thead class="box-header processMenu">';
-                    html += '<tr>';
-                    html += '<th>Instance</th>';
-                    html += '<th>Name</th>';
-                    html += '<th>Type</th>';
-                    html += '<th>Start</th>';
-                    html += '<th>End</th>';
-                    html += '<th>LastLog(s ago)</th>';
-                    html += '<th>Hostname</th>';
-                    html += '<th>PID</th>';
-                    html += '<th>Status</th>';
-                    html += '<th>TimeStamp</th>';
-                    html += '<th>Uptime</th>';
-                    html += '<th>System Time</th>';
-                    html += '<th>User Time</th>';
-                    html += '<th>VMem(KB)</th>';
-                    html += '<th colspan="2">RMem(KB)|%</th>';
-                    html += '<th>Parent</th>';
-    
-                    html += '</tr>';
-    
-    
-                    html += '</thead> ';
-    
-                    html += '</table>';
-                    html += '</div>';
-    
-                    html += '</div>';
-                    html += '</div>';
-                    html += '</div>';
-    
-                 //   html += generateScriptAdminModal();
-                    return html;
-    
-                }
-            */
+   
     function generateNodeTable(tmpObj) {
         var cu = tmpObj.elems;
         var template = tmpObj.type;
@@ -4283,38 +4237,7 @@
 
     function buildProcessInterface(tempObj) {
         var html = "";
-        /*var html = '<div class="row">';
- 
-     html += '<div class="statbox purple" onTablet="col-md-6" onDesktop="col-md-2">';
-     html += '<h3>Zones</h3>';
-     html += '<select id="zones" size="auto"></select>';
-     html += '</div>';
- 
-     html += '<div class="statbox purple" onTablet="col-md-6" onDesktop="col-md-2">';
-     html += '<h3>Instances</h3>';
-     html += '<select id="elements" size="auto"></select>';
-     html += '</div>';
- 
-     html += '<div class="statbox purple" onTablet="col-md-4" onDesktop="col-md-2">'
-     html += '<h3>Class Algorithm</h3>';
-     html += '<select id="classe" size="auto"></select>';
-     html += '</div>';
- 
-     html += '<div class="statbox purple row" onTablet="col-md-4" onDesktop="col-md-3">'
-     html += '<div class="col-md-3">'
-     html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
-     html += '</div>'
-     html += '<div class="col-md-3">'
-     html += '<label for="search-alive">Search Running</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
-     html += '</div>'
-     // html += '<h3 class="col-md-3">Search</h3>';
- 
-     html += '<input class="input-xlarge focused col-md-6" id="search-chaos" title="Free form Search" type="text" value="">';
-     html += '</div>';
-     //    html += generateActionBox();
-     html += '</div>';
-     html += generateEditJson();
-     */
+      
         html += '<div id="specific-table-' + tempObj.template + '"></div>';
 
 
@@ -5399,7 +5322,12 @@
                 return;
             } else if (cmd == "console-node") {
                 var agentn = node_name_to_desc[node_selected].desc.ndk_parent;
-                var server = node_name_to_desc[node_selected].desc.ndk_host_name;
+                var server;
+                if(node_name_to_desc[node_selected].desc.hasOwnProperty("ndk_ip_addr")){
+                    server= node_name_to_desc[node_selected].desc.ndk_ip_addr;
+                } else {
+                    server= node_name_to_desc[node_selected].desc.ndk_host_name;
+                }
                 //  getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
 
                 jchaos.node(agentn, "get", "agent", node_selected, null, function(data) {
@@ -6264,7 +6192,14 @@
             var ag = tmpObj['agent_list'];
             var cnt = ag.length;
             ag.forEach(function(ser) {
-                var server = ser.ndk_host_name;
+
+                var server;
+                if(ser.hasOwnProperty("ndk_ip_addr")){
+                    server= ser.ndk_ip_addr;
+                } else {
+                    server = ser.ndk_host_name;
+                }
+                 
                 jchaos.rmtUploadScript(server, jsonscript, function(r) {
                     if (r.err != 0) {
                         instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);

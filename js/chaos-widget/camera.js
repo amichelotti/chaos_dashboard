@@ -536,11 +536,11 @@ var mappedcamera = {};
 
 function buildCameraArray(id, opt) {
   var tablename = id;
-  var col = opt.camera['cameraPerRow'];
-  var row = opt.camera['maxCameraRow'];
+  var col = opt.camera['cameraPerRow'] || 2;
+  var row = opt.camera['maxCameraRow'] || 2;
   var tmpObj = {
-    cameraPerRow: col || 2,
-    maxCameraRow: row || 2,
+    cameraPerRow: col ,
+    maxCameraRow: row ,
     displayRatio: opt.camera['displayRatio'] || "4/3"
   };
   // var html = '<table class="table" id="' + tablename + '">';
@@ -827,8 +827,8 @@ function updateCamera(ds) {
 $.fn.save_config = function () {
   
   var obj={
-    col: opt.camera['cameraPerRow'],
-    row: opt.camera['maxCameraRow'],
+    col: opt.camera['cameraPerRow'] || 2,
+    row: opt.camera['maxCameraRow'] || 2,
     w2cam: mappedcamera
   }
   jqccs.getEntryWindow("Save current configuration", "Name", "noname", "Save", function (name) {
@@ -2487,8 +2487,8 @@ function activateMenu(tmpObj) {
 
 }
 function rebuildCam(tmpObj){
-  var col = opt.camera['cameraPerRow'];
-  var row = opt.camera['maxCameraRow'];
+  var col = opt.camera['cameraPerRow'] || 2;
+  var row = opt.camera['maxCameraRow'] || 2;
   var m={};
   var siz=0;
   if (selectedCams instanceof Array) {
