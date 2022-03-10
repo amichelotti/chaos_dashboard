@@ -5753,11 +5753,21 @@
             if (cmd == "open-process-errconsole") {
                 console = 2;
             }
+            jchaos.node(tmpObj.data[node_selected].ndk_parent, "desc", "agent", function (data) {
+                console.log("->" + JSON.stringify(data));
+                var server = "";
+                if (data.ndk_ip_addr !== undefined) {
+                    server = data.ndk_ip_addr;
+                } else if (data.ndk_host_name !== undefined) {
+                    server = data.ndk_host_name;
+                } else if (data.ndk_rpc_addr !== undefined) {
+                    server = data.ndk_rpc_addr;
+                    server.replace(/:\d+/g, '');
+                }
             //   var agentn = tmpObj[node_selected].parent;
-            var server = tmpObj.data[node_selected].hostname;
-            var friendname = tmpObj.data[node_selected].pname;
-            getConsole(tmpObj.data[node_selected].hostname + ":" + friendname + "(" + node_selected + ")", node_selected, server, 2, console, 1000, tmpObj.data[node_selected].ptype);
-
+                var friendname = tmpObj.data[node_selected].pname;
+                getConsole(tmpObj.data[node_selected].hostname + ":" + friendname + "(" + node_selected + ")", node_selected, server, 2, console, 1000, tmpObj.data[node_selected].ptype);
+            })
         } else if (cmd == "download-output") {
             var server = tmpObj.data[node_selected].hostname;
             jchaos.setOptions({ "timeout": 60000 });
