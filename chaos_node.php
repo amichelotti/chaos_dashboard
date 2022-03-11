@@ -1048,7 +1048,9 @@
 										jchaos.node(node.data.ndk_parent, "desc", "agent", function (data) {
 											console.log("->" + JSON.stringify(data));
 											var server = "";
-											if (data.ndk_host_name !== undefined) {
+											if (data.ndk_ip_addr !== undefined) {
+												server = data.ndk_ip_addr;
+											} else if (data.ndk_host_name !== undefined) {
 												server = data.ndk_host_name;
 											} else if (data.ndk_rpc_addr !== undefined) {
 												server = data.ndk_rpc_addr;
