@@ -26,11 +26,11 @@ require_once('header.php');
 					<div class="col-md-12">
 
 						<label for="save-configuration" class="form-label">Save whole configuration </label>
-						<a class="btn-outline-info icon-save col-md-2" id="save-configuration">Save To Disk</a>
+						<a class="btn-outline-info icon-save col-md-2" title="Save JSON configuration to Local disk" id="save-configuration">Save To Disk</a>
 					</div>
 					<div class="col-md-12">
 						<label for="upload-file" class="form-label">Import configuration </label>
-						<input id="upload-file" type="file" class="form-control-md" />
+						<input id="upload-file" type="file" title="Load JSON configuration from Local disk" class="form-control-sm" />
 					</div>
 
 				</div>
@@ -42,12 +42,20 @@ require_once('header.php');
 					<h3>Variables</h3>
 				</div>
 				<div class="row border border-info">
-					<div class="col-md-12">
+					<div class="col-md-4">
 						<input class="input-xlarge focused" id="varname" type="text" title="variable name search"
 							value="" />
 						<a class="btn-outline-info" id="update-variable"><i class='material-icons verde'>search</i>
 							<p>Search</p>
 						</a>
+					</div>
+					<div class="col-md-3">
+						<label for="upload-variable" class="form-label" title="Load JSON variable from Local disk">Import variable </label>
+						<input id="upload-variable" type="file" class="form-control-sm" />
+					</div>
+					<div class="col-md-5">
+						<label for="download-variable" class="form-label" title="Save JSON variable to Local disk">Save variable </label>
+						<select id="varselect"></select>
 					</div>
 					<div class="col-md-12">
 
@@ -78,8 +86,14 @@ require_once('header.php');
 			var variables = {};
 
 			jchaos.search(varname, "variable", false, function (vl) {
+				var vlist=[];
+				for(k in vl){
+					vlist.push(vl[k]);
+				}
+				jqccs.element_sel("#varselect",vlist,0);
 				vl.forEach(function (v) {
 					jchaos.variable(v, "get", null, function (d) {
+						
 						variables[v] = d;
 						var dom = "#chaos_variables";
 						$(dom).html(jqccs.json2html(variables));
@@ -147,6 +161,18 @@ require_once('header.php');
 		$("#update-variable").on("click", function () {
 			varupdate($("#varname").val());
 		});
+		$('#varselect').on('change', function () {
+            
+            var var_selected = $("#varselect option:selected").val();
+			if((var_selected!="--Select--")){
+				jchaos.variable(var_selected,"get",(v)=>{
+					var blob = new Blob([JSON.stringify(v)], { type: "json;charset=utf-8" });
+                saveAs(blob, var_selected + ".json");
+
+            
+				});
+			}
+		});
 		$('#upload-file').on('change', function () {
 			var fname = this.files[0];
 
@@ -197,6 +223,50 @@ require_once('header.php');
 				
 			}, "Cancel");
 		});
+		$('#upload-variable').on('change', function () {
+			var fname = this.files[0];
+
+			jqccs.busyWindow(false);
+				var reader = new FileReader();
+
+				reader.onload = function (e) {					
+					try {
+						var o = JSON.parse(e.target.result);
+						jqccs.busyWindow(false);
+						let fn = fname.name.split('.');
+
+
+						jqccs.getEntryWindow("Variable", "Variable Name", fn[0], "Save", function(name) {
+						if(name==""){
+								return;
+						}
+						jchaos.variable(name,"set",o,()=>{
+							jqccs.instantMessage("Saved " + name, " OK", 3000, true);
+							location.reload();
+
+
+						},(b)=>{
+							jqccs.instantMessage("Error Saving " + name, ":"+b, 3000, false);
+
+						});
+					}, "Cancel");
+
+					} catch (e) {
+						alert("ERROR parsing '" + fname.name + "' : " + e);
+						jqccs.busyWindow(false);
+						location.reload();
+
+						return;
+					}
+					
+
+				};
+
+				reader.readAsText(fname);
+
+				
+	
+	});
 		varupdate("");
 	</script>
 

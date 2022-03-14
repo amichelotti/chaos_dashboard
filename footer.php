@@ -40,10 +40,7 @@
 
         <ul class="list-unstyled">
           <li>
-            <a href="https://chaos-lb01.chaos.lnf.infn.it/preprod/grafana/login">Grafana preproduction</a>
-          </li>
-          <li>
-            <a href="https://chaos-lb01.chaos.lnf.infn.it/grafana">Grafana production</a>
+            <a id="grafana-link" href="https://chaos-lb01.chaos.lnf.infn.it/preprod/grafana/login">Grafana</a>
           </li>
           <li>
             <a href="CUgenerator/index.html">CU generator</a>
@@ -113,6 +110,26 @@
   <!-- Copyright -->
   <div id="refresh_rate_update"></div>
 
-</footer>
 <!-- Footer -->
 </footer>
+<script>
+  jchaos.variable("links", "get", function (l) {
+    if(l !== undefined){
+    for( k in l){
+      if(l[k].hasOwnProperty("title")){
+          $("#"+k+"-link").attr("title", l[k].title);
+        }
+        if(l[k].hasOwnProperty("href")){
+          if(l[k].href==""){
+            $("#"+k+"-link").remove();
+          } else {
+            $("#"+k+"-link").attr("href", l[k].href);
+          }
+        }
+        
+      }
+    }
+  });
+
+</script>
+
