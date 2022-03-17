@@ -99,7 +99,7 @@ $(document).ready(function() {
                 $('#message-form').trigger('reset');
                 messageArray = [...messageArray, message];
                 var now=jchaos.getDateTime();
-    
+                
                 jchaos.iomessage(message);
                 $.each(messageArray, function(index, value) {
                     let messageList;
