@@ -50,12 +50,26 @@ require_once('header.php');
 						</a>
 					</div>
 					<div class="col-md-3">
-						<label for="upload-variable" class="form-label" title="Load JSON variable from Local disk">Import variable </label>
-						<input id="upload-variable" type="file" class="form-control-sm" />
+						<div class="row-md">
+							<label for="upload-variable" class="form-label" title="Load JSON variable from Local disk">Import variable from disk</label>
+							<input id="upload-variable" type="file" class="form-control-sm" />
+						</div>
+						<div class="row-md">
+							<label for="text-variable" class="form-label" title="paste JSON variable">Import JSON variable </label>
+							<textarea id="text-variable" placeholder="edit/paste json value" class="form-control" rows="4" cols="50"></textarea>
+							<button type="button" id="text-variable-import" disabled="true" class="btn btn-primary">Save</button>
+
+						</div>
 					</div>
 					<div class="col-md-5">
-						<label for="download-variable" class="form-label" title="Save JSON variable to Local disk">Save variable </label>
+					<div class="row-md">
+						<label for="varselect" class="form-label" title="Save JSON variable to Local disk">Save variable to disk </label>
 						<select id="varselect"></select>
+					</div>
+					<div class="row-md">
+						<label for="delselect" class="form-label" title="Delete variable">Delete variable </label>
+						<select id="delselect"></select>
+					</div>
 					</div>
 					<div class="col-md-12">
 
@@ -91,6 +105,8 @@ require_once('header.php');
 					vlist.push(vl[k]);
 				}
 				jqccs.element_sel("#varselect",vlist,0);
+				jqccs.element_sel("#delselect",vlist,0);
+
 				vl.forEach(function (v) {
 					jchaos.variable(v, "get", null, function (d) {
 						
@@ -161,6 +177,39 @@ require_once('header.php');
 		$("#update-variable").on("click", function () {
 			varupdate($("#varname").val());
 		});
+		$("#text-variable").on('input', function () {
+			try{
+				var j=JSON.parse($("#text-variable").val());
+				$("#text-variable-import").attr('disabled',false);
+				$("#text-variable").removeClass("text-danger");
+				$("#text-variable").addClass("text-success");
+
+			}catch(e){
+				$("#text-variable-import").attr('disabled',true);
+				$("#text-variable").removeClass("text-success");
+
+				$("#text-variable").addClass("text-danger");
+			}
+			//console.log("change:"+$("#text-variable").val());
+		});
+		$("#text-variable-import").on('click', function () {
+			jqccs.getEntryWindow("Variable", "Variable Name", "", "Save", function(name) {
+						if(name==""){
+								return;
+						}
+						var o=JSON.parse($("#text-variable").val());
+						jchaos.variable(name,"set",o,()=>{
+							jqccs.instantMessage("Saved " + name, " OK", 3000, true);
+							location.reload();
+
+
+						},(b)=>{
+							jqccs.instantMessage("Error Saving " + name, ":"+b, 3000, false);
+
+						});
+					}, "Cancel");
+			//console.log("change:"+$("#text-variable").val());
+		})
 		$('#varselect').on('change', function () {
             
             var var_selected = $("#varselect option:selected").val();
@@ -171,6 +220,21 @@ require_once('header.php');
 
             
 				});
+			}
+		});
+		$('#delselect').on('change', function () {
+            
+            var var_selected = $("#delselect option:selected").val();
+			if((var_selected!="--Select--")){
+				jqccs.confirm("Do You want DELETE "+var_selected+" ?", "The action cannot be un-done on "+var_selected, "Ok", function () {
+
+				jchaos.variable(var_selected,"del",(v)=>{
+					jqccs.instantMessage("Deleted " + var_selected, " OK", 3000, true);
+					location.reload();
+
+            
+				});
+			},"Cancel");
 			}
 		});
 		$('#upload-file').on('change', function () {
