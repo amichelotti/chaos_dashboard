@@ -1,9 +1,12 @@
 <?php
-/**
- * Created by komodo.
- * User: eliana
- * Date: 21/05/16
- */
+if(isset($_SERVER['HTTPS'])) {
+	if ($_SERVER['HTTPS'] == "on") {
+		$secure_connection = true;
+/*		require_once('auth.php');*/
+
+	}
+  }
+  
 function getUserIP() {
     $userIP =   '';
     if(isset($_SERVER['HTTP_CLIENT_IP'])){

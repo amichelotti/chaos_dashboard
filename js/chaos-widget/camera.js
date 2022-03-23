@@ -656,7 +656,7 @@ var old_size={};
 function updateCamera(ds) {
   if (ds.dpck_ds_type == 0) {
     // output
-    let freq, start, lat;
+    let freq, start, lat,latd;
     let id = mappedcamera[ds.ndk_uid];
     let debug = opt.camera.debug;
     let debug_html = "";
@@ -682,7 +682,8 @@ function updateCamera(ds) {
       old_tim[id] = start;
       debug_html = " Hz:" + freq.toFixed(2);
     }
-    lat = start - ds.dpck_ats;
+    lat = start - Math.trunc(ds.dpck_hr_ats/1000);
+    latd = start - ds.dpck_ats;
 
     if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
       $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER.$binary.base64);
@@ -692,7 +693,7 @@ function updateCamera(ds) {
     /*if (ds.WIDTH !== undefined) {
       $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
     }*/
-    $("#lat-" + id).html(lat);
+    $("#lat-" + id).html(lat+" "+latd);
     $("#seq-" + id).html(ds.dpck_seq_id);
     $("#"+id+"SHUTTER").html(ds.SHUTTER);
     $("#"+id+"GAIN").html(ds.GAIN);
@@ -984,7 +985,11 @@ function activateCameraFetch(){
           });
 
         });
+        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+          clearInterval(pullInterval);
+        }
       }, opt.camera.cameraRefresh);
+
       pullIntervalsec = setInterval(() => {
         jchaos.getChannel(cameralist, 1, (vds) => {
           vds.forEach(ele => {
@@ -992,6 +997,9 @@ function activateCameraFetch(){
           });
 
         });
+        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+          clearInterval(pullIntervalsec);
+        }
       }, 1000);
       pullIntervalHealth = setInterval(() => {
         jchaos.getChannel(cameralist, 4, (vds) => {
@@ -1000,6 +1008,9 @@ function activateCameraFetch(){
           });
 
         });
+        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+          clearInterval(pullIntervalHealth);
+        }
       }, 5000);
     }
   }
@@ -2884,14 +2895,16 @@ function getWidget(options) {
                   }
                   //$('#triggerType').val(selected.output.TRIGGER_MODE)
                   var id = jchaos.encodeName(elem);
-                  let lat = Date.now() - selected.output.dpck_ats;
+                  let now=Date.now() 
+                  let latd = now- Math.trunc(selected.output.dpck_hr_ats/1000);
+                  let latc = now- selected.output.dpck_ats;
 
                   // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
                   $("#cameraImage-" + id).attr("src", "data:image/" + fmt + ";base64," + bin);
                   if (selected.output.WIDTH !== undefined) {
-                    $("#info-" + id).html(selected.output.WIDTH + "x" + selected.output.HEIGHT + "(" + selected.output.OFFSETX + "," + selected.output.OFFSETY + ") frame:" + selected.output.dpck_seq_id + " lat:" + lat);
+                    $("#info-" + id).html(selected.output.WIDTH + "x" + selected.output.HEIGHT + "(" + selected.output.OFFSETX + "," + selected.output.OFFSETY + ") frame:" + selected.output.dpck_seq_id + " lat:" + latd +" "+latc);
                   } else {
-                    $("#info-" + id).html("frame:" + selected.output.dpck_seq_id + " lat:" + lat);
+                    $("#info-" + id).html("frame:" + selected.output.dpck_seq_id + " lat:" + latd +" "+latc);
 
                   }
 
@@ -3062,11 +3075,12 @@ function getWidget(options) {
 
             // let freq = 1000.0 * counter[id] / tcum[id];
             let freq = 1000.0 / (start - old_tim[id]);
-            let lat = start - ds.dpck_ats;
+            let latd = start- Math.trunc(ds.dpck_hr_ats/1000);
+            let latc = start- ds.dpck_ats;            
             if (ds.WIDTH !== undefined) {
-              $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
+              $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) +  " lat:" + latd +" "+latc);
             } else {
-              $("#info-" + id).html("frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
+              $("#info-" + id).html("frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + latd +" "+latc);
 
             }
             old_tim[id] = start;
