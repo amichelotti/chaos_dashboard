@@ -733,6 +733,8 @@ function updateCamera(ds) {
       jqccs.updateSingleNode({input:ds});
 
   } else if (ds.dpck_ds_type == 4) {
+    var obj={};
+
     //HEALTH
     let id = mappedcamera[ds.ndk_uid];
     $("#freq-" + id).html(ds.cuh_dso_prate.toFixed(1));
@@ -775,6 +777,15 @@ function updateCamera(ds) {
   }
 }
   if(ds.cuh_alarm_lvl){
+    
+    jchaos.getChannel(ds.ndk_uid,255, function (selected) {
+      jqccs.updateSingleNode(selected[0]);
+      jqccs.updateGenericControl(null, selected[0]);
+    
+    }, function (str) {
+      console.log(str);
+    });
+
     if(ds.cuh_alarm_lvl==1){
       mode += '<i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>';
 
@@ -814,7 +825,7 @@ function updateCamera(ds) {
 
   }
   old_size[id]['dpck_ats']=ds.dpck_ats;
-
+  
   } else {
     var obj={};
     obj[jchaos.channelToString(ds.dpck_ds_type)]=ds;

@@ -7599,7 +7599,21 @@
 
 
                 if (status == 'Start') {
-                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">play_arrow</i>');
+                    mode=""
+                    if(el.health.cuh_alarm_lvl){
+                        if(el.health.cuh_alarm_lvl==1){
+                          mode += '<i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>';
+                    
+                        } else {
+                          mode += '<i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i>';
+                    
+                        }
+                      } else {
+                        $("#" + name_id + "_system_cu_alarm").html('');
+                        $("#" + name_id + "_system_device_alarm").html('');
+
+                      }
+                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">play_arrow</i>'+mode);
                 } else if (status == 'Stop') {
                     $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:orange">stop</i>');
                 } else if (status == 'Calibrating') {
@@ -7630,7 +7644,9 @@
                     $("#" + name_id + "_health_status").html('<i class="material-icons red">block</i>');
 
                 }
+               
             }
+           
             if (el.hasOwnProperty('system') /*&& (tmpObj.off_line[name_device_db] == 0)*/ ) { //if el system
                 var busy = $.trim(el.system.busy);
                 var dev_alarm = Number(el.system.cudk_dalrm_lvl);
@@ -7730,7 +7746,12 @@
                     }
                 }
             }
-
+            if(el.hasOwnProperty("cu_alarms")){
+                $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit:"+JSON.stringify(jchaos.filterAlarmObject(el.cu_alarms,false)));
+            }
+            if(el.hasOwnProperty("device_alarms")){
+                $("#" + name_id + "_system_device_alarm").attr('title', "Device:"+JSON.stringify(jchaos.filterAlarmObject(el.devices_alarms,false)));
+            }
             /*if (el.hasOwnProperty("output")){
                 var lat=el.output.dpck_mds_ats-el.output.dpck_ats;
                 if(typeof lat === "number"){
