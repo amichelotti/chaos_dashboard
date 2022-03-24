@@ -2349,7 +2349,7 @@
                         getFile("Upload", "upload the json", function(obj) {
                             $("#edit-temp").dialog('close');
                             console.log("uploaded:" + JSON.stringify(obj));
-                            if (obj.hasOwnProperty('ndk_parent') && (obj.ndk_parent == "") && jsonin.hasOwnProperty('ndk_parent')) {
+                            if (obj.hasOwnProperty('ndk_parent') && jsonin.hasOwnProperty('ndk_parent')) {
                                 obj['ndk_parent'] = jsonin['ndk_parent'];
                             }
                             jsonEditWindow(name, {} /*jsontemp*/ , obj, editorFn, tmpObj, ok, nok, eventFn);
