@@ -686,9 +686,9 @@ function updateCamera(ds) {
     latd = start - ds.dpck_ats;
 
     if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
-      $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER.$binary.base64);
+      $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER.$binary.base64);
     } else {
-      $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+      $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER);
     }
     /*if (ds.WIDTH !== undefined) {
       $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
@@ -1139,7 +1139,7 @@ function showHisto(msghead, cuname, refresh, channel) {
          }
          var blob = new Blob([bytes], { type: "image/png" });
         */
-        saveAsBinary(binary_string, name + ".png");
+        saveAsBinary(binary_string, name + "."+data.FMT);
 
       }
     },
@@ -1562,9 +1562,59 @@ function activateMenuShort() {
               })
             }
           }
+          
 
         }
       };
+      cuitem['encoding'] = {
+        "name":"Encodings", icon:"fa-picture-o",
+        "items":{
+        'lolat': {
+          name: "JPEG max quality", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT",".jpg", function () {
+              jchaos.setCUProperty(name,{"compression_factor":90},function () {
+                jqccs.instantMessage("JPEG max quality", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed JPEG max quality", name, 3000, false);
+              });})
+          }
+        },
+        name: "JPEG half quality", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","jpg", function () {
+              jchaos.setCUProperty(name,{"compression_factor":40},function () {
+                jqccs.instantMessage("JPEG half quality", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed JPEG half quality", name, 3000, false);
+              });})
+          }
+        },
+        'pnglatmin': {
+          name: "PNG min compression", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","png", function () {
+              jchaos.setCUProperty(name,{"compression_factor":1},function () {
+                jqccs.instantMessage("PNG min compression", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed min compression", name, 3000, false);
+              });})
+          }
+        },
+        'pnglatmax': {
+          name: "PNG max compression", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","png", function () {
+              jchaos.setCUProperty(name,{"compression_factor":9},function () {
+                jqccs.instantMessage("PNG max compression", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed PNG max compression", name, 3000, false);
+              });})
+          }
+        }
+      }
+      
+
       cuitem['operation'] = {
         "name": "Operations", icon: "fa-cog",
         "items": {
@@ -3082,7 +3132,7 @@ function getWidget(options) {
 
             // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
 
-            $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
+            $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT + ";base64," + ds.FRAMEBUFFER);
 
             // let freq = 1000.0 * counter[id] / tcum[id];
             let freq = 1000.0 / (start - old_tim[id]);
