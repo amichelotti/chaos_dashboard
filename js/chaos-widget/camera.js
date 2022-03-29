@@ -651,39 +651,29 @@ function buildCameraArray(id, opt) {
 }
 
 var cameralist = [], cameralistold = [];
-var old_tim = {}, counter = {}, tcum = {};
+var old_tim = {}, counter = {}, tcum = {},tlat={};
 var old_size={};
 function updateCamera(ds) {
   if (ds.dpck_ds_type == 0) {
     // output
-    let freq, start, lat,latd;
+    let freq, start, lat=0;
     let id = mappedcamera[ds.ndk_uid];
     let debug = opt.camera.debug;
     let debug_html = "";
     start = Date.now();
-    /*  if (counter[id] == 0) {
-        checkRedrawReference(ds.ndk_uid, id);
-        counter[id]=1;
-      }
-  */
-    if (debug) {
-      if (old_tim[id]) {
-        if ((counter[id] % 1000) == 0) {
-          tcum[id] = 0;
-          counter[id] = 1;
-        } else {
-          counter[id]++;
-        }
-        tcum[id] += (start - old_tim[id]);
+    
+    tlat[id] += start - Math.trunc(ds.dpck_hr_ats/1000);
+    counter[id]++;
+    if(start-old_tim[id]>1000){
+      lat = tlat[id]/counter[id]
+      counter[id]=0
+      tlat[id]=0;
+      old_tim[id]=start
+      $("#lat-" + id).html(Math.trunc(lat));
 
-      }
-      freq = 1000.0 * counter[id] / tcum[id];
-      //  let freq = 1000.0 / (start-old_tim[id]);
-      old_tim[id] = start;
-      debug_html = " Hz:" + freq.toFixed(2);
     }
-    lat = start - Math.trunc(ds.dpck_hr_ats/1000);
-    latd = start - ds.dpck_ats;
+
+
 
     if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
       $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER.$binary.base64);
@@ -693,7 +683,6 @@ function updateCamera(ds) {
     /*if (ds.WIDTH !== undefined) {
       $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
     }*/
-    $("#lat-" + id).html(lat+" "+latd);
     $("#seq-" + id).html(ds.dpck_seq_id);
     $("#"+id+"SHUTTER").html(ds.SHUTTER);
     $("#"+id+"GAIN").html(ds.GAIN);
@@ -958,6 +947,8 @@ function activateCameraFetch(){
     old_tim[id] = 0;
     counter[id] = 0;
     tcum[id] = 0;
+    tlat[id] =0;
+    counter[jchaos.encodeName(k)] = 0;
 
   }
   if (cameralist.length) {
@@ -1580,6 +1571,7 @@ function activateMenuShort() {
               });})
           }
         },
+        'hq':{
         name: "JPEG half quality", cu: name,
           callback: function (itemKey, opt, e) {
             jchaos.setAttribute(name, "FMT","jpg", function () {
@@ -1611,8 +1603,30 @@ function activateMenuShort() {
                 jqccs.instantMessage("Failed PNG max compression", name, 3000, false);
               });})
           }
+        },
+        'weblatmax': {
+          name: "WEBP max quality", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","webp", function () {
+              jchaos.setCUProperty(name,{"compression_factor":100},function () {
+                jqccs.instantMessage("WEBP max quality", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed WEBP max quality", name, 3000, false);
+              });})
+          }
+        },
+        'weblatlooseless': {
+          name: "WEBP looseless", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","webp", function () {
+              jchaos.setCUProperty(name,{"compression_factor":101},function () {
+                jqccs.instantMessage("WEBP looseless quality", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed WEBP looseless quality", name, 3000, false);
+              });})
+          }
         }
-      }
+      }}
       
 
       cuitem['operation'] = {
@@ -2947,27 +2961,30 @@ function getWidget(options) {
                 // $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
                 if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
                   var bin = selected.output.FRAMEBUFFER.$binary.base64;
-                  var fmt = "png";
-                  if (selected.hasOwnProperty("input")) {
-                    if (selected.input.FMT != null) {
-                      fmt = selected.input.FMT;
-                    }
-
-                  }
+                  var fmt = selected.output.FMT;
+                  
                   //$('#triggerType').val(selected.output.TRIGGER_MODE)
                   var id = jchaos.encodeName(elem);
                   let now=Date.now() 
                   let latd = now- Math.trunc(selected.output.dpck_hr_ats/1000);
-                  let latc = now- selected.output.dpck_ats;
-
+                  //let latc = now- selected.output.dpck_ats;
+                  if(counter[id]%100==0){
+                    tlat[id]=0;
+                    counter[id]=0;
+                  }
+                  tlat[id]+=latd
+                  counter[id]++
+                  latd=latd/counter[id]
                   // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
                   $("#cameraImage-" + id).attr("src", "data:image/" + fmt + ";base64," + bin);
-                  if (selected.output.WIDTH !== undefined) {
-                    $("#info-" + id).html(selected.output.WIDTH + "x" + selected.output.HEIGHT + "(" + selected.output.OFFSETX + "," + selected.output.OFFSETY + ") frame:" + selected.output.dpck_seq_id + " lat:" + latd +" "+latc);
-                  } else {
-                    $("#info-" + id).html("frame:" + selected.output.dpck_seq_id + " lat:" + latd +" "+latc);
+                  $("#lat-" + id).html(latd);
 
-                  }
+                  /*if (selected.output.WIDTH !== undefined) {
+                    $("#info-" + id).html(selected.output.WIDTH + "x" + selected.output.HEIGHT + "(" + selected.output.OFFSETX + "," + selected.output.OFFSETY + ") frame:" + selected.output.dpck_seq_id + " lat:" + latd );
+                  } else {
+                    $("#info-" + id).html("frame:" + selected.output.dpck_seq_id + " lat:" + latd);
+
+                  }*/
 
 
                 }
@@ -3009,162 +3026,7 @@ function getWidget(options) {
       var html = '<div class="row" id="cameraTable"></div>';
       html+=jqccs.generateGenericTable(tmpObj,true);
       return html;
-      var old_tim = {}, counter = {}, tcum = {};
-
-      var cu = tmpObj.elems;
-      var template = tmpObj.type;
-
-      //var html = '<div class="row">';
-
-
-      // html += '<div class="container-fluid" id="cameraTable"></div>';
-      var html = '<div class="row" id="cameraTable"></div>';
-
-
-      var cu = tmpObj.elems;
-      var template = tmpObj.type;
-      html += '<div class="row" id="table-space">';
-      html += '<div class="box col-md-12">';
-      html += '<div class="box-content table-responsive col-md-12">';
-      if (cu.length == 0) {
-        html += '<p id="no-result-monitoring">No results match</p>';
-
-      } else {
-        html += '<p id="no-result-monitoring"></p>';
-
-      }
-
-      html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
-      html += '<thead class="box-header">';
-      html += '<tr>';
-      /*html += '<th><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" id="selectAll">';
-      html += '<label class="custom-control-label" for="tableDefaultCheck1">Select All</label></div></th>';
-*/
-      html += '<th>Name CU</th>';
-      html += '<th colspan="3">Status</th>';
-      html += '<th colspan="2">Mode</th>';
-      html += '<th colspan="2">Shutter</th>';
-      html += '<th colspan="2">Gain</th>';
-      html += '<th colspan="2">Brightness</th>';
-      html += '<th colspan="2">Error</th>';
-      html += '<th colspan="1">Hz</th>';
-      html += '<th colspan="1">KB/s</th>';
-      html += '<th colspan="1">Lat(ms)</th>';
-
-      html += '</tr>';
-
-
-      html += '</thead> ';
-      $(cu).each(function (i) {
-        var cuname = jchaos.encodeName(cu[i]);
-
-        old_tim[cuname] = 0;
-        counter[cuname] = 0;
-        tcum[cuname] = 0;
-
-
-        html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-        html += '<th scope="row"><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" name="' + cu[i] + '" id="s-' + cuname + '">';
-        html += '<label class="custom-control-label" for="s-' + cuname + '">' + cu[i] + '</label></div><div id="' + cuname + '_INFO"></div></th>';
-
-        //   html += "<td class='name_element'>" + cu[i] + "</td>";
-        html += "<td id='" + cuname + "_health_status'></td>";
-        html += "<td id='" + cuname + "_system_busy'></td>";
-        html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-
-        html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
-        html += "<td id='" + cuname + "'><select class='select_camera_mode form-control form-control-sm' id='" + cuname + "_select_camera_mode' name='" + cu[i] + "'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='1'>Pulse</option><option value='5'>No Acquire</option><option value='2'>Software</option></select></td>";
-
-        html += "<td id='" + cuname + "_output_SHUTTER'></td>";
-
-
-        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_SHUTTER' name='" + cu[i] + "/input/SHUTTER'></input><div><span id='" + cuname + "_SHUTTER_INFO'></span></div></td>";
-
-
-        html += "<td id='" + cuname + "_output_GAIN'></td>";
-
-        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_GAIN' name='" + cu[i] + "/input/GAIN'></input><div><span id='" + cuname + "_GAIN_INFO'></span></div></td>";
-
-        html += "<td id='" + cuname + "_output_BRIGHTNESS'></td>";
-        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_BRIGHTNESS' name='" + cu[i] + "/input/BRIGHTNESS'></input></td>";
-
-        html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
-        html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-        html += "<td id='" + cuname + "_health_prate'></td>";
-        html += "<td id='" + cuname + "_health_pband'></td>";
-        html += "<td id='" + cuname + "_output_dpck_ts_diff'></td></tr>";
-
-
-      });
-
-      html += '</table>';
-      html += '</div>';
-      html += '</div>';
-      html += '</div>';
-      if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
-        jchaos.options['io_onconnect'] = (s) => {
-          console.log("resubscribe ..")
-
-          jchaos.iosubscribeCU(cu, true);
-          jchaos.iosubscribeCU(selectedCams, true);
-          onConnectServer();
-        }
-        jchaos.options['io_onmessage'] = (ds) => {
-
-
-          let id = jchaos.encodeName(ds.ndk_uid);
-          if (ds.dpck_ds_type == 0) {
-            let start = Date.now();
-
-            // output
-            if (old_tim[id]) {
-              if ((counter[id] % 100) == 0) {
-                counter[id] = 1;
-                tcum[id] = 0;
-              } else {
-                counter[id]++;
-              }
-              tcum[id] += (start - old_tim[id]);
-
-            }
-
-
-
-            // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-
-            $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT + ";base64," + ds.FRAMEBUFFER);
-
-            // let freq = 1000.0 * counter[id] / tcum[id];
-            let freq = 1000.0 / (start - old_tim[id]);
-            let latd = start- Math.trunc(ds.dpck_hr_ats/1000);
-            let latc = start- ds.dpck_ats;            
-            if (ds.WIDTH !== undefined) {
-              $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) +  " lat:" + latd +" "+latc);
-            } else {
-              $("#info-" + id).html("frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + latd +" "+latc);
-
-            }
-            old_tim[id] = start;
-
-            delete ds.FRAMEBUFFER;
-            tmpObj['data'] = [jchaos.chaosDatasetToFullDS(ds)];
-            jqccs.updateGenericTableDataset(tmpObj);
-
-          } else {
-            tmpObj['data'] = [jchaos.chaosDatasetToFullDS(ds)];
-            //console.log("Not output:"+JSON.stringify(tmpObj['data']));
-            jqccs.checkLiveCU(tmpObj);
-            jqccs.updateGenericTableDataset(tmpObj);
-
-          }
-        }
-        jchaos.iosubscribeCU(cu, true);
-
-
-
-      }
-
-      return html;
+    
     },
     cmdFn: function (tmpObj) {
       console.log("CmdFn ");
