@@ -68,12 +68,12 @@
         },
         "defaultRestPort": {
             "type": "string",
-            "default": "8081",
+            "default": "",
             "description": "Default Rest Port or rest path"
         },
         "defaultIOPort": {
             "type": "string",
-            "default": "4000",
+            "default": "",
             "description": "Default SocketIO port or io path"
         },
         "camera": {
