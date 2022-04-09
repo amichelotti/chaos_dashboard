@@ -955,6 +955,11 @@ function activateCameraFetch(){
 
     if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
       if (cameralistold.length) {
+        var tounsub=[]
+        cameralistold.forEach(ele=>{
+          let sel = cameralist.filter((e) => { return (e == ele) })
+
+        });
         console.log("Unsubscribe " + JSON.stringify(cameralistold));
         jchaos.iosubscribeCU(cameralistold, false);
       }
