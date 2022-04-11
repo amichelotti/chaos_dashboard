@@ -7501,8 +7501,8 @@
                 decodeDeviceAlarm(alarm.device_alarms, false);
             }
         });
-        $("a.cu-alarm").off();
-        $("a.cu-alarm").click(function(e) {
+        $(".cu-alarm").off();
+        $(".cu-alarm").click(function(e) {
 
             //      var node=tmpObj.node_selected;
             var node = $(this).attr("cuname");
@@ -7602,10 +7602,10 @@
                     mode=""
                     if(el.health.cuh_alarm_lvl){
                         if(el.health.cuh_alarm_lvl==1){
-                          mode += '<i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>';
+                          mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>';
                     
                         } else {
-                          mode += '<i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i>';
+                          mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i>';
                     
                         }
                       } else {
@@ -7653,22 +7653,27 @@
                 var cu_alarm = Number(el.system.cudk_calrm_lvl);
                 if (dev_alarm == 1) {
                     $("#" + name_id + "_system_device_alarm").attr('title', "Device Warning");
-                    $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
+                   // $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i></a>');
+                    $("#" + name_id + "_system_device_alarm").html('<i cuname="' + name_device_db + '" class="device-alarm fa fa-exclamation fa-lg" title="Device Warning" style="color:orange"</i>');
+
                 } else if (dev_alarm == 2) {
                     $("#" + name_id + "_system_device_alarm").attr('title', "Device Error");
-                    $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
+                //  $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i></a>');
+                  $("#" + name_id + "_system_device_alarm").html('<i cuname="' + name_device_db + '" class="device-alarm fa fa-exclamation-triangle fa-lg" title="Device Error" style="color:red"</i>');
+
                 } else {
                     $("#" + name_id + "_system_device_alarm").html('');
                 }
 
                 if (cu_alarm == 1) {
                     $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
-
-                    $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="material-icons" style="color:yellow">error_outline</i></a>');
+                  //$("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i></a>');
+                  $("#" + name_id + "_system_cu_alarm").html('<i cuname="' + name_device_db + '" class="cu-alarm fa fa-exclamation fa-lg" title="CU Warning" style="color:orange"</i>');
                 } else if (cu_alarm == 2) {
                     $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
+                   //$("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i></a>');
+                   $("#" + name_id + "_system_cu_alarm").html('<i cuname="' + name_device_db + '" class="cu-alarm fa fa-exclamation-triangle fa-lg" title="CU Error" style="color:red"</i>');
 
-                    $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i  class="material-icons" style="color:red">error_outline</i></a>');
                 } else {
                     $("#" + name_id + "_system_cu_alarm").html('');
                 }
