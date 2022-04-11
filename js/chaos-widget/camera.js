@@ -957,11 +957,18 @@ function activateCameraFetch(){
       if (cameralistold.length) {
         var tounsub=[]
         cameralistold.forEach(ele=>{
-          let sel = cameralist.filter((e) => { return (e == ele) })
+
+           let sel = cameralist.filter((e) => { return (e != ele) })
+           if (sel.length == 0) {
+             // not present in new list
+             tounsub.push(ele);
+           }
 
         });
-        console.log("Unsubscribe " + JSON.stringify(cameralistold));
-        jchaos.iosubscribeCU(cameralistold, false);
+        if(tounsub.length){
+          console.log("Unsubscribe " + JSON.stringify(tounsub));
+          jchaos.iosubscribeCU(tounsub, false);
+        }
       }
       console.log("Subscribe " + JSON.stringify(cameralist));
 
