@@ -6908,8 +6908,8 @@
 
             }
         }
-        if ((typeof GetURLParameter('CLASS') === "string") && (GetURLParameter('CLASS') != "")) {
-            definterface = GetURLParameter('CLASS');
+        if ((typeof GetURLParameter('INTERFACE') === "string") && (GetURLParameter('INTERFACE') != "")) {
+            definterface = GetURLParameter('INTERFACE');
         } else {
             if (dashboard_settings.hasOwnProperty("defaultInterface") && (dashboard_settings.defaultInterface != "")) {
                 definterface = dashboard_settings.defaultInterface;
@@ -7121,8 +7121,8 @@
 
             }
         }
-        if ((typeof GetURLParameter('CLASS') === "string") && (GetURLParameter('CLASS') != "")) {
-            definterface = GetURLParameter('CLASS');
+        if ((typeof GetURLParameter('INTERFACE') === "string") && (GetURLParameter('INTERFACE') != "")) {
+            definterface = GetURLParameter('INTERFACE');
         } else {
             if (dashboard_settings.hasOwnProperty("defaultInterface") && (dashboard_settings.defaultInterface != "")) {
                 definterface = dashboard_settings.defaultInterface;
