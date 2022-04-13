@@ -789,10 +789,10 @@ function updateCamera(ds) {
     });
 
     if(ds.cuh_alarm_lvl==1){
-      mode += '<i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>';
+      mode += '<i class="fa fa-exclamation fa-lg all-alarm" title="Warning" style="color:orange"</i>';
 
     } else {
-      mode += '<i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i>';
+      mode += '<i class="fa fa-exclamation-triangle fa-lg all-alarm" title="Error" style="color:red"</i>';
 
     }
   }
@@ -2939,6 +2939,8 @@ function getWidget(options) {
     tableClickFn: function (tmpObj, e) {
       //  rebuildCam(tmpObj);
       console.log("Table click");
+      jqccs.updateGenericTableDataset(tmpObj);
+
     /*  jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
         var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
         if(!tmpObj.hasOwnProperty("data")){

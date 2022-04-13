@@ -7487,28 +7487,39 @@
         updateCUDS(tmpObj);
 
 
-        $("a.device-alarm").off();
-        $("a.device-alarm").click(function(e) {
+        $(".device-alarm").off();
+        $(".device-alarm").click(function(e) {
             //var id = $(this).attr("cuname");
             //show_dev_alarm(id);
             //var node=tmpObj.node_selected;
             var node = $(this).attr("cuname");
-            var cindex = tmpObj.node_name_to_index[node];
-
-            var alarm = tmpObj.data[cindex];
-
+            jchaos.getChannel(node,255,(a)=>{
+            let alarm=a[0];    
             if (alarm != null && alarm.hasOwnProperty("device_alarms")) {
                 decodeDeviceAlarm(alarm.device_alarms, false);
             }
-        });
+        })});
+        $(".all-alarm").off();
+        $(".all-alarm").click(function(e) {
+            //var id = $(this).attr("cuname");
+            //show_dev_alarm(id);
+            //var node=tmpObj.node_selected;
+            var node = $(this).attr("cuname");
+            jchaos.getChannel(node,255,(a)=>{
+            let alarm=a[0];
+            var all_alarm= Object.assign(alarm.device_alarms, alarm.cu_alarms);
+
+            if (all_alarm != null && all_alarm.hasOwnProperty("ndk_uid")) {
+                decodeDeviceAlarm(alarm.device_alarms, false);
+            }
+        })});
         $(".cu-alarm").off();
         $(".cu-alarm").click(function(e) {
 
             //      var node=tmpObj.node_selected;
             var node = $(this).attr("cuname");
-            var cindex = tmpObj.node_name_to_index[node];
-
-            var alarm = tmpObj.data[cindex];
+            jchaos.getChannel(node,255,(a)=>{
+            let alarm=a[0];
             if (alarm != null && alarm.hasOwnProperty("cu_alarms")) {
                 var obj = {};
                 if (alarm.health.nh_lem != "") {
@@ -7520,7 +7531,7 @@
 
                 decodeDeviceAlarm(obj, false);
             }
-        });
+        });});
     }
 
 
@@ -7602,10 +7613,10 @@
                     mode=""
                     if(el.health.cuh_alarm_lvl){
                         if(el.health.cuh_alarm_lvl==1){
-                          mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>';
+                          mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation fa-lg all-alarm" title="Warning" style="color:orange"</i>';
                     
                         } else {
-                          mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i>';
+                          mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation-triangle fa-lg all-alarm" title="Error" style="color:red"</i>';
                     
                         }
                       } else {
