@@ -1,6 +1,7 @@
 
 var selectedCams = [];
 var stateObj = {};
+var streamaddr={}
 var cameraDriverDesc = {};
 var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
@@ -504,10 +505,21 @@ function getCameraProps(ele,domid) {
 };
 
 function getCameraDesc(cul,domid) {
+  if(opt.camera.hasOwnProperty('cameraStream') && opt.camera.cameraStream){
+    jchaos.getChannel(cul,2,(clist)=>{
+      clist.forEach(ele=>{
+        if(ele.hasOwnProperty("stream")&&ele.stream.length){
+          streamaddr[ele.ndk_uid]=ele['stream'];
+          console.log("STREAM "+ele.ndk_uid+ " link:"+ele['stream']);
+        }
+      });
+    });
+}
   jchaos.command(cul, { "act_name": "cu_prop_drv_get" }, data => {
     if (data instanceof Array){
       data.forEach((ele, cnt) => {
         getCameraProps(ele);
+        
         // console.log(cul[cnt]+" ->"+JSON.stringify(pub));
   
       });
@@ -674,12 +686,13 @@ function updateCamera(ds) {
     }
 
 
-
-    if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
-      $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER.$binary.base64);
-    } else {
-      $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER);
-    }
+    if(!streamaddr.hasOwnProperty(ds.ndk_uid)){
+      if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
+        $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER.$binary.base64);
+      } else {
+        $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER);
+      }
+  }
     /*if (ds.WIDTH !== undefined) {
       $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
     }*/
@@ -891,6 +904,17 @@ function mapAssociation(vid,cam){
 
   } else {
     mapcamera[vid] = cam;
+    if(opt.camera.hasOwnProperty('cameraStream') && opt.camera.cameraStream){
+
+    jchaos.getChannel(cam,2,(clist)=>{
+      if(clist[0].hasOwnProperty('stream')&&clist[0].stream.length){
+        streamaddr[clist[0].ndk_uid]=clist[0]['stream'];
+        $("#cameraImage-" + vid).attr("src", clist[0]['stream']);
+        console.log("setting stream of "+vid+ " to:"+clist[0]['stream']);
+      }
+
+    })
+  }
     for (var k in mappedcamera) {
       if (mappedcamera[k] == vid) {
         delete mappedcamera[k];

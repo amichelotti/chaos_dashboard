@@ -10,6 +10,12 @@
             "required": true,
             "description": "Camera Refresh (ms)"
         },
+        "cameraStream": {
+            "type": "boolean",
+            "default": true,
+            "required": true,
+            "description": "Use direct http stream if available"
+        },
         "cameraPerRow": {
             "type": "integer",
             "default": 2,
