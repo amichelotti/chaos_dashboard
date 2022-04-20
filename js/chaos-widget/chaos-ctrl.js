@@ -148,6 +148,9 @@
 
       })
     }*/
+    jqccs.saveAsBinary=function(binary_string, name){
+        return saveAsBinary(binary_string, name);
+    }
     function saveAsBinary(binary_string, name) {
         var len = binary_string.length;
         var bytes = new Uint8Array(len);
@@ -4537,12 +4540,11 @@
                     jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function(dat) {
                         lat = (new Date()).getTime() - now;
 
-                        var node_live_selected = dat;
-                        if (node_live_selected.length == 0) {
+                        if (dat.length == 0) {
                             return;
                         }
 
-                        tmpObj.data = node_live_selected;
+                        tmpObj.data = dat;
                         tmpObj.updateFn(tmpObj);
 
                     }, function(err) {
@@ -4604,11 +4606,11 @@
             tmpObj.upd_chan = -1;
         } else if ((cutype.indexOf("camera") != -1)) {
             tmpObj.type = "camera";
-            tmpObj.upd_chan = -2;
+            tmpObj.upd_chan = 255;
 
             tmpObj['maxCameraRow'] = dashboard_settings.camera.maxCameraRow;
             tmpObj['cameraPerRow'] = dashboard_settings.camera.cameraPerRow;
-            tmpObj['refresh_rate'] = dashboard_settings.camera.cameraRefresh;
+            tmpObj['refresh_rate'] = 5000;//dashboard_settings.camera.cameraRefresh;
             jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
         } else if ((cutype.indexOf("bpm") != -1)) {
             tmpObj.type = "bpm";

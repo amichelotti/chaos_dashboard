@@ -12,7 +12,7 @@
         },
         "cameraStream": {
             "type": "boolean",
-            "default": true,
+            "default": false,
             "required": true,
             "description": "Use direct http stream if available"
         },

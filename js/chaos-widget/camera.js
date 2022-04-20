@@ -2,6 +2,8 @@
 var selectedCams = [];
 var stateObj = {};
 var streamaddr={}
+var streamaddr_cap={}
+
 var cameraDriverDesc = {};
 var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
@@ -53,6 +55,18 @@ function modeToString(val){
     default:
       return "--";
   }
+}
+function subscribeCU(culist){
+  var subscribed=[]
+  culist.forEach(ele=>{
+    if(!streamaddr.hasOwnProperty(ele)){
+      console.log("Subscribe " +ele)
+      jchaos.iosubscribeCU(ele, true);
+      subscribed.push(ele)
+    }
+  });
+  return subscribed;
+
 }
 function moveOval(id) {
   selection_ctx.clearRect(0, 0, selection_canvas.width, selection_canvas.height);
@@ -347,33 +361,11 @@ function checkRedrawReference(camid, domid, x, y, sx, sy, r, rt) {
 
   });
 }
-function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
+function zoomResize(domid, x, y, sx, sy, r, rot,w,h){
   const canvas = document.getElementById("cameraImageCanv-" + domid);
   const canvasSel = document.getElementById("selectionCanv-" + domid);
- 
-
-  if ((canvas == null)||($("#cameraImage-" + domid).length == 0)) {
-    return;
-  }
   const ctx = canvas.getContext('2d');
-  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
-  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
-  if (natwidth > natheight) {
-    $("#cameraImage-" + domid).removeClass("chaos_image_v");
-    $("#cameraImage-" + domid).removeClass("chaos_image");
 
-    $("#cameraImage-" + domid).addClass("chaos_image_h");
-  } else {
-    $("#cameraImage-" + domid).removeClass("chaos_image");
-
-    $("#cameraImage-" + domid).removeClass("chaos_image_h");
-    $("#cameraImage-" + domid).addClass("chaos_image_v");
-  }
-
-  $("#cameraImage-" + domid).on('load', function () {
-  $("#cameraImage-" + domid).off('load');
-
-  
   let currzoom = 1.0;
   if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
     currzoom = cameraLayoutSettings[domid]["zoom"];
@@ -387,6 +379,8 @@ function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
   }
   let width = $("#cameraImage-" + domid).width();
   let height = $("#cameraImage-" + domid).height();
+  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
   if (canvasSel != null) {
     canvasSel.width = width * currzoom;
     canvasSel.height = height * currzoom;
@@ -462,6 +456,57 @@ function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
     //   console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
   }
 
+}
+function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
+  let currzoom = 1.0;
+  if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+    currzoom = cameraLayoutSettings[domid]["zoom"];
+  }
+  let curr_size={
+    'REFX':x,
+    'REFY':y,
+    'REFSX':sx,
+    'REFSY':sy,
+    'REFRHO':r,
+    'ROT':rot,
+    'WIDTH':w,
+    'HEIGHT':h,
+    'ZOOM':currzoom
+  };
+  if(!old_size.hasOwnProperty(domid)){
+    old_size[domid]={};
+  } else if(JSON.stringify(old_size[domid])==JSON.stringify(curr_size)){
+    return;
+  }
+  old_size[domid]=curr_size;
+
+  const canvas = document.getElementById("cameraImageCanv-" + domid);
+  const canvasSel = document.getElementById("selectionCanv-" + domid);
+ 
+
+  if ((canvas == null)||($("#cameraImage-" + domid).length == 0)) {
+    return;
+  }
+  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
+  if (natwidth > natheight) {
+    $("#cameraImage-" + domid).removeClass("chaos_image_v");
+    $("#cameraImage-" + domid).removeClass("chaos_image");
+
+    $("#cameraImage-" + domid).addClass("chaos_image_h");
+  } else {
+    $("#cameraImage-" + domid).removeClass("chaos_image");
+
+    $("#cameraImage-" + domid).removeClass("chaos_image_h");
+    $("#cameraImage-" + domid).addClass("chaos_image_v");
+  }
+  zoomResize(domid, x, y, sx, sy, r, rot,w,h);
+
+  $("#cameraImage-" + domid).on('load', function () {
+  $("#cameraImage-" + domid).off('load');
+  
+    zoomResize(domid, x, y, sx, sy, r, rot,w,h);
+  
   });
 
 }
@@ -510,7 +555,11 @@ function getCameraDesc(cul,domid) {
       clist.forEach(ele=>{
         if(ele.hasOwnProperty("stream")&&ele.stream.length){
           streamaddr[ele.ndk_uid]=ele['stream'];
+          streamaddr_cap[ele.ndk_uid]=ele['stream'];
+
           console.log("STREAM "+ele.ndk_uid+ " link:"+ele['stream']);
+          jchaos.iosubscribeCU(ele.ndk_uid, false);
+
         }
       });
     });
@@ -693,6 +742,7 @@ function updateCamera(ds) {
         $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER);
       }
   }
+
     /*if (ds.WIDTH !== undefined) {
       $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
     }*/
@@ -700,18 +750,9 @@ function updateCamera(ds) {
     $("#"+id+"SHUTTER").html(ds.SHUTTER);
     $("#"+id+"GAIN").html(ds.GAIN);
     $("#"+id+"TRIGGER_MODE").html(modeToString(ds.TRIGGER_MODE));
-    if(old_size.hasOwnProperty(id)){
-      if((old_size[id].WIDTH!=ds.WIDTH)||(old_size[id].HEIGHT!=ds.HEIGHT)){
-        redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
-      }
-    } else {
-      old_size[id]={WIDTH:0,HEIGH:0,MODE:0};
-      
+    if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
+      redrawReference(id, old_size[id].REFX, old_size[id].REFY, old_size[id].REFSX, old_size[id].REFSY, old_size[id].REFRHO, -old_size[id].ROT,ds.WIDTH,ds.HEIGHT);
     }
-    old_size[id]['WIDTH']=ds.WIDTH;
-    old_size[id]['HEIGHT']=ds.HEIGHT;
-    old_size[id]['TRIGGER_MODE']=ds.TRIGGER_MODE;
-
 
   } else if (ds.dpck_ds_type == 1) {
   //  console.log("INPUT :" + JSON.stringify(ds));
@@ -723,13 +764,9 @@ function updateCamera(ds) {
         $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
     
       }
-      if(!old_size.hasOwnProperty(id)){
-        old_size[id]={};
-      }
-      if((!old_size[id].hasOwnProperty('dpck_seq_id'))||(old_size[id].dpck_seq_id<ds.dpck_seq_id)){
-          redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
-      } 
-      old_size[id]['dpck_seq_id']=ds.dpck_seq_id;
+      
+      redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
+    
         
       
       jqccs.updateSingleNode({input:ds});
@@ -910,6 +947,8 @@ function mapAssociation(vid,cam){
       if(clist[0].hasOwnProperty('stream')&&clist[0].stream.length){
         streamaddr[clist[0].ndk_uid]=clist[0]['stream'];
         $("#cameraImage-" + vid).attr("src", clist[0]['stream']);
+        $("#lat-" + vid).html("-");
+        $("#seq-" + vid).html("-");
         console.log("setting stream of "+vid+ " to:"+clist[0]['stream']);
       }
 
@@ -994,14 +1033,10 @@ function activateCameraFetch(){
           jchaos.iosubscribeCU(tounsub, false);
         }
       }
-      console.log("Subscribe " + JSON.stringify(cameralist));
-
-      jchaos.iosubscribeCU(cameralist, true);
-      cameralistold = cameralist;
+      cameralistold =subscribeCU(cameralist);
       jchaos.options['io_onconnect'] = (s) => {
         console.log("resubscribe ..")
-
-        jchaos.iosubscribeCU(cameralist, true);
+        cameralistold =subscribeCU(cameralist);
       }
 
       jchaos.options['io_onmessage'] = updateCamera;
@@ -1017,7 +1052,13 @@ function activateCameraFetch(){
         clearInterval(pullIntervalHealth);
       }
       pullInterval = setInterval(() => {
-        jchaos.getChannel(cameralist, 0, (vds) => {
+        var clist=[];
+        cameralist.forEach((e)=>{
+          if(!streamaddr.hasOwnProperty(e)){
+            clist.push(e);
+          }
+        });
+        jchaos.getChannel(clist, 0, (vds) => {
           vds.forEach(ele => {
             updateCamera(ele);
           });
@@ -1040,9 +1081,10 @@ function activateCameraFetch(){
         }
       }, 1000);
       pullIntervalHealth = setInterval(() => {
-        jchaos.getChannel(cameralist, 4, (vds) => {
+        jchaos.getChannel(cameralist, 255, (vds) => {
           vds.forEach(ele => {
-            updateCamera(ele);
+            jqccs.updateSingleNode(ele);
+            jqccs.updateGenericControl(null, ele);
           });
 
         });
@@ -1166,7 +1208,7 @@ function showHisto(msghead, cuname, refresh, channel) {
          }
          var blob = new Blob([bytes], { type: "image/png" });
         */
-        saveAsBinary(binary_string, name + "."+data.FMT);
+        jqccs.saveAsBinary(binary_string, name + "."+data.FMT);
 
       }
     },
@@ -1540,6 +1582,51 @@ function activateMenuShort() {
       var el = ele[0];
       var selection = selection_ellipse[domid];
       // redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+      cuitem['save-image']= {
+        name: "Save Image", cu: name, icon: "fa-save",
+        callback: function (itemKey, o, e) {
+          jchaos.getChannel(name,0,(ds)=>{
+            var binary_string = atob(ds[0].FRAMEBUFFER.$binary.base64);
+            var encoden = jchaos.encodeName(name);
+
+            jqccs.saveAsBinary(binary_string, encoden + "_"+ds[0].dpck_seq_id+ "_"+ds[0].dpck_ats+"."+ds[0].FMT);
+          });
+          
+
+        }
+      }
+      if(streamaddr.hasOwnProperty(name)){
+        cuitem['stream-stop']= {
+          name: "Stream Stop", cu: name, icon: "fa-camera",
+          callback: function (itemKey, o, e) {
+            delete streamaddr[name];
+            if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
+                jchaos.iosubscribeCU(name, true);
+                jchaos.getChannel(name,1,(ds)=>{
+                  updateCamera(ds[0]);
+                });
+            }
+
+          }
+        }
+      } else {
+        if(streamaddr_cap.hasOwnProperty(name)){
+          cuitem['stream-start']= {
+            name: "Stream Start", cu: name, icon: "fa-film",
+            callback: function (itemKey, o, e) {
+              streamaddr[name]=streamaddr_cap[name];
+              jchaos.iosubscribeCU(name, false);
+              $("#cameraImage-" + mappedcamera[name]).attr("src", streamaddr[name]);
+              $("#lat-" + mappedcamera[name]).html("-");
+              $("#seq-" + mappedcamera[name]).html("-");
+
+  
+            }
+          }
+        }
+
+      }
+
       cuitem['sep1'] = "---------";
       cuitem['state'] = {
         "name": "Set Mode..", icon: "fa-plug",
@@ -2939,7 +3026,19 @@ function getWidget(options) {
     tableClickFn: function (tmpObj, e) {
       //  rebuildCam(tmpObj);
       console.log("Table click");
-      jqccs.updateGenericTableDataset(tmpObj);
+      var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+      if(!tmpObj.hasOwnProperty("data")){
+        tmpObj['data']={};
+      } else {
+        if(tmpObj.data instanceof Array)
+          jqccs.updateGenericControl(tmpObj, tmpObj.data[cindex]);
+
+      }
+
+    
+     // jqccs.updateGenericControl(tmpObj, );
+
+    //  jqccs.updateGenericTableDataset(tmpObj);
 
     /*  jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
         var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
@@ -2977,12 +3076,15 @@ function getWidget(options) {
       })
     },
     updateFn: function (tmpObj) {
+      jqccs.updateGenericTableDataset(tmpObj);
+
+      return;
       var cu = [];
 
       if (tmpObj['elems'] instanceof Array) {
         cu = tmpObj.elems;
       }
-
+/*
       if ((opt.push == false) || (jchaos.socket == null) || (jchaos.socket.connected == false)) {
 
         if (tmpObj.node_multi_selected instanceof Array) {
@@ -3017,14 +3119,6 @@ function getWidget(options) {
                   $("#cameraImage-" + id).attr("src", "data:image/" + fmt + ";base64," + bin);
                   $("#lat-" + id).html(latd);
 
-                  /*if (selected.output.WIDTH !== undefined) {
-                    $("#info-" + id).html(selected.output.WIDTH + "x" + selected.output.HEIGHT + "(" + selected.output.OFFSETX + "," + selected.output.OFFSETY + ") frame:" + selected.output.dpck_seq_id + " lat:" + latd );
-                  } else {
-                    $("#info-" + id).html("frame:" + selected.output.dpck_seq_id + " lat:" + latd);
-
-                  }*/
-
-
                 }
               }
               var cindex = tmpObj.node_name_to_index[elem];
@@ -3054,6 +3148,7 @@ function getWidget(options) {
           console.log(str);
         });
       }
+      */
 
 
 
