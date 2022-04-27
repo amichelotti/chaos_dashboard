@@ -253,7 +253,11 @@
 
 		function cu2editor(ob, func) {
 			var obj = Object.assign({}, ob);
-			$.get('cu_write_mask.json', function (templ) {
+			var edm='cu_write_mask.json';
+			if(obj.hasOwnProperty("ndk_type")&&(obj['ndk_type']=="nt_root")){
+				edm='eu_write_mask.json';
+			}
+			$.get(edm, function (templ) {
 				try {
 
 					jchaos.search("", "us", false, function (uslist) {
@@ -419,7 +423,9 @@
 							if (list_drivers.length > 0) {
 								templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum = list_drivers;
 							} else {
-								delete templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name']['enum'];
+								if(templ['properties'].hasOwnProperty('cudk_driver_description')){
+									delete templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name']['enum'];
+								}
 							}
 
 							/*	if((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined )&& (drv !== undefined)){
