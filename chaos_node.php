@@ -2436,6 +2436,10 @@
 
 					if (decoded) {
 						json['group'] = decoded["group"];
+						var parent="";
+						if(node && node.hasOwnProperty('id')){
+							parent=node.id;
+						}
 						var newnode = {
 							"id": jchaos.encodeName(json.ndk_uid),
 							"parent": node.id,
