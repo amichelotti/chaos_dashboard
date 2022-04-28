@@ -1,6 +1,9 @@
 
 var selectedCams = [];
 var stateObj = {};
+var streamaddr={}
+var streamaddr_cap={}
+
 var cameraDriverDesc = {};
 var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
@@ -52,6 +55,18 @@ function modeToString(val){
     default:
       return "--";
   }
+}
+function subscribeCU(culist){
+  var subscribed=[]
+  culist.forEach(ele=>{
+    if(!streamaddr.hasOwnProperty(ele)){
+      console.log("Subscribe " +ele)
+      jchaos.iosubscribeCU(ele, true);
+      subscribed.push(ele)
+    }
+  });
+  return subscribed;
+
 }
 function moveOval(id) {
   selection_ctx.clearRect(0, 0, selection_canvas.width, selection_canvas.height);
@@ -346,33 +361,11 @@ function checkRedrawReference(camid, domid, x, y, sx, sy, r, rt) {
 
   });
 }
-function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
+function zoomResize(domid, x, y, sx, sy, r, rot,w,h){
   const canvas = document.getElementById("cameraImageCanv-" + domid);
   const canvasSel = document.getElementById("selectionCanv-" + domid);
- 
-
-  if ((canvas == null)||($("#cameraImage-" + domid).length == 0)) {
-    return;
-  }
   const ctx = canvas.getContext('2d');
-  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
-  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
-  if (natwidth > natheight) {
-    $("#cameraImage-" + domid).removeClass("chaos_image_v");
-    $("#cameraImage-" + domid).removeClass("chaos_image");
 
-    $("#cameraImage-" + domid).addClass("chaos_image_h");
-  } else {
-    $("#cameraImage-" + domid).removeClass("chaos_image");
-
-    $("#cameraImage-" + domid).removeClass("chaos_image_h");
-    $("#cameraImage-" + domid).addClass("chaos_image_v");
-  }
-
-  $("#cameraImage-" + domid).on('load', function () {
-  $("#cameraImage-" + domid).off('load');
-
-  
   let currzoom = 1.0;
   if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
     currzoom = cameraLayoutSettings[domid]["zoom"];
@@ -386,6 +379,8 @@ function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
   }
   let width = $("#cameraImage-" + domid).width();
   let height = $("#cameraImage-" + domid).height();
+  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
   if (canvasSel != null) {
     canvasSel.width = width * currzoom;
     canvasSel.height = height * currzoom;
@@ -461,6 +456,57 @@ function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
     //   console.log("drawing x:"+x+"y:"+y+" sx:"+sx+" sy:"+sy+ " rho:"+r);
   }
 
+}
+function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
+  let currzoom = 1.0;
+  if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+    currzoom = cameraLayoutSettings[domid]["zoom"];
+  }
+  let curr_size={
+    'REFX':x,
+    'REFY':y,
+    'REFSX':sx,
+    'REFSY':sy,
+    'REFRHO':r,
+    'ROT':rot,
+    'WIDTH':w,
+    'HEIGHT':h,
+    'ZOOM':currzoom
+  };
+  if(!old_size.hasOwnProperty(domid)){
+    old_size[domid]={};
+  } else if(JSON.stringify(old_size[domid])==JSON.stringify(curr_size)){
+    return;
+  }
+  old_size[domid]=curr_size;
+
+  const canvas = document.getElementById("cameraImageCanv-" + domid);
+  const canvasSel = document.getElementById("selectionCanv-" + domid);
+ 
+
+  if ((canvas == null)||($("#cameraImage-" + domid).length == 0)) {
+    return;
+  }
+  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
+  if (natwidth > natheight) {
+    $("#cameraImage-" + domid).removeClass("chaos_image_v");
+    $("#cameraImage-" + domid).removeClass("chaos_image");
+
+    $("#cameraImage-" + domid).addClass("chaos_image_h");
+  } else {
+    $("#cameraImage-" + domid).removeClass("chaos_image");
+
+    $("#cameraImage-" + domid).removeClass("chaos_image_h");
+    $("#cameraImage-" + domid).addClass("chaos_image_v");
+  }
+  zoomResize(domid, x, y, sx, sy, r, rot,w,h);
+
+  $("#cameraImage-" + domid).on('load', function () {
+  $("#cameraImage-" + domid).off('load');
+  
+    zoomResize(domid, x, y, sx, sy, r, rot,w,h);
+  
   });
 
 }
@@ -504,10 +550,25 @@ function getCameraProps(ele,domid) {
 };
 
 function getCameraDesc(cul,domid) {
+  if(opt.camera.hasOwnProperty('cameraStream') && opt.camera.cameraStream){
+    jchaos.getChannel(cul,2,(clist)=>{
+      clist.forEach(ele=>{
+        if(ele.hasOwnProperty("stream")&&ele.stream.length){
+          streamaddr[ele.ndk_uid]=ele['stream'];
+          streamaddr_cap[ele.ndk_uid]=ele['stream'];
+
+          console.log("STREAM "+ele.ndk_uid+ " link:"+ele['stream']);
+          jchaos.iosubscribeCU(ele.ndk_uid, false);
+
+        }
+      });
+    });
+}
   jchaos.command(cul, { "act_name": "cu_prop_drv_get" }, data => {
     if (data instanceof Array){
       data.forEach((ele, cnt) => {
         getCameraProps(ele);
+        
         // console.log(cul[cnt]+" ->"+JSON.stringify(pub));
   
       });
@@ -651,64 +712,47 @@ function buildCameraArray(id, opt) {
 }
 
 var cameralist = [], cameralistold = [];
-var old_tim = {}, counter = {}, tcum = {};
+var old_tim = {}, counter = {}, tcum = {},tlat={};
 var old_size={};
 function updateCamera(ds) {
   if (ds.dpck_ds_type == 0) {
     // output
-    let freq, start, lat;
+    let freq, start, lat=0;
     let id = mappedcamera[ds.ndk_uid];
     let debug = opt.camera.debug;
     let debug_html = "";
     start = Date.now();
-    /*  if (counter[id] == 0) {
-        checkRedrawReference(ds.ndk_uid, id);
-        counter[id]=1;
-      }
-  */
-    if (debug) {
-      if (old_tim[id]) {
-        if ((counter[id] % 1000) == 0) {
-          tcum[id] = 0;
-          counter[id] = 1;
-        } else {
-          counter[id]++;
-        }
-        tcum[id] += (start - old_tim[id]);
+    
+    tlat[id] += start - Math.trunc(ds.dpck_hr_ats/1000);
+    counter[id]++;
+    if(start-old_tim[id]>1000){
+      lat = tlat[id]/counter[id]
+      counter[id]=0
+      tlat[id]=0;
+      old_tim[id]=start
+      $("#lat-" + id).html(Math.trunc(lat));
 
-      }
-      freq = 1000.0 * counter[id] / tcum[id];
-      //  let freq = 1000.0 / (start-old_tim[id]);
-      old_tim[id] = start;
-      debug_html = " Hz:" + freq.toFixed(2);
     }
-    lat = start - ds.dpck_ats;
 
-    if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
-      $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER.$binary.base64);
-    } else {
-      $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
-    }
+
+    if(!streamaddr.hasOwnProperty(ds.ndk_uid)){
+      if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
+        $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER.$binary.base64);
+      } else {
+        $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER);
+      }
+  }
+
     /*if (ds.WIDTH !== undefined) {
       $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
     }*/
-    $("#lat-" + id).html(lat);
     $("#seq-" + id).html(ds.dpck_seq_id);
     $("#"+id+"SHUTTER").html(ds.SHUTTER);
     $("#"+id+"GAIN").html(ds.GAIN);
     $("#"+id+"TRIGGER_MODE").html(modeToString(ds.TRIGGER_MODE));
-    if(old_size.hasOwnProperty(id)){
-      if((old_size[id].WIDTH!=ds.WIDTH)||(old_size[id].HEIGHT!=ds.HEIGHT)){
-        redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
-      }
-    } else {
-      old_size[id]={WIDTH:0,HEIGH:0,MODE:0};
-      
+    if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
+      redrawReference(id, old_size[id].REFX, old_size[id].REFY, old_size[id].REFSX, old_size[id].REFSY, old_size[id].REFRHO, -old_size[id].ROT,ds.WIDTH,ds.HEIGHT);
     }
-    old_size[id]['WIDTH']=ds.WIDTH;
-    old_size[id]['HEIGHT']=ds.HEIGHT;
-    old_size[id]['TRIGGER_MODE']=ds.TRIGGER_MODE;
-
 
   } else if (ds.dpck_ds_type == 1) {
   //  console.log("INPUT :" + JSON.stringify(ds));
@@ -720,18 +764,16 @@ function updateCamera(ds) {
         $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
     
       }
-      if(!old_size.hasOwnProperty(id)){
-        old_size[id]={};
-      }
-      if((!old_size[id].hasOwnProperty('dpck_seq_id'))||(old_size[id].dpck_seq_id<ds.dpck_seq_id)){
-          redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
-      } 
-      old_size[id]['dpck_seq_id']=ds.dpck_seq_id;
+      
+      redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
+    
         
       
       jqccs.updateSingleNode({input:ds});
 
   } else if (ds.dpck_ds_type == 4) {
+    var obj={};
+
     //HEALTH
     let id = mappedcamera[ds.ndk_uid];
     $("#freq-" + id).html(ds.cuh_dso_prate.toFixed(1));
@@ -774,11 +816,20 @@ function updateCamera(ds) {
   }
 }
   if(ds.cuh_alarm_lvl){
+    
+    jchaos.getChannel(ds.ndk_uid,255, function (selected) {
+      jqccs.updateSingleNode(selected[0]);
+      jqccs.updateGenericControl(null, selected[0]);
+    
+    }, function (str) {
+      console.log(str);
+    });
+
     if(ds.cuh_alarm_lvl==1){
-      mode += '<i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>';
+      mode += '<i class="fa fa-exclamation fa-lg all-alarm" title="Warning" style="color:orange"</i>';
 
     } else {
-      mode += '<i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i>';
+      mode += '<i class="fa fa-exclamation-triangle fa-lg all-alarm" title="Error" style="color:red"</i>';
 
     }
   }
@@ -813,7 +864,7 @@ function updateCamera(ds) {
 
   }
   old_size[id]['dpck_ats']=ds.dpck_ats;
-
+  
   } else {
     var obj={};
     obj[jchaos.channelToString(ds.dpck_ds_type)]=ds;
@@ -890,6 +941,19 @@ function mapAssociation(vid,cam){
 
   } else {
     mapcamera[vid] = cam;
+    if(opt.camera.hasOwnProperty('cameraStream') && opt.camera.cameraStream){
+
+    jchaos.getChannel(cam,2,(clist)=>{
+      if(clist[0].hasOwnProperty('stream')&&clist[0].stream.length){
+        streamaddr[clist[0].ndk_uid]=clist[0]['stream'];
+        $("#cameraImage-" + vid).attr("src", clist[0]['stream']);
+        $("#lat-" + vid).html("-");
+        $("#seq-" + vid).html("-");
+        console.log("setting stream of "+vid+ " to:"+clist[0]['stream']);
+      }
+
+    })
+  }
     for (var k in mappedcamera) {
       if (mappedcamera[k] == vid) {
         delete mappedcamera[k];
@@ -946,23 +1010,33 @@ function activateCameraFetch(){
     old_tim[id] = 0;
     counter[id] = 0;
     tcum[id] = 0;
+    tlat[id] =0;
+    counter[jchaos.encodeName(k)] = 0;
 
   }
   if (cameralist.length) {
 
     if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
       if (cameralistold.length) {
-        console.log("Unsubscribe " + JSON.stringify(cameralistold));
-        jchaos.iosubscribeCU(cameralistold, false);
-      }
-      console.log("Subscribe " + JSON.stringify(cameralist));
+        var tounsub=[]
+        cameralistold.forEach(ele=>{
 
-      jchaos.iosubscribeCU(cameralist, true);
-      cameralistold = cameralist;
+           let sel = cameralist.filter((e) => { return (e != ele) })
+           if (sel.length == 0) {
+             // not present in new list
+             tounsub.push(ele);
+           }
+
+        });
+        if(tounsub.length){
+          console.log("Unsubscribe " + JSON.stringify(tounsub));
+          jchaos.iosubscribeCU(tounsub, false);
+        }
+      }
+      cameralistold =subscribeCU(cameralist);
       jchaos.options['io_onconnect'] = (s) => {
         console.log("resubscribe ..")
-
-        jchaos.iosubscribeCU(cameralist, true);
+        cameralistold =subscribeCU(cameralist);
       }
 
       jchaos.options['io_onmessage'] = updateCamera;
@@ -978,13 +1052,23 @@ function activateCameraFetch(){
         clearInterval(pullIntervalHealth);
       }
       pullInterval = setInterval(() => {
-        jchaos.getChannel(cameralist, 0, (vds) => {
+        var clist=[];
+        cameralist.forEach((e)=>{
+          if(!streamaddr.hasOwnProperty(e)){
+            clist.push(e);
+          }
+        });
+        jchaos.getChannel(clist, 0, (vds) => {
           vds.forEach(ele => {
             updateCamera(ele);
           });
 
         });
+        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+          clearInterval(pullInterval);
+        }
       }, opt.camera.cameraRefresh);
+
       pullIntervalsec = setInterval(() => {
         jchaos.getChannel(cameralist, 1, (vds) => {
           vds.forEach(ele => {
@@ -992,14 +1076,21 @@ function activateCameraFetch(){
           });
 
         });
+        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+          clearInterval(pullIntervalsec);
+        }
       }, 1000);
       pullIntervalHealth = setInterval(() => {
-        jchaos.getChannel(cameralist, 4, (vds) => {
+        jchaos.getChannel(cameralist, 255, (vds) => {
           vds.forEach(ele => {
-            updateCamera(ele);
+            jqccs.updateSingleNode(ele);
+            jqccs.updateGenericControl(null, ele);
           });
 
         });
+        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+          clearInterval(pullIntervalHealth);
+        }
       }, 5000);
     }
   }
@@ -1117,7 +1208,7 @@ function showHisto(msghead, cuname, refresh, channel) {
          }
          var blob = new Blob([bytes], { type: "image/png" });
         */
-        saveAsBinary(binary_string, name + ".png");
+        jqccs.saveAsBinary(binary_string, name + "."+data.FMT);
 
       }
     },
@@ -1491,6 +1582,51 @@ function activateMenuShort() {
       var el = ele[0];
       var selection = selection_ellipse[domid];
       // redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
+      cuitem['save-image']= {
+        name: "Save Image", cu: name, icon: "fa-save",
+        callback: function (itemKey, o, e) {
+          jchaos.getChannel(name,0,(ds)=>{
+            var binary_string = atob(ds[0].FRAMEBUFFER.$binary.base64);
+            var encoden = jchaos.encodeName(name);
+
+            jqccs.saveAsBinary(binary_string, encoden + "_"+ds[0].dpck_seq_id+ "_"+ds[0].dpck_ats+"."+ds[0].FMT);
+          });
+          
+
+        }
+      }
+      if(streamaddr.hasOwnProperty(name)){
+        cuitem['stream-stop']= {
+          name: "Stream Stop", cu: name, icon: "fa-camera",
+          callback: function (itemKey, o, e) {
+            delete streamaddr[name];
+            if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
+                jchaos.iosubscribeCU(name, true);
+                jchaos.getChannel(name,1,(ds)=>{
+                  updateCamera(ds[0]);
+                });
+            }
+
+          }
+        }
+      } else {
+        if(streamaddr_cap.hasOwnProperty(name)){
+          cuitem['stream-start']= {
+            name: "Stream Start", cu: name, icon: "fa-film",
+            callback: function (itemKey, o, e) {
+              streamaddr[name]=streamaddr_cap[name];
+              jchaos.iosubscribeCU(name, false);
+              $("#cameraImage-" + mappedcamera[name]).attr("src", streamaddr[name]);
+              $("#lat-" + mappedcamera[name]).html("-");
+              $("#seq-" + mappedcamera[name]).html("-");
+
+  
+            }
+          }
+        }
+
+      }
+
       cuitem['sep1'] = "---------";
       cuitem['state'] = {
         "name": "Set Mode..", icon: "fa-plug",
@@ -1540,9 +1676,82 @@ function activateMenuShort() {
               })
             }
           }
+          
 
         }
       };
+      cuitem['encoding'] = {
+        "name":"Encodings", icon:"fa-picture-o",
+        "items":{
+        'lolat': {
+          name: "JPEG max quality", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT",".jpg", function () {
+              jchaos.setCUProperty(name,{"compression_factor":90},function () {
+                jqccs.instantMessage("JPEG max quality", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed JPEG max quality", name, 3000, false);
+              });})
+          }
+        },
+        'hq':{
+        name: "JPEG half quality", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","jpg", function () {
+              jchaos.setCUProperty(name,{"compression_factor":40},function () {
+                jqccs.instantMessage("JPEG half quality", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed JPEG half quality", name, 3000, false);
+              });})
+          }
+        },
+        'pnglatmin': {
+          name: "PNG min compression", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","png", function () {
+              jchaos.setCUProperty(name,{"compression_factor":1},function () {
+                jqccs.instantMessage("PNG min compression", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed min compression", name, 3000, false);
+              });})
+          }
+        },
+        'pnglatmax': {
+          name: "PNG max compression", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","png", function () {
+              jchaos.setCUProperty(name,{"compression_factor":9},function () {
+                jqccs.instantMessage("PNG max compression", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed PNG max compression", name, 3000, false);
+              });})
+          }
+        },
+        'weblatmax': {
+          name: "WEBP max quality", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","webp", function () {
+              jchaos.setCUProperty(name,{"compression_factor":100},function () {
+                jqccs.instantMessage("WEBP max quality", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed WEBP max quality", name, 3000, false);
+              });})
+          }
+        },
+        'weblatlooseless': {
+          name: "WEBP looseless", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","webp", function () {
+              jchaos.setCUProperty(name,{"compression_factor":101},function () {
+                jqccs.instantMessage("WEBP looseless quality", name, 3000, true);
+              },function () {
+                jqccs.instantMessage("Failed WEBP looseless quality", name, 3000, false);
+              });})
+          }
+        }
+      }}
+      
+
       cuitem['operation'] = {
         "name": "Operations", icon: "fa-cog",
         "items": {
@@ -2817,6 +3026,20 @@ function getWidget(options) {
     tableClickFn: function (tmpObj, e) {
       //  rebuildCam(tmpObj);
       console.log("Table click");
+      var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+      if(!tmpObj.hasOwnProperty("data")){
+        tmpObj['data']={};
+      } else {
+        if(tmpObj.data instanceof Array)
+          jqccs.updateGenericControl(tmpObj, tmpObj.data[cindex]);
+
+      }
+
+    
+     // jqccs.updateGenericControl(tmpObj, );
+
+    //  jqccs.updateGenericTableDataset(tmpObj);
+
     /*  jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
         var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
         if(!tmpObj.hasOwnProperty("data")){
@@ -2853,12 +3076,15 @@ function getWidget(options) {
       })
     },
     updateFn: function (tmpObj) {
+      jqccs.updateGenericTableDataset(tmpObj);
+
+      return;
       var cu = [];
 
       if (tmpObj['elems'] instanceof Array) {
         cu = tmpObj.elems;
       }
-
+/*
       if ((opt.push == false) || (jchaos.socket == null) || (jchaos.socket.connected == false)) {
 
         if (tmpObj.node_multi_selected instanceof Array) {
@@ -2875,26 +3101,23 @@ function getWidget(options) {
                 // $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
                 if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
                   var bin = selected.output.FRAMEBUFFER.$binary.base64;
-                  var fmt = "png";
-                  if (selected.hasOwnProperty("input")) {
-                    if (selected.input.FMT != null) {
-                      fmt = selected.input.FMT;
-                    }
-
-                  }
+                  var fmt = selected.output.FMT;
+                  
                   //$('#triggerType').val(selected.output.TRIGGER_MODE)
                   var id = jchaos.encodeName(elem);
-                  let lat = Date.now() - selected.output.dpck_ats;
-
+                  let now=Date.now() 
+                  let latd = now- Math.trunc(selected.output.dpck_hr_ats/1000);
+                  //let latc = now- selected.output.dpck_ats;
+                  if(counter[id]%100==0){
+                    tlat[id]=0;
+                    counter[id]=0;
+                  }
+                  tlat[id]+=latd
+                  counter[id]++
+                  latd=latd/counter[id]
                   // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
                   $("#cameraImage-" + id).attr("src", "data:image/" + fmt + ";base64," + bin);
-                  if (selected.output.WIDTH !== undefined) {
-                    $("#info-" + id).html(selected.output.WIDTH + "x" + selected.output.HEIGHT + "(" + selected.output.OFFSETX + "," + selected.output.OFFSETY + ") frame:" + selected.output.dpck_seq_id + " lat:" + lat);
-                  } else {
-                    $("#info-" + id).html("frame:" + selected.output.dpck_seq_id + " lat:" + lat);
-
-                  }
-
+                  $("#lat-" + id).html(latd);
 
                 }
               }
@@ -2925,6 +3148,7 @@ function getWidget(options) {
           console.log(str);
         });
       }
+      */
 
 
 
@@ -2935,161 +3159,7 @@ function getWidget(options) {
       var html = '<div class="row" id="cameraTable"></div>';
       html+=jqccs.generateGenericTable(tmpObj,true);
       return html;
-      var old_tim = {}, counter = {}, tcum = {};
-
-      var cu = tmpObj.elems;
-      var template = tmpObj.type;
-
-      //var html = '<div class="row">';
-
-
-      // html += '<div class="container-fluid" id="cameraTable"></div>';
-      var html = '<div class="row" id="cameraTable"></div>';
-
-
-      var cu = tmpObj.elems;
-      var template = tmpObj.type;
-      html += '<div class="row" id="table-space">';
-      html += '<div class="box col-md-12">';
-      html += '<div class="box-content table-responsive col-md-12">';
-      if (cu.length == 0) {
-        html += '<p id="no-result-monitoring">No results match</p>';
-
-      } else {
-        html += '<p id="no-result-monitoring"></p>';
-
-      }
-
-      html += '<table class="table table-sm table-striped" id="main_table-' + template + '">';
-      html += '<thead class="box-header">';
-      html += '<tr>';
-      /*html += '<th><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" id="selectAll">';
-      html += '<label class="custom-control-label" for="tableDefaultCheck1">Select All</label></div></th>';
-*/
-      html += '<th>Name CU</th>';
-      html += '<th colspan="3">Status</th>';
-      html += '<th colspan="2">Mode</th>';
-      html += '<th colspan="2">Shutter</th>';
-      html += '<th colspan="2">Gain</th>';
-      html += '<th colspan="2">Brightness</th>';
-      html += '<th colspan="2">Error</th>';
-      html += '<th colspan="1">Hz</th>';
-      html += '<th colspan="1">KB/s</th>';
-      html += '<th colspan="1">Lat(ms)</th>';
-
-      html += '</tr>';
-
-
-      html += '</thead> ';
-      $(cu).each(function (i) {
-        var cuname = jchaos.encodeName(cu[i]);
-
-        old_tim[cuname] = 0;
-        counter[cuname] = 0;
-        tcum[cuname] = 0;
-
-
-        html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-        html += '<th scope="row"><div class="custom-control custom-checkbox"><input type="checkbox" onchange="updatelist(this)" class="custom-control-input" name="' + cu[i] + '" id="s-' + cuname + '">';
-        html += '<label class="custom-control-label" for="s-' + cuname + '">' + cu[i] + '</label></div><div id="' + cuname + '_INFO"></div></th>';
-
-        //   html += "<td class='name_element'>" + cu[i] + "</td>";
-        html += "<td id='" + cuname + "_health_status'></td>";
-        html += "<td id='" + cuname + "_system_busy'></td>";
-        html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-
-        html += "<td id='" + cuname + "_output_TRIGGER_MODE'></td>";
-        html += "<td id='" + cuname + "'><select class='select_camera_mode form-control form-control-sm' id='" + cuname + "_select_camera_mode' name='" + cu[i] + "'><option value='0'>Continuous</option><option value='3'>TriggeredLOHI</option><option value='4'>TriggeredHILO</option><option value='1'>Pulse</option><option value='5'>No Acquire</option><option value='2'>Software</option></select></td>";
-
-        html += "<td id='" + cuname + "_output_SHUTTER'></td>";
-
-
-        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_SHUTTER' name='" + cu[i] + "/input/SHUTTER'></input><div><span id='" + cuname + "_SHUTTER_INFO'></span></div></td>";
-
-
-        html += "<td id='" + cuname + "_output_GAIN'></td>";
-
-        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_GAIN' name='" + cu[i] + "/input/GAIN'></input><div><span id='" + cuname + "_GAIN_INFO'></span></div></td>";
-
-        html += "<td id='" + cuname + "_output_BRIGHTNESS'></td>";
-        html += "<td id='" + cuname + "'><input class='cucmdattr form-control form-control-sm' id='" + cuname + "_BRIGHTNESS' name='" + cu[i] + "/input/BRIGHTNESS'></input></td>";
-
-        html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
-        html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-        html += "<td id='" + cuname + "_health_prate'></td>";
-        html += "<td id='" + cuname + "_health_pband'></td>";
-        html += "<td id='" + cuname + "_output_dpck_ts_diff'></td></tr>";
-
-
-      });
-
-      html += '</table>';
-      html += '</div>';
-      html += '</div>';
-      html += '</div>';
-      if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
-        jchaos.options['io_onconnect'] = (s) => {
-          console.log("resubscribe ..")
-
-          jchaos.iosubscribeCU(cu, true);
-          jchaos.iosubscribeCU(selectedCams, true);
-          onConnectServer();
-        }
-        jchaos.options['io_onmessage'] = (ds) => {
-
-
-          let id = jchaos.encodeName(ds.ndk_uid);
-          if (ds.dpck_ds_type == 0) {
-            let start = Date.now();
-
-            // output
-            if (old_tim[id]) {
-              if ((counter[id] % 100) == 0) {
-                counter[id] = 1;
-                tcum[id] = 0;
-              } else {
-                counter[id]++;
-              }
-              tcum[id] += (start - old_tim[id]);
-
-            }
-
-
-
-            // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-
-            $("#cameraImage-" + id).attr("src", "data:image/png" + ";base64," + ds.FRAMEBUFFER);
-
-            // let freq = 1000.0 * counter[id] / tcum[id];
-            let freq = 1000.0 / (start - old_tim[id]);
-            let lat = start - ds.dpck_ats;
-            if (ds.WIDTH !== undefined) {
-              $("#info-" + id).html(ds.WIDTH + "x" + ds.HEIGHT + "(" + ds.OFFSETX + "," + ds.OFFSETY + ") frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
-            } else {
-              $("#info-" + id).html("frame:" + ds.dpck_seq_id + " Hz:" + freq.toFixed(2) + " lat:" + lat);
-
-            }
-            old_tim[id] = start;
-
-            delete ds.FRAMEBUFFER;
-            tmpObj['data'] = [jchaos.chaosDatasetToFullDS(ds)];
-            jqccs.updateGenericTableDataset(tmpObj);
-
-          } else {
-            tmpObj['data'] = [jchaos.chaosDatasetToFullDS(ds)];
-            //console.log("Not output:"+JSON.stringify(tmpObj['data']));
-            jqccs.checkLiveCU(tmpObj);
-            jqccs.updateGenericTableDataset(tmpObj);
-
-          }
-        }
-        jchaos.iosubscribeCU(cu, true);
-
-
-
-      }
-
-      return html;
+    
     },
     cmdFn: function (tmpObj) {
       console.log("CmdFn ");

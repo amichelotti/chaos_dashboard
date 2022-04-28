@@ -88,6 +88,7 @@
 					<label class="checkbox-inline">
 						<input type="checkbox" id="push_enable" data-toggle="toggle"> push
 					</label>
+					
 					<div class="row align-items-start">
 						<div class="col-sm-1">
 							<div id="server-connection-status" class="indicator-nok rounded-circle"></div>

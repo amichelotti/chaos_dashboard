@@ -77,7 +77,13 @@
             "type": "string",
             "format": "textarea",
             "required": true,
-            "description": "script arguments"
+            "description": "script startup arguments or load runtime parameters"
+        },
+        "script_startup_parameter": {
+            "type": "boolean",
+            "default": true,
+            "required": true,
+            "description": "Pass parameter as script argument"
         },
         "auto_load": {
             "type": "boolean",
@@ -98,27 +104,7 @@
             "description": "start automatically on registration"
         },
 
-        "cudk_prop": {
-            "type": "array",
-            "format": "table",
-            "title": "CU properties",
-            "description": "Initialization of existing attributes of the CU, does not belong to a dataset",
-            "uniqueItems": true,
-            "headerTemplate": "{{ i1 }} - {{ self.name }} (value {{ self.value }})",
 
-            "items": {
-                "type": "object",
-                "title": "Property",
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "value": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "cudk_thr_sch_delay": {
             "type": "integer",
             "default": 1000000,
@@ -145,6 +131,29 @@
             "items": {
                 "$ref": "cu-attribute.json",
                 "title": "Attributes"
+            }
+        },
+        "cudk_prop": {
+            "type": "array",
+            "format": "table",
+            "title": "EU properties",
+            "description": "Initialization of existing attributes of the EU, does not belong to a dataset",
+            "uniqueItems": true,
+
+            "items": {
+                "type": "object",
+                "title": "Property",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                },
+                "headerTemplate": "{{ i1 }} - {{ self.name }} (value {{ self.value }})"
+
+
             }
         }
     }

@@ -24,9 +24,9 @@
 					<div class="statbox purple col-sm-3">
 						<h3>Node View</h3>
 						<select id="View" size="auto">
-							<option value="byzone" selected="selected">By Zone</option>
+							<option value="byzone">By Zone</option>
 							<option value="bydevice">By Type</option>
-							<option value="byserver">By Server</option>
+							<option value="byserver" selected="selected">By Server</option>
 						</select>
 					</div>
 
@@ -253,7 +253,11 @@
 
 		function cu2editor(ob, func) {
 			var obj = Object.assign({}, ob);
-			$.get('cu_write_mask.json', function (templ) {
+			var edm='cu_write_mask.json';
+			if(obj.hasOwnProperty("ndk_type")&&(obj['ndk_type']=="nt_root")){
+				edm='eu_write_mask.json';
+			}
+			$.get(edm, function (templ) {
 				try {
 
 					jchaos.search("", "us", false, function (uslist) {
@@ -419,7 +423,9 @@
 							if (list_drivers.length > 0) {
 								templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum = list_drivers;
 							} else {
-								delete templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name']['enum'];
+								if(templ['properties'].hasOwnProperty('cudk_driver_description')){
+									delete templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name']['enum'];
+								}
 							}
 
 							/*	if((cudb[impl] !== undefined) && (cudb[impl].drivers !== undefined )&& (drv !== undefined)){
@@ -1340,12 +1346,21 @@
 						label: "Clear Alarm",
 						action: function () {
 							var typ = jchaos.nodeTypeToHuman(type);
+							if(type =="nt_control_unit" || type == "nt_root"){
+								jchaos.command(node.data.ndk_uid, { "act_name": "nodeclralrm", "act_msg": {"all":true} }, function (data) {
+									jqccs.instantMessage(node.data.ndk_uid, "Clear Alarms on " + node.data.ndk_uid, 4000, true);
 
+								}, function (bad) {
+									jqccs.instantMessage(node.data.ndk_uid, "Error Clearing Alarm " + JSON.stringify(bad), 4000, false);
+
+								});
+						} else {
 							jchaos.node(selected_node, "nodeclralrm", typ, function () {
 								jqccs.instantMessage("Clear Alarms ", "Cleared " + selected_node + "", 2000, true);
 							}, function (err) {
 								jqccs.instantMessage("Error Clearing Alarms ", "Clearing " + selected_node + " " + JSON.stringify(err), 5000, false);
 							});
+						}
 
 
 						}
@@ -2421,6 +2436,10 @@
 
 					if (decoded) {
 						json['group'] = decoded["group"];
+						var parent="";
+						if(node && node.hasOwnProperty('id')){
+							parent=node.id;
+						}
 						var newnode = {
 							"id": jchaos.encodeName(json.ndk_uid),
 							"parent": node.id,

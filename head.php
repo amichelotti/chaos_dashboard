@@ -1,9 +1,12 @@
 <?php
-/**
- * Created by komodo.
- * User: eliana
- * Date: 21/05/16
- */
+if(isset($_SERVER['HTTPS'])) {
+	if ($_SERVER['HTTPS'] == "on") {
+		$secure_connection = true;
+/*		require_once('auth.php');*/
+
+	}
+  }
+  
 function getUserIP() {
     $userIP =   '';
     if(isset($_SERVER['HTTP_CLIENT_IP'])){
@@ -97,7 +100,7 @@ function getUserIP() {
 		var ioport=":4000";
 		var dashboard_settings=jqccs.initSettings();
 		if(dashboard_settings.hasOwnProperty("defaultRestPort")){
-			if(!isNaN(dashboard_settings.defaultRestPort)){
+			if((!isNaN(dashboard_settings.defaultRestPort))&&(dashboard_settings.defaultRestPort!="")){
 				rport=":"+dashboard_settings.defaultRestPort;
 			} else {
 				rport="/"+dashboard_settings.defaultRestPort;
@@ -111,7 +114,7 @@ function getUserIP() {
 		}
 		if(dashboard_settings.hasOwnProperty("defaultIOPort")){
 
-			if(!isNaN(dashboard_settings.defaultIOPort)){
+			if((!isNaN(dashboard_settings.defaultIOPort)&&(dashboard_settings.defaultIOPort!=""))){
 				ioport=":"+dashboard_settings.defaultIOPort;
 			} else {
 				ioport="/"+dashboard_settings.defaultIOPort;

@@ -148,6 +148,9 @@
 
       })
     }*/
+    jqccs.saveAsBinary=function(binary_string, name){
+        return saveAsBinary(binary_string, name);
+    }
     function saveAsBinary(binary_string, name) {
         var len = binary_string.length;
         var bytes = new Uint8Array(len);
@@ -2349,7 +2352,7 @@
                         getFile("Upload", "upload the json", function(obj) {
                             $("#edit-temp").dialog('close');
                             console.log("uploaded:" + JSON.stringify(obj));
-                            if (obj.hasOwnProperty('ndk_parent') && (obj.ndk_parent == "") && jsonin.hasOwnProperty('ndk_parent')) {
+                            if (obj.hasOwnProperty('ndk_parent') && jsonin.hasOwnProperty('ndk_parent')) {
                                 obj['ndk_parent'] = jsonin['ndk_parent'];
                             }
                             jsonEditWindow(name, {} /*jsontemp*/ , obj, editorFn, tmpObj, ok, nok, eventFn);
@@ -2429,12 +2432,13 @@
     jqccs.element_sel=function(field, arr, add_all) {
         return element_sel(field, arr, add_all) ;
     };
+    
     function element_sel(field, arr, add_all) {
         $(field).empty();
         //$(field).append("<option value='ALL'>ALL</option>");
+        $(field).append("<option>--Select--</option>");
 
         if (add_all == 1) {
-            $(field).append("<option>--Select--</option>");
 
             $(field).append("<option value='ALL'>ALL</option>");
 
@@ -4536,12 +4540,11 @@
                     jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function(dat) {
                         lat = (new Date()).getTime() - now;
 
-                        var node_live_selected = dat;
-                        if (node_live_selected.length == 0) {
+                        if (dat.length == 0) {
                             return;
                         }
 
-                        tmpObj.data = node_live_selected;
+                        tmpObj.data = dat;
                         tmpObj.updateFn(tmpObj);
 
                     }, function(err) {
@@ -4603,11 +4606,11 @@
             tmpObj.upd_chan = -1;
         } else if ((cutype.indexOf("camera") != -1)) {
             tmpObj.type = "camera";
-            tmpObj.upd_chan = -2;
+            tmpObj.upd_chan = 255;
 
             tmpObj['maxCameraRow'] = dashboard_settings.camera.maxCameraRow;
             tmpObj['cameraPerRow'] = dashboard_settings.camera.cameraPerRow;
-            tmpObj['refresh_rate'] = dashboard_settings.camera.cameraRefresh;
+            tmpObj['refresh_rate'] = 5000;//dashboard_settings.camera.cameraRefresh;
             jchaos.setOptions({ "timeout": dashboard_settings.camera.restTimeout });
         } else if ((cutype.indexOf("bpm") != -1)) {
             tmpObj.type = "bpm";
@@ -6907,8 +6910,8 @@
 
             }
         }
-        if ((typeof GetURLParameter('CLASS') === "string") && (GetURLParameter('CLASS') != "")) {
-            definterface = GetURLParameter('CLASS');
+        if ((typeof GetURLParameter('INTERFACE') === "string") && (GetURLParameter('INTERFACE') != "")) {
+            definterface = GetURLParameter('INTERFACE');
         } else {
             if (dashboard_settings.hasOwnProperty("defaultInterface") && (dashboard_settings.defaultInterface != "")) {
                 definterface = dashboard_settings.defaultInterface;
@@ -7120,8 +7123,8 @@
 
             }
         }
-        if ((typeof GetURLParameter('CLASS') === "string") && (GetURLParameter('CLASS') != "")) {
-            definterface = GetURLParameter('CLASS');
+        if ((typeof GetURLParameter('INTERFACE') === "string") && (GetURLParameter('INTERFACE') != "")) {
+            definterface = GetURLParameter('INTERFACE');
         } else {
             if (dashboard_settings.hasOwnProperty("defaultInterface") && (dashboard_settings.defaultInterface != "")) {
                 definterface = dashboard_settings.defaultInterface;
@@ -7486,28 +7489,39 @@
         updateCUDS(tmpObj);
 
 
-        $("a.device-alarm").off();
-        $("a.device-alarm").click(function(e) {
+        $(".device-alarm").off();
+        $(".device-alarm").click(function(e) {
             //var id = $(this).attr("cuname");
             //show_dev_alarm(id);
             //var node=tmpObj.node_selected;
             var node = $(this).attr("cuname");
-            var cindex = tmpObj.node_name_to_index[node];
-
-            var alarm = tmpObj.data[cindex];
-
+            jchaos.getChannel(node,255,(a)=>{
+            let alarm=a[0];    
             if (alarm != null && alarm.hasOwnProperty("device_alarms")) {
                 decodeDeviceAlarm(alarm.device_alarms, false);
             }
-        });
-        $("a.cu-alarm").off();
-        $("a.cu-alarm").click(function(e) {
+        })});
+        $(".all-alarm").off();
+        $(".all-alarm").click(function(e) {
+            //var id = $(this).attr("cuname");
+            //show_dev_alarm(id);
+            //var node=tmpObj.node_selected;
+            var node = $(this).attr("cuname");
+            jchaos.getChannel(node,255,(a)=>{
+            let alarm=a[0];
+            var all_alarm= Object.assign(alarm.device_alarms, alarm.cu_alarms);
+
+            if (all_alarm != null && all_alarm.hasOwnProperty("ndk_uid")) {
+                decodeDeviceAlarm(alarm.device_alarms, false);
+            }
+        })});
+        $(".cu-alarm").off();
+        $(".cu-alarm").click(function(e) {
 
             //      var node=tmpObj.node_selected;
             var node = $(this).attr("cuname");
-            var cindex = tmpObj.node_name_to_index[node];
-
-            var alarm = tmpObj.data[cindex];
+            jchaos.getChannel(node,255,(a)=>{
+            let alarm=a[0];
             if (alarm != null && alarm.hasOwnProperty("cu_alarms")) {
                 var obj = {};
                 if (alarm.health.nh_lem != "") {
@@ -7519,7 +7533,7 @@
 
                 decodeDeviceAlarm(obj, false);
             }
-        });
+        });});
     }
 
 
@@ -7598,7 +7612,21 @@
 
 
                 if (status == 'Start') {
-                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">play_arrow</i>');
+                    mode=""
+                    if(el.health.cuh_alarm_lvl){
+                        if(el.health.cuh_alarm_lvl==1){
+                          mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation fa-lg all-alarm" title="Warning" style="color:orange"</i>';
+                    
+                        } else {
+                          mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation-triangle fa-lg all-alarm" title="Error" style="color:red"</i>';
+                    
+                        }
+                      } else {
+                        $("#" + name_id + "_system_cu_alarm").html('');
+                        $("#" + name_id + "_system_device_alarm").html('');
+
+                      }
+                    $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:green">play_arrow</i>'+mode);
                 } else if (status == 'Stop') {
                     $("#" + name_id + "_health_status").html('<i class="material-icons" style="color:orange">stop</i>');
                 } else if (status == 'Calibrating') {
@@ -7629,29 +7657,36 @@
                     $("#" + name_id + "_health_status").html('<i class="material-icons red">block</i>');
 
                 }
+               
             }
+           
             if (el.hasOwnProperty('system') /*&& (tmpObj.off_line[name_device_db] == 0)*/ ) { //if el system
                 var busy = $.trim(el.system.busy);
                 var dev_alarm = Number(el.system.cudk_dalrm_lvl);
                 var cu_alarm = Number(el.system.cudk_calrm_lvl);
                 if (dev_alarm == 1) {
                     $("#" + name_id + "_system_device_alarm").attr('title', "Device Warning");
-                    $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="material-icons" style="color:yellow">error</i></a>');
+                   // $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button"  ><i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i></a>');
+                    $("#" + name_id + "_system_device_alarm").html('<i cuname="' + name_device_db + '" class="device-alarm fa fa-exclamation fa-lg" title="Device Warning" style="color:orange"</i>');
+
                 } else if (dev_alarm == 2) {
                     $("#" + name_id + "_system_device_alarm").attr('title', "Device Error");
-                    $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="material-icons" style="color:red">error</i></a>');
+                //  $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" role="button" ><i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i></a>');
+                  $("#" + name_id + "_system_device_alarm").html('<i cuname="' + name_device_db + '" class="device-alarm fa fa-exclamation-triangle fa-lg" title="Device Error" style="color:red"</i>');
+
                 } else {
                     $("#" + name_id + "_system_device_alarm").html('');
                 }
 
                 if (cu_alarm == 1) {
                     $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
-
-                    $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="material-icons" style="color:yellow">error_outline</i></a>');
+                  //$("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i></a>');
+                  $("#" + name_id + "_system_cu_alarm").html('<i cuname="' + name_device_db + '" class="cu-alarm fa fa-exclamation fa-lg" title="CU Warning" style="color:orange"</i>');
                 } else if (cu_alarm == 2) {
                     $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
+                   //$("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i></a>');
+                   $("#" + name_id + "_system_cu_alarm").html('<i cuname="' + name_device_db + '" class="cu-alarm fa fa-exclamation-triangle fa-lg" title="CU Error" style="color:red"</i>');
 
-                    $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i  class="material-icons" style="color:red">error_outline</i></a>');
                 } else {
                     $("#" + name_id + "_system_cu_alarm").html('');
                 }
@@ -7729,7 +7764,12 @@
                     }
                 }
             }
-
+            if(el.hasOwnProperty("cu_alarms")){
+                $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit:"+JSON.stringify(jchaos.filterAlarmObject(el.cu_alarms,false)));
+            }
+            if(el.hasOwnProperty("device_alarms")){
+                $("#" + name_id + "_system_device_alarm").attr('title', "Device:"+JSON.stringify(jchaos.filterAlarmObject(el.devices_alarms,false)));
+            }
             /*if (el.hasOwnProperty("output")){
                 var lat=el.output.dpck_mds_ats-el.output.dpck_ats;
                 if(typeof lat === "number"){

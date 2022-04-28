@@ -1,6 +1,5 @@
-[submodule "jchaos"]
-	path = js/jchaos
-	url = https://baltig.infn.it/chaos-lnf-control/jchaos.git
-	branch = .
 
 	
+[submodule "js/jchaos"]
+	path = js/jchaos
+	url = https://baltig.infn.it/chaos-lnf-control/jchaos.git
