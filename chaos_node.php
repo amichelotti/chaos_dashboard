@@ -420,11 +420,11 @@
 									}
 								}
 							}
-							if (list_drivers.length > 0) {
-								templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum = list_drivers;
-							} else {
-								if(templ['properties'].hasOwnProperty('cudk_driver_description')){
-									delete templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name']['enum'];
+							if(templ['properties']['cudk_driver_description']){
+								if (list_drivers.length > 0){
+									templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name'].enum = list_drivers;
+								} else {
+										delete templ['properties']['cudk_driver_description']['items']['properties']['cudk_driver_description_name']['enum'];
 								}
 							}
 
