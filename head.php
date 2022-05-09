@@ -102,7 +102,10 @@ function getUserIP() {
 		if(dashboard_settings.hasOwnProperty("defaultRestPort")){
 			if((!isNaN(dashboard_settings.defaultRestPort))&&(dashboard_settings.defaultRestPort!="")){
 				rport=":"+dashboard_settings.defaultRestPort;
-			} else {
+			} else if(dashboard_settings.defaultRestPort==""){
+				rport="";
+
+			} else{
 				rport="/"+dashboard_settings.defaultRestPort;
 			}
 			console.log("RESTPORT:"+rport);
@@ -116,7 +119,9 @@ function getUserIP() {
 
 			if((!isNaN(dashboard_settings.defaultIOPort)&&(dashboard_settings.defaultIOPort!=""))){
 				ioport=":"+dashboard_settings.defaultIOPort;
-			} else {
+			} else if(dashboard_settings.defaultIOPort==""){
+				ioport="";
+			} else{
 				ioport="/"+dashboard_settings.defaultIOPort;
 			}
 			console.log("IOPORT="+ioport);
