@@ -11117,13 +11117,13 @@
 
                 createQueryDialog(function(query) {
                     //query call back
-                    progressBar("Retrive and Zip", "zipprogress", "zipping");
+                    progressBar("Retrieve and Zip", "zipprogress", "zipping");
                     jchaos.setOptions({ "timeout": 60000 });
 
                     jchaos.fetchHistoryToZip(query.tag, node_multi_selected, query.start, query.stop, query.tag, opt, function(msg) {
                         $("#zipprogress").parent().remove();
 
-                        instantMessage("fetchHistoryToZip ", "failed:" + msg, 3000, false);
+                        jqccs.instantMessage("fetchHistoryToZip ", "failed:" + JSON.stringify(msg), 8000, false);
                     });
 
 
@@ -11159,7 +11159,7 @@
                 }
             };
             critem['history-json-cu'] = {
-                name: "Retrive JSON zip History for...",
+                name: "Retrieve JSON zip History for...",
                 icon: "histo",
                 callback: function(itemKey, opt, e) {
                     var opt = {
@@ -11169,7 +11169,7 @@
                 }
             };
             critem['history-csv-cu'] = {
-                name: "Retrive CSV zip History for...",
+                name: "Retrieve CSV zip History for...",
                 icon: "histo",
                 callback: function(itemKey, opt, e) {
                     var opt = {
@@ -11204,7 +11204,7 @@
             items['channcontrol'] = { name: "Storage Control", items: citem };
 
 
-            items['retrivecontrol'] = { name: "Retrive", items: critem };
+            items['retrivecontrol'] = { name: "Retrieve", items: critem };
 
 
         }
