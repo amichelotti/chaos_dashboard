@@ -793,10 +793,14 @@
 		});
 
 	}
-	function handle_log() {
+	function handle_log(obj) {
 		//$("body").addClass("loading");
+		var search="";
+		if(obj && obj.search){
+			search=obj.search;
+		}
 		jqccs.createQueryDialog(query => {
-			jqccs.createBrowserWindow("Log browser", (pid) => {
+			jqccs.createBrowserWindow("Log browser "+search, (pid) => {
 				var jsree_data = [];
 				var node_created = {};
 				var node_all = {
@@ -806,7 +810,7 @@
 				};
 				jsree_data.push(node_all);
 				node_created['ALL'] = true;
-				jchaos.log("", "search", "all", query.start, query.end, function (data) {
+				jchaos.log(search, "search", "all", query.start, query.end, function (data) {
 					if (data.hasOwnProperty("result_list")) {
 						data.result_list.forEach(function (item) {
 							var name = item.mdsndk_nl_sid;

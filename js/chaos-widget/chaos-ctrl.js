@@ -11043,6 +11043,7 @@
         items['sep3'] = "---------";
         if (cu != null && cu.hasOwnProperty('system') && cu.system.hasOwnProperty("dsndk_storage_type")) {
             var citem = {};
+            var critem={};
             if (cu.system.dsndk_storage_type & 0x2) {
                 citem['live-cu-disable'] = {
                     name: "Disable Live",
@@ -11147,7 +11148,17 @@
                 });
 
             }
-            citem['history-json-cu'] = {
+            critem['log-cu'] = {
+                name: "Retrieve log...",
+                icon: "histo",
+                callback: function(itemKey, opt, e) {
+                    var opt = {
+                        search: node_multi_selected[0]
+                    };
+                    handle_log(opt);
+                }
+            };
+            critem['history-json-cu'] = {
                 name: "Retrive JSON zip History for...",
                 icon: "histo",
                 callback: function(itemKey, opt, e) {
@@ -11157,7 +11168,7 @@
                     queryOption(opt);
                 }
             };
-            citem['history-csv-cu'] = {
+            critem['history-csv-cu'] = {
                 name: "Retrive CSV zip History for...",
                 icon: "histo",
                 callback: function(itemKey, opt, e) {
@@ -11191,6 +11202,10 @@
             }
 
             items['channcontrol'] = { name: "Storage Control", items: citem };
+
+
+            items['retrivecontrol'] = { name: "Retrive", items: critem };
+
 
         }
         items['sep4'] = "---------";
