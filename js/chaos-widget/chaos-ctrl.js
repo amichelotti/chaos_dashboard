@@ -7954,7 +7954,7 @@
         html += '<input class="input-xlarge focused col-md-9" id="query-tag" title="Tag Name" type="text" value="">';
 
         html += '<label class="label col-md-3">Page </label>';
-        html += '<input class="input-xlarge focused col-md-9" id="query-page" title="page length" type="number" value=30>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-page" title="page length" type="number" value='+jchaos.options.history_page_len+'>';
         html += '<label class="label col-md-3">Query chunk </label>';
         html += '<input class="input-xlarge focused col-md-9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
 
@@ -8204,7 +8204,7 @@
             return;
         }
         var qtag = "";
-        var page = 30;
+        var page = jchaos.options.history_page_len;
         var chunk = 3600;
         var autoreduction = 1;
         if (options.hasOwnProperty("tag")) {
@@ -11119,7 +11119,7 @@
                     //query call back
                     progressBar("Retrieve and Zip", "zipprogress", "zipping");
                     jchaos.setOptions({ "timeout": 60000 });
-
+                    opt['page']=query.page;
                     jchaos.fetchHistoryToZip(query.tag, node_multi_selected, query.start, query.stop, query.tag, opt, function(msg) {
                         $("#zipprogress").parent().remove();
 
