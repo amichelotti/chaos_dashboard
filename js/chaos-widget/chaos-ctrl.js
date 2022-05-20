@@ -7954,7 +7954,7 @@
         html += '<input class="input-xlarge focused col-md-9" id="query-tag" title="Tag Name" type="text" value="">';
 
         html += '<label class="label col-md-3">Page </label>';
-        html += '<input class="input-xlarge focused col-md-9" id="query-page" title="page length" type="number" value=30>';
+        html += '<input class="input-xlarge focused col-md-9" id="query-page" title="page length" type="number" value='+jchaos.options.history_page_len+'>';
         html += '<label class="label col-md-3">Query chunk </label>';
         html += '<input class="input-xlarge focused col-md-9" id="query-chunk" title="if supported cut the query in chunk of the given seconds" type="number" value=3600>';
 
@@ -8204,7 +8204,7 @@
             return;
         }
         var qtag = "";
-        var page = 30;
+        var page = jchaos.options.history_page_len;
         var chunk = 3600;
         var autoreduction = 1;
         if (options.hasOwnProperty("tag")) {
@@ -11043,6 +11043,7 @@
         items['sep3'] = "---------";
         if (cu != null && cu.hasOwnProperty('system') && cu.system.hasOwnProperty("dsndk_storage_type")) {
             var citem = {};
+            var critem={};
             if (cu.system.dsndk_storage_type & 0x2) {
                 citem['live-cu-disable'] = {
                     name: "Disable Live",
@@ -11116,13 +11117,13 @@
 
                 createQueryDialog(function(query) {
                     //query call back
-                    progressBar("Retrive and Zip", "zipprogress", "zipping");
+                    progressBar("Retrieve and Zip", "zipprogress", "zipping");
                     jchaos.setOptions({ "timeout": 60000 });
-
+                    opt['page']=query.page;
                     jchaos.fetchHistoryToZip(query.tag, node_multi_selected, query.start, query.stop, query.tag, opt, function(msg) {
                         $("#zipprogress").parent().remove();
 
-                        instantMessage("fetchHistoryToZip ", "failed:" + msg, 3000, false);
+                        jqccs.instantMessage("fetchHistoryToZip ", "failed:" + JSON.stringify(msg), 8000, false);
                     });
 
 
@@ -11147,8 +11148,18 @@
                 });
 
             }
-            citem['history-json-cu'] = {
-                name: "Retrive JSON zip History for...",
+            critem['log-cu'] = {
+                name: "Retrieve log...",
+                icon: "histo",
+                callback: function(itemKey, opt, e) {
+                    var opt = {
+                        search: node_multi_selected[0]
+                    };
+                    handle_log(opt);
+                }
+            };
+            critem['history-json-cu'] = {
+                name: "Retrieve JSON zip History for...",
                 icon: "histo",
                 callback: function(itemKey, opt, e) {
                     var opt = {
@@ -11157,8 +11168,8 @@
                     queryOption(opt);
                 }
             };
-            citem['history-csv-cu'] = {
-                name: "Retrive CSV zip History for...",
+            critem['history-csv-cu'] = {
+                name: "Retrieve CSV zip History for...",
                 icon: "histo",
                 callback: function(itemKey, opt, e) {
                     var opt = {
@@ -11191,6 +11202,10 @@
             }
 
             items['channcontrol'] = { name: "Storage Control", items: citem };
+
+
+            items['retrivecontrol'] = { name: "Retrieve", items: critem };
+
 
         }
         items['sep4'] = "---------";

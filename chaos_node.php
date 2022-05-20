@@ -272,6 +272,15 @@
 							if (par != "") {
 								list_us.push(par);
 							}
+							if(obj.ndk_type=="nt_root"){
+								let alist=jchaos.search("", "agent", false);
+								alist.forEach((us) => {
+									if (us != par) {
+										list_us.push(us);
+									}
+								});
+
+							}
 							if ((obj.ndk_type !== undefined) && (obj.ndk_type == "nt_control_unit")) {
 
 								uslist.forEach((us) => {
@@ -281,6 +290,7 @@
 								});
 							}
 							if (list_us.length > 0) {
+								list_us.push(""); // allow to set parent null
 								templ['properties']['ndk_parent'].enum = list_us;
 							} else {
 
