@@ -33,7 +33,8 @@
 										aria-hidden="true"></i> Synoptic</a>
 								<a class="dropdown-item" href="./app/magnet_check.php"><i class="fa fa-magnet"></i>
 									Hunter Dog</a>
-
+									<a class="dropdown-item" href="./app/experiment_control.php"><i class="fa fa-flask"></i>
+									Experiment Control</a>
 							</div>
 						</li>
 						<li class="nav-item dropdown">

@@ -2429,11 +2429,11 @@
         $("#mdl-jsonedit").modal("show");
         //json_editor.enable();
     }
-    jqccs.element_sel=function(field, arr, add_all) {
-        return element_sel(field, arr, add_all) ;
+    jqccs.element_sel=function(field, arr, add_all,def) {
+        return element_sel(field, arr, add_all,def) ;
     };
     
-    function element_sel(field, arr, add_all) {
+    function element_sel(field, arr, add_all,def) {
         $(field).empty();
         //$(field).append("<option value='ALL'>ALL</option>");
         $(field).append("<option>--Select--</option>");
@@ -2444,7 +2444,12 @@
 
         }
         $(arr).each(function(i) {
-            $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
+            if(def && (arr[i]==def)){
+             $(field).append("<option selected value='" + arr[i] + "'>" + arr[i] + "</option>");
+
+            } else {
+             $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
+            }
 
         });
 
