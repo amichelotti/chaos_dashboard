@@ -2444,11 +2444,21 @@
 
         }
         $(arr).each(function(i) {
-            if(def && (arr[i]==def)){
-             $(field).append("<option selected value='" + arr[i] + "'>" + arr[i] + "</option>");
+            var name=arr[i];
+            var desc="";
+            if(typeof arr[i] === "object"){
+                if(arr[i].hasOwnProperty("name")){
+                    name = arr[i].name;
+                }
+                if(arr[i].hasOwnProperty("desc")){
+                    desc = arr[i].desc;
+                }
+            }
+            if(def && (name==def)){
+             $(field).append("<option selected title='"+desc+"' value='" + name + "'>" + name + "</option>");
 
             } else {
-             $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
+             $(field).append("<option title='"+desc+"' value='" + name + "'>" + name + "</option>");
             }
 
         });
