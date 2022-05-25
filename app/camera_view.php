@@ -112,7 +112,8 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/camera.js"></script>';
 
 		$("#app-name").html("CAMERA VIEW");
 		$("#app-setting").on("click", function () {
-                var templ = {
+				jqccs.handle_config('camera_view-settings',"../dashboard-settings.json");
+               /* var templ = {
                     $ref: "../dashboard-settings.json",
                     format: "tabs"
                 }
@@ -135,7 +136,7 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/camera.js"></script>';
 					location.reload();
 
                 }, null);
-
+				*/
             });
 		if(settings.hasOwnProperty("push")){
 			$("#push_enable").prop('checked',settings.push);

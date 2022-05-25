@@ -48,6 +48,8 @@ $curr_page = "Experiment Control";
                         <div id="desc_view" class="col-md-3"></div>
                         <div class="col-md-3">
                             <div class="row">
+                                 <div class="wait_modal"></div>
+
                                 <label for="session"><strong>Session:</strong></label>
                                 <input name="session" id="session_name" placeholder="Session name (default to Date)"></input>
                             </div>
@@ -62,8 +64,13 @@ $curr_page = "Experiment Control";
                             <div class="row">
                                 <label for="script"><strong>Choose Script:</strong></label>
                                 <select name="script" id="script_select"></select>
+
                             </div>
                             <div class="row script_control invisible">
+                            
+                                <div class="col">
+                                    <button id="edit-params" type="button" class="btn btn-success">Change Param..</button>
+                                </div>
                                 <div class="col">
                                     <button id="run-script" type="button" class="btn btn-success">RUN </button>
                                 </div>
@@ -101,14 +108,30 @@ $curr_page = "Experiment Control";
 
             var progressive_id = 0;
             var tagname = "";
+            if(dashboard_settings && dashboard_settings.hasOwnProperty('lastProgressive')){
+                progressive_id=dashboard_settings['lastProgressive'];
+                $("#progressive_id").val(progressive_id);
+            }
+            jqccs.busyWindow(false);
+
             function onfailure(code){
+                jqccs.busyWindow(false);
+
                 alert("Script "+ current_script.script_name+" failed error:"+code);
 
             }
             function onsuccess(code){
+                jqccs.busyWindow(false);
+
                 if(typeof progressive_id === "number"){
                     progressive_id++;
                     $("#progressive_id").val(progressive_id);
+                    if(dashboard_settings.hasOwnProperty('lastProgressive')){
+                        dashboard_settings['lastProgressive']=progressive_id;
+                        localStorage['experiment_control_settings'] = JSON.stringify(dashboard_settings);
+
+                    }
+
                 }
                 
                 jqccs.instantMessage("OK ", current_script.script_name, 5000, true);
@@ -212,8 +235,15 @@ $curr_page = "Experiment Control";
                 updateTag();
 
             });
+            $("#edit-params").on("click",function(){
+                jqccs.jsonEditWindow("Parameters", {}, current_args, (json)=>{
+                    current_args=json;
+                    return 0;
+                }, null);
+            });
             $("#run-script").on("click",function(){
                 updateTag();
+                jqccs.busyWindow(true);
 
                 if(current_script.hasOwnProperty("script_name")){
                     jchaos.loadScript(current_script.script_name, current_script.seq, function(data) {

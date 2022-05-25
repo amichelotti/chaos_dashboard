@@ -11687,7 +11687,32 @@
         return dashboard_settings;
 
     }
+    jqccs.handle_config=function (loc_storage_key,conf){
+        var templ = {
+            $ref: conf,
+            format: "tabs"
+        }
+        var def={};
+        if(localStorage.hasOwnProperty(loc_storage_key)){
+            def=JSON.parse(localStorage[loc_storage_key]);
+        }
+        jqccs.jsonEditWindow("Config", templ, def, function (d) {
+            localStorage[loc_storage_key] = JSON.stringify(d);
+            var e = jQuery.Event('keypress');
+            e.which = 13;
+            e.keyCode = 13;
+            if(d.hasOwnProperty("defaultRestTimeout")){
+                jchaos.setOptions({ "timeout": d.defaultRestTimeout });
+            } else {
+                jchaos.setOptions({ "timeout": 10000 });
 
+            }
+            //jqccs.initSettings();
+            location.reload();
+
+        }, null);
+
+    }
     jqccs.initSettings = function(setname, defaultconf) {
         return initSettings(setname, defaultconf);
     }

@@ -16,8 +16,9 @@
 							
 					</li>
 					<li class="nav-item dropdown">
-							<div class="nav-link cappmenu"
-								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Config</div>
+						<a class="nav-link" href='javascript:jqccs.handle_config("experiment_control_settings","./experiment_control_settings.json")'><i class="fa fa-cogs" aria-hidden="true"></i>Config <span class="sr-only">(current)</span></a>
+
+							
 					</li>
 
 					</ul>
@@ -1135,4 +1136,5 @@
 
   return false;
 });
+ 
 </script>
