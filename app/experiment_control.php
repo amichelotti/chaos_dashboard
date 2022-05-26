@@ -78,11 +78,15 @@ $curr_page = "Experiment Control";
                                     <button id="cancel-script" type="button" class="btn btn-danger">STOP</button>
                                 </div>
                             </div>
+                            <div class="row script_control invisible">
+                            <div class="form-group">
+                                <label for="tagnote"><strong>Tag Notes</strong></label>
+                                <textarea class="form-control" id="tagnote" rows="3"></textarea>
+                                </div>
+                            </div>
                         </div>
                         <div id="script_area" class="col-md-6">
                             <div id="script_view" class="row">
-
-
                             </div>
 
                         </div>
@@ -158,6 +162,10 @@ $curr_page = "Experiment Control";
                     $("#control_view").addClass("invisible");
 
                     experiment_sel = {}
+                    if(Object.keys(exp).length==0){
+                        alert("not experiments found, please contact administrator");
+                        return;
+                    }
                     for (var k in exp) {
                         if (exp[k].hasOwnProperty("zone") && exp[k].hasOwnProperty("group")) {
                             if ((zon != null)) {
@@ -193,6 +201,8 @@ $curr_page = "Experiment Control";
 
                         jqccs.element_sel('#experiments', experiments, 0);
                     }
+                },(bad)=>{
+                    alert("cannot retrieve any experiment "+bad);
                 });
 
             }
@@ -249,6 +259,7 @@ $curr_page = "Experiment Control";
                     jchaos.loadScript(current_script.script_name, current_script.seq, function(data) {
                                 if (typeof data === "object" && data.hasOwnProperty('eudk_script_content')) {
                                     var obj = atob(data['eudk_script_content']);
+                                    current_args['note']=$("#tagnote").val();
                                     obj+="\nmain("+JSON.stringify(current_args)+",\""+tagname+"\");";
                                     $('#script_view').terminal().exec(obj,false);
 
