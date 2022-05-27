@@ -45,7 +45,16 @@ $curr_page = "Experiment Control";
                 <div id="control_view" class="box-content invisible">
 
                     <div class="box row">
-                        <div id="desc_view" class="col-md-3"></div>
+                        <div class="col-md-3">
+                            <div class="row box">
+                                <label for="desc_view"><strong>Description:</strong></label>
+                                <div id="desc_view" class=""></div>
+                            </div>
+                            <div class="row box">
+                                <label for="desc_view"><strong>Virtual folder:</strong></label>
+                                <div id="hier_view" class=""></div>
+                            </div>
+                        </div>
                         <div class="col-md-3">
                             <div class="row">
                                  <div class="wait_modal"></div>
@@ -112,20 +121,149 @@ $curr_page = "Experiment Control";
 
             var progressive_id = 0;
             var tagname = "";
+            var parent_tag="";
             if(dashboard_settings && dashboard_settings.hasOwnProperty('lastProgressive')){
                 progressive_id=dashboard_settings['lastProgressive'];
                 $("#progressive_id").val(progressive_id);
             }
             jqccs.busyWindow(false);
 
+            function refresh_hier(search,start,end){
+                var jsree_data = [];
+                var node_created = {};
+
+                jchaos.log(search, "search", "tag", start, end, function (data) {
+					if (data.hasOwnProperty("result_list")) {
+						data.result_list.forEach(function (item) {
+							var name = item.mdsndk_nl_sid;
+							var nodef = jchaos.encodeName(name) + "_" + item.mdsndk_nl_lts;
+
+							var dat = jchaos.getDateTime(item.mdsndk_nl_lts);
+
+							item.mdsndk_nl_lts = dat;
+							var msg = item.mdsndk_nl_e_em;
+							var type = item.mdsndk_nl_ld;
+							if ((item.mdsndk_nl_l_ld !== undefined) && (item.mdsndk_nl_l_ld == "Error")) {
+								type = "error";
+							}
+							var origin = item.mdsndk_nl_e_ed;
+							var node_group = {
+								"id": jchaos.encodeName(type),
+								"parent": "#",
+								"text": type,
+							};
+							var icon = "";
+							if (type == "error") {
+								icon = "/img/log-error.png";
+							} else {
+								icon = "/img/log-file.png";
+
+							}
+							if (!node_created.hasOwnProperty(type)) {
+								jsree_data.push(node_group);
+								node_created[type] = node_group['parent'];
+							}
+							var dirs = name.split("/");
+							var group = "";
+							var compname = "";
+							var parent = "";
+
+							dirs.forEach((ele, index) => {
+								var node_group;
+								compname = ele;
+								if (index == 0) {
+									group = type + "/" + ele;
+									parent = type;
+								} else {
+									parent = group;
+									group = group + "/" + ele;
+
+								}
+
+								var egroup = jchaos.encodeName(group);
+								node_group = {
+									"id": egroup,
+									"parent": jchaos.encodeName(parent),
+									"text": ele
+								};
+                                node_group['data'] = { "parent": group }
+
+								if (!node_created.hasOwnProperty(egroup)) {
+									node_created[egroup] = node_group['parent'];
+									jsree_data.push(node_group);
+								}
+
+							});
+							var node = {
+								"id": nodef,
+								"parent": jchaos.encodeName(group),
+								"text": dat,
+								"icon": icon,
+								"data": item
+							};
+							node['data']['parent'] = group;
+							if (!node_created.hasOwnProperty(nodef)) {
+								node_created[node['id']] = node['parent'];
+								jsree_data.push(node);
+								// push also in all
+								var nn = JSON.parse(JSON.stringify(node));
+								nn['id'] = "ALL_" + node['id'];
+								nn['parent'] = "ALL";
+								nn['text'] = compname + "_" + node['text'];
+								nn[node['id']] = node['parent'];
+
+								jsree_data.push(nn);
+							}
+						});
+					}
+
+
+					$("#hier_view").jstree("destroy");
+
+					$("#hier_view").jstree({
+						"plugins": ["dnd", "contextmenu"],
+						"contextmenu": {
+							'items': (node) => {
+								return addMenuLogItems( node);
+
+							}, "select_node": true, "show_at_node": false
+						},
+
+						'core': {
+							'data': jsree_data, "multiple": true,
+							"animation": 0,
+							"check_callback": true,
+
+
+						}
+					});
+					$("#hier_view").on('select_node.jstree', function (e, data) {
+						var i, j, r = [];
+						var node_data = data.instance.get_node(data.selected[0]).data;
+						/*
+                        $('#desc-' + pid).html(jqccs.json2html(node_data));
+						jqccs.jsonSetup($('#desc-' + pid), function (e) {
+						});
+						$('#desc-' + pid).find('a.json-toggle').click();
+                        */
+
+					});
+					$("body").removeClass("loading");
+				});
+            }
             function onfailure(code){
                 jqccs.busyWindow(false);
-
+                if(parent_tag!=""){
+                    refresh_hier(parent_tag,0,new Date().getTime());
+                }
                 alert("Script "+ current_script.script_name+" failed error:"+code);
 
             }
             function onsuccess(code){
                 jqccs.busyWindow(false);
+                if(parent_tag!=""){
+                    refresh_hier(parent_tag,0,new Date().getTime());
+                }
 
                 if(typeof progressive_id === "number"){
                     progressive_id++;
@@ -259,6 +397,7 @@ $curr_page = "Experiment Control";
                     jchaos.loadScript(current_script.script_name, current_script.seq, function(data) {
                                 if (typeof data === "object" && data.hasOwnProperty('eudk_script_content')) {
                                     var obj = atob(data['eudk_script_content']);
+                                    current_args['script']=current_script.script_name;
                                     current_args['note']=$("#tagnote").val();
                                     obj+="\nmain("+JSON.stringify(current_args)+",\""+tagname+"\");";
                                     $('#script_view').terminal().exec(obj,false);
@@ -323,6 +462,8 @@ $curr_page = "Experiment Control";
                     $('#desc_view').find('a.json-toggle').click();
                     jqccs.element_sel('#script_select', current_experiment.scripts, 0);
                     updateTag()
+                    parent_tag=current_experiment.zone+"/"+current_experiment.group+"/"+current_experiment.experiment;
+                    refresh_hier(parent_tag,0,new Date().getTime());
                     var methods = Object.getOwnPropertyNames(jchaos).filter(function(property) {
                         return typeof jchaos[property] == 'function';
                     });
@@ -394,6 +535,51 @@ $curr_page = "Experiment Control";
 
                 }
             });
+
+    function addMenuLogItems(node) {
+		var items = {};
+		var tree = $('#hier_view').jstree(true);
+		var ID = $(node).attr('id');
+	
+
+		if (node.hasOwnProperty("data")) {
+            items['info'] = {
+                "separator_before": false,
+                "separator_after": false,
+                label: "Info",
+				action: function () {
+						var info=node.data;
+                        if (info.hasOwnProperty("info")){
+                            try {
+                                var jinfo=JSON.parse(info.info);
+                                info['info']=jinfo;
+                            }catch(e){
+
+                            }
+                        }
+                        jqccs.showJson(info.mdsndk_nl_lsubj,info);	
+				    }
+				};
+            items['download']={
+                "separator_before": false,
+                "separator_after": false,
+                label: "Download",
+                action: function(){
+                    jchaos.setOptions({ "timeout": 60000 });
+                    opt['page']=dashboard_settings.page;
+                    jchaos.fetchHistoryToZip(query.tag, node_multi_selected, query.start, query.stop, query.tag, opt, function(msg) {
+                        $("#zipprogress").parent().remove();
+
+                        jqccs.instantMessage("fetchHistoryToZip ", "failed:" + JSON.stringify(msg), 8000, false);
+                    });
+
+                }
+            }
+			
+			}
+		
+		return items;
+	}
         </script>
 
 
