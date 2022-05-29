@@ -1,0 +1,85 @@
+{
+    "title": "Settings",
+    "type": "object",
+    "id": "experimenta-control-settings",
+    "format": "tab",
+    "properties": {
+
+        "generalRefresh": {
+            "type": "integer",
+            "default": 1000,
+            "description": "General Refresh (ms)"
+        },
+        "fontSize": {
+            "type": "string",
+            "default": "12px",
+            "description": "Font Size"
+        },
+        "push": {
+            "type": "boolean",
+            "default": true,
+            "required": true,
+            "description": "If server is active use push (less latency and higher refresh rate)"
+        },
+        "lastProgressive": {
+            "type": "integer",
+            "default": 0,
+            "description": "Last progressive"
+        },
+        "maxNodesPerPage": {
+            "type": "integer",
+            "default": 10,
+            "description": "Max number of Nodes per page"
+        },
+        "defaultZone": {
+            "type": "string",
+            "default": "",
+            "description": "Default Zone to open"
+        },
+        "defaultGroup": {
+            "type": "string",
+            "default": "",
+            "description": "Default Group to open"
+        },
+        "defaultInterface": {
+            "type": "string",
+            "default": "",
+            "description": "Default Interface to open"
+        },
+        "generalControlRefresh": {
+            "type": "integer",
+            "default": 500,
+            "description": "Default General Refresh when in control (ms)"
+        },
+        "processRefresh": {
+            "type": "integer",
+            "default": 5000,
+            "description": "Refresh of process page (ms)"
+        },
+        "defaultPage": {
+            "type": "integer",
+            "default": 1000,
+            "description": "Default History Page"
+        },
+        "checkLive": {
+            "type": "integer",
+            "default": 10000,
+            "description": "Live Check Refresh (ms)"
+        },
+        "defaultRestTimeout": {
+            "type": "integer",
+            "default": 30000,
+            "description": "Default Timeout Rest operation (ms)"
+        },
+        "defaultRestPort": {
+            "type": "string",
+            "default": "8081",
+            "description": "Default Rest Port or rest path"
+        },
+        "defaultIOPort": {
+            "type": "string",
+            "default": "4000",
+            "description": "Default SocketIO port or io path"
+        }
+    }
+}

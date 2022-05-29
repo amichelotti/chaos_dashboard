@@ -2429,11 +2429,11 @@
         $("#mdl-jsonedit").modal("show");
         //json_editor.enable();
     }
-    jqccs.element_sel=function(field, arr, add_all) {
-        return element_sel(field, arr, add_all) ;
+    jqccs.element_sel=function(field, arr, add_all,def) {
+        return element_sel(field, arr, add_all,def) ;
     };
     
-    function element_sel(field, arr, add_all) {
+    function element_sel(field, arr, add_all,def) {
         $(field).empty();
         //$(field).append("<option value='ALL'>ALL</option>");
         $(field).append("<option>--Select--</option>");
@@ -2444,7 +2444,22 @@
 
         }
         $(arr).each(function(i) {
-            $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
+            var name=arr[i];
+            var desc="";
+            if(typeof arr[i] === "object"){
+                if(arr[i].hasOwnProperty("name")){
+                    name = arr[i].name;
+                }
+                if(arr[i].hasOwnProperty("desc")){
+                    desc = arr[i].desc;
+                }
+            }
+            if(def && (name==def)){
+             $(field).append("<option selected title='"+desc+"' value='" + name + "'>" + name + "</option>");
+
+            } else {
+             $(field).append("<option title='"+desc+"' value='" + name + "'>" + name + "</option>");
+            }
 
         });
 
@@ -11672,7 +11687,32 @@
         return dashboard_settings;
 
     }
+    jqccs.handle_config=function (loc_storage_key,conf){
+        var templ = {
+            $ref: conf,
+            format: "tabs"
+        }
+        var def={};
+        if(localStorage.hasOwnProperty(loc_storage_key)){
+            def=JSON.parse(localStorage[loc_storage_key]);
+        }
+        jqccs.jsonEditWindow("Config", templ, def, function (d) {
+            localStorage[loc_storage_key] = JSON.stringify(d);
+            var e = jQuery.Event('keypress');
+            e.which = 13;
+            e.keyCode = 13;
+            if(d.hasOwnProperty("defaultRestTimeout")){
+                jchaos.setOptions({ "timeout": d.defaultRestTimeout });
+            } else {
+                jchaos.setOptions({ "timeout": 10000 });
 
+            }
+            //jqccs.initSettings();
+            location.reload();
+
+        }, null);
+
+    }
     jqccs.initSettings = function(setname, defaultconf) {
         return initSettings(setname, defaultconf);
     }

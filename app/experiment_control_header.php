@@ -5,155 +5,97 @@
 
 
 				<div class="collapse navbar-collapse" id="navbarsExampleDefault">
-					<ul class="navbar-nav mr-auto">
-						<li class="nav-item dropdown">
-							<div class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
-								aria-haspopup="true" aria-expanded="false">Chaos</div>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="./index.php"><i class="fa fa-gamepad"
-										aria-hidden="true"></i> CU/EU</a>
-								<a class="dropdown-item" href="./chaos_jshell.php"><i class="fa fa-terminal"
-										aria-hidden="true"></i> Control Shell</a>
-								<a class="dropdown-item" href="./process.php"><i class="fa fa-cogs"
-										aria-hidden="true"></i> Process</a>
-								<a class="dropdown-item" href="./chaos_node.php"><i class="fa fa-wrench"
-										aria-hidden="true"></i> Node Management</a>
-								<a class="dropdown-item" href="./configuration.php"><i class="fa fa-file-text"
-										aria-hidden="true"></i> Chaos Configuration</a>
+					<ul class="navbar-nav mr-auto" id="appmenu">
+					<li class="nav-item active">
+        				<a class="nav-link" href="../index.php"><i class="fa fa-home" aria-hidden="true"></i> Home <span class="sr-only">(current)</span></a>
+      				</li>
+					 
+					<li class="nav-item dropdown">
+						<a class="nav-link" href="javascript:handle_script()"><i class="fa fa-cogs" aria-hidden="true"></i>Scripts <span class="sr-only">(current)</span></a>
 
-							</div>
-						</li>
-						<li class="nav-item dropdown">
-							<div class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
-								aria-haspopup="true" aria-expanded="false">App</div>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="./app/camera_view.php"><i class="fa fa-video-camera"
-										aria-hidden="true"></i> Camera</a>
-								<a class="dropdown-item" href="./app/synoptic_view.php"><i class="fa fa-map-marker"
-										aria-hidden="true"></i> Synoptic</a>
-								<a class="dropdown-item" href="./app/magnet_check.php"><i class="fa fa-magnet"></i>
-									Hunter Dog</a>
-									<a class="dropdown-item" href="./app/experiment_control.php"><i class="fa fa-flask"></i>
-									Experiment Control</a>
-							</div>
-						</li>
-						<li class="nav-item dropdown">
-							<div class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
-								aria-haspopup="true" aria-expanded="false">Tools</div>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="javascript:handle_script()" id="hscript-management"><i
-										class="fa fa-cogs" aria-hidden="true"></i> Scripts</a>
-								<a class="dropdown-item" href="javascript:handle_graph()" id="hgraph"><i
-										class="fa fa-area-chart" aria-hidden="true"></i> Graph</a>
-								<a class="dropdown-item" href="javascript:handle_snap()" id="hsnap-management"><i
-										class="fa fa-tags" aria-hidden="true"></i> Snapshot</a>
-								<a class="dropdown-item" href="javascript:handle_log()" id="hlog"><i class="fa fa-list"
-										aria-hidden="true"></i> Log</a>
-								<a class="dropdown-item" href="javascript:handle_chat()" id="hchat"><i
-										class="fa fa-commenting-o" aria-hidden="true"></i> Message chat</a>
+							
+					</li>
+					<li class="nav-item dropdown">
+						<a class="nav-link" href='javascript:jqccs.handle_config("experiment_control_settings","./experiment_control_settings.json")'><i class="fa fa-cogs" aria-hidden="true"></i>Config <span class="sr-only">(current)</span></a>
 
-							</div>
-						</li>
-						<li class="nav-item dropdown">
-							<div class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
-								aria-haspopup="true" aria-expanded="false">Settings</div>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
-								<a class="dropdown-item" href="login.html"><i class="fa fa-sign-in"
-										aria-hidden="true"></i> Login</a>
-								<a class="dropdown-item" id="config-settings"><i class="fa fa-pencil-square-o"
-										aria-hidden="true"></i>Config..</a>
-								<!-- <a class="dropdown-item" id="help-clients"><i class="halflings-icon off"></i>
-									Client
-									List..</a> -->
-								<div class="dropdown-item" id="help-about"><i class="fa fa-info" aria-hidden="true"></i>
-									About..</div>
+							
+					</li>
 
-							</div>
-						</li>
 					</ul>
-
+				
 				</div>
-
+				
 				<div class="navbar-brand col-sm-8">
 					<div class="row">
-						<h2 class="display2 col-sm align-items-left">!CHAOS
-							Dashboard</h2>
+						<h2 class="display2 col-sm align-items-left" id="app-name"></h2>
 						<div class="col-sm">
-							<?php echo file_get_contents("version.html");?>
+							<?php echo file_get_contents("../version.html");?>
 						</div>
-
+						
 					</div>
 				</div>
 				<div class="col-sm-1 align-items-right">
 
-					<label class="checkbox-inline">
-						<input type="checkbox" id="push_enable" data-toggle="toggle"> push
-					</label>
-					
-					<div class="row align-items-start">
-						<div class="col-sm-1">
-							<div id="server-connection-status" class="indicator-nok rounded-circle"></div>
-						</div>
-						<div id="client-connection-id" class="col-sm-1">
-						</div>
-					</div>
+						<label class="checkbox-inline">
+  <input type="checkbox" id="push_enable" data-toggle="toggle"> push
+</label>
+<div class="row align-items-start">
+  <div class="col-sm-1"> 
+    <div id="server-connection-status" class="indicator-nok rounded-circle"></div>
+  </div>
+  <div id="client-connection-id" class="col-sm-1">
+  </div>
+</div>
 
 			</nav>
 
 		</div>
 	</div>
 </div>
-<div class="btn-group btn-breadcrumb">
-	<a href="./index.php" class="btn btn-default"><i class="glyphicon glyphicon-home"></i></a>
-	<a href="./index.php" id="CUEU" class="btn btn-default">CU/EU</a>
-	<a href="./chaos_jshell.php" id="SHELL" class="btn btn-default">Control Shell</a>
-	<a href="./process.php" id="PROCESS" class="btn btn-default">Process</a>
-	<a href="./chaos_node.php" id="NODE" class="btn btn-default">Node Management</a>
-	<a href="./configuration.php" id="CONFIG" class="btn btn-default">Configuration</a>
 
 </div>
-</div>
 <script>
+	
 	if(dashboard_settings.hasOwnProperty('push')&&dashboard_settings.push){
 		$("#push_enable").prop('checked',true);
 	}
 	$("#push_enable").prop('disabled', true);
-	
-	function onConnectServer(s) {
+
+	function onConnectServer(){
 		$("#server-connection-status").removeClass("indicator-nok");
 		$("#server-connection-status").addClass("indicator-ok");
-		$("#push_enable").prop('disabled', false);
+		$("#push_enable").prop('disabled',false);
+
 	}
-	function onDisconnectServer() {
+	function onDisconnectServer(){
 		$("#server-connection-status").removeClass("indicator-ok");
 		$("#server-connection-status").addClass("indicator-nok");
-		$("#push_enable").prop('disabled', true);
+		$("#push_enable").prop('disabled',true);
 		$("#push_enable").prop('checked',false);
 
 	}
-	$("#client-connection-id").html("<font size=\"1\">" + localStorage['chaos_browser_uuid_cookie'].substr(localStorage['chaos_browser_uuid_cookie'].length - 5) + "</font>");
+	$("#client-connection-id").html("<font size=\"1\">"+localStorage['chaos_browser_uuid_cookie'].substr(localStorage['chaos_browser_uuid_cookie'].length - 5) +"</font>");
 	jchaos.options['io_onconnect'] = (s) => {
-		onConnectServer(s);
-	}
-	jchaos.options['io_disconnect'] = (sock) => {
+		onConnectServer();
+    }
+	jchaos.options['io_disconnect']=(sock)=> {
 		onDisconnectServer();
 	};
-	jchaos.iosubscribeCU("all", false);
-	jchaos.options['on_restTimeout'] = (e) => {
+	jchaos.options['on_restTimeout']=(e)=> {
 		var now = (new Date()).getTime();
 
-		if (jchaos.hasOwnProperty('last_timeout')) {
-			if ((now - jchaos.last_timeout) > 2 * jchaos.options.timeout) {
-				alert("Timeout on server:" + JSON.stringify(e));
+		if(jchaos.hasOwnProperty('last_timeout')){
+			if((now-jchaos.last_timeout)>2*jchaos.options.timeout){
+				alert("Timeout on server:"+JSON.stringify(e));
 			}
 
 		}
-		jchaos['last_timeout'] = now;
+		jchaos['last_timeout']=now;
 		jqccs.busyWindow(false);
 
 	};
-	$(<?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
-	function triggerRefreshEdit() {
+	$( <?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
+	function triggerRefreshEdit(){
 		$("input[type=radio][name=search-alive]:checked").val(false);
 		$("input[type=radio][name=search-alive]").trigger("change");
 
@@ -193,16 +135,12 @@
 						language = "LUA";
 					}
 					var group = "";
-					if (node.hasOwnProperty("data") && node.data.hasOwnProperty("group")) {
-						group = node.data.group;
-					} else {
-						var zone_selected = $("#zones option:selected").val();
+					var zone_selected = $("#zones option:selected").val();
 
-						if ((typeof zone_selected === "string") && (!zone_selected.includes("--"))) {
-							group = zone_selected;
-						} else {
-							group = "ALL";
-						}
+					if (typeof zone_selected === "string") {
+						group = zone_selected;
+					} else {
+						group = "ALL";
 					}
 					if (node['group'] !== undefined) {
 						group = node['group'];
@@ -217,17 +155,17 @@
 					scriptTmp['script_group'] = group;
 
 					var templ = {
-						$ref: "algo.json",
+						$ref: "../algo.json",
 						format: "tabs"
 					}
-					jqccs.jsonEditWindow("Loaded", templ, scriptTmp, (obj) => {
-						jqccs.algoSave(obj, () => { refresh_script(pid); });
-
-
-					});
-
-				});
-			}
+					jqccs.jsonEditWindow("Loaded", templ, scriptTmp, (obj)=>{
+						jqccs.algoSave(obj,()=>{refresh_script(pid);});
+						
+				
+			});
+					
+			});
+		}
 		};
 
 		if (node.hasOwnProperty("data")) {
@@ -311,8 +249,8 @@
 										alert(" Cannot create node err:" + JSON.stringify(bad));
 									});
 
-								}, (bad) => {
-									alert("Cannot retrieve best server err:" + JSON.stringify(bad));
+								},(bad)=>{
+									alert("Cannot retrieve best server err:"+JSON.stringify(bad));
 								});
 
 
@@ -335,7 +273,7 @@
 								return;
 							}
 							var templ = {
-								$ref: "algo.json",
+								$ref: "../algo.json",
 								format: "tabs"
 							}
 							if (!data.hasOwnProperty("script_group")) {
@@ -343,15 +281,15 @@
 							}
 							data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
 							delete data['_id'];
-							jqccs.jsonEditWindow("Loaded", templ, data, (obj) => {
-								jqccs.algoSave(obj, () => { refresh_script(pid); });
+							jqccs.jsonEditWindow("Loaded", templ, data, (obj)=>{
+						jqccs.algoSave(obj,()=>{refresh_script(pid);});
+						
+				
+			});
 
-
-							});
-
-
+						
 						});
-
+						
 
 					}
 				};
@@ -396,128 +334,128 @@
 		return items;
 	}
 
-	function refresh_script(pid) {
-		var jsree_data = [];
-		var scripts = {};
-		var node_created = {};
-		jchaos.search("", "script", false, function (l) {
+	function refresh_script(pid){
+			var jsree_data = [];
+			var scripts = {};
+			var node_created = {};
+			jchaos.search("", "script", false, function (l) {
+				
 
-
-			var scripts_flat = {}
-			if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
-				var list_algo = l['found_script_list'];
-				list_algo.forEach(function (p) {
-					var group_name = "ALL";
-					if ((p["script_group"] !== undefined) && (p["script_group"] != "")) {
-						group_name = p["script_group"];
-					}
-					var encoden = jchaos.encodeName(p.script_name) + "_" + p.seq;
-					delete p._id;
-					if (p.seq > 0) {
-						p['date'] = jchaos.getDateTime(p.seq);
-					}
-					var dirs = group_name.split("/");
-					var group = "";
-					dirs.forEach((ele, index) => {
-
-						if (index == 0) {
-							group = ele;
-							var node_group = {
-								"id": jchaos.encodeName(group),
-								"parent": "#",
-								"text": ele,
-							};
-						} else {
-							var parent = group;
-							group = group + "/" + ele;
-							var node_group = {
-								"id": jchaos.encodeName(group),
-								"parent": jchaos.encodeName(parent),
-								"text": ele
-							};
+				var scripts_flat = {}
+				if (l.hasOwnProperty('found_script_list') && (l['found_script_list'] instanceof Array)) {
+					var list_algo = l['found_script_list'];
+					list_algo.forEach(function (p) {
+						var group_name = "ALL";
+						if ((p["script_group"] !== undefined) && (p["script_group"] != "")) {
+							group_name = p["script_group"];
 						}
-						node_group['data'] = { "group": group }
+						var encoden = jchaos.encodeName(p.script_name) + "_" + p.seq;
+						delete p._id;
+						if (p.seq > 0) {
+							p['date'] = jchaos.getDateTime(p.seq);
+						}
+						var dirs = group_name.split("/");
+						var group = "";
+						dirs.forEach((ele, index) => {
 
-						if (!node_created.hasOwnProperty(group)) {
-							node_created[group] = true;
+							if (index == 0) {
+								group = ele;
+								var node_group = {
+									"id": jchaos.encodeName(group),
+									"parent": "#",
+									"text": ele,
+								};
+							} else {
+								var parent = group;
+								group = group + "/" + ele;
+								var node_group = {
+									"id": jchaos.encodeName(group),
+									"parent": jchaos.encodeName(parent),
+									"text": ele
+								};
+							}
+							node_group['data'] = { "group": group }
+
+							if (!node_created.hasOwnProperty(group)) {
+								node_created[group] = true;
+								jsree_data.push(node_group);
+
+							}
+
+						});
+
+
+						var node = {
+							"id": encoden,
+							"parent": jchaos.encodeName(group),
+							"text": p.script_name,
+							"data": p
+						};
+						node['data']['group'] = group;
+						if (p['eudk_script_language'] == "JS" || p['eudk_script_language'] == "NODEJS") {
+							node['icon'] = "/img/js.png";
+						} else if (p['eudk_script_language'] == "CPP") {
+							node['icon'] = "/img/cpp.png";
+
+						}
+						/*if (!node_created.hasOwnProperty(group_name)) {
 							jsree_data.push(node_group);
-
-						}
+							node_created[group_name] = true;
+						}*/
+						jsree_data.push(node);
 
 					});
-
-
+				} else {
 					var node = {
-						"id": encoden,
-						"parent": jchaos.encodeName(group),
-						"text": p.script_name,
-						"data": p
-					};
-					node['data']['group'] = group;
-					if (p['eudk_script_language'] == "JS" || p['eudk_script_language'] == "NODEJS") {
-						node['icon'] = "/img/js.png";
-					} else if (p['eudk_script_language'] == "CPP") {
-						node['icon'] = "/img/cpp.png";
+							"id": "EMPTY",
+							"parent":"#",
+							"text": "EMPTY",
+							"data": ""
+						};
+						if (!node_created.hasOwnProperty("EMPTY")) {
+								node_created["EMPTY"] = true;
+								jsree_data.push(node);
+
+							}
+
+				}
+				//$("#desc-"+pid).html(jqccs.json2html(p));
+				//jqccs.jsonSetup($("#desc-"+pid), function (e) {
+				//});
+				$("#hier-" + pid).jstree("destroy");
+
+				$("#hier-" + pid).jstree({
+					"plugins": ["dnd", "contextmenu"],
+					"contextmenu": {
+						'items': (node) => {
+							return addMenuScriptItems(pid, node);
+
+						}, "select_node": true, "show_at_node": false
+					},
+
+					'core': {
+						'data': jsree_data, "multiple": true,
+						"animation": 0,
+						"check_callback": true,
+
 
 					}
-					/*if (!node_created.hasOwnProperty(group_name)) {
-						jsree_data.push(node_group);
-						node_created[group_name] = true;
-					}*/
-					jsree_data.push(node);
+				});
+				$("#hier-" + pid).on('select_node.jstree', function (e, data) {
+					var i, j, r = [];
+					var node_data = data.instance.get_node(data.selected[0]).data;
+					$('#desc-' + pid).html(jqccs.json2html(node_data));
+					jqccs.jsonSetup($('#desc-' + pid), function (e) {
+					});
+					$('#desc-' + pid).find('a.json-toggle').click();
 
 				});
-			} else {
-				var node = {
-					"id": "EMPTY",
-					"parent": "#",
-					"text": "EMPTY",
-					"data": ""
-				};
-				if (!node_created.hasOwnProperty("EMPTY")) {
-					node_created["EMPTY"] = true;
-					jsree_data.push(node);
+				$("body").removeClass("loading");
 
-				}
-
-			}
-			//$("#desc-"+pid).html(jqccs.json2html(p));
-			//jqccs.jsonSetup($("#desc-"+pid), function (e) {
-			//});
-			$("#hier-" + pid).jstree("destroy");
-
-			$("#hier-" + pid).jstree({
-				"plugins": ["dnd", "contextmenu"],
-				"contextmenu": {
-					'items': (node) => {
-						return addMenuScriptItems(pid, node);
-
-					}, "select_node": true, "show_at_node": false
-				},
-
-				'core': {
-					'data': jsree_data, "multiple": true,
-					"animation": 0,
-					"check_callback": true,
-
-
-				}
+				//$('#hier_view').jstree('load_node',ds);
+				//addListeners();    
 			});
-			$("#hier-" + pid).on('select_node.jstree', function (e, data) {
-				var i, j, r = [];
-				var node_data = data.instance.get_node(data.selected[0]).data;
-				$('#desc-' + pid).html(jqccs.json2html(node_data));
-				jqccs.jsonSetup($('#desc-' + pid), function (e) {
-				});
-				$('#desc-' + pid).find('a.json-toggle').click();
-
-			});
-			$("body").removeClass("loading");
-
-			//$('#hier_view').jstree('load_node',ds);
-			//addListeners();    
-		});
-	}
+		}
 	function handle_script() {
 		$("body").addClass("loading");
 
@@ -555,7 +493,7 @@
 			}
 		};
 
-		if (node.hasOwnProperty("data") && (node.data != null)) {
+		if (node.hasOwnProperty("data")&&(node.data!=null)) {
 			items['snap-apply'] = {
 				"separator_before": false,
 				"separator_after": true,
@@ -596,19 +534,19 @@
 				action: function () {
 					var snap = node.data;
 					jchaos.snapshot(snap.name, "load", null, "", (dataset) => {
-						jqccs.jsonEditWindow("Snap Editor", {}, dataset, (snapdata) => {
-							console.log("snapshot:" + JSON.stringify(snapdata));
+						jqccs.jsonEditWindow("Snap Editor", {}, dataset, (snapdata)=>{
+							console.log("snapshot:"+JSON.stringify(snapdata));
 							/*vsets.forEach(function (elem) {
 							jchaos.snapshot(name, "set", "", JSON.stringify(elem), function (d) {
 								console.log("saving " + elem.name + " in " + name);
 							});
 						});*/
 						}, null, (ok) => {
-							jqccs.instantMessage("Created ", "OK", 2000, true);
+										jqccs.instantMessage("Created ", "OK", 2000, true);
 
-						}, (bad) => {
-							alert(" Cannot create node err:" + JSON.stringify(bad));
-						});
+									}, (bad) => {
+										alert(" Cannot create node err:" + JSON.stringify(bad));
+									});
 					});
 				}
 			};
@@ -619,7 +557,7 @@
 				action: function () {
 					var snap_selected = node.data.name;
 
-					jqccs.confirm("Delete Snapshot", "Your are deleting snapshot: " + snap_selected, "Ok", function () {
+					confirm("Delete Snapshot", "Your are deleting snapshot: " + snap_selected, "Ok", function () {
 
 						jchaos.snapshot(snap_selected, "delete", "", function () {
 							jqccs.instantMessage(snap_selected + " deleted ", 1000, null, null, true);
@@ -649,66 +587,66 @@
 					var name = p.name;
 					var dirs = name.split("/");
 					var group = "";
-					var parent = "#";
+					var parent="#";
 					var encoden = jchaos.encodeName(name);
 					if (p.ts !== undefined) {
 						p.ts = jchaos.getDateTime(p.ts);
 					}
-					if (dirs.length > 1) {
+					if(dirs.length>1){
 						dirs.forEach((ele, index) => {
 
-							if (index == 0) {
-								group = ele;
-								var node_group = {
-									"id": jchaos.encodeName(group),
-									"parent": "#",
-									"text": ele,
-								};
-							} else {
-								parent = group;
-								group = group + "/" + ele;
-								var node_group = {
-									"id": jchaos.encodeName(group),
-									"parent": jchaos.encodeName(parent),
-									"text": ele
-								};
-							}
-							node_group['data'] = { "group": group }
-							parent = jchaos.encodeName(parent);
-							if (!node_created.hasOwnProperty(jchaos.encodeName(group))) {
-								node_created[group] = true;
-								jsree_data.push(node_group);
+						if (index == 0) {
+							group = ele;
+							var node_group = {
+								"id": jchaos.encodeName(group),
+								"parent": "#",
+								"text": ele,
+							};
+						} else {
+							parent = group;
+							group = group + "/" + ele;
+							var node_group = {
+								"id": jchaos.encodeName(group),
+								"parent": jchaos.encodeName(parent),
+								"text": ele
+							};
+						}
+						node_group['data'] = { "group": group }
+						parent=jchaos.encodeName(parent);
+						if (!node_created.hasOwnProperty(jchaos.encodeName(group))) {
+							node_created[group] = true;
+							jsree_data.push(node_group);
 
-							}
+						}
 
-						});
+					});
 
-					}
+				}
 					var node = {
 						"id": encoden,
 						"parent": parent,
 						"text": name,
 						"data": p
 					};
-					if (!node_created.hasOwnProperty(encoden)) {
+					if(!node_created.hasOwnProperty(encoden)){
 						node['data']['group'] = group;
 						jsree_data.push(node);
-						node_created[encoden] = true;
+						node_created[encoden]=true;
 					}
 				});
 
-				if (l.length == 0) {
+				if(l.length==0){
 					var node = {
-						"id": "EMPTY",
-						"parent": "#",
-						"text": "EMPTY",
-						"data": null
-					};
-					if (!node_created.hasOwnProperty("EMPTY")) {
-						node_created["EMPTY"] = true;
-						jsree_data.push(node);
+							"id": "EMPTY",
+							"parent":"#",
+							"text": "EMPTY",
+							"data": null
+						};
+						if (!node_created.hasOwnProperty("EMPTY")) {
+								node_created["EMPTY"] = true;
+								jsree_data.push(node);
 
-					}
+							}
 				}
 
 				$("#hier-" + pid).jstree("destroy");
@@ -733,7 +671,7 @@
 					var i, j, r = [];
 					var node_data = data.instance.get_node(data.selected[0]).data;
 					jchaos.snapshot(node_data.name, "load", null, "", function (dataset) {
-						node_data['setpoints'] = dataset;
+						node_data['setpoints']=dataset;
 						$('#desc-' + pid).html(jqccs.json2html(node_data));
 						jqccs.jsonSetup($('#desc-' + pid), function (e) {
 						});
@@ -758,26 +696,26 @@
 		}
 		return items;
 	}
-	function handle_chat() {
-		jqccs.createDialogFromFile("chat_dialog.html", "chaosim", "Chaos IM", {
-			modal: false, draggable: true,
-			closeOnEscape: true,
-			title: "Chaos Instant Messaging",
-			minWidth: $(window).width() / 2,
-			minHeight: $(window).height() / 2,
-			buttons: [{
-				id: "close",
-				text: "Close",
-				click: function (e) {
-					$(this).dialog("close");
-				}
-			}],
-			close: function () {
+	function handle_chat(){
+		jqccs.createDialogFromFile("chat_dialog.html","chaosim","Chaos IM",{
+			modal:false,draggable:true,
+                            closeOnEscape: true,
+                            title:"Chaos Instant Messaging",
+                            minWidth:$(window).width()/2,
+							minHeight:$(window).height()/2,
+							buttons: [{
+                    id: "close",
+                    text: "Close",
+                    click: function (e) {
+                        $(this).dialog("close");
+                    }
+                }],
+			close:function(){
 				console.log("delete chat service");
-				//	delete chatService;
+			//	delete chatService;
 				$(this).dialog('destroy');
 			},
-			open: function () {
+			open:function(){
 				/*chatService.initializeApp();
 
 				// Send message
@@ -792,26 +730,22 @@
 				});*/
 			}
 		});
-
+		
 	}
-	function handle_log(obj) {
+	function handle_log() {
 		//$("body").addClass("loading");
-		var search="";
-		if(obj && obj.search){
-			search=obj.search;
-		}
 		jqccs.createQueryDialog(query => {
-			jqccs.createBrowserWindow("Log browser "+search, (pid) => {
+			jqccs.createBrowserWindow("Log browser", (pid) => {
 				var jsree_data = [];
 				var node_created = {};
 				var node_all = {
-					"id": "ALL",
-					"parent": "#",
-					"text": "ALL",
+								"id": "ALL",
+								"parent": "#",
+								"text": "ALL",
 				};
 				jsree_data.push(node_all);
 				node_created['ALL'] = true;
-				jchaos.log(search, "search", "all", query.start, query.end, function (data) {
+				jchaos.log("", "search", "all", query.start, query.end, function (data) {
 					if (data.hasOwnProperty("result_list")) {
 						data.result_list.forEach(function (item) {
 							var name = item.mdsndk_nl_sid;
@@ -844,27 +778,27 @@
 							}
 							var dirs = name.split("/");
 							var group = "";
-							var compname = "";
+							var compname="";
 							var parent = "";
 
 							dirs.forEach((ele, index) => {
 								var node_group;
-								compname = ele;
+								compname=ele;
 								if (index == 0) {
 									group = type + "/" + ele;
-									parent = type;
+									parent=type;
 								} else {
 									parent = group;
 									group = group + "/" + ele;
-
+									
 								}
 
-								var egroup = jchaos.encodeName(group);
+								var egroup=jchaos.encodeName(group);
 								node_group = {
-									"id": egroup,
-									"parent": jchaos.encodeName(parent),
-									"text": ele
-								};
+										"id": egroup,
+										"parent": jchaos.encodeName(parent),
+										"text": ele
+									};
 								node_group['data'] = { "group": group }
 
 								if (!node_created.hasOwnProperty(egroup)) {
@@ -885,10 +819,10 @@
 								node_created[node['id']] = node['parent'];
 								jsree_data.push(node);
 								// push also in all
-								var nn = JSON.parse(JSON.stringify(node));
-								nn['id'] = "ALL_" + node['id'];
-								nn['parent'] = "ALL";
-								nn['text'] = compname + "_" + node['text'];
+								var nn=JSON.parse(JSON.stringify(node));
+								nn['id']="ALL_"+node['id'];
+								nn['parent']="ALL";
+								nn['text']=compname+"_"+node['text'];
 								nn[node['id']] = node['parent'];
 
 								jsree_data.push(nn);
@@ -942,104 +876,104 @@
 			"separator_after": true,
 			label: "Create Graph",
 			action: function () {
-				jqccs.createEditGraph({}, (ok) => {
-					$("#refresh-" + pid).trigger("click");
-				});
-			}
-		}
-		if (node.hasOwnProperty("data") && node.data.hasOwnProperty('name')) {
-			items['run-graph'] = {
-				"separator_before": false,
-				"separator_after": true,
-				label: "Run Graph",
-				action: function () {
-					var opt = node.data;
-					var count = (new Date()).getTime();
-					var options = {
-						modal: false,
-						draggable: true,
-						closeOnEscape: false,
-						title: opt.name,
-						width: opt.width,
-						hright: opt.height,
-						height: opt.height,
-						zIndex: 10000,
-						resizable: true,
-						dialogClass: 'no-close'
-					};
-					var gname = opt.name;
-					var id = gname + "_" + count;
-					jqccs.createGraphDialog(gname, null, options);
-
+				jqccs.createEditGraph({},(ok)=>{				
+					$("#refresh-"+pid).trigger("click");
+});
 				}
-			}
-			items['edit-graph'] = {
-				"separator_before": false,
-				"separator_after": false,
-				label: "Edit Graph (WinP)",
-				action: function () {
-					var templ = {
+		}
+		if (node.hasOwnProperty("data")&&node.data.hasOwnProperty('name')) {
+			items['run-graph'] = {
+			"separator_before": false,
+			"separator_after": true,
+			label: "Run Graph",
+			action: function () {
+				var opt=node.data;
+				var count=(new Date()).getTime();
+				var options = {
+                modal: false,
+                draggable: true,
+                closeOnEscape: false,
+                title: opt.name,
+                width: opt.width,
+                hright: opt.height,
+				height: opt.height,
+				zIndex: 10000,
+                resizable: true,
+                dialogClass: 'no-close'
+            };
+				var gname=opt.name;
+				var id=gname+"_"+count;
+				jqccs.createGraphDialog(gname, null, options);
+
+		}
+	}
+		items['edit-graph'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Edit Graph (WinP)",
+			action: function () {
+				var templ = {
 						$ref: "graph.json",
 						format: "tabs"
 					}
-					jqccs.jsonEditWindow("Graph ", templ, node.data, (gtsave) => {
+					jqccs.jsonEditWindow("Graph ", templ, node.data, (gtsave)=>{
 						jchaos.variable("graphs", "get", function (gphs) {
-							if (gtsave.hasOwnProperty("name")) {
-								if (typeof gphs !== "object") {
-									gphs = {}
+							if(gtsave.hasOwnProperty("name")){
+							if(typeof gphs !== "object"){
+								gphs={}
+
+								
+							} 
+							gtsave['time']=jchaos.getDateTime();
+							gphs[gtsave.name]=gtsave;
+							jchaos.variable("graphs", "set",gphs, function (gphs) {
+								jqccs.instantMessage("Graph", "Graph " + gtsave.name + " uploaded", 2000, true);
+								$("#refresh-"+pid).trigger("click");
+
+							});
+
+						}
 
 
-								}
-								gtsave['time'] = jchaos.getDateTime();
-								gphs[gtsave.name] = gtsave;
-								jchaos.variable("graphs", "set", gphs, function (gphs) {
-									jqccs.instantMessage("Graph", "Graph " + gtsave.name + " uploaded", 2000, true);
-									$("#refresh-" + pid).trigger("click");
-
-								});
-
-							}
-
-
-						});
+                    });
 					});
-
-
-				}
-
-			}
-			items['remove-graph'] = {
-				"separator_before": false,
-				"separator_after": false,
-				label: "Remove Graph",
-				action: function () {
-					jchaos.variable("graphs", "get", function (gphs) {
-						delete gphs[node.data.name];
-						jchaos.variable("graphs", "set", gphs, function (gphs) {
-							jqccs.instantMessage("Graph", "Graph " + gtsave.name + " removed", 2000, true);
-
-						});
-						$("#refresh-" + pid).trigger("click");
-					});
+					
 
 				}
-			}
+		
+	}
+	items['remove-graph'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Remove Graph",
+			action: function () {
+				jchaos.variable("graphs", "get", function (gphs) {
+					delete gphs[node.data.name];
+							jchaos.variable("graphs", "set",gphs, function (gphs) {
+								jqccs.instantMessage("Graph", "Graph " + gtsave.name + " removed", 2000, true);
 
+							});
+				$("#refresh-"+pid).trigger("click");
+				});
 
-			items['upload-graph'] = {
-				"separator_before": false,
-				"separator_after": false,
-				label: "Upload Graph (WinP)",
-				action: function () {
-				}
-			}
-			items['download-graph'] = {
-				"separator_before": false,
-				"separator_after": false,
-				label: "Download Graph (WinP)",
-				action: function () {
-				}
-			}
+		}
+	}
+	
+	
+	items['upload-graph'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Upload Graph (WinP)",
+			action: function () {
+		}
+	}
+	items['download-graph'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Download Graph (WinP)",
+			action: function () {
+		}
+	}
 		}
 		return items;
 	}
@@ -1051,7 +985,7 @@
 			var jsree_data = [];
 			var node_created = {};
 			jchaos.variable("graphs", "get", (high_graphs) => {
-				var cnt = 0;
+				var cnt=0;
 				for (var g in high_graphs) {
 					var name = g;
 					var type = high_graphs[g].type;
@@ -1107,7 +1041,7 @@
 					var node = {
 						"id": nodef,
 						"parent": jchaos.encodeName(idgroup),
-						"text": ((typeof high_graphs[g].time === "string") ? high_graphs[g].time : name),
+						"text": ((typeof  high_graphs[g].time==="string")?high_graphs[g].time:name),
 						"icon": icon,
 						"data": high_graphs[g]
 					};
@@ -1117,18 +1051,18 @@
 						jsree_data.push(node);
 					}
 				}
-				if (cnt == 0) {
+				if(cnt==0){
 					var node = {
-						"id": "EMPTY",
-						"parent": "#",
-						"text": "EMPTY",
-						"data": ""
-					};
-					if (!node_created.hasOwnProperty("EMPTY")) {
-						node_created["EMPTY"] = true;
-						jsree_data.push(node);
+							"id": "EMPTY",
+							"parent":"#",
+							"text": "EMPTY",
+							"data": ""
+						};
+						if (!node_created.hasOwnProperty("EMPTY")) {
+								node_created["EMPTY"] = true;
+								jsree_data.push(node);
 
-					}
+							}
 				}
 
 
@@ -1165,58 +1099,42 @@
 			});
 		});
 	}
-
-	dashboard_settings['current_page'] = 0;
-
-	jqccs['dashboard_settings'] = dashboard_settings;
-
+	
 	$("#help-about").on("click", function () {
-		jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
-			//alert("version:"+JSON.stringify(ver));
-			jqccs.showJson("VERSION", ver);
-		}, function () {
-			alert("Cannot retrive version");
-		});
-	});
-	$("#help-clients").on("click", function () {
-		jchaos.basicPost("clients", "", function (ver) {
-			//alert("version:"+JSON.stringify(ver));
-			ver.forEach(function (ele, i) {
-				var tt = ele.lastConnection / 1000;
-				ver[i]['updated'] = jchaos.getDateTime(Number(tt));
+                jchaos.basicPost("MDS", "cmd=buildInfo", function (ver) {
+                    //alert("version:"+JSON.stringify(ver));
+                    jqccs.showJson("VERSION", ver);
+                }, function () {
+                    alert("Cannot retrive version");
+                });
 			});
+			$("#help-clients").on("click", function () {
+                jchaos.basicPost("clients", "", function (ver) {
+                    //alert("version:"+JSON.stringify(ver));
+                    ver.forEach(function (ele, i) {
+                        var tt = ele.lastConnection / 1000;
+                        ver[i]['updated'] = jchaos.getDateTime(Number(tt));
+                    });
 
-			jqccs.showJson("CLIENTS", ver);
-		}, function () {
-			alert("Cannot retrive Client List");
-		});
-	});
-	$("#config-settings").on("click", function () {
-		var templ = {
-			$ref: "dashboard-settings.json",
-			format: "tabs"
-		}
-		var def = {}
-		jqccs.initSettings();
+                    jqccs.showJson("CLIENTS", ver);
+                }, function () {
+                    alert("Cannot retrive Client List");
+                });
+            });
+			$('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
+  if (!$(this).next().hasClass('show')) {
+    $(this).parents('.dropdown-menu').first().find('.show').removeClass('show');
+  }
+  var $subMenu = $(this).next('.dropdown-menu');
+  $subMenu.toggleClass('show');
 
-		var def = JSON.parse(localStorage['chaos_dashboard_settings']);
-		jqccs.jsonEditWindow("Config", templ, def, function (d) {
-			localStorage['chaos_dashboard_settings'] = JSON.stringify(d);
-			console.log("Save settings:" + localStorage['chaos_dashboard_settings']);
-			var e = jQuery.Event('keypress');
-			e.which = 13;
-			e.keyCode = 13;
-			if (d.hasOwnProperty("defaultRestTimeout")) {
-				jchaos.setOptions({ "timeout": d.defaultRestTimeout });
-			} else {
-				jchaos.setOptions({ "timeout": 10000 });
 
-			}
-			location.reload();
-			return 0;// close window
-			//    $("#search-chaos").trigger(e);
-		}, null);
+  $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function(e) {
+    $('.dropdown-submenu .show').removeClass('show');
+  });
 
-	});
 
+  return false;
+});
+ 
 </script>

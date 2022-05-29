@@ -1,0 +1,18 @@
+{
+    "zone":"BTF",
+    "group":"SPARC",
+    "experiment":"emittanza",
+    "user":"vlad",
+    "scripts":[
+        {
+            "name":"StartAcquisitionEmittanza.js",
+            "desc":"Start camera and dipole acquisition",
+            "def_param":{
+                "cams":["BTF/CAMERA/VLAD001"],
+                "magnets":["BTF/DIPOLE/DHPT001"],
+                "acquisitions":10
+            }
+        }
+    ],
+    "log_params":["temperature","comment"]
+}
