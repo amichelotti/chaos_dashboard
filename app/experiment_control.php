@@ -146,6 +146,14 @@ $curr_page = "Experiment Control";
 							if ((item.mdsndk_nl_l_ld !== undefined) && (item.mdsndk_nl_l_ld == "Error")) {
 								type = "error";
 							}
+                            if(item.hasOwnProperty("info")){
+                                try{
+                                    var j =JSON.parse(item.info);
+                                    item.info=j;
+                                }catch(e){
+
+                                }
+                            }
 							var origin = item.mdsndk_nl_e_ed;
 							var node_group = {
 								"id": jchaos.encodeName(type),
@@ -536,6 +544,34 @@ $curr_page = "Experiment Control";
                 }
             });
 
+    function listDev(tree,node,arr,tags,st){
+
+        if(node.data.hasOwnProperty("info")&&node.data.info.hasOwnProperty('ndk_uid')){
+            var start=st;
+            if(node.data.hasOwnProperty("seq")){
+                if(start>node.data.seq)
+                    start = node.data.seq-1000;
+            }
+            jchaos.addVector(tags,node.data.parent.replace("tag/",""));
+
+            var ia=node.data.info.ndk_uid;
+            for(var k in ia){
+                jchaos.addVector(arr,ia[k]);
+            }
+            
+            return start;
+        } else if(node.hasOwnProperty("children")){
+            
+            for(var k in node.children){
+                var node_data = tree.get_node(node.children[k]);
+
+                st=listDev(tree,node_data,arr,tags,st);
+            }
+
+        }
+        return st;
+
+    }
     function addMenuLogItems(node) {
 		var items = {};
 		var tree = $('#hier_view').jstree(true);
@@ -549,25 +585,50 @@ $curr_page = "Experiment Control";
                 label: "Info",
 				action: function () {
 						var info=node.data;
-                        if (info.hasOwnProperty("info")){
-                            try {
-                                var jinfo=JSON.parse(info.info);
-                                info['info']=jinfo;
-                            }catch(e){
-
-                            }
-                        }
                         jqccs.showJson(info.mdsndk_nl_lsubj,info);	
 				    }
 				};
+            if(node.data.hasOwnProperty('parent')&&node.data.parent!=""){
+                var parent_tag=node.data.parent.replace("tag/","");
+
+                var tags=[]
+                var start=0;
+                var stop=new Date().getTime();
+                if(node.data.hasOwnProperty("seq")){
+                    start = (node.data.seq-1000);
+                }
+
+                var nlist=[];
+                start=listDev(tree,node,nlist,tags,stop);
+               /* if(node.data.hasOwnProperty("info")&&node.data.info.hasOwnProperty('ndk_uid')){
+                    nlist=node.data.info.ndk_uid;
+
+                } else if(node.children.length){
+                    node.children.forEach(element => {
+                        var node_data = tree.get_node(element).data;
+                        if(node_data.hasOwnProperty("info")&&node_data.info.hasOwnProperty('ndk_uid')){
+                            nlist=nlist.concat(node_data.info.ndk_uid);
+                        }
+                    });
+
+                }*/
+                if(nlist.length){
             items['download']={
                 "separator_before": false,
                 "separator_after": false,
                 label: "Download",
                 action: function(){
                     jchaos.setOptions({ "timeout": 60000 });
-                    opt['page']=dashboard_settings.page;
-                    jchaos.fetchHistoryToZip(query.tag, node_multi_selected, query.start, query.stop, query.tag, opt, function(msg) {
+                    var opt={
+                        'page':dashboard_settings.defaultPage
+                        
+                    }
+                   /* opt['updateCall'] = function(meta) {
+                    $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
+                    console.log("percent:" + parseInt(meta.percent.toFixed(2)));
+
+                };*/
+                    jchaos.fetchHistoryToZip(parent_tag, nlist, start, stop, tags, opt, function(msg) {
                         $("#zipprogress").parent().remove();
 
                         jqccs.instantMessage("fetchHistoryToZip ", "failed:" + JSON.stringify(msg), 8000, false);
@@ -575,6 +636,8 @@ $curr_page = "Experiment Control";
 
                 }
             }
+        }
+        }
 			
 			}
 		
