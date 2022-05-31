@@ -117,6 +117,8 @@ $curr_page = "Experiment Control";
             var experiment_sel = {}
             var current_experiment = {}
             var current_script = {}
+            var current_script_name=""
+
             var current_args = {}
 
             var progressive_id = 0;
@@ -394,6 +396,18 @@ $curr_page = "Experiment Control";
             $("#edit-params").on("click",function(){
                 jqccs.jsonEditWindow("Parameters", {}, current_args, (json)=>{
                     current_args=json;
+                    for(var s in current_experiment.scripts){
+                        if(current_experiment.scripts[s].name == current_script_name){
+                            current_experiment.scripts[s].def_param=current_args;
+                            $('#desc_view').html(jqccs.json2html(current_experiment));
+                            jchaos.variable("experiments", "get", (exp) => {
+                                exp[current_experiment.experiment]=current_experiment;
+                                jchaos.variable("experiments","set",exp);
+                            });
+
+                        }
+                    }
+                    
                     return 0;
                 }, null);
             });
@@ -436,6 +450,7 @@ $curr_page = "Experiment Control";
                             current_experiment.scripts.forEach(ele=>{
                                 if(ele.name==script){
                                     current_args=ele.def_param;
+                                    current_script_name=ele.name;
                             
                                 }
                             });
