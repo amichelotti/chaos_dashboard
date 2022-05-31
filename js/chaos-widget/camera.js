@@ -1727,6 +1727,20 @@ function activateMenuShort() {
               });})
           }
         },
+        'bmp': {
+          name: "BMP", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","bmp", function () {
+              })
+          }
+        },
+        'tiff': {
+          name: "Tiff", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","tiff", function () {
+              })
+          }
+        },
         'weblatmax': {
           name: "WEBP max quality", cu: name,
           callback: function (itemKey, opt, e) {
