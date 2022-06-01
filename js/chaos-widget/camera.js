@@ -38,37 +38,71 @@ var selection_resizableY = 0;
 var selection_grabbable = false;
 
 var selection_ellipse = {};
+function inputCameraRefresh(update_ms,opt){
+  var diff=0;
+  var pullIntervalsec=setInterval(() => {
+    jchaos.getChannel(cameralist, 1, (vds,req) => {
+      vds.forEach(ele => {
+        updateCamera(ele);
+      });
+      diff=new Date().getTime()-req['jchaos_ts'];
 
+    },(err,req)=>{
+      diff=new Date().getTime()-req['jchaos_ts'];
+
+  });
+    if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+      clearInterval(pullIntervalsec);
+    }
+  }, update_ms);
+  if(diff>0){
+    if(diff>update_ms){
+      clearInterval(pullIntervalsec);
+      console.log("camera input refresh rescheduled down to:"+diff+"+"+Math.trunc(diff/10)+" ms");
+      inputCameraRefresh((diff+Math.trunc(diff/10)),opt);
+    } else if((update_ms>opt.camera.cameraRefresh)&&(diff<(update_ms-Math.trunc(diff/5)))){
+      clearInterval(pullIntervalsec);
+      console.log("camera input refresh rescheduled up to:"+(diff+Math.trunc(diff/10))+" ms");
+      inputCameraRefresh((diff+Math.trunc(diff/10)),opt);
+    }
+  }
+  return pullIntervalsec;
+}
 function outputCameraRefresh(update_ms,opt){
-  last_output_time=new Date().getTime()
+  var diff=0;
+
   var pullInterval = setInterval(() => {
     var clist=[];
+
     cameralist.forEach((e)=>{
       if(!streamaddr.hasOwnProperty(e)){
         clist.push(e);
       }
     });
-    jchaos.getChannel(clist, 0, (vds) => {
+    jchaos.getChannel(clist, 0, (vds,req) => {
       vds.forEach(ele => {
         updateCamera(ele);
       });
+      diff=new Date().getTime()-req['jchaos_ts'];
+
+    },(err,req)=>{
+        diff=new Date().getTime()-req['jchaos_ts'];
 
     });
     if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
       clearInterval(pullInterval);
     }
-    var now=new Date().getTime()
-    let diff=(now-last_output_time);
-    if(diff>update_ms){
-      clearInterval(pullInterval);
-      console.log("camera output refresh rescheduled down to:"+diff+"+"+Math.trunc(diff/10)+" ms");
-      outputCameraRefresh((diff+Math.trunc(diff/10)),opt);
-    } else if((update_ms>opt.camera.cameraRefresh)&&(diff<opt.camera.cameraRefresh)){
-      clearInterval(pullInterval);
-      console.log("camera output refresh rescheduled up to:"+opt.camera.cameraRefresh+" ms");
-      outputCameraRefresh(opt.camera.cameraRefresh,opt);
-    }
-    last_output_time=now;
+    if(diff>0){
+      if(diff>update_ms){
+        clearInterval(pullInterval);
+        console.log("camera output refresh rescheduled down to:"+diff+"+"+Math.trunc(diff/10)+" ms");
+        outputCameraRefresh((diff+Math.trunc(diff/10)),opt);
+      } else if((update_ms>opt.camera.cameraRefresh)&&(diff<(update_ms-Math.trunc(diff/5)))){
+        clearInterval(pullInterval);
+        console.log("camera output refresh rescheduled up to:"+(diff+Math.trunc(diff/10))+" ms");
+        outputCameraRefresh((diff+Math.trunc(diff/10)),opt);
+      }
+  }
   }, update_ms);
   return pullInterval;
 }
@@ -1088,17 +1122,7 @@ function activateCameraFetch(){
       
       pullInterval=outputCameraRefresh(opt.camera.cameraRefresh,opt);
 
-      pullIntervalsec = setInterval(() => {
-        jchaos.getChannel(cameralist, 1, (vds) => {
-          vds.forEach(ele => {
-            updateCamera(ele);
-          });
-
-        });
-        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
-          clearInterval(pullIntervalsec);
-        }
-      }, 1000);
+      pullIntervalsec = inputCameraRefresh(1000,opt);
       pullIntervalHealth = setInterval(() => {
         jchaos.getChannel(cameralist, 255, (vds) => {
           vds.forEach(ele => {

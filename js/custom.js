@@ -1816,17 +1816,7 @@ function growlLikeNotifications() {
 			class_name: 'my-sticky-class'
 		});
 
-		// You can have it return a unique id, this can be used to manually remove it later using
-		/* ----------
-		setTimeout(function(){
-
-			$.gritter.remove(unique_id, {
-				fade: true,
-				speed: 'slow'
-			});
-
-		}, 6000)
-		*/
+		
 
 		return false;
 
