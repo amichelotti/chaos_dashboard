@@ -12,7 +12,7 @@ var opt = {};
 var pullInterval = null;
 var pullIntervalsec = null;
 var pullIntervalHealth = null;
-
+var last_output_time=null
 const TRIGGER_CONT = 0;
 const TRIGGER_PULSE = 1;
 
@@ -38,6 +38,40 @@ var selection_resizableY = 0;
 var selection_grabbable = false;
 
 var selection_ellipse = {};
+
+function outputCameraRefresh(update_ms,opt){
+  last_output_time=new Date().getTime()
+  var pullInterval = setInterval(() => {
+    var clist=[];
+    cameralist.forEach((e)=>{
+      if(!streamaddr.hasOwnProperty(e)){
+        clist.push(e);
+      }
+    });
+    jchaos.getChannel(clist, 0, (vds) => {
+      vds.forEach(ele => {
+        updateCamera(ele);
+      });
+
+    });
+    if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+      clearInterval(pullInterval);
+    }
+    var now=new Date().getTime()
+    let diff=(now-last_output_time);
+    if(diff>update_ms){
+      clearInterval(pullInterval);
+      console.log("camera output refresh rescheduled down to:"+diff+"+"+Math.trunc(diff/10)+" ms");
+      outputCameraRefresh((diff+Math.trunc(diff/10)),opt);
+    } else if((update_ms>opt.camera.cameraRefresh)&&(diff<opt.camera.cameraRefresh)){
+      clearInterval(pullInterval);
+      console.log("camera output refresh rescheduled up to:"+opt.camera.cameraRefresh+" ms");
+      outputCameraRefresh(opt.camera.cameraRefresh,opt);
+    }
+    last_output_time=now;
+  }, update_ms);
+  return pullInterval;
+}
 function modeToString(val){
   switch (val) {
     case TRIGGER_CONT:
@@ -1051,23 +1085,8 @@ function activateCameraFetch(){
       if (pullIntervalHealth != null) {
         clearInterval(pullIntervalHealth);
       }
-      pullInterval = setInterval(() => {
-        var clist=[];
-        cameralist.forEach((e)=>{
-          if(!streamaddr.hasOwnProperty(e)){
-            clist.push(e);
-          }
-        });
-        jchaos.getChannel(clist, 0, (vds) => {
-          vds.forEach(ele => {
-            updateCamera(ele);
-          });
-
-        });
-        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
-          clearInterval(pullInterval);
-        }
-      }, opt.camera.cameraRefresh);
+      
+      pullInterval=outputCameraRefresh(opt.camera.cameraRefresh,opt);
 
       pullIntervalsec = setInterval(() => {
         jchaos.getChannel(cameralist, 1, (vds) => {
@@ -1725,6 +1744,20 @@ function activateMenuShort() {
               },function () {
                 jqccs.instantMessage("Failed PNG max compression", name, 3000, false);
               });})
+          }
+        },
+        'bmp': {
+          name: "BMP", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","bmp", function () {
+              })
+          }
+        },
+        'tiff': {
+          name: "Tiff", cu: name,
+          callback: function (itemKey, opt, e) {
+            jchaos.setAttribute(name, "FMT","tiff", function () {
+              })
           }
         },
         'weblatmax': {
