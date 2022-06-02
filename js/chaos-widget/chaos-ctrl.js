@@ -4497,7 +4497,73 @@
         }
 
     }
+jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
+    $("#" + dom).empty();
+    var fontsize="";
+    if(opt && opt.hasClass("fontSize")){
+        fontsize=opt.fontSize;
+    }
+    l.forEach(item => {
+        var n = "";
+        var t = "";
+        var name="";
+        if(typeof item ==="object"){
+            if(item.hasOwnProperty('name')){
+                name=item.name;
+                n=jchaos.encodeName(name);
+                t=name;
+            }
+            if(item.hasOwnProperty('desc')){
+                t=item.desc;
+            }
+        } else if(typeof item === "string"){
+            name =item;
+            n=jchaos.encodeName(item);
+            t=name;
+        } else {
+            throw "refresh item must be string or object";
+        }
+        // var l = "<li class=\"list-group-item list-group-item-action\" title=\""+t+"\" id=\""+n+"\">"+item+"</li>";
 
+        var l;
+        if(fontsize!=""){
+            l = "<li class=\"listitem\" style=\"font-size:"+fontsize+" !important\" title=\"" + t + "\" id=\"" + n + "\" cu=\""+name+"\">" + name + "</li>";
+        } else {
+            l = "<li class=\"listitem\" title=\"" + t + "\" id=\"" + n + "\" cu=\""+name+"\">" + name + "</li>";
+
+        }
+        $("#" + dom).append(l);
+    });
+    if(typeof checkFn === "function" || typeof uncheckFn==="function"){
+    $("#" + dom).simsCheckbox({
+
+        btnStyle: 'checkbox',
+        height: 'auto',
+        element: "li",
+        titleIcon: "square-o",
+        uncheckedClass: "btn-default",
+        checkedClass: "btn-warning",
+        selectAllBtn: false,
+        selectAllText: 'Select/Unselect All',
+        ifChecked:function() {
+            var cuname=this.attr("cu");
+            if(typeof checkFn === "function" ){
+                checkFn(cuname);
+            }
+
+        },
+        ifUnChecked:function() {
+            var cuname=this.attr("cu");
+            console.log("UNCHECK "+cuname);
+            if(typeof uncheckFn === "function" ){
+                uncheckFn(cuname);
+            }
+        }
+
+    });
+}
+
+}
     function updateInterface(tmpObj) {
         var cuids = tmpObj['elems'];
         var template = tmpObj.type;

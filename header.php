@@ -141,16 +141,16 @@
 	jchaos.iosubscribeCU("all", false);
 	jchaos.options['on_restTimeout'] = (e) => {
 		var now = (new Date()).getTime();
+		jqccs.busyWindow(true);
+		jchaos['last_timeout'] = now;
+
+	};
+	jchaos.options['on_restOk'] = (e) => {
 
 		if (jchaos.hasOwnProperty('last_timeout')) {
-			if ((now - jchaos.last_timeout) > 2 * jchaos.options.timeout) {
-				alert("Timeout on server:" + JSON.stringify(e));
-			}
-
+			jqccs.busyWindow(false);
+			delete jchaos['last_timeout'];
 		}
-		jchaos['last_timeout'] = now;
-		jqccs.busyWindow(false);
-
 	};
 	$(<?php echo '"#'.$curr_page.'"' ?> ).addClass("btn-success");
 	function triggerRefreshEdit() {
