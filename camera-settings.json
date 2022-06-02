@@ -37,7 +37,7 @@
         },
         "restTimeout": {
             "type": "integer",
-            "default": 6000,
+            "default": 10000,
             "required": true,
             "description": "Timeout of Rest ops (ms)"
         },

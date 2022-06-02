@@ -10,13 +10,17 @@ $curr_page = "Experiment Control";
 
     <?php
     require_once('experiment_control_header.php');
+    
     echo '<script src="../js/jquery.terminal/js/jquery.terminal.min.js"></script>';
     echo '<script src="../js/jquery.terminal/js/jquery.mousewheel-min.js"></script>';
     echo '<link href="../js/jquery.terminal/css/jquery.terminal.min.css" type="text/css" rel="stylesheet" />';
 
     ?>
+    
     <link href="../css/font-awesome.min.css" rel="stylesheet">
 
+    <link href="../js/list-selection/simsCheckbox.css" rel="stylesheet">
+    <script src="../js/list-selection/simsCheckbox.js"></script>
 
     <div class="container-fluid px-4">
         <div class="row">
@@ -27,23 +31,23 @@ $curr_page = "Experiment Control";
                         <select id="zones" size="auto">
                         </select>
                     </div>
-
+    
                     <div id="group_select" class="invisible statbox purple col-sm-2">
                         <h3>Group</h3>
                         <select id="classes">
                         </select>
                     </div>
-
+    
                     <div id="experiment_select" class="statbox purple invisible col-sm-2">
                         <h3>Experiment</h3>
                         <select id="experiments">
                         </select>
                     </div>
-
-
+    
+    
                 </div>
                 <div id="control_view" class="box-content invisible">
-
+    
                     <div class="box row">
                         <div class="col-md-3">
                             <div class="row box">
@@ -55,49 +59,116 @@ $curr_page = "Experiment Control";
                                 <div id="hier_view" class=""></div>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-5">
                             <div class="row">
-                                 <div class="wait_modal"></div>
-
+                                <div class="col">
+                                <div class="wait_modal"></div>
+    
                                 <label for="session"><strong>Session:</strong></label>
-                                <input name="session" id="session_name" placeholder="Session name (default to Date)"></input>
+                                <input name="session" id="session_name"
+                                    placeholder="Session name (default to Date)"/> 
+                                </div>
+                                <div class="col">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="enable_manual">
+                                        <label class="custom-control-label" for="enable_manual">Manual Tag</label>
+                                    </div>
+
+                                </div>
                             </div>
                             <div class="row">
+                                <div class="col">
                                 <label for="progressive"><strong>Progressive:</strong></label>
-                                <input name="progressive" id="progressive_id" value=0></input>
+                                <input name="progressive" id="progressive_id" value=0>
+                                </div>
+                                <div class="col">
+                                    <div class="row script_selection">
+                                        <label for="script"><strong>Choose Script:</strong></label>
+                                        <select name="script" id="script_select"></select>
+                                    </div>
+                                    
+                                </div>
                             </div>
                             <div class="row">
+                            <div class="col">
                                 <label for="tag"><strong>Tag:</strong></label>
                                 <div name="tag" id="tag_id"></div>
+</div>
                             </div>
                             <div class="row">
-                                <label for="script"><strong>Choose Script:</strong></label>
-                                <select name="script" id="script_select"></select>
+                            <div class="col">
 
+                                <div class="form-group box">
+                                    <label for="tagnote"><strong>Tag Notes</strong></label>
+                                    <textarea class="form-control" id="tagnote" rows="3"></textarea>
+                                </div>
+</div>
                             </div>
                             <div class="row script_control invisible">
+    
+    <div class="col">
+        <button id="edit-params" type="button" class="btn btn-success">Change Param..</button>
+    </div>
+    <div class="col">
+        <button id="run-script" type="button" class="btn btn-success">RUN </button>
+    </div>
+    <div class="col">
+        <button id="cancel-script" type="button" class="btn btn-danger">STOP</button>
+    </div>
+</div>
+                            <div class="row manual_control invisible">
+                                <div class="col-sm-5 box">
+                                    <div class="card list-group">
+                                        <div id="elements_h" class="card-header">
+                                            Elements
+                                        </div>
+                                        <ul id="elements" class="listview">
+                                        </ul>
+                                    </div>     
+                                </div>
+                                <div class="col-sm-2 align-self-center">
+                                    <div class="row form-group">
+                                        <label for="acquisitions"><strong>Tag cycles</strong></label>
+                                        <input type="number" min="1" value="1" class="form-control" id="acquisitions">
+                                    </div>
+                                    <div class="row justify-content-cente">
+                                        <div class="col">
+                                            <button id="run-tag" type="button" class="btn btn-success" disabled>Tag</button>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row justify-content-center">
+                                        <button type="button" id="b-tag" class="btn btn-sm">
+                                            <i class="fa fa-long-arrow-right fa-2x" aria-hidden="true"></i></span>
+                                        </button>
+    
+                                    </div>
+                                    <div class="row justify-content-center">
+                                        <button type="button" id="b-untag" class="btn btn-sm">
+                                            <i class="fa fa-long-arrow-left fa-2x" aria-hidden="true"></i></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-sm-5 box">
+                                    <div class="card list-group">
+                                        <div id="tagged_h" class="card-header">
+                                            Being Tagged
+                                        </div>
+                                        <ul id="tagged" class="listview">
+    
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                             
-                                <div class="col">
-                                    <button id="edit-params" type="button" class="btn btn-success">Change Param..</button>
-                                </div>
-                                <div class="col">
-                                    <button id="run-script" type="button" class="btn btn-success">RUN </button>
-                                </div>
-                                <div class="col">
-                                    <button id="cancel-script" type="button" class="btn btn-danger">STOP</button>
-                                </div>
-                            </div>
-                            <div class="row script_control invisible">
-                            <div class="form-group">
-                                <label for="tagnote"><strong>Tag Notes</strong></label>
-                                <textarea class="form-control" id="tagnote" rows="3"></textarea>
-                                </div>
-                            </div>
+                            
+                            
                         </div>
-                        <div id="script_area" class="col-md-6">
+                        <div id="script_area" class="col-md-4">
                             <div id="script_view" class="row">
                             </div>
-
+    
                         </div>
                     </div>
                 </div>
@@ -105,10 +176,9 @@ $curr_page = "Experiment Control";
         </div>
         <footer>
             <?php require_once('footer.php'); ?>
-
+    
             <audio src="../audio/twoknocks.mp3" width="0" height="0" id="bau"></audio>
         </footer>
-
 
 
 
@@ -118,9 +188,12 @@ $curr_page = "Experiment Control";
             var current_experiment = {}
             var current_script = {}
             var current_script_name=""
+            var selected_cu=[];
+            var selected_tagged_cu=[];
+            var current_tagged_cu=[];
 
             var current_args = {}
-
+            var current_acquisitions=1;
             var progressive_id = 0;
             var tagname = "";
             var parent_tag="";
@@ -368,6 +441,19 @@ $curr_page = "Experiment Control";
             $("#session_name").on("input", function() {
                 updateTag();
             });
+            $("#enable_manual").change(function(){
+                if($(this).is(':checked')){
+                    $(".manual_control").removeClass("invisible");
+                    $("#control_view").removeClass("invisible");
+                    $(".script_selection").addClass("invisible");
+
+
+                } else {
+                    $(".manual_control").addClass("invisible");
+                    $(".script_selection").removeClass("invisible");
+
+                }
+            });
             $("#classes").change(function() {
                 var selzone = $("#zones option:selected").val();
                 var selclass = $("#classes option:selected").val();
@@ -393,6 +479,53 @@ $curr_page = "Experiment Control";
                 updateTag();
 
             });
+            $("#acquisitions").change(function() {
+                current_acquisitions=$("#acquisitions").val();
+                if((current_acquisitions>0 )&&(current_tagged_cu.length)){
+                    $("#run-tag").prop('disabled', false);
+                } else {
+                    $("#run-tag").prop('disabled', true);
+
+                }
+            });
+            $("#run-tag").on("click",function(){
+            });
+            $("#b-tag").on("click",function(){
+                selected_cu.forEach(ele=>{
+                    jchaos.addVector(current_tagged_cu,ele);
+                });
+                selected_cu=[];
+                jqccs.refreshCheckList("tagged",current_tagged_cu,(check)=>{
+                        jchaos.addVector(selected_tagged_cu,check);
+                    },(uncheck)=>{
+                        selected_tagged_cu=jchaos.removeVector(selected_tagged_cu,uncheck);
+                    })
+                
+                if((current_acquisitions>0 )&&(current_tagged_cu.length)){
+                    $("#run-tag").prop('disabled', false);
+                } else {
+                    $("#run-tag").prop('disabled', true);
+
+                } 
+            });
+            $("#b-untag").on("click",function(){
+                selected_tagged_cu.forEach(ele=>{
+                    current_tagged_cu=jchaos.removeVector(current_tagged_cu,ele);
+                });
+                jqccs.refreshCheckList("tagged",current_tagged_cu,(check)=>{
+                        jchaos.addVector(selected_tagged_cu,check);
+                    },(uncheck)=>{
+                        selected_tagged_cu=jchaos.removeVector(selected_tagged_cu,uncheck);
+                    })
+                
+                    if((current_acquisitions>0 )&&(current_tagged_cu.length)){
+                        $("#run-tag").prop('disabled', false);
+                    } else {
+                        $("#run-tag").prop('disabled', true);
+    
+                    }
+            });
+
             $("#edit-params").on("click",function(){
                 jqccs.jsonEditWindow("Parameters", {}, current_args, (json)=>{
                     current_args=json;
@@ -481,6 +614,16 @@ $curr_page = "Experiment Control";
                     current_experiment = experiment_sel[experiments];
 
                     $('#desc_view').html(jqccs.json2html(current_experiment));
+                    if(current_experiment.hasOwnProperty("zone")){
+
+                        jchaos.search(current_experiment.zone,"cu",true,(ele)=>{
+                            jqccs.refreshCheckList("elements",ele,(checked)=>{
+                                jchaos.addVector(selected_cu,checked);
+                            },(unchecked)=>{
+                                selected_cu=jchaos.removeVector(selected_cu,unchecked);
+                            });
+                        })
+                    }
                     jqccs.jsonSetup($('#desc_view'), function(e) {});
                     $('#desc_view').find('a.json-toggle').click();
                     jqccs.element_sel('#script_select', current_experiment.scripts, 0);
