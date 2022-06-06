@@ -489,6 +489,10 @@ $curr_page = "Experiment Control";
                 }
             });
             $("#run-tag").on("click",function(){
+                var cmd="jchaos.tag(\""+tagname+"\","+ JSON.stringify(current_tagged_cu)+", 1,"+current_acquisitions+",\""+$("#tagnote").val()+"\")";
+                console.log("executing "+cmd);
+                $('#script_view').terminal().exec(cmd,false);
+
             });
             $("#b-tag").on("click",function(){
                 selected_cu.forEach(ele=>{
@@ -672,10 +676,15 @@ $curr_page = "Experiment Control";
                                 if (result !== undefined) {
                                     
                                     this.echo(new String(result));
-                                    if(result==0){
-                                        onsuccess();
-                                    } else {
-                                        onfailure(result);
+                                    if(typeof result === "object"){
+                                        onsuccess(result);
+
+                                    } else if(typeof result==="number"){
+                                        if(result==0){
+                                            onsuccess();
+                                        } else {
+                                            onfailure(result);
+                                        }
                                     }
                                 } else {
                                     onfailure("undefined");
@@ -704,7 +713,7 @@ $curr_page = "Experiment Control";
 
     function listDev(tree,node,arr,tags,st){
 
-        if(node.data.hasOwnProperty("info")&&node.data.info.hasOwnProperty('ndk_uid')){
+        if(node.data.hasOwnProperty('ndk_uid')){
             var start=st;
             if(node.data.hasOwnProperty("seq")){
                 if(start>node.data.seq)
@@ -712,7 +721,12 @@ $curr_page = "Experiment Control";
             }
             jchaos.addVector(tags,node.data.parent.replace("tag/",""));
 
-            var ia=node.data.info.ndk_uid;
+            var ia=[];
+            if(typeof node.data.ndk_uid === "string"){
+                ia = node.data.ndk_uid.split(",");
+            } else if(node.data.ndk_uid instanceof Array){
+                ia = node.data.ndk_uid;
+            }
             for(var k in ia){
                 jchaos.addVector(arr,ia[k]);
             }
@@ -735,7 +749,18 @@ $curr_page = "Experiment Control";
 		var tree = $('#hier_view').jstree(true);
 		var ID = $(node).attr('id');
 	
-
+        items['refresh'] = {
+                "separator_before": false,
+                "separator_after": true,
+                label: "Refresh",
+				action: function () {
+                    jqccs.busyWindow(false);
+                        if(parent_tag!=""){
+                            refresh_hier(parent_tag,0,new Date().getTime());
+                        }
+				    }
+				
+        };
 		if (node.hasOwnProperty("data")) {
             items['info'] = {
                 "separator_before": false,
@@ -778,7 +803,8 @@ $curr_page = "Experiment Control";
                 action: function(){
                     jchaos.setOptions({ "timeout": 60000 });
                     var opt={
-                        'page':dashboard_settings.defaultPage
+                        'page':dashboard_settings.defaultPage,
+                        'channels':[0,1]
                         
                     }
                    /* opt['updateCall'] = function(meta) {
