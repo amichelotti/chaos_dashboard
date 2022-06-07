@@ -1126,6 +1126,7 @@ function activateCameraFetch(){
       pullIntervalHealth = setInterval(() => {
         jchaos.getChannel(cameralist, 255, (vds) => {
           vds.forEach(ele => {
+            updateCamera(ele.health)
             jqccs.updateSingleNode(ele);
             jqccs.updateGenericControl(null, ele);
           });
