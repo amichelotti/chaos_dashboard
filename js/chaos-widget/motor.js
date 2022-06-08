@@ -1,8 +1,27 @@
 function getWidget() {
+  console.log("motor widget");
     var chaos = 
      {
        dsFn:{
         output:{
+          LastHomingTime:function(val,w){
+            if(val){
+               var ago = new Date(val).toString();
+               // w.attr('title',"Performed "+ago);
+                return '<i title="Performed '+ago+'" class="material-icons verde">home</i>';
+            }
+            return '';
+          },
+          KindOfHomingDone:function(val,w){
+            if(val==1){
+               // w.attr('title',"Performed "+ago);
+                return '<i title="1- Hardware" class="material-icons verde">sim_card</i>';
+            } else if(val==2){
+              return '<i title="2- Software" class="material-icons verde">calculate</i>';
+
+            }
+            return '';
+          },
             home:function(val){
                 if(val){
                     return '<i class="material-icons verde">home</i>';
@@ -11,10 +30,10 @@ function getWidget() {
               },
               powerOn:function(val){
                 if (val) {
-                  return '<i class="material-icons verde">trending_down</i>';
+                  return '<i title="on" class="material-icons verde">trending_down</i>';
         
                 } else {
-                  return '<i class="material-icons rosso">pause_circle_outline</i>';
+                  return '<i title="off" class="material-icons rosso">pause_circle_outline</i>';
         
                 }
               },
@@ -50,11 +69,13 @@ function getWidget() {
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Element</th>';
-        html += '<th colspan="3">Status</th>';
+        html += '<th colspan="2">Status</th>';
         html += '<th colspan="2">Position</th>';
         html += '<th colspan="2">Setting</th>';
-        html += '<th colspan="2">Saved [mm]</th>';
-        html += '<th colspan="4">Flags(On,Plim,Nlim,Home)</th>';
+        html += '<th colspan="1">Min</th>';
+        html += '<th colspan="1">Max</th>';
+        html += '<th colspan="3">Flags(On,Plim,Nlim)</th>';
+        html += '<th colspan="2">Home</th>';
         html += '<th colspan="2">Alarms dev/cu</th>';
         html += '</tr>';
         html += '</thead>';
@@ -66,20 +87,21 @@ function getWidget() {
           html += "<td class='td_element td_name'>" + cu[i] + "</td>";
           html += "<td id='" + cuname + "_health_status'></td>";
           html += "<td id='" + cuname + "_system_busy'></td>";
-          html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+         // html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           html += "<td class='position_element' id='" + cuname + "_output_position'></td>";
           html += "<td class='position_element' id='" + cuname + "_output_POI'></td>";
     
           html += "<td class='position_element' id='" + cuname + "_input_position'></td>";
           html += "<td class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'></select></td>";
     
-          html += "<td id='" + cuname + "_input_saved_position'></td>";
-          html += "<td id='" + cuname + "_input_saved_status'></td>";
+          html += "<td id='" + cuname + "_custom_min_position'></td>";
+          html += "<td id='" + cuname + "_custom_max_position'></td>";
           html += "<td id='" + cuname + "_output_powerOn'></td>";
           html += "<td id='" + cuname + "_output_PositiveLimitSwitchActive'></td>";
           html += "<td id='" + cuname + "_output_NegativeLimitSwitchActive'></td>";
-          html += "<td id='" + cuname + "_output_home'></td>";
-    
+          html += "<td id='" + cuname + "_output_LastHomingTime'></td>";
+          html += "<td id='" + cuname + "_output_KindOfHomingDone'></td>";
+
           html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
           html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
         });

@@ -3106,6 +3106,8 @@ function setRoi(cu, width, height, x, y, func) {
   );
 }
 function getWidget(options) {
+  console.log("camera widget");
+
   if (options) {
     opt = options;
   }
