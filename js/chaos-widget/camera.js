@@ -1242,7 +1242,7 @@ function showHisto(msghead, cuname, refresh, channel) {
     resizable: true,
     dialogClass: 'no-close',
     buttons: [{
-      text: "save",
+      text: "Save",
       click: function (e) {
         var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
         /* var len = binary_string.length;
@@ -1639,6 +1639,45 @@ function activateMenuShort() {
 
         }
       }
+      cuitem['save-mimage']= {
+        name: "Save Multi..", cu: name, icon: "fa-save",
+        callback: function (itemKey, o, e) {
+          jqccs.getEntryWindow("Save Multiple", "Samples", 1, "Save", function (cnt) {
+          var last_ser=0;
+          var nimage=1;
+          var zipf = new JSZip();
+          var zipname=name.replaceAll("/", "_");
+          jqccs.busyWindow(true);
+          var refresh=dashboard_settings['camera']['multiShotRefresh']||200;
+          var pullshot=setInterval(() => {
+            if(cnt>0){
+              jchaos.getChannel(name,0,(im)=>{
+                var img=im[0];
+                if(img.dpck_seq_id!=last_ser){
+                  var fname=zipname+"_"+nimage+"_"+img.dpck_seq_id+"."+img.FMT;
+                  zipf.file(fname, img.FRAMEBUFFER.$binary.base64, { base64: true });
+                  last_ser=img.dpck_seq_id;
+                  console.log(nimage+"] "+fname);
+                  nimage++;
+                  cnt--;
+                }
+                if(cnt==0){
+                  clearInterval(pullshot);
+                  jqccs.busyWindow(false);
+  
+                  zipf.generateAsync({ type: "blob" }).then(function (content) {
+                    saveAs(content, zipname);
+                });
+                }
+              });
+          }
+          },refresh);
+          
+  
+        });
+  
+      }
+    }
       if(streamaddr.hasOwnProperty(name)){
         cuitem['stream-stop']= {
           name: "Stream Stop", cu: name, icon: "fa-camera",

@@ -10,6 +10,12 @@
             "required": true,
             "description": "Camera Refresh (ms)"
         },
+        "multiShotRefresh": {
+            "type": "integer",
+            "default": 100,
+            "required": true,
+            "description": "Camera Multi shot refresh (ms)"
+        },
         "cameraStream": {
             "type": "boolean",
             "default": false,
