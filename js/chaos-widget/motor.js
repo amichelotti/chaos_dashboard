@@ -94,8 +94,8 @@ function getWidget() {
           html += "<td digits=2 class='position_element' id='" + cuname + "_input_position'></td>";
           html += "<td digits=2 class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'></select></td>";
     
-          html += "<td id='" + cuname + "_custom_min_position'></td>";
-          html += "<td id='" + cuname + "_custom_max_position'></td>";
+          html += "<td id='" + cuname + "_input_hwpositionmin'></td>";
+          html += "<td id='" + cuname + "_input_hwpositionmax'></td>";
           html += "<td id='" + cuname + "_output_powerOn'></td>";
           html += "<td id='" + cuname + "_output_PositiveLimitSwitchActive'></td>";
           html += "<td id='" + cuname + "_output_NegativeLimitSwitchActive'></td>";

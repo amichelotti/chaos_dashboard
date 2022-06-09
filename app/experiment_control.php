@@ -350,6 +350,7 @@ $curr_page = "Experiment Control";
             }
             function onsuccess(code){
                 jqccs.busyWindow(false);
+                
                 if(parent_tag!=""){
                     refresh_hier(parent_tag,0,new Date().getTime());
                 }
@@ -362,7 +363,7 @@ $curr_page = "Experiment Control";
                         localStorage['experiment_control_settings'] = JSON.stringify(dashboard_settings);
 
                     }
-
+                    updateTag();
                 }
                 
                 jqccs.instantMessage("OK ", current_script.script_name, 5000, true);
@@ -495,9 +496,13 @@ $curr_page = "Experiment Control";
                 }
             });
             $("#run-tag").on("click",function(){
+                jqccs.busyWindow(true);
+
+                updateTag()
                 var cmd="jchaos.tag(\""+tagname+"\","+ JSON.stringify(current_tagged_cu)+", 1,"+current_acquisitions+",\""+$("#tagnote").val()+"\")";
                 console.log("executing "+cmd);
                 $('#script_view').terminal().exec(cmd,false);
+
 
             });
             $("#b-tag").on("click",function(){
@@ -719,10 +724,10 @@ $curr_page = "Experiment Control";
 
     function listDev(tree,node,arr,tags,st,obj){
         if(typeof obj !== "object"){
-            obj={index:0};
+            obj={index:0,start:-1};
         }
         if(obj.index>2){
-            return;
+            return obj.start;
         }
         if(node.data.hasOwnProperty('ndk_uid')){
             var start=st;
@@ -741,7 +746,8 @@ $curr_page = "Experiment Control";
             for(var k in ia){
                 jchaos.addVector(arr,ia[k]);
             }
-            
+            obj.index--;
+
             return start;
         } else if(node.hasOwnProperty("children")){
             obj.index++;
@@ -749,12 +755,15 @@ $curr_page = "Experiment Control";
             for(var k in node.children){
                 var node_data = tree.get_node(node.children[k]);
                 st=listDev(tree,node_data,arr,tags,st,obj);
+                if((obj.start<0)||(st<obj.start)){
+                    obj.start=st
+                } 
             }
-
         }
         return st;
 
     }
+
     function addMenuLogItems(node) {
 		var items = {};
 		var tree = $('#hier_view').jstree(true);
@@ -824,11 +833,14 @@ $curr_page = "Experiment Control";
                         'channels':[0,1]
                         
                     }
-                   /* opt['updateCall'] = function(meta) {
-                    $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
-                    console.log("percent:" + parseInt(meta.percent.toFixed(2)));
+                    opt['updateCall'] = function(meta) {
+                        $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
+                        console.log("percent:" + parseInt(meta.percent.toFixed(2)));
+                        jqccs.busyWindow(false);
 
-                };*/
+                    };
+                    jqccs.busyWindow(true);
+
                     jchaos.fetchHistoryToZip(parent_tag, nlist, start, stop, tags, opt, function(msg) {
                         $("#zipprogress").parent().remove();
 
