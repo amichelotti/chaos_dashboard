@@ -818,14 +818,17 @@ function updateCamera(ds) {
     $("#"+id+"SHUTTER").html(ds.SHUTTER);
     $("#"+id+"GAIN").html(ds.GAIN);
     $("#"+id+"TRIGGER_MODE").html(modeToString(ds.TRIGGER_MODE));
-    if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
+   /* if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
       redrawReference(id, old_size[id].REFX, old_size[id].REFY, old_size[id].REFSX, old_size[id].REFSY, old_size[id].REFRHO, -old_size[id].ROT,ds.WIDTH,ds.HEIGHT);
-    }
+    }*/
 
   } else if (ds.dpck_ds_type == 1) {
   //  console.log("INPUT :" + JSON.stringify(ds));
     let id = mappedcamera[ds.ndk_uid];
-    
+    if(selection_ellipse.hasOwnProperty(id)){
+      console.log("editing.. input update skipped")
+      return;
+    }
       if(ds.hasOwnProperty("ROT")&&(ds.ROT%360)){
         $("#rot_enable-" + id).html('<i class="fa fa-check-square-o" aria-hidden="true"></i>');
       } else {
@@ -1996,15 +1999,10 @@ function activateMenuShort() {
       if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.hasOwnProperty('ctx_width') && selection.h && selection.w) {
 
         cuitem['transforms']['items']['zoom-in'] = {
-          name: "Zoom In ", cu: name, icon: "fa-search-plus",
+          name: "Zoom In 2X", cu: name, icon: "fa-search-plus",
           callback: function (itemKey, opt, e) {
-           /* if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
-              zoomInOut(domid, (cameraLayoutSettings[domid]['zoom']+1)/cameraLayoutSettings[domid]['zoom']);
-
-            } else {
-              zoomInOut(domid, selection.ctx_width / selection.w);
-            }*/
-            zoomInOut(domid, selection.ctx_width / selection.w);
+            //zoomInOut(domid, selection.ctx_width / selection.w);
+            zoomInOut(domid, 2.0);
 
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
@@ -2015,7 +2013,7 @@ function activateMenuShort() {
         cuitem['transforms']['items']['zoom-out'] = {
           name: "Zoom Out ", cu: name, icon: "fa-search-minus",
           callback: function (itemKey, opt, e) {
-            if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom_incr']&&(cameraLayoutSettings[domid]['zoom_incr']>0)){
+           /* if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom_incr']&&(cameraLayoutSettings[domid]['zoom_incr']>0)){
               zoomInOut(domid, 1/cameraLayoutSettings[domid]['zoom_incr']);
 
             } else if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
@@ -2023,7 +2021,9 @@ function activateMenuShort() {
             } else {
               zoomInOut(domid, selection.w/selection.ctx_width);
 
-            }
+            }*/
+            zoomInOut(domid, 0.5);
+
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
         }
