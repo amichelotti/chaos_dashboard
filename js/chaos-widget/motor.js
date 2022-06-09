@@ -15,9 +15,9 @@ function getWidget() {
           KindOfHomingDone:function(val,w){
             if(val==1){
                // w.attr('title',"Performed "+ago);
-                return '<i title="1- Hardware" class="material-icons verde">sim_card</i>';
+                return '<i title="1- Homing Hardware" class="material-icons verde">sim_card</i>';
             } else if(val==2){
-              return '<i title="2- Software" class="material-icons verde">calculate</i>';
+              return '<i title="2- Homing Software" class="material-icons verde">calculate</i>';
 
             }
             return '';
@@ -88,11 +88,11 @@ function getWidget() {
           html += "<td id='" + cuname + "_health_status'></td>";
           html += "<td id='" + cuname + "_system_busy'></td>";
          // html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-          html += "<td class='position_element' id='" + cuname + "_output_position'></td>";
-          html += "<td class='position_element' id='" + cuname + "_output_POI'></td>";
+          html += "<td digits=2 class='position_element' id='" + cuname + "_output_position'></td>";
+          html += "<td digits=2 class='position_element' id='" + cuname + "_output_POI'></td>";
     
-          html += "<td class='position_element' id='" + cuname + "_input_position'></td>";
-          html += "<td class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'></select></td>";
+          html += "<td digits=2 class='position_element' id='" + cuname + "_input_position'></td>";
+          html += "<td digits=2 class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'></select></td>";
     
           html += "<td id='" + cuname + "_custom_min_position'></td>";
           html += "<td id='" + cuname + "_custom_max_position'></td>";
