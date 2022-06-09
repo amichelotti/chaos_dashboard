@@ -71,7 +71,7 @@ $curr_page = "Experiment Control";
                                 <div class="col">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="enable_manual">
-                                        <label class="custom-control-label" for="enable_manual">Manual Tag</label>
+                                        <label class="custom-control-label" for="enable_manual">Manual Acquire</label>
                                     </div>
 
                                 </div>
@@ -128,12 +128,12 @@ $curr_page = "Experiment Control";
                                 </div>
                                 <div class="col-sm-2 align-self-center">
                                     <div class="row form-group">
-                                        <label for="acquisitions"><strong>Tag cycles</strong></label>
+                                        <label for="acquisitions"><strong>Acquire cycles</strong></label>
                                         <input type="number" min="1" value="1" class="form-control" id="acquisitions">
                                     </div>
                                     <div class="row justify-content-cente">
                                         <div class="col">
-                                            <button id="run-tag" type="button" class="btn btn-success" disabled>Tag</button>
+                                            <button id="run-tag" type="button" class="btn btn-success" disabled>Acquire</button>
                                         </div>
                                     </div>
 
@@ -153,7 +153,7 @@ $curr_page = "Experiment Control";
                                 <div class="col-sm-5 box">
                                     <div class="card list-group">
                                         <div id="tagged_h" class="card-header">
-                                            Being Tagged
+                                            Being Acquired
                                         </div>
                                         <ul id="tagged" class="listview">
     
@@ -284,6 +284,12 @@ $curr_page = "Experiment Control";
 								"icon": icon,
 								"data": item
 							};
+                            if(item.hasOwnProperty('info')){
+                                node["li_attr"]={ //or a_attr if you prefer
+                                "title":item.info,
+                                "class": "show_tooltip"
+                                };
+                            }
 							node['data']['parent'] = group;
 							if (!node_created.hasOwnProperty(nodef)) {
 								node_created[node['id']] = node['parent'];
@@ -711,8 +717,13 @@ $curr_page = "Experiment Control";
                 }
             });
 
-    function listDev(tree,node,arr,tags,st){
-
+    function listDev(tree,node,arr,tags,st,obj){
+        if(typeof obj !== "object"){
+            obj={index:0};
+        }
+        if(obj.index>2){
+            return;
+        }
         if(node.data.hasOwnProperty('ndk_uid')){
             var start=st;
             if(node.data.hasOwnProperty("seq")){
@@ -733,11 +744,11 @@ $curr_page = "Experiment Control";
             
             return start;
         } else if(node.hasOwnProperty("children")){
-            
+            obj.index++;
+
             for(var k in node.children){
                 var node_data = tree.get_node(node.children[k]);
-
-                st=listDev(tree,node_data,arr,tags,st);
+                st=listDev(tree,node_data,arr,tags,st,obj);
             }
 
         }
@@ -761,7 +772,8 @@ $curr_page = "Experiment Control";
 				    }
 				
         };
-		if (node.hasOwnProperty("data")) {
+		if (node.hasOwnProperty("data")&& node.data) {
+            if(node.data.hasOwnProperty("seq")){
             items['info'] = {
                 "separator_before": false,
                 "separator_after": false,
@@ -771,6 +783,7 @@ $curr_page = "Experiment Control";
                         jqccs.showJson(info.mdsndk_nl_lsubj,info);	
 				    }
 				};
+            }
             if(node.data.hasOwnProperty('parent')&&node.data.parent!=""){
                 var parent_tag=node.data.parent.replace("tag/","");
 
@@ -795,6 +808,10 @@ $curr_page = "Experiment Control";
                     });
 
                 }*/
+               /* if(nlist.length && ((node.data.hasOwnProperty("seq")||
+                (node.hasOwnProperty("children")&&node.get_node(node.children[0]).hasOwnProperty('data')&&node.get_node(node.children[0]).data.hasOwnProperty("seq"))||
+                (node.hasOwnProperty("children")&&node.get_node(node.children[0]).hasOwnProperty("children")&&node.get_node(node.children[0]).get_node(node.get_node(node.children[0]).children[0]).data.hasOwnProperty("seq"))
+                )))*/
                 if(nlist.length){
             items['download']={
                 "separator_before": false,
