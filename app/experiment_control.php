@@ -54,9 +54,14 @@ $curr_page = "Experiment Control";
                                 <label for="desc_view"><strong>Description:</strong></label>
                                 <div id="desc_view" class=""></div>
                             </div>
+                            <div class="row">
+                                <button id="refresh-folder" type="button" class="btn btn-success">Refresh</button>
+                            </div>
                             <div class="row box">
-                                <label for="desc_view"><strong>Virtual folder:</strong></label>
-                                <div id="hier_view" class=""></div>
+                                
+                                    <label for="hier_view"><strong>Virtual folder:</strong></label>
+                                    <div id="hier_view"></div>
+                                
                             </div>
                         </div>
                         <div class="col-md-5">
@@ -206,9 +211,11 @@ $curr_page = "Experiment Control";
             function refresh_hier(search,start,end){
                 var jsree_data = [];
                 var node_created = {};
-
+                console.log("refreshing virtual folder:"+search);
                 jchaos.log(search, "search", "tag", start, end, function (data) {
 					if (data.hasOwnProperty("result_list")) {
+                        console.log("found :"+data.result_list.length+" results");
+
 						data.result_list.forEach(function (item) {
 							var name = item.mdsndk_nl_sid;
 							var nodef = jchaos.encodeName(name) + "_" + item.mdsndk_nl_lts;
@@ -304,7 +311,9 @@ $curr_page = "Experiment Control";
 								jsree_data.push(nn);
 							}
 						});
-					}
+					} else {
+                        console.log("virtual folder nothing found")
+                    }
 
 
 					$("#hier_view").jstree("destroy");
@@ -448,6 +457,19 @@ $curr_page = "Experiment Control";
             $("#session_name").on("input", function() {
                 updateTag();
             });
+            $("#refresh-folder").on("click",()=>{
+                jqccs.busyWindow(true);
+
+                if(parent_tag!=""){
+                    refresh_hier(parent_tag,0,new Date().getTime());
+                } else {
+                    parent_tag=current_experiment.zone+"/"+current_experiment.group+"/"+current_experiment.experiment;
+
+                }
+                jqccs.busyWindow(false);
+
+ 
+            })
             $("#enable_manual").change(function(){
                 if($(this).is(':checked')){
                     $(".manual_control").removeClass("invisible");
