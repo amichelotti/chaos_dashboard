@@ -4554,7 +4554,6 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         },
         ifUnChecked:function() {
             var cuname=this.attr("cu");
-            console.log("UNCHECK "+cuname);
             if(typeof uncheckFn === "function" ){
                 uncheckFn(cuname);
             }

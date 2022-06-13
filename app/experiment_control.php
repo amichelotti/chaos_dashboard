@@ -228,10 +228,13 @@ $curr_page = "Experiment Control";
 							if ((item.mdsndk_nl_l_ld !== undefined) && (item.mdsndk_nl_l_ld == "Error")) {
 								type = "error";
 							}
-                            if(item.hasOwnProperty("info")){
+                            if(item.hasOwnProperty("dsndk_history_burst_linfo")){
                                 try{
-                                    var j =JSON.parse(item.info);
-                                    item.info=j;
+                                    var j=item.dsndk_history_burst_linfo;
+                                    if(typeof item.dsndk_history_burst_linfo === "object"){
+                                        j=JSON.parse(item.dsndk_history_burst_linfo);
+                                    }
+                                    item['info']=j;
                                 }catch(e){
 
                                 }
@@ -549,6 +552,7 @@ $curr_page = "Experiment Control";
                 selected_tagged_cu.forEach(ele=>{
                     current_tagged_cu=jchaos.removeVector(current_tagged_cu,ele);
                 });
+                selected_tagged_cu=[];
                 jqccs.refreshCheckList("tagged",current_tagged_cu,(check)=>{
                         jchaos.addVector(selected_tagged_cu,check);
                     },(uncheck)=>{
@@ -862,7 +866,7 @@ $curr_page = "Experiment Control";
 
                     };
                     jqccs.busyWindow(true);
-
+                    opt['fmt']="csv";
                     jchaos.fetchHistoryToZip(parent_tag, nlist, start, stop, tags, opt, function(msg) {
                         $("#zipprogress").parent().remove();
 
