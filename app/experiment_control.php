@@ -867,11 +867,12 @@ $curr_page = "Experiment Control";
                     };
                     jqccs.busyWindow(true);
                     opt['fmt']="csv";
+                    opt['log']=true;
                     jchaos.fetchHistoryToZip(parent_tag, nlist, start, stop, tags, opt, function(msg) {
                         $("#zipprogress").parent().remove();
                         jqccs.busyWindow(false);
                         if(msg.hasOwnProperty("error")&& msg.error==-1100){
-                            alert("To much data transferred, please reduce history page in Config->Settings->defaultPage");
+                            alert("Too much data transferred, please reduce history page in Config->Settings->defaultPage");
                         } else {
                             jqccs.instantMessage("fetchHistoryToZip ", "failed:" + JSON.stringify(msg), 8000, false);
                         }
