@@ -811,7 +811,7 @@
 				};
 				jsree_data.push(node_all);
 				node_created['ALL'] = true;
-				jchaos.log(search, "search", "all", query.start, query.end, function (data) {
+				jchaos.log(search, "search", "all", query.start, query.stop, function (data) {
 					if (data.hasOwnProperty("result_list")) {
 						data.result_list.forEach(function (item) {
 							var name = item.mdsndk_nl_sid;

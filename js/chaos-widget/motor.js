@@ -71,7 +71,7 @@ function getWidget() {
         html += '<th>Element</th>';
         html += '<th colspan="2">Status</th>';
         html += '<th colspan="2">Position</th>';
-        html += '<th colspan="2">Setting</th>';
+        html += '<th colspan="3">Setting</th>';
         html += '<th colspan="1">Min</th>';
         html += '<th colspan="1">Max</th>';
         html += '<th colspan="3">Flags(On,Plim,Nlim)</th>';
@@ -92,7 +92,7 @@ function getWidget() {
           html += "<td digits=2 class='position_element' id='" + cuname + "_output_POI'></td>";
     
           html += "<td digits=2 class='position_element' id='" + cuname + "_input_position'></td>";
-          html += "<td digits=2 class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'></select></td>";
+          html += "<td digits=2 class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'><option value=\"ciccio\">ciccio</option></select></td>";
     
           html += "<td id='" + cuname + "_input_hwpositionmin'></td>";
           html += "<td id='" + cuname + "_input_hwpositionmax'></td>";
