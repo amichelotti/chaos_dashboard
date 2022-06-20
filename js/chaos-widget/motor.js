@@ -1,3 +1,4 @@
+var current_selection=""
 function getWidget() {
   console.log("motor widget");
     var chaos = 
@@ -55,6 +56,148 @@ function getWidget() {
   
         }
       }
+      },
+      tableMenuItem:{
+       
+        'poi':{
+          "name": "POI",icon: "fa-edit",
+          "items": {
+              'add-poi': {
+                  name: "Edit Poi", icon:"fa-add",
+                  callback: function(itemKey, opt, e) {
+                    jchaos.loadSetPoint(current_selection, "poiConfig", attr=>{
+                      var poilist=[];
+
+                      var poi={};
+                      var poi_editor={
+                        "type": "array",
+                        "format": "table",
+                        "title": "POI",
+                        "description":"Alias to positions",
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "object",
+                          "title": "POI",
+                          "properties": {
+                            "name": {
+                                "type": "string"
+                              },
+                            "value": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                      
+                      if(attr && attr.hasOwnProperty("cudk_default_value")){
+                        try{
+                          poi=JSON.parse(attr["cudk_default_value"]);
+                          if(poi.hasOwnProperty("poi")){
+                            for(var k in poi['poi']){
+                              poilist.push({"name":k,"value":poi['poi'][k]});
+                            }
+                          }
+                      } catch(e){
+
+                      }
+                    }
+                      jqccs.jsonEditWindow("POI Editor", poi_editor, poilist, function(data, obj) {
+                        var poi={
+                          "poi":{}
+                        }
+                        for(var k in data){
+                          poi['poi'][data[k].name]=data[k].value;
+
+                        }
+                        
+                        var str=JSON.stringify(poi);
+                        jchaos.saveSetPoint(current_selection, "poiConfig", str,()=>{
+                          jchaos.setAttribute(current_selection, "poiConfig", str, function () {
+                            jqccs.instantMessage(current_selection, "Modified POIs ", 4000, true);
+                            triggerRefreshEdit();
+                          },function (bad) {
+                            jqccs.instantMessage(current_selection, "Error updating poi err:" + JSON.stringify(bad), 4000, false);
+
+                          })
+
+
+														}, function (bad) {
+															jqccs.instantMessage(current_selection, "Error Removing poi from configuration "+n+" err:" + JSON.stringify(bad), 4000, false);
+
+														});
+                      });
+                    })
+
+                  }
+                
+              },
+              'remove-poi': {
+                name: "Remove Poi", icon:"fa-sub",
+                callback: function(itemKey, opt, e) {
+                  jchaos.loadSetPoint(current_selection, "poiConfig", attr=>{
+                    var poilist=[];
+                    var poi={};
+                    if(attr && attr.hasOwnProperty("cudk_default_value")){
+                      try{
+                        poi=JSON.parse(attr["cudk_default_value"]);
+                        if(poi.hasOwnProperty("poi")){
+                          for(var k in poi['poi']){
+                            poilist.push(k);
+                          }
+                        }
+                      } catch(e){
+
+                      }
+                    
+                      if(poilist.length){
+                      jqccs.getEntryWindow("Remove", "name", poilist, "Remove", function (n) {
+                        delete poi['poi'][n];
+                        if(poilist.length==1){
+                          // no more poi
+                          attr["cudk_default_value"]="";
+
+                        } else {
+                          attr["cudk_default_value"]=JSON.stringify(poi);
+
+                        }
+
+                        jchaos.saveSetPoint(current_selection, "poiConfig", attr,()=>{
+                          jchaos.setAttribute(current_selection, "poiConfig", attr["cudk_default_value"], function () {
+                            jqccs.instantMessage(current_selection, "Removed POI " +n, 4000, true);
+                            triggerRefreshEdit();
+                          },function (bad) {
+                            jqccs.instantMessage(current_selection, "Error updating poi "+n+" err:" + JSON.stringify(bad), 4000, false);
+
+                          })
+
+
+														}, function (bad) {
+															jqccs.instantMessage(current_selection, "Error Removing poi from configuration "+n+" err:" + JSON.stringify(bad), 4000, false);
+
+														});
+									},"Cancel");
+                }}
+                });
+              
+            }
+            }
+            }
+          }
+
+      },
+      tableClickFn: function (tmpObj, e) {
+        //  rebuildCam(tmpObj);
+        current_selection=tmpObj.node_selected;
+        var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+        if(!tmpObj.hasOwnProperty("data")){
+          tmpObj['data']={};
+        } else {
+          if(tmpObj.data instanceof Array)
+            jqccs.updateGenericControl(tmpObj, tmpObj.data[cindex]);
+  
+        }
+  
+      
       },
       tableFn:function(tmpObj) {
         var cu=[];
@@ -179,12 +322,12 @@ function getWidget() {
         customs.forEach(function(custom){
           var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
           $("#"+name).hide();
-        if(custom.hasOwnProperty('cudk_load_param')&& custom.cudk_load_param.hasOwnProperty('poi')){
+        if(custom.hasOwnProperty('poi')&&(Object.keys(custom.poi).length)){
           var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
           $("#"+name).show();
           $("#"+name).empty();
-          for(var i in custom.cudk_load_param.poi){
-            $("#"+name).append("<option value='"+custom.cudk_load_param.poi[i]+"'>"+i+"</option>");
+          for(var i in custom.poi){
+            $("#"+name).append("<option value='"+custom.poi[i]+"'>"+i+"</option>");
 
           }
           $("#"+name).on("change", function (s) {

@@ -4710,6 +4710,9 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                 if (w.hasOwnProperty('updateFn')) {
                     tmpObj['updateFn'] = w.updateFn;
                 }
+                if (w.hasOwnProperty('tableMenuItem')) {
+                    tmpObj['tableMenuItem'] = w.tableMenuItem;
+                }
                 if (w.hasOwnProperty('updateInterfaceFn')) {
                     tmpObj['updateInterfaceFn'] = w.updateInterfaceFn;
                 }
@@ -10462,6 +10465,9 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         }, cancelText);
 
     }
+    jqccs.getNEntryWindow=function(hmsg, def_msg_v, def_text_v, butyes, yeshandle, cancelText){
+        return getNEntryWindow(hmsg, def_msg_v, def_text_v, butyes, yeshandle, cancelText);
+    } 
 
     function getNEntryWindow(hmsg, def_msg_v, def_text_v, butyes, yeshandle, cancelText) {
         var ret = true;
@@ -10700,7 +10706,14 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         var stat = jchaos.getChannel(currsel, 255);
         
         var cu =stat[0];
+        if(tmpObj.hasOwnProperty("tableMenuItem")){
+            for(var k in tmpObj.tableMenuItem){
+                items['widget-'+k]= tmpObj.tableMenuItem[k];
+            }
+            
+            items['sep1'] = "---------";
 
+        }
         if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) { //if el health
             var status = cu.health.nh_status;
             items['setstate'] = {
@@ -10801,7 +10814,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             }
         }
         items['mask-alarms'] = { name: "Mask alarms Dataset" };
-
+       
         if (tmpObj.node_multi_selected.length == 1) {
 
             items['savenode'] = {
@@ -11120,7 +11133,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             };
 
         }
-        items['sep3'] = "---------";
+        items['sep4'] = "---------";
         if (cu != null && cu.hasOwnProperty('system') && cu.system.hasOwnProperty("dsndk_storage_type")) {
             var citem = {};
             var critem={};
