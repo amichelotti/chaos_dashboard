@@ -525,6 +525,7 @@
 
 								jchaos.agentAssociateNode(selected_node, ok['ndk_uid'], "", "UnitServer", okk => {
 									jqccs.instantMessage("Unit server created and associated ", " OK", 2000, true);
+									triggerRefreshEdit();
 
 
 								}, (badd) => {
@@ -690,33 +691,7 @@
 									if (decoded) {
 										cu["ndk_uid"] = zone + "/" + decoded["group"] + "/" + decoded['id'] + (new Date()).getTime();
 										addEditCU(cu, tree);
-										/*	cu2editor(cu, (edit_templ, editobj) => {
-	
-												jqccs.jsonEditWindow("CU Editor", edit_templ, editobj, jchaos.cuSave, null, function (json) {
-													jqccs.instantMessage("CU saved " + selected_node, " OK", 2000, true);
-													decoded = jchaos.pathToZoneGroupId(json.ndk_uid);
-													var icon_name = "/img/devices/" + decoded["group"] + ".png";
-	
-													if (decoded) {
-														json['group'] = decoded["group"];
-														var newnode = {
-															"id": jchaos.encodeName(json.ndk_uid),
-															"parent": node.id,
-															"icon": icon_name,
-															"text": decoded["id"],
-															"data": json
-														};
-	
-														tree.create_node(node, newnode);
-														triggerRefreshEdit();
-	
-	
-													}
-												}, function (bad) {
-													jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
-	
-												});
-											});*/
+										
 									} else {
 										alert("Not a valid uid:'" + cu.ndk_uid + "' must contain at least zone/group/id")
 									}
@@ -819,12 +794,16 @@
 										}
 										cu2editor(data, (edit_templ, editobj) => {
 											jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (ok) {
+												
 												jqccs.instantMessage("CU/EU saved " + selected_node, " OK", 2000, true);
+												triggerRefreshEdit();
+
 
 											}, function (bad) {
 												jqccs.instantMessage("Error saving CU/EU " + selected_node, JSON.stringify(bad), 2000, false);
 
 											});
+
 										});
 
 									}
@@ -886,6 +865,7 @@
 												jqccs.instantMessage("Agent  " + selected_node, "Save Error:" + JSON.stringify(bad), 4000, false);
 
 											}
+
 										);
 
 									}
@@ -922,9 +902,13 @@
 
 											jqccs.jsonEditWindow("EU Editor", templ, eu, jchaos.cuSave, null, (ok) => {
 												jqccs.instantMessage("Created ", "OK", 2000, true);
+												triggerRefreshEdit();
+
 
 											}, (bad) => {
 												alert(" Cannot create node err:" + JSON.stringify(bad));
+												triggerRefreshEdit();
+
 											});
 										});
 
@@ -953,6 +937,8 @@
 										}
 										jqccs.jsonEditWindow("US Editor", templ, data.us_desc, jchaos.unitServerSave, null, function (ok) {
 											jqccs.instantMessage("Unit server save ", " OK", 2000, true);
+											triggerRefreshEdit();
+
 
 										}, function (bad) {
 											jqccs.instantMessage("Unit server failed", "Error:" + JSON.stringify(bad), 4000, false);

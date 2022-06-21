@@ -54,9 +54,14 @@ $curr_page = "Experiment Control";
                                 <label for="desc_view"><strong>Description:</strong></label>
                                 <div id="desc_view" class=""></div>
                             </div>
+                            <div class="row">
+                                <button id="refresh-folder" type="button" class="btn btn-success">Refresh</button>
+                            </div>
                             <div class="row box">
-                                <label for="desc_view"><strong>Virtual folder:</strong></label>
-                                <div id="hier_view" class=""></div>
+                                
+                                    <label for="hier_view"><strong>Virtual folder:</strong></label>
+                                    <div id="hier_view"></div>
+                                
                             </div>
                         </div>
                         <div class="col-md-5">
@@ -71,7 +76,7 @@ $curr_page = "Experiment Control";
                                 <div class="col">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="enable_manual">
-                                        <label class="custom-control-label" for="enable_manual">Manual Tag</label>
+                                        <label class="custom-control-label" for="enable_manual">Manual Acquire</label>
                                     </div>
 
                                 </div>
@@ -128,12 +133,12 @@ $curr_page = "Experiment Control";
                                 </div>
                                 <div class="col-sm-2 align-self-center">
                                     <div class="row form-group">
-                                        <label for="acquisitions"><strong>Tag cycles</strong></label>
+                                        <label for="acquisitions"><strong>Acquire cycles</strong></label>
                                         <input type="number" min="1" value="1" class="form-control" id="acquisitions">
                                     </div>
                                     <div class="row justify-content-cente">
                                         <div class="col">
-                                            <button id="run-tag" type="button" class="btn btn-success" disabled>Tag</button>
+                                            <button id="run-tag" type="button" class="btn btn-success" disabled>Acquire</button>
                                         </div>
                                     </div>
 
@@ -153,7 +158,7 @@ $curr_page = "Experiment Control";
                                 <div class="col-sm-5 box">
                                     <div class="card list-group">
                                         <div id="tagged_h" class="card-header">
-                                            Being Tagged
+                                            Being Acquired
                                         </div>
                                         <ul id="tagged" class="listview">
     
@@ -206,9 +211,11 @@ $curr_page = "Experiment Control";
             function refresh_hier(search,start,end){
                 var jsree_data = [];
                 var node_created = {};
-
+                console.log("refreshing virtual folder:"+search);
                 jchaos.log(search, "search", "tag", start, end, function (data) {
 					if (data.hasOwnProperty("result_list")) {
+                        console.log("found :"+data.result_list.length+" results");
+
 						data.result_list.forEach(function (item) {
 							var name = item.mdsndk_nl_sid;
 							var nodef = jchaos.encodeName(name) + "_" + item.mdsndk_nl_lts;
@@ -221,10 +228,13 @@ $curr_page = "Experiment Control";
 							if ((item.mdsndk_nl_l_ld !== undefined) && (item.mdsndk_nl_l_ld == "Error")) {
 								type = "error";
 							}
-                            if(item.hasOwnProperty("info")){
+                            if(item.hasOwnProperty("dsndk_history_burst_linfo")){
                                 try{
-                                    var j =JSON.parse(item.info);
-                                    item.info=j;
+                                    var j=item.dsndk_history_burst_linfo;
+                                    if(typeof item.dsndk_history_burst_linfo === "object"){
+                                        j=JSON.parse(item.dsndk_history_burst_linfo);
+                                    }
+                                    item['info']=j;
                                 }catch(e){
 
                                 }
@@ -284,6 +294,12 @@ $curr_page = "Experiment Control";
 								"icon": icon,
 								"data": item
 							};
+                            if(item.hasOwnProperty('info')){
+                                node["li_attr"]={ //or a_attr if you prefer
+                                "title":item.info,
+                                "class": "show_tooltip"
+                                };
+                            }
 							node['data']['parent'] = group;
 							if (!node_created.hasOwnProperty(nodef)) {
 								node_created[node['id']] = node['parent'];
@@ -298,7 +314,9 @@ $curr_page = "Experiment Control";
 								jsree_data.push(nn);
 							}
 						});
-					}
+					} else {
+                        console.log("virtual folder nothing found")
+                    }
 
 
 					$("#hier_view").jstree("destroy");
@@ -344,6 +362,7 @@ $curr_page = "Experiment Control";
             }
             function onsuccess(code){
                 jqccs.busyWindow(false);
+                
                 if(parent_tag!=""){
                     refresh_hier(parent_tag,0,new Date().getTime());
                 }
@@ -356,7 +375,7 @@ $curr_page = "Experiment Control";
                         localStorage['experiment_control_settings'] = JSON.stringify(dashboard_settings);
 
                     }
-
+                    updateTag();
                 }
                 
                 jqccs.instantMessage("OK ", current_script.script_name, 5000, true);
@@ -441,6 +460,19 @@ $curr_page = "Experiment Control";
             $("#session_name").on("input", function() {
                 updateTag();
             });
+            $("#refresh-folder").on("click",()=>{
+                jqccs.busyWindow(true);
+
+                if(parent_tag!=""){
+                    refresh_hier(parent_tag,0,new Date().getTime());
+                } else {
+                    parent_tag=current_experiment.zone+"/"+current_experiment.group+"/"+current_experiment.experiment;
+
+                }
+                jqccs.busyWindow(false);
+
+ 
+            })
             $("#enable_manual").change(function(){
                 if($(this).is(':checked')){
                     $(".manual_control").removeClass("invisible");
@@ -489,9 +521,13 @@ $curr_page = "Experiment Control";
                 }
             });
             $("#run-tag").on("click",function(){
+                jqccs.busyWindow(true);
+
+                updateTag()
                 var cmd="jchaos.tag(\""+tagname+"\","+ JSON.stringify(current_tagged_cu)+", 1,"+current_acquisitions+",\""+$("#tagnote").val()+"\")";
                 console.log("executing "+cmd);
                 $('#script_view').terminal().exec(cmd,false);
+
 
             });
             $("#b-tag").on("click",function(){
@@ -516,6 +552,7 @@ $curr_page = "Experiment Control";
                 selected_tagged_cu.forEach(ele=>{
                     current_tagged_cu=jchaos.removeVector(current_tagged_cu,ele);
                 });
+                selected_tagged_cu=[];
                 jqccs.refreshCheckList("tagged",current_tagged_cu,(check)=>{
                         jchaos.addVector(selected_tagged_cu,check);
                     },(uncheck)=>{
@@ -711,8 +748,13 @@ $curr_page = "Experiment Control";
                 }
             });
 
-    function listDev(tree,node,arr,tags,st){
-
+    function listDev(tree,node,arr,tags,st,obj){
+        if(typeof obj !== "object"){
+            obj={index:0,start:-1};
+        }
+        if(obj.index>2){
+            return obj.start;
+        }
         if(node.data.hasOwnProperty('ndk_uid')){
             var start=st;
             if(node.data.hasOwnProperty("seq")){
@@ -730,20 +772,24 @@ $curr_page = "Experiment Control";
             for(var k in ia){
                 jchaos.addVector(arr,ia[k]);
             }
-            
+            obj.index--;
+
             return start;
         } else if(node.hasOwnProperty("children")){
-            
+            obj.index++;
+
             for(var k in node.children){
                 var node_data = tree.get_node(node.children[k]);
-
-                st=listDev(tree,node_data,arr,tags,st);
+                st=listDev(tree,node_data,arr,tags,st,obj);
+                if((obj.start<0)||(st<obj.start)){
+                    obj.start=st
+                } 
             }
-
         }
         return st;
 
     }
+
     function addMenuLogItems(node) {
 		var items = {};
 		var tree = $('#hier_view').jstree(true);
@@ -761,7 +807,8 @@ $curr_page = "Experiment Control";
 				    }
 				
         };
-		if (node.hasOwnProperty("data")) {
+		if (node.hasOwnProperty("data")&& node.data) {
+            if(node.data.hasOwnProperty("seq")){
             items['info'] = {
                 "separator_before": false,
                 "separator_after": false,
@@ -771,6 +818,7 @@ $curr_page = "Experiment Control";
                         jqccs.showJson(info.mdsndk_nl_lsubj,info);	
 				    }
 				};
+            }
             if(node.data.hasOwnProperty('parent')&&node.data.parent!=""){
                 var parent_tag=node.data.parent.replace("tag/","");
 
@@ -795,6 +843,10 @@ $curr_page = "Experiment Control";
                     });
 
                 }*/
+               /* if(nlist.length && ((node.data.hasOwnProperty("seq")||
+                (node.hasOwnProperty("children")&&node.get_node(node.children[0]).hasOwnProperty('data')&&node.get_node(node.children[0]).data.hasOwnProperty("seq"))||
+                (node.hasOwnProperty("children")&&node.get_node(node.children[0]).hasOwnProperty("children")&&node.get_node(node.children[0]).get_node(node.get_node(node.children[0]).children[0]).data.hasOwnProperty("seq"))
+                )))*/
                 if(nlist.length){
             items['download']={
                 "separator_before": false,
@@ -807,15 +859,23 @@ $curr_page = "Experiment Control";
                         'channels':[0,1]
                         
                     }
-                   /* opt['updateCall'] = function(meta) {
-                    $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
-                    console.log("percent:" + parseInt(meta.percent.toFixed(2)));
+                    opt['updateCall'] = function(meta) {
+                        $("#zipprogress").progressbar("option", { value: parseInt(meta.percent.toFixed(2)) });
+                        console.log("percent:" + parseInt(meta.percent.toFixed(2)));
+                        jqccs.busyWindow(false);
 
-                };*/
+                    };
+                    jqccs.busyWindow(true);
+                    opt['fmt']="csv";
+                    opt['log']=true;
                     jchaos.fetchHistoryToZip(parent_tag, nlist, start, stop, tags, opt, function(msg) {
                         $("#zipprogress").parent().remove();
-
-                        jqccs.instantMessage("fetchHistoryToZip ", "failed:" + JSON.stringify(msg), 8000, false);
+                        jqccs.busyWindow(false);
+                        if(msg.hasOwnProperty("error")&& msg.error==-1100){
+                            alert("Too much data transferred, please reduce history page in Config->Settings->defaultPage");
+                        } else {
+                            jqccs.instantMessage("fetchHistoryToZip ", "failed:" + JSON.stringify(msg), 8000, false);
+                        }
                     });
 
                 }

@@ -6,65 +6,79 @@
 		"cudk_ds_attr_name" : {
 			"type": "string",
 			"format":"text",
+			"required": true,
 			"description":"Attribute Name"
 		},
 		"cudk_default_value" : {
 			"type": "string",
 			"format":"textarea",
+			"required": true,
 			"description":"Default Value (applied on Init)"
 		},
 		"cudk_ds_max_range" : {
 			"type": "string",
-			"description":"Max Range, ERROR if greater"
+			"required": true,
+			"default":"",
+			"description":"Max Range, ERROR if greater, empty no check"
 		},
 		"cudk_ds_min_range" : {
 			"type": "string",
-			"description":"Min Range, ERROR if smaller"
+			"required": true,
+			"default":"",
+			"description":"Min Range, ERROR if smaller, empty no check"
 		},
 		"cudk_ds_max_warn_range" : {
 			"type": "string",
 			"default":"",
-			"description":"Set WARNING if greater"
+			"required": true,
+			"description":"Set WARNING if greater, empty no check"
 		},
 		"cudk_ds_min_warn_range" : {
 			"type": "string",
 			"default":"",
-			"description":"Set WARNING if smaller"
+			"required": true,
+			"description":"Set WARNING if smaller, empty no check"
 		},
 		"cudk_ds_attr_inc" : {
 			"type": "string",
 			"default":"0",
+			"required": true,
 			"description":"Meaningful value increment (0=digital)"
 		},
 		"cudk_ds_attr_unit" : {
 			"type": "string",
 			"default":"NA",
 			"format":"text",
+			"required": true,
 			"description":"data Units"
 		}
 		,
 		"cudk_ds_attr_convfact" : {
 			"type": "string",
 			"default":"1",
+			"required": true,
 			"description":"Conversion factor to apply on sets"
 		}
 		,
 		"cudk_ds_attr_offset" : {
 			"type": "string",
 			"default":"0",
+			"required": true,
 			"description":"Offset to apply on sets"
 		}
 		,
 		"cudk_ds_attr_wrn_thr" : {
 			"type": "string",
 			"default":"",
-			"description":"Set/readout warning threshold"
+			"required": true,
+			"description":"Set/readout warning threshold, empty no check"
 		}
 		,
 		"cudk_ds_attr_error_thr" : {
 			"type": "string",
 			"default":"",
-			"description":"Set/readout error thresholdt"
+			"required": true,
+			"description":"Set/readout error threshold, empty no check"
 		}
 		
 	} 

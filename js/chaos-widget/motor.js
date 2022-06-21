@@ -1,8 +1,28 @@
+var current_selection=""
 function getWidget() {
+  console.log("motor widget");
     var chaos = 
      {
        dsFn:{
         output:{
+          LastHomingTime:function(val,w){
+            if(val){
+               var ago = new Date(val).toString();
+               // w.attr('title',"Performed "+ago);
+                return '<i title="Performed '+ago+'" class="material-icons verde">home</i>';
+            }
+            return '';
+          },
+          KindOfHomingDone:function(val,w){
+            if(val==1){
+               // w.attr('title',"Performed "+ago);
+                return '<i title="1- Homing Hardware" class="material-icons verde">sim_card</i>';
+            } else if(val==2){
+              return '<i title="2- Homing Software" class="material-icons verde">calculate</i>';
+
+            }
+            return '';
+          },
             home:function(val){
                 if(val){
                     return '<i class="material-icons verde">home</i>';
@@ -11,10 +31,10 @@ function getWidget() {
               },
               powerOn:function(val){
                 if (val) {
-                  return '<i class="material-icons verde">trending_down</i>';
+                  return '<i title="on" class="material-icons verde">trending_down</i>';
         
                 } else {
-                  return '<i class="material-icons rosso">pause_circle_outline</i>';
+                  return '<i title="off" class="material-icons rosso">pause_circle_outline</i>';
         
                 }
               },
@@ -37,6 +57,148 @@ function getWidget() {
         }
       }
       },
+      tableMenuItem:{
+       
+        'poi':{
+          "name": "POI",icon: "fa-edit",
+          "items": {
+              'add-poi': {
+                  name: "Edit Poi", icon:"fa-add",
+                  callback: function(itemKey, opt, e) {
+                    jchaos.loadSetPoint(current_selection, "poiConfig", attr=>{
+                      var poilist=[];
+
+                      var poi={};
+                      var poi_editor={
+                        "type": "array",
+                        "format": "table",
+                        "title": "POI",
+                        "description":"Alias to positions",
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "object",
+                          "title": "POI",
+                          "properties": {
+                            "name": {
+                                "type": "string"
+                              },
+                            "value": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                      
+                      if(attr && attr.hasOwnProperty("cudk_default_value")){
+                        try{
+                          poi=JSON.parse(attr["cudk_default_value"]);
+                          if(poi.hasOwnProperty("poi")){
+                            for(var k in poi['poi']){
+                              poilist.push({"name":k,"value":poi['poi'][k]});
+                            }
+                          }
+                      } catch(e){
+
+                      }
+                    }
+                      jqccs.jsonEditWindow("POI Editor", poi_editor, poilist, function(data, obj) {
+                        var poi={
+                          "poi":{}
+                        }
+                        for(var k in data){
+                          poi['poi'][data[k].name]=data[k].value;
+
+                        }
+                        
+                        var str=JSON.stringify(poi);
+                        jchaos.saveSetPoint(current_selection, "poiConfig", str,()=>{
+                          jchaos.setAttribute(current_selection, "poiConfig", str, function () {
+                            jqccs.instantMessage(current_selection, "Modified POIs ", 4000, true);
+                            triggerRefreshEdit();
+                          },function (bad) {
+                            jqccs.instantMessage(current_selection, "Error updating poi err:" + JSON.stringify(bad), 4000, false);
+
+                          })
+
+
+														}, function (bad) {
+															jqccs.instantMessage(current_selection, "Error Removing poi from configuration "+n+" err:" + JSON.stringify(bad), 4000, false);
+
+														});
+                      });
+                    })
+
+                  }
+                
+              },
+              'remove-poi': {
+                name: "Remove Poi", icon:"fa-sub",
+                callback: function(itemKey, opt, e) {
+                  jchaos.loadSetPoint(current_selection, "poiConfig", attr=>{
+                    var poilist=[];
+                    var poi={};
+                    if(attr && attr.hasOwnProperty("cudk_default_value")){
+                      try{
+                        poi=JSON.parse(attr["cudk_default_value"]);
+                        if(poi.hasOwnProperty("poi")){
+                          for(var k in poi['poi']){
+                            poilist.push(k);
+                          }
+                        }
+                      } catch(e){
+
+                      }
+                    
+                      if(poilist.length){
+                      jqccs.getEntryWindow("Remove", "name", poilist, "Remove", function (n) {
+                        delete poi['poi'][n];
+                        if(poilist.length==1){
+                          // no more poi
+                          attr["cudk_default_value"]="";
+
+                        } else {
+                          attr["cudk_default_value"]=JSON.stringify(poi);
+
+                        }
+
+                        jchaos.saveSetPoint(current_selection, "poiConfig", attr,()=>{
+                          jchaos.setAttribute(current_selection, "poiConfig", attr["cudk_default_value"], function () {
+                            jqccs.instantMessage(current_selection, "Removed POI " +n, 4000, true);
+                            triggerRefreshEdit();
+                          },function (bad) {
+                            jqccs.instantMessage(current_selection, "Error updating poi "+n+" err:" + JSON.stringify(bad), 4000, false);
+
+                          })
+
+
+														}, function (bad) {
+															jqccs.instantMessage(current_selection, "Error Removing poi from configuration "+n+" err:" + JSON.stringify(bad), 4000, false);
+
+														});
+									},"Cancel");
+                }}
+                });
+              
+            }
+            }
+            }
+          }
+
+      },
+      tableClickFn: function (tmpObj, e) {
+        //  rebuildCam(tmpObj);
+        current_selection=tmpObj.node_selected;
+        var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+        if(!tmpObj.hasOwnProperty("data")){
+          tmpObj['data']={};
+        } else {
+          if(tmpObj.data instanceof Array)
+            jqccs.updateGenericControl(tmpObj, tmpObj.data[cindex]);
+  
+        }
+  
+      
+      },
       tableFn:function(tmpObj) {
         var cu=[];
         if(tmpObj['elems'] instanceof Array){
@@ -50,11 +212,13 @@ function getWidget() {
         html += '<thead class="box-header">';
         html += '<tr>';
         html += '<th>Element</th>';
-        html += '<th colspan="3">Status</th>';
+        html += '<th colspan="2">Status</th>';
         html += '<th colspan="2">Position</th>';
-        html += '<th colspan="2">Setting</th>';
-        html += '<th colspan="2">Saved [mm]</th>';
-        html += '<th colspan="4">Flags(On,Plim,Nlim,Home)</th>';
+        html += '<th colspan="3">Setting</th>';
+        html += '<th colspan="1">Min</th>';
+        html += '<th colspan="1">Max</th>';
+        html += '<th colspan="3">Flags(On,Plim,Nlim)</th>';
+        html += '<th colspan="2">Home</th>';
         html += '<th colspan="2">Alarms dev/cu</th>';
         html += '</tr>';
         html += '</thead>';
@@ -66,20 +230,21 @@ function getWidget() {
           html += "<td class='td_element td_name'>" + cu[i] + "</td>";
           html += "<td id='" + cuname + "_health_status'></td>";
           html += "<td id='" + cuname + "_system_busy'></td>";
-          html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-          html += "<td class='position_element' id='" + cuname + "_output_position'></td>";
-          html += "<td class='position_element' id='" + cuname + "_output_POI'></td>";
+         // html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+          html += "<td digits=2 class='position_element' id='" + cuname + "_output_position'></td>";
+          html += "<td digits=2 class='position_element' id='" + cuname + "_output_POI'></td>";
     
-          html += "<td class='position_element' id='" + cuname + "_input_position'></td>";
-          html += "<td class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'></select></td>";
+          html += "<td digits=2 class='position_element' id='" + cuname + "_input_position'></td>";
+          html += "<td digits=2 class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'><option value=\"ciccio\">ciccio</option></select></td>";
     
-          html += "<td id='" + cuname + "_input_saved_position'></td>";
-          html += "<td id='" + cuname + "_input_saved_status'></td>";
+          html += "<td id='" + cuname + "_input_hwpositionmin'></td>";
+          html += "<td id='" + cuname + "_input_hwpositionmax'></td>";
           html += "<td id='" + cuname + "_output_powerOn'></td>";
           html += "<td id='" + cuname + "_output_PositiveLimitSwitchActive'></td>";
           html += "<td id='" + cuname + "_output_NegativeLimitSwitchActive'></td>";
-          html += "<td id='" + cuname + "_output_home'></td>";
-    
+          html += "<td id='" + cuname + "_output_LastHomingTime'></td>";
+          html += "<td id='" + cuname + "_output_KindOfHomingDone'></td>";
+
           html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
           html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
         });
@@ -153,18 +318,34 @@ function getWidget() {
     html += '</div>';
     html += '</div>';
     if(tmpObj.hasOwnProperty('elems')){
-      jchaos.getChannel(tmpObj.elems,2,function(customs){
-        customs.forEach(function(custom){
+      jchaos.getChannel(tmpObj.elems,1,function(inputs){
+        
+        inputs.forEach(function(custom){
           var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
           $("#"+name).hide();
-        if(custom.hasOwnProperty('cudk_load_param')&& custom.cudk_load_param.hasOwnProperty('poi')){
-          var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
-          $("#"+name).show();
-          $("#"+name).empty();
-          for(var i in custom.cudk_load_param.poi){
-            $("#"+name).append("<option value='"+custom.cudk_load_param.poi[i]+"'>"+i+"</option>");
+        
+        if(custom.hasOwnProperty('poiConfig')){
+          var poiconfig={}
 
+          if(typeof custom.poiConfig==="string"){
+            try{
+              poiconfig=JSON.parse(custom.poiConfig);
+            }catch(e){
+
+            }
+          } else if(typeof custom.poiConfig==="object"){
+            poiconfig=custom.poiConfig;
           }
+          var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
+          $("#"+name).empty();
+          if(poiconfig.hasOwnProperty("poi")&&(Object.keys(poiconfig.poi).length)){
+            $("#"+name).show();
+
+            for(var i in poiconfig.poi){
+              $("#"+name).append("<option value='"+poiconfig.poi[i]+" title='"+poiconfig.poi[i]+"'>"+i+"</option>");
+
+            }
+        }
           $("#"+name).on("change", function (s) {
 
             var cuname = $(this).attr('name');

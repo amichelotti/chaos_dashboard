@@ -1,4 +1,6 @@
 function getWidget() {
+  console.log("powersupply widget");
+
   var chaos = 
    {
      dsFn:{

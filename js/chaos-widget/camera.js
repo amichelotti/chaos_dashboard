@@ -818,14 +818,17 @@ function updateCamera(ds) {
     $("#"+id+"SHUTTER").html(ds.SHUTTER);
     $("#"+id+"GAIN").html(ds.GAIN);
     $("#"+id+"TRIGGER_MODE").html(modeToString(ds.TRIGGER_MODE));
-    if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
+   /* if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
       redrawReference(id, old_size[id].REFX, old_size[id].REFY, old_size[id].REFSX, old_size[id].REFSY, old_size[id].REFRHO, -old_size[id].ROT,ds.WIDTH,ds.HEIGHT);
-    }
+    }*/
 
   } else if (ds.dpck_ds_type == 1) {
   //  console.log("INPUT :" + JSON.stringify(ds));
     let id = mappedcamera[ds.ndk_uid];
-    
+    if(selection_ellipse.hasOwnProperty(id)){
+      console.log("editing.. input update skipped")
+      return;
+    }
       if(ds.hasOwnProperty("ROT")&&(ds.ROT%360)){
         $("#rot_enable-" + id).html('<i class="fa fa-check-square-o" aria-hidden="true"></i>');
       } else {
@@ -1126,6 +1129,7 @@ function activateCameraFetch(){
       pullIntervalHealth = setInterval(() => {
         jchaos.getChannel(cameralist, 255, (vds) => {
           vds.forEach(ele => {
+            updateCamera(ele.health)
             jqccs.updateSingleNode(ele);
             jqccs.updateGenericControl(null, ele);
           });
@@ -1241,7 +1245,7 @@ function showHisto(msghead, cuname, refresh, channel) {
     resizable: true,
     dialogClass: 'no-close',
     buttons: [{
-      text: "save",
+      text: "Save",
       click: function (e) {
         var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
         /* var len = binary_string.length;
@@ -1638,6 +1642,45 @@ function activateMenuShort() {
 
         }
       }
+      cuitem['save-mimage']= {
+        name: "Save Multi..", cu: name, icon: "fa-save",
+        callback: function (itemKey, o, e) {
+          jqccs.getEntryWindow("Save Multiple", "Samples", 1, "Save", function (cnt) {
+          var last_ser=0;
+          var nimage=1;
+          var zipf = new JSZip();
+          var zipname=name.replaceAll("/", "_");
+          jqccs.busyWindow(true);
+          var refresh=dashboard_settings['camera']['multiShotRefresh']||200;
+          var pullshot=setInterval(() => {
+            if(cnt>0){
+              jchaos.getChannel(name,0,(im)=>{
+                var img=im[0];
+                if(img.dpck_seq_id!=last_ser){
+                  var fname=zipname+"_"+nimage+"_"+img.dpck_seq_id+"."+img.FMT;
+                  zipf.file(fname, img.FRAMEBUFFER.$binary.base64, { base64: true });
+                  last_ser=img.dpck_seq_id;
+                  console.log(nimage+"] "+fname);
+                  nimage++;
+                  cnt--;
+                }
+                if(cnt==0){
+                  clearInterval(pullshot);
+                  jqccs.busyWindow(false);
+  
+                  zipf.generateAsync({ type: "blob" }).then(function (content) {
+                    saveAs(content, zipname);
+                });
+                }
+              });
+          }
+          },refresh);
+          
+  
+        });
+  
+      }
+    }
       if(streamaddr.hasOwnProperty(name)){
         cuitem['stream-stop']= {
           name: "Stream Stop", cu: name, icon: "fa-camera",
@@ -1956,15 +1999,10 @@ function activateMenuShort() {
       if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.hasOwnProperty('ctx_width') && selection.h && selection.w) {
 
         cuitem['transforms']['items']['zoom-in'] = {
-          name: "Zoom In ", cu: name, icon: "fa-search-plus",
+          name: "Zoom In 2X", cu: name, icon: "fa-search-plus",
           callback: function (itemKey, opt, e) {
-           /* if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
-              zoomInOut(domid, (cameraLayoutSettings[domid]['zoom']+1)/cameraLayoutSettings[domid]['zoom']);
-
-            } else {
-              zoomInOut(domid, selection.ctx_width / selection.w);
-            }*/
-            zoomInOut(domid, selection.ctx_width / selection.w);
+            //zoomInOut(domid, selection.ctx_width / selection.w);
+            zoomInOut(domid, 2.0);
 
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
@@ -1975,7 +2013,7 @@ function activateMenuShort() {
         cuitem['transforms']['items']['zoom-out'] = {
           name: "Zoom Out ", cu: name, icon: "fa-search-minus",
           callback: function (itemKey, opt, e) {
-            if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom_incr']&&(cameraLayoutSettings[domid]['zoom_incr']>0)){
+           /* if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom_incr']&&(cameraLayoutSettings[domid]['zoom_incr']>0)){
               zoomInOut(domid, 1/cameraLayoutSettings[domid]['zoom_incr']);
 
             } else if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
@@ -1983,7 +2021,9 @@ function activateMenuShort() {
             } else {
               zoomInOut(domid, selection.w/selection.ctx_width);
 
-            }
+            }*/
+            zoomInOut(domid, 0.5);
+
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
           }
         }
@@ -3066,6 +3106,8 @@ function setRoi(cu, width, height, x, y, func) {
   );
 }
 function getWidget(options) {
+  console.log("camera widget");
+
   if (options) {
     opt = options;
   }
