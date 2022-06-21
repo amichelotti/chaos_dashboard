@@ -318,18 +318,34 @@ function getWidget() {
     html += '</div>';
     html += '</div>';
     if(tmpObj.hasOwnProperty('elems')){
-      jchaos.getChannel(tmpObj.elems,2,function(customs){
-        customs.forEach(function(custom){
+      jchaos.getChannel(tmpObj.elems,1,function(inputs){
+        
+        inputs.forEach(function(custom){
           var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
           $("#"+name).hide();
-        if(custom.hasOwnProperty('poi')&&(Object.keys(custom.poi).length)){
-          var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
-          $("#"+name).show();
-          $("#"+name).empty();
-          for(var i in custom.poi){
-            $("#"+name).append("<option value='"+custom.poi[i]+"'>"+i+"</option>");
+        
+        if(custom.hasOwnProperty('poiConfig')){
+          var poiconfig={}
 
+          if(typeof custom.poiConfig==="string"){
+            try{
+              poiconfig=JSON.parse(custom.poiConfig);
+            }catch(e){
+
+            }
+          } else if(typeof custom.poiConfig==="object"){
+            poiconfig=custom.poiConfig;
           }
+          var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
+          $("#"+name).empty();
+          if(poiconfig.hasOwnProperty("poi")&&(Object.keys(poiconfig.poi).length)){
+            $("#"+name).show();
+
+            for(var i in poiconfig.poi){
+              $("#"+name).append("<option value='"+poiconfig.poi[i]+" title='"+poiconfig.poi[i]+"'>"+i+"</option>");
+
+            }
+        }
           $("#"+name).on("change", function (s) {
 
             var cuname = $(this).attr('name');
