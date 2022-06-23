@@ -1125,7 +1125,7 @@
                     } else if (typeof execHandler === "function") {
                         $('#console-' + pid).terminal().exec(execHandler(), false);
                     }
-                }, 500);
+                }, 1000);
                 jchaos.exit = function(str) {
                     console.log("pausing: " + str);
                     $('#console-' + pid).terminal().logout();
@@ -1155,7 +1155,7 @@
                            server = dd.ndk_host_name + ":" + dd.ndk_rest_port;   
                         }
                         if (data.node_log_on_console) {
-                            getConsole(msghead, data.association_uid, server, 2, 1, 1000);
+                            getConsole(msghead, data.association_uid, server, 2, 1, 2000);
                         } else {
                             instantMessage("Remote Console log disabled ", "Please enable on agent association:" + d.ndk_parent, 4000, null, null, false);
 
@@ -5418,7 +5418,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
 
                 jchaos.node(agentn, "get", "agent", node_selected, null, function(data) {
                     console.log("->" + JSON.stringify(data));
-                    getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
+                    getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 2000);
                 });
 
 
@@ -5977,7 +5977,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                                         jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function(r) {
                                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
+                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 2000);
 
                                         }, function(bad) {
                                             console.log("Some error getting loading script:" + bad);
@@ -5995,7 +5995,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                                     jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function(r) {
                                         console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                         instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                        getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
+                                        getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 2000);
 
                                     }, function(bad) {
                                         console.log("Some error getting loading script:" + bad);
@@ -6100,7 +6100,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                                 console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                 var node_selected = tmpObj.node_selected;
                                 instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000, language);
+                                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 2000, language);
                             }, function(bad) {
                                 console.log("Some error getting loading script:" + bad);
                                 instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -6112,7 +6112,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                             var node_selected = tmpObj.node_selected;
                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000), language;
+                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 2000), language;
                         }, function(bad) {
                             console.log("Some error getting loading script:" + bad);
                             instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -6670,7 +6670,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                                 node_workdir: "",
                                 node_auto_start: true,
                                 node_keep_alive: false,
-                                node_log_on_console: true
+                                node_log_on_console: false
                             };
                             var script_type = "";
                             getEntryWindow(tmpObj.node_selected + " arguments ", tmpObj.node_selected, "()", "Continue", function(fargs) {
