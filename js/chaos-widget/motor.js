@@ -214,7 +214,7 @@ function getWidget() {
         html += '<th>Element</th>';
         html += '<th colspan="2">Status</th>';
         html += '<th colspan="2">Position</th>';
-        html += '<th colspan="3">Setting</th>';
+        html += '<th colspan="2">Setting</th>';
         html += '<th colspan="1">Min</th>';
         html += '<th colspan="1">Max</th>';
         html += '<th colspan="3">Flags(On,Plim,Nlim)</th>';
@@ -230,15 +230,14 @@ function getWidget() {
           html += "<td class='td_element td_name'>" + cu[i] + "</td>";
           html += "<td id='" + cuname + "_health_status'></td>";
           html += "<td id='" + cuname + "_system_busy'></td>";
-         // html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
           html += "<td digits=2 class='position_element' id='" + cuname + "_output_position'></td>";
           html += "<td digits=2 class='position_element' id='" + cuname + "_output_POI'></td>";
     
           html += "<td digits=2 class='position_element' id='" + cuname + "_input_position'></td>";
-          html += "<td digits=2 class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'><option value=\"ciccio\">ciccio</option></select></td>";
+          html += "<td digits=2 class='position_element'><select id='" + cuname + "_select_input_poi' name='"+cu[i]+"'></select></td>";
     
-          html += "<td id='" + cuname + "_input_hwpositionmin'></td>";
-          html += "<td id='" + cuname + "_input_hwpositionmax'></td>";
+          html += "<td id='" + cuname + "_input_hwminpos'></td>";
+          html += "<td id='" + cuname + "_input_hwmaxpos'></td>";
           html += "<td id='" + cuname + "_output_powerOn'></td>";
           html += "<td id='" + cuname + "_output_PositiveLimitSwitchActive'></td>";
           html += "<td id='" + cuname + "_output_NegativeLimitSwitchActive'></td>";
@@ -322,8 +321,16 @@ function getWidget() {
         
         inputs.forEach(function(custom){
           var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
-          $("#"+name).hide();
-        
+          if(!custom.hasOwnProperty("hwminpos")){
+            var name=jchaos.encodeName(custom.ndk_uid) + "_input_hwminpos";
+
+            $("#"+name).html("NA");
+          }
+          if(!custom.hasOwnProperty("hwmaxpos")){
+            var name=jchaos.encodeName(custom.ndk_uid) + "_input_hwmaxpos";
+
+            $("#"+name).html("NA");
+          }
         if(custom.hasOwnProperty('poiConfig')){
           var poiconfig={}
 
@@ -337,9 +344,10 @@ function getWidget() {
             poiconfig=custom.poiConfig;
           }
           var name=jchaos.encodeName(custom.ndk_uid) + "_select_input_poi";
-          $("#"+name).empty();
+          $("#"+name).addClass("invisible");
+
           if(poiconfig.hasOwnProperty("poi")&&(Object.keys(poiconfig.poi).length)){
-            $("#"+name).show();
+            $("#"+name).removeClass("invisible");
 
             for(var i in poiconfig.poi){
               $("#"+name).append("<option value='"+poiconfig.poi[i]+" title='"+poiconfig.poi[i]+"'>"+i+"</option>");
