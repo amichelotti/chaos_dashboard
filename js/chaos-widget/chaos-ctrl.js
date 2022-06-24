@@ -1281,7 +1281,7 @@
                     }
                     if (!stop_update) {
 
-                        jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function(r) {
+                        jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function(r,par) {
                             if (r.data !== undefined) {
                                 if (r.data.process.last_log_time != last_log_time) {
                                     //  var str = decodeURIComponent(escape(atob(r.data.console)));
@@ -1295,8 +1295,10 @@
                                 $('#console-' + pid).terminal().error(str);
 
                             }
-                        }, function(bad) {
-                            console.log("Some error getting console occur:" + JSON.stringify(bad));
+                        }, function(bad,par) {
+                            var str="error getting console, err:"+ JSON.stringify(bad)+" request:"+JSON.stringify(par);
+                            $('#console-' + pid).terminal().error(str);
+
                         });
 
                     }
