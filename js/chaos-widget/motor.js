@@ -1,6 +1,48 @@
 var current_selection=""
-function getWidget() {
-  console.log("motor widget");
+var widget_options={}
+var widget_state={}
+var device_subscribed=[]
+var pullInterval = null;
+
+function updateWidget(ds) {
+
+  if (ds.dpck_ds_type == 0) {
+    // output
+    jqccs.updateSingleNode({output:ds},widget_state);
+
+  } else if (ds.dpck_ds_type == 1) {
+
+    jqccs.updateSingleNode({input:ds},widget_state);
+
+  } else if (ds.dpck_ds_type == 4) {
+
+   jqccs.updateSingleNode({health:ds},widget_state);
+   jqccs.updateGenericControl(null, {health:ds});
+
+ 
+   if(ds.cuh_alarm_lvl){
+   
+    jqccs.decodeAlarms();
+  
+  }
+  } else if (ds.dpck_ds_type == 7) {
+  //  console.log(ds.ndk_uid+ " LOG PACK:"+JSON.stringify(ds));
+
+  } else {
+    var obj={};
+    
+
+    obj[jchaos.channelToString(ds.dpck_ds_type)]=ds;
+    jqccs.updateSingleNode(obj);
+    jqccs.updateGenericControl(null, obj);
+
+
+  }
+
+}
+function getWidget(options) {
+  console.log("motor widget "+JSON.stringify(options));
+  widget_options=options;
     var chaos = 
      {
        dsFn:{
@@ -265,12 +307,12 @@ function getWidget() {
     html += '<p class="name-cmd">Homing</p>';
     html += '</a>';
     html += '<div class="col-md-2">';
-    html += '<p class="lead">     Absolute</p><input class="input focused" id="'+tmpObj.template+'-mov_abs_offset_mm" type="number" value="1">';
+    html += '<p class="lead">     Absolute</p><input class="input focused" id="'+tmpObj.template+'-mov_abs_offset_mm" type="number" value="1" >';
     html += '</div>';
     html += '<div class="col-md-2">';
     html += '<p class="lead">     POI</p><select class="input" id="'+tmpObj.template+'-mov_abs_poi"></select>';
     html += '</div>';
-    html += '<a class="quick-button-small col-md-1 btn-value cucmd" id="scraper_setPosition" cutemplate="'+tmpObj.template+'" cucmdid="mov_abs">';
+    html += '<a class="quick-button-small col-md-1 btn-value cucmd" id="scraper_setPosition" cutemplate="'+tmpObj.template+'" cucmdid="mov_abs" cucmdattr={\"sched\":200000,\"prio\":100}>';
     html += '<p>Set Absolute</p>';
     html += '</a>';
     html += '<div class="col-md-2"></div>';
@@ -279,16 +321,16 @@ function getWidget() {
     html += '<i class="material-icons green">trending_down</i>';
     html += '<p class="name-cmd">ON</p>';
     html += '</a>';
-    html += '<a class="quick-button-small col-md-1 btn-value cucmd" id="scraper_setStop" cutemplate="'+tmpObj.template+'"  cucmdid="stopMotion">';
+    html += '<a class="quick-button-small col-md-1 btn-value cucmd" id="scraper_setStop" cutemplate="'+tmpObj.template+'"  cucmdid="stopMotion" cucmdattr={\"submode\":1,\"prio\":100}>';
     html += '<i class="material-icons rosso">cancel</i>';
     html += '<p class="name-cmd">STOP</p>';
     html += '</a>';
 
     html += '</div>';
     html += '<div class="row justify-content-center">';
-    html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="scraper_in" cucmdid="mov_rel" cutemplate="'+tmpObj.template+'"  cucmdvalueMult=-1>';
+    html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="scraper_in" cucmdid="mov_rel" cutemplate="'+tmpObj.template+'"  cucmdvalueMult=-1 cucmdattr={\"sched\":200000,\"prio\":100}>';
     html += '<i class="icon-angle-left"></i>';
-    html += '<p class="name-cmd">In</p>';
+    html += '<p class="name-cmd"><</p>';
     html += '</a>';
     // in case of cucmdvalue = null, a item named 'cucmd'_<commandparam>
     html += '<div class="col-md-3" id="input-value-due">';
@@ -296,9 +338,9 @@ function getWidget() {
     html += '</div>';
     html += '<div class="col-md-1"></div>';
 
-    html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="scraper_out" cutemplate="'+tmpObj.template+'" cucmdid="mov_rel">';
+    html += '<a class="quick-button-small col-md-1 btn-cmd cucmd" id="scraper_out" cutemplate="'+tmpObj.template+'" cucmdid="mov_rel" cucmdattr={\"sched\":200000,\"prio\":100}>';
     html += '<i class="icon-angle-right"></i>';
-    html += '<p class="name-cmd">Out</p>';
+    html += '<p class="name-cmd">></p>';
     html += '</a>';
     html += '<div class="col-md-2"></div>';
 
@@ -379,7 +421,56 @@ function getWidget() {
     
     
     return html;
+    },
+    updateInterfaceFn: function (tmpObj) {
+      console.log("UpdateInterfaceFn "+tmpObj.elems);
+      if(widget_options.hasOwnProperty('push')&&widget_options.push&&jchaos.socket.connected){
+        device_subscribed=tmpObj.elems;
+        jchaos.iosubscribeCU(tmpObj.elems, true);
+        jchaos.options['io_onconnect'] = (s) => {
+          console.log("resubscribe ..")
+          jchaos.iosubscribeCU(device_subscribed, true);
+        }
+        jchaos.options['io_onmessage'] = updateWidget;
+      } else {
+        jchaos.iosubscribeCU(tmpObj.elems, false);
+
+      }
+      jqccs.updateInterfaceCU(tmpObj);
+
+    },
+    updateFn: function (tmpObj) {
+      widget_state=tmpObj;
+
+      if(!(widget_options.hasOwnProperty('push')&&widget_options.push&&jchaos.socket.connected)){
+        if(device_subscribed.length){
+          jchaos.iosubscribeCU(device_subscribed, false);
+          device_subscribed=[];
+        }
+        var opt={
+          channel:-1,
+          devs:tmpObj.elems
+        }
+        if(!tmpObj.hasOwnProperty('interval')){
+          console.log("RESCHEDULE TASK")
+
+        
+          pullInterval=jqccs.rescheduleTask(widget_options.generalRefresh,opt,(dat,req,op)=>{
+            tmpObj.data=dat;
+            jqccs.updateGenericTableDataset(tmpObj);
+            jqccs.stateOutput(op['currRefresh']);
+          });
+          tmpObj['interval']=pullInterval;
+       } 
+       } else {
+        jchaos.getChannel(tmpObj.elems,-1,(ele)=>{
+          ele.forEach(i=>{
+            jqccs.updateSingleNode(i)
+          });
+        });
+       }
     }
+
   }
   return chaos;
   }

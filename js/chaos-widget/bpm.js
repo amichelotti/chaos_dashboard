@@ -1,6 +1,93 @@
 var selectedElems = [];
+var selectedElemsold=[];
 var stateObj = {};
+var current_selection=""
+var widget_options={}
+var widget_state={}
+var device_subscribed=[]
+var pullInterval = {};
 
+var pullIntervalHealth={}
+
+function updateWidget(ds){
+
+  var name =ds.ndk_uid;
+  var cuname = jchaos.encodeName(name);
+
+  if (ds.dpck_ds_type == 0) {
+    var now=ds.dpck_ats;
+    // output
+    jqccs.updateSingleNode({output:ds},widget_state);
+    if (stateObj.hasOwnProperty("graph_table_BPM")&&stateObj['graph_table_BPM'].hasOwnProperty(cuname)) {
+      var chart = stateObj['graph_table_BPM'][cuname];
+      if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
+        var shift = false;
+        if (stateObj['graph_table_BPM'][cuname].options.npoints > stateObj['graph_table_BPM'][cuname].options.maxpoints) {
+          shift = true;
+        }
+        stateObj['graph_table_BPM'][cuname].options.npoints++;
+        if ((ds.MODE & 0x1) && (ds.hasOwnProperty("SUM_ACQ"))) {
+          var arrv = [];
+         
+          arrv[0] = jqccs.convertBinaryToArrays(ds.VA_ACQ,"84");
+          arrv[1] = jqccs.convertBinaryToArrays(ds.VB_ACQ,"84");
+          arrv[2] = jqccs.convertBinaryToArrays(ds.VC_ACQ,"84");
+          arrv[3] = jqccs.convertBinaryToArrays(ds.VD_ACQ,"84");
+          arrv[4] = jqccs.convertBinaryToArrays(ds.SUM_ACQ,"84");
+          for (var i = 0; i < 5; i++) {
+            if (arrv[i] instanceof Array) {
+              var setp = []
+              arrv[i].forEach(function (elem, n) {
+                setp.push([now + n, elem]);
+
+              });
+              chart.series[i].setData(setp, false, false, false);
+            }
+          }
+        } else {
+          chart.series[0].addPoint([now, ds.VA], false, shift);
+          chart.series[1].addPoint([now, ds.VB], false, shift);
+          chart.series[2].addPoint([now, ds.VC], false, shift);
+          chart.series[3].addPoint([now, ds.VD], false, shift);
+          chart.series[4].addPoint([now, ds.SUM], false, shift);
+        }
+        chart.redraw();
+
+      }
+
+    }
+   // widget_state['data'][ds.ndk_uid]=ds;
+  } else if (ds.dpck_ds_type == 1) {
+
+    jqccs.updateSingleNode({input:ds},widget_state);
+
+  } else if (ds.dpck_ds_type == 4) {
+
+   jqccs.updateSingleNode({health:ds},widget_state);
+   jqccs.updateGenericControl(null, {health:ds});
+
+   
+  if(ds.cuh_alarm_lvl){
+   
+    jqccs.decodeAlarms();
+  
+  }
+  } else if (ds.dpck_ds_type == 7) {
+    console.log(ds.ndk_uid+ " LOG PACK:"+JSON.stringify(ds));
+
+  } else {
+    var obj={};
+    console.log(ds.ndk_uid+ " OTHER:"+JSON.stringify(ds));
+
+
+    obj[jchaos.channelToString(ds.dpck_ds_type)]=ds;
+    jqccs.updateSingleNode(obj);
+    jqccs.updateGenericControl(null, obj);
+
+
+  }  
+  
+}
 function updatelist(checkboxElem) {
   var ename = checkboxElem.name;
   if (checkboxElem.checked) {
@@ -12,6 +99,63 @@ function updatelist(checkboxElem) {
   stateObj.node_multi_selected = selectedElems;
   stateObj['elems']=selectedElems;
   let min=Math.min(selectedElems.length,3);
+
+
+  if (selectedElems.length) {
+
+    if (widget_options.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
+      if (selectedElemsold.length) {
+        var tounsub=[]
+        selectedElemsold.forEach(ele=>{
+
+           let sel = selectedElems.filter((e) => { return (e != ele) })
+           if (sel.length == 0) {
+             // not present in new list
+             tounsub.push(ele);
+           }
+
+        });
+        if(tounsub.length){
+          console.log("Unsubscribe " + JSON.stringify(tounsub));
+          jchaos.iosubscribeCU(tounsub, false);
+        }
+      }
+      jchaos.iosubscribeCU(selectedElems);
+      selectedElemsold =selectedElems;
+      jchaos.options['io_onconnect'] = (s) => {
+        console.log("resubscribe ..")
+        jchaos.iosubscribeCU(selectedElems, false);
+
+        selectedElemsold =selectedElems;
+      }
+
+      jchaos.options['io_onmessage'] = updateWidget;
+
+    } else {
+      
+      
+     // pullInterval=outputCameraRefresh(opt.camera.cameraRefresh,opt);
+    
+    pullInterval['channel']=-1;
+    pullInterval['devs']=selectedElems;
+
+     jqccs.rescheduleTask(widget_options.generalRefresh,pullInterval,(vds,req,op)=>{
+      vds.forEach(ele => {
+        updateWidget(ele.output);
+        updateWidget(ele.input);
+
+      });
+      
+      if((widget_options.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+        clearInterval(op['interval']);
+
+      }
+    });
+    
+    }
+  }
+
+
 
   var chart_options = {
       chart_per_row: min,
@@ -70,13 +214,23 @@ function updatelist(checkboxElem) {
     stateObj['old_elems'] = stateObj['elems'];
 
 }
-function getWidget() {
+function getWidget(conf) {
   console.log("BPM widget");
+  widget_options=conf;
+  if((jchaos.socket != null) && (jchaos.socket.connected)){
+    jchaos.unsubscribeall();
+  }
     var chaos = 
      {
        dsFn:{
-        output:{
-         
+        input:{
+          TRIGGER:function(t){
+            if(t){
+              return "Triggered";
+            }
+            return "Not Triggered"
+            
+          }
   
         }
       
@@ -196,82 +350,76 @@ function getWidget() {
         html += '</div>';
     
         return html;
-      },    
+      }, 
       updateInterfaceFn: function (tmpObj) {
-        stateObj = tmpObj;
-        jqccs.updateInterfaceCU(tmpObj);
-
-      },
-      updateFn:function(tmpObj) {
-        var cu = tmpObj.data;
-        
-        
-       // var now = (new Date()).getTime();
-        jqccs.updateGenericTableDataset(stateObj);
-    
-        cu.forEach(function (elem) {
-          if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
-            var now=elem.output.dpck_ats;
-            var cuname = jchaos.encodeName(elem.health.ndk_uid);
-            if ((stateObj.node_selected != null) && (elem.health.ndk_uid == stateObj.node_selected)) {
-              $("#BPM_STATUS").html(elem.output.STATUS);
-            }
-            $("#" + cuname + "_output_X").html(elem.output.X.toFixed(3));
-            $("#" + cuname + "_output_Y").html(elem.output.Y.toFixed(3));
-            $("#" + cuname + "_output_VA").html(elem.output.VA);
-            $("#" + cuname + "_output_VB").html(elem.output.VB);
-            $("#" + cuname + "_output_VC").html(elem.output.VC);
-            $("#" + cuname + "_output_VD").html(elem.output.VD);
-            $("#" + cuname + "_output_SUM").html(elem.output.SUM);
-            $("#" + cuname + "_output_SAMPLES").html(elem.output.SAMPLES);
-            if (elem.input.TRIGGER) {
-              $("#" + cuname + "_input_TRIGGER").html("Triggered");
-            } else {
-              $("#" + cuname + "_input_TRIGGER").html("No Trigger");
-            }
-            if (stateObj.hasOwnProperty("graph_table_BPM")&&stateObj['graph_table_BPM'].hasOwnProperty(cuname)) {
-              var chart = stateObj['graph_table_BPM'][cuname];
-              if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
-                var shift = false;
-                if (stateObj['graph_table_BPM'][cuname].options.npoints > stateObj['graph_table_BPM'][cuname].options.maxpoints) {
-                  shift = true;
-                }
-                stateObj['graph_table_BPM'][cuname].options.npoints++;
-                if ((elem.output.MODE & 0x1) && (elem.output.hasOwnProperty("SUM_ACQ"))) {
-                  var arrv = [];
-                  arrv[0] = jqccs.convertBinaryToArrays(elem.output.VA_ACQ);
-                  arrv[1] = jqccs.convertBinaryToArrays(elem.output.VB_ACQ);
-                  arrv[2] = jqccs.convertBinaryToArrays(elem.output.VC_ACQ);
-                  arrv[3] = jqccs.convertBinaryToArrays(elem.output.VD_ACQ);
-                  arrv[4] = jqccs.convertBinaryToArrays(elem.output.SUM_ACQ);
-                  for (var i = 0; i < 5; i++) {
-                    if (arrv[i] instanceof Array) {
-                      var setp = []
-                      arrv[i].forEach(function (elem, n) {
-                        setp.push([now + n, elem]);
-    
-                      });
-                      chart.series[i].setData(setp, false, false, false);
-                    }
-                  }
-                } else {
-                  chart.series[0].addPoint([now, elem.output.VA], false, shift);
-                  chart.series[1].addPoint([now, elem.output.VB], false, shift);
-                  chart.series[2].addPoint([now, elem.output.VC], false, shift);
-                  chart.series[3].addPoint([now, elem.output.VD], false, shift);
-                  chart.series[4].addPoint([now, elem.output.SUM], false, shift);
-                }
-                chart.redraw();
-    
-              }
-    
-            }
+        console.log("UpdateInterfaceFn "+tmpObj.elems);
+        if(widget_options.hasOwnProperty('push')&&widget_options.push&&jchaos.socket.connected){
+         /* device_subscribed=tmpObj.elems;
+          jchaos.iosubscribeCU(tmpObj.elems, true);
+          jchaos.options['io_onconnect'] = (s) => {
+            console.log("resubscribe ..")
+            jchaos.iosubscribeCU(device_subscribed, true);
           }
+          jchaos.options['io_onmessage'] = updateWidget;*/
+        } else {
+          jchaos.iosubscribeCU(tmpObj.elems, false);
+    
+        }
+        jqccs.updateInterfaceCU(tmpObj);
+        
+    
+      },
+      updateFn: function (tmpObj) {
+        widget_state=tmpObj;
+        widget_state['state']={};
+        if (pullIntervalHealth.hasOwnProperty('interval')) {
+          clearInterval(pullIntervalHealth.interval);
+        }
+      
+        pullIntervalHealth['channel']=255;
+        pullIntervalHealth['devs']=tmpObj.elems;
+        
+        jqccs.rescheduleTask(5000,pullIntervalHealth,(vds,req,op)=>{
+          vds.forEach(ele => {
+            updateWidget(ele.health);
+            jqccs.updateGenericControl(null, ele);
+    
+          });
+          
+          jqccs.stateOutput(op['currRefresh']);
+          
         });
+        if(!(widget_options.hasOwnProperty('push')&&widget_options.push&&jchaos.socket.connected)){
+          if(device_subscribed.length){
+            jchaos.iosubscribeCU(device_subscribed, false);
+            device_subscribed=[];
+          }
+          pullInterval['channel']=-1;
+          pullInterval['devs']=tmpObj.elems;
+          if(pullInterval['interval']){
+            clearInterval(pullInterval['interval']);
+            delete pullInterval['interval']
+          }
+          if(!tmpObj.hasOwnProperty('interval')){
+            console.log("RESCHEDULE TASK")
     
-    
-    
+          
+            jqccs.rescheduleTask(widget_options.generalRefresh,pullInterval,(dat,req,op)=>{
+              tmpObj.data=dat;
+              jqccs.updateGenericTableDataset(tmpObj);
+              jqccs.stateOutput(op['currRefresh']);
+            });
+            tmpObj['interval']=pullInterval;
+         } 
+         } else {
+          jchaos.getChannel(tmpObj.elems,-1,(ele)=>{
+            ele.forEach(i=>{
+              jqccs.updateSingleNode(i)
+            });
+          });
+         }
       }
+     
   }
   return chaos;
   }

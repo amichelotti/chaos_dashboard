@@ -46,6 +46,11 @@
             "default": 500,
             "description": "Default General Refresh when in control (ms)"
         },
+        "statusRefresh": {
+            "type": "integer",
+            "default": 1000,
+            "description": "Default Status Refresh (ms)"
+        },
         "processRefresh": {
             "type": "integer",
             "default": 5000,

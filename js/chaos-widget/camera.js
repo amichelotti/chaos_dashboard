@@ -9,9 +9,9 @@ var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
 var currzoomm = 1.0;
 var opt = {};
-var pullInterval = null;
-var pullIntervalsec = null;
-var pullIntervalHealth = null;
+var pullInterval = {};
+var pullIntervalsec = {};
+var pullIntervalHealth = {};
 var last_output_time=null
 const TRIGGER_CONT = 0;
 const TRIGGER_PULSE = 1;
@@ -38,7 +38,7 @@ var selection_resizableY = 0;
 var selection_grabbable = false;
 
 var selection_ellipse = {};
-function inputCameraRefresh(update_ms,opt){
+/*function inputCameraRefresh(update_ms,opt){
   var diff=0;
   var pullIntervalsec=setInterval(() => {
     jchaos.getChannel(cameralist, 1, (vds,req) => {
@@ -105,7 +105,7 @@ function outputCameraRefresh(update_ms,opt){
   }
   }, update_ms);
   return pullInterval;
-}
+}*/
 function modeToString(val){
   switch (val) {
     case TRIGGER_CONT:
@@ -129,7 +129,10 @@ function subscribeCU(culist){
   culist.forEach(ele=>{
     if(!streamaddr.hasOwnProperty(ele)){
       console.log("Subscribe " +ele)
-      jchaos.iosubscribeCU(ele, true);
+      var topt={};
+      
+      topt[ele.replaceAll('/', '.')]={'update':opt.camera.cameraRefresh};
+      jchaos.iosubscribeCU(ele, true,topt);
       subscribed.push(ele)
     }
   });
@@ -887,7 +890,10 @@ function updateCamera(ds) {
   }
 }
   if(ds.cuh_alarm_lvl){
+   
+      jqccs.decodeAlarms();
     
+    /*
     jchaos.getChannel(ds.ndk_uid,255, function (selected) {
       jqccs.updateSingleNode(selected[0]);
       jqccs.updateGenericControl(null, selected[0]);
@@ -902,7 +908,7 @@ function updateCamera(ds) {
     } else {
       mode += '<i class="fa fa-exclamation-triangle fa-lg all-alarm" title="Error" style="color:red"</i>';
 
-    }
+    }*/
   }
 
   if (status == 'Start') {
@@ -1085,6 +1091,13 @@ function activateCameraFetch(){
     counter[jchaos.encodeName(k)] = 0;
 
   }
+  if (pullInterval.hasOwnProperty('interval')) {
+    clearInterval(pullInterval.interval);
+  }
+  if (pullIntervalsec.hasOwnProperty('interval')) {
+    clearInterval(pullIntervalsec.interval);
+  }
+  
   if (cameralist.length) {
 
     if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
@@ -1113,32 +1126,44 @@ function activateCameraFetch(){
       jchaos.options['io_onmessage'] = updateCamera;
 
     } else {
-      if (pullInterval != null) {
-        clearInterval(pullInterval);
-      }
-      if (pullIntervalsec != null) {
-        clearInterval(pullIntervalsec);
-      }
-      if (pullIntervalHealth != null) {
-        clearInterval(pullIntervalHealth);
-      }
       
-      pullInterval=outputCameraRefresh(opt.camera.cameraRefresh,opt);
+      
+     // pullInterval=outputCameraRefresh(opt.camera.cameraRefresh,opt);
+     var clist=[];
 
-      pullIntervalsec = inputCameraRefresh(1000,opt);
-      pullIntervalHealth = setInterval(() => {
-        jchaos.getChannel(cameralist, 255, (vds) => {
-          vds.forEach(ele => {
-            updateCamera(ele.health)
-            jqccs.updateSingleNode(ele);
-            jqccs.updateGenericControl(null, ele);
-          });
+    cameralist.forEach((e)=>{
+      if(!streamaddr.hasOwnProperty(e)){
+        clist.push(e);
+      }
+    });
+    pullInterval['channel']=0;
+    pullInterval['devs']=clist;
 
-        });
-        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
-          clearInterval(pullIntervalHealth);
-        }
-      }, 5000);
+     jqccs.rescheduleTask(opt.camera.cameraRefresh,pullInterval,(vds,req,op)=>{
+      vds.forEach(ele => {
+        updateCamera(ele);
+      });
+      
+      if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+        clearInterval(op['interval']);
+
+      }
+    });
+    pullIntervalsec['channel']=1;
+    pullIntervalsec['devs']=cameralist;
+    
+    
+   
+    jqccs.rescheduleTask(1000,pullIntervalsec,(vds,req,op)=>{
+      vds.forEach(ele => {
+        updateCamera(ele);
+      });
+      
+      if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
+        clearInterval(op['interval']);
+
+      }
+    });
     }
   }
 }
@@ -3176,81 +3201,33 @@ function getWidget(options) {
     },
     updateFn: function (tmpObj) {
       jqccs.updateGenericTableDataset(tmpObj);
-
-      return;
-      var cu = [];
-
-      if (tmpObj['elems'] instanceof Array) {
-        cu = tmpObj.elems;
+      if (pullInterval.hasOwnProperty('interval')) {
+        clearInterval(pullInterval.interval);
       }
-/*
-      if ((opt.push == false) || (jchaos.socket == null) || (jchaos.socket.connected == false)) {
-
-        if (tmpObj.node_multi_selected instanceof Array) {
-
-          var cnt = 0;
-          tmpObj.node_multi_selected.forEach(function (elem) {
-            tmpObj.skip_fetch++;
-            jchaos.getChannel(elem, -1, function (d) {
-              if (tmpObj.skip_fetch > 0)
-                tmpObj.skip_fetch--;
-              var selected = d[0];
-              //    var selected = tmpObj.data[tmpObj.index];
-              if (selected != null && selected.hasOwnProperty("output")) {
-                // $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
-                if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
-                  var bin = selected.output.FRAMEBUFFER.$binary.base64;
-                  var fmt = selected.output.FMT;
-                  
-                  //$('#triggerType').val(selected.output.TRIGGER_MODE)
-                  var id = jchaos.encodeName(elem);
-                  let now=Date.now() 
-                  let latd = now- Math.trunc(selected.output.dpck_hr_ats/1000);
-                  //let latc = now- selected.output.dpck_ats;
-                  if(counter[id]%100==0){
-                    tlat[id]=0;
-                    counter[id]=0;
-                  }
-                  tlat[id]+=latd
-                  counter[id]++
-                  latd=latd/counter[id]
-                  // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-                  $("#cameraImage-" + id).attr("src", "data:image/" + fmt + ";base64," + bin);
-                  $("#lat-" + id).html(latd);
-
-                }
-              }
-              var cindex = tmpObj.node_name_to_index[elem];
-
-              tmpObj.data[cindex] = d[0];
-              if (++cnt == tmpObj.node_multi_selected.length) {
-
-                jqccs.updateGenericTableDataset(tmpObj);
-              }
-              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO, selected.input.ROT,selected.output.WIDTH,selected.output.HEIGHT);
-
-            }, function (d) {
-              if (tmpObj.skip_fetch > 0)
-                tmpObj.skip_fetch--;
-
-              tmpObj.updateErrors++;
-              // $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
-            });
-
-          });
-        }
-        jchaos.getChannel(tmpObj['elems'], 255, function (selected) {
-          tmpObj.data = selected;
-
-          jqccs.updateGenericTableDataset(tmpObj);
-        }, function (str) {
-          console.log(str);
+      if (pullIntervalsec.hasOwnProperty('interval')) {
+        clearInterval(pullIntervalsec.interval);
+      }
+      if (pullIntervalHealth.hasOwnProperty('interval')) {
+        clearInterval(pullIntervalHealth.interval);
+      }
+    
+      pullIntervalHealth['channel']=255;
+      pullIntervalHealth['devs']=tmpObj.elems;
+      
+      jqccs.rescheduleTask(5000,pullIntervalHealth,(vds,req,op)=>{
+        vds.forEach(ele => {
+          updateCamera(ele.health);
+          jqccs.updateGenericControl(null, ele);
+  
         });
-      }
-      */
-
-
-
+        
+        jqccs.stateOutput(op['currRefresh']);
+        
+      });
+      
+      
+      return;
+    
 
     },
     tableFn: function (tmpObj) {

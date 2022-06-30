@@ -1,5 +1,49 @@
-function getWidget() {
+var current_selection=""
+var widget_options={}
+var widget_state={}
+var device_subscribed=[]
+var pullInterval = null;
+function updateWidget(ds) {
+
+  if (ds.dpck_ds_type == 0) {
+    // output
+    jqccs.updateSingleNode({output:ds},widget_state);
+   // widget_state['data'][ds.ndk_uid]=ds;
+  } else if (ds.dpck_ds_type == 1) {
+
+    jqccs.updateSingleNode({input:ds},widget_state);
+
+  } else if (ds.dpck_ds_type == 4) {
+
+   jqccs.updateSingleNode({health:ds},widget_state);
+   jqccs.updateGenericControl(null, {health:ds});
+
+   
+  if(ds.cuh_alarm_lvl){
+   
+    jqccs.decodeAlarms();
+  
+  }
+  } else if (ds.dpck_ds_type == 7) {
+    console.log(ds.ndk_uid+ " LOG PACK:"+JSON.stringify(ds));
+
+  } else {
+    var obj={};
+    console.log(ds.ndk_uid+ " OTHER:"+JSON.stringify(ds));
+
+
+    obj[jchaos.channelToString(ds.dpck_ds_type)]=ds;
+    jqccs.updateSingleNode(obj);
+    jqccs.updateGenericControl(null, obj);
+
+
+  }
+
+}
+function getWidget(options) {
   console.log("powersupply widget");
+  widget_options=options;
+
 
   var chaos = 
    {
@@ -39,15 +83,25 @@ function getWidget() {
     tableClickFn: function (tmpObj, e) {
       //  rebuildCam(tmpObj);
       var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
-      if(!tmpObj.data[cindex].output.hasOwnProperty("polarity")){
-        var cuname = jchaos.encodeName(tmpObj.node_selected);
-        $(".pola").addClass("disabled");
-        //$(".pola").remove();
-        console.log("disable polarity for "+tmpObj.node_selected);
-      } else {
-        $(".pola").removeClass("disabled");
+      if(widget_state.hasOwnProperty(tmpObj.node_selected)){
+        if(widget_state[tmpObj.node_selected].hasOwnProperty('polarity')){
+          $(".pola").removeClass("disabled");
+        } else {
+          $(".pola").addClass("disabled");
 
+        }
+      } else {
+        jchaos.getChannel(tmpObj.node_selected,0,(dat)=>{
+          widget_state[tmpObj.node_selected]=dat[0];
+          if(widget_state[tmpObj.node_selected].hasOwnProperty('polarity')){
+            $(".pola").removeClass("disabled");
+          } else {
+            $(".pola").addClass("disabled");
+  
+          }
+        });
       }
+    
       
 
     },
@@ -145,6 +199,56 @@ function getWidget() {
         html += '</div>';
     
       return html;
+  },
+  updateInterfaceFn: function (tmpObj) {
+    console.log("UpdateInterfaceFn "+tmpObj.elems);
+    if(widget_options.hasOwnProperty('push')&&widget_options.push&&jchaos.socket.connected){
+      device_subscribed=tmpObj.elems;
+      jchaos.iosubscribeCU(tmpObj.elems, true);
+      jchaos.options['io_onconnect'] = (s) => {
+        console.log("resubscribe ..")
+        jchaos.iosubscribeCU(device_subscribed, true);
+      }
+      jchaos.options['io_onmessage'] = updateWidget;
+    } else {
+      jchaos.iosubscribeCU(tmpObj.elems, false);
+
+    }
+    jqccs.updateInterfaceCU(tmpObj);
+    
+
+  },
+  updateFn: function (tmpObj) {
+    widget_state=tmpObj;
+    widget_state['state']={};
+    
+    if(!(widget_options.hasOwnProperty('push')&&widget_options.push&&jchaos.socket.connected)){
+      if(device_subscribed.length){
+        jchaos.iosubscribeCU(device_subscribed, false);
+        device_subscribed=[];
+      }
+      var opt={
+        channel:-1,
+        devs:tmpObj.elems
+      }
+      if(!tmpObj.hasOwnProperty('interval')){
+        console.log("RESCHEDULE TASK")
+
+      
+        pullInterval=jqccs.rescheduleTask(widget_options.generalRefresh,opt,(dat,req,op)=>{
+          tmpObj.data=dat;
+          jqccs.updateGenericTableDataset(tmpObj);
+          jqccs.stateOutput(op['currRefresh']);
+        });
+        tmpObj['interval']=pullInterval;
+     } 
+     } else {
+      jchaos.getChannel(tmpObj.elems,-1,(ele)=>{
+        ele.forEach(i=>{
+          jqccs.updateSingleNode(i)
+        });
+      });
+     }
   }
 }
 return chaos;

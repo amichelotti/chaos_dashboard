@@ -2,6 +2,7 @@
     "generalRefresh": 1000,
     "fontSize":"12",
     "generalControlRefresh": 500,
+    "statusRefresh": 1000,
     "processRefresh": 5000,
     "checkLive": 10000,
     "defaultRestTimeout": 5000,
