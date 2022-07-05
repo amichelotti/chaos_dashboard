@@ -82,6 +82,7 @@ function getUserIP() {
 
 			echo '<script src="'.$main_dir.'/js/jstree/dist/jstree.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/socket.io.js"></script>';
+			echo '<script src="'.$main_dir.'/js/opencv.js"></script>';
 
 
 		?>

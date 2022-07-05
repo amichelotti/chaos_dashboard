@@ -8050,7 +8050,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             opt['diff']=0
         }
         var pullIntervalsec=setInterval(() => {
-        console.log(pullIntervalsec+"- performing task at "+update_ms)
+        //console.log(pullIntervalsec+"- performing task at "+update_ms)
         jchaos.getChannel(opt.devs, opt.channel, (vds,req) => {
             task(vds,req,opt)
             opt['diff']=new Date().getTime()-req['jchaos_ts'];

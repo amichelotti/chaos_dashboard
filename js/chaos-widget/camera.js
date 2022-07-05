@@ -106,6 +106,126 @@ function outputCameraRefresh(update_ms,opt){
   }, update_ms);
   return pullInterval;
 }*/
+function performFilter(msghead, imgsrc, options) {
+  var update;
+  var data;
+  var stop_update = false;
+  var hostWidth = $(window).width();
+  var hostHeight = $(window).height();
+  if (typeof channel === "undefined") {
+      channel = 0;
+  }
+
+  function filterImage(){
+    let imgElement = document.getElementById("cameraImage-" + imgsrc);
+    let src = cv.imread(imgElement);
+    if(options=="equalize"){
+      let dst = new cv.Mat();
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+      cv.equalizeHist(src, dst);
+      cv.imshow('pict-' + imgsrc, dst);
+      dst.delete();
+
+    } else if(options=="contour"){
+      let dst = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+      //cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
+      let contours = new cv.MatVector();
+      let hierarchy = new cv.Mat();
+      // You can try more different parameters
+      cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+      // draw contours with random Scalar
+      for (let i = 0; i < contours.size(); ++i) {
+          let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255));
+          cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
+      }
+      cv.imshow('pict-' + imgsrc, dst);
+      src.delete(); dst.delete(); contours.delete(); hierarchy.delete();
+      
+    } else if(options=="circle"){
+      let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8U);
+      let circles = new cv.Mat();
+      let color = new cv.Scalar(255, 0, 0);
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+// You can try more different parameters
+    cv.HoughCircles(src, circles, cv.HOUGH_GRADIENT,
+                1, 45, 75, 40, 0, 0);
+// draw circles
+for (let i = 0; i < circles.cols; ++i) {
+    let x = circles.data32F[i * 3];
+    let y = circles.data32F[i * 3 + 1];
+    let radius = circles.data32F[i * 3 + 2];
+    let center = new cv.Point(x, y);
+    cv.circle(dst, center, radius, color);
+}
+cv.imshow('pict-' + imgsrc, dst);
+src.delete(); dst.delete(); circles.delete();
+
+    }
+
+
+  }
+  var instant = $('<div><canvas id="pict-' + imgsrc + '"></canvas><div id="info-' + imgsrc + '"></div></div>').dialog({
+      minWidth: hostWidth / 4,
+      minHeight: hostHeight / 4,
+      title: msghead,
+      position: "center",
+      resizable: true,
+      fontSize: 10,
+      dialogClass: 'no-close',
+      buttons: [{
+              text: "save",
+              click: function(e) {
+                  var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
+                  /* var len = binary_string.length;
+                   var bytes = new Uint8Array(len);
+                   for (var i = 0; i < len; i++) {
+                     bytes[i] = binary_string.charCodeAt(i);
+                   }
+                   var blob = new Blob([bytes], { type: "image/png" });
+                  */
+                  saveAsBinary(binary_string, name + ".png");
+
+              }
+          },
+          {
+              text: "update",
+              id: 'pict-update-' + name,
+              click: function(e) {
+                  // var interval=$(this).attr("refresh_time");
+                  stop_update = !stop_update;
+
+              }
+          },
+          {
+              text: "close",
+              click: function(e) {
+                  // var interval=$(this).attr("refresh_time");
+                  let imgElement = document.getElementById("cameraImage-" + imgsrc);
+                  imgElement.removeEventListener('load',filterImage);
+                  // $(instant).dialog("close");
+                  $(this).remove();
+              }
+          }
+
+
+      ],
+      close: function(event, ui) {
+        let imgElement = document.getElementById("cameraImage-" + imgsrc);
+          imgElement.removeEventListener('load',filterImage);
+          // $(instant).dialog("close");
+          $(this).remove();
+      },
+      open: function() {
+       
+        let imgElement = document.getElementById("cameraImage-" + imgsrc);
+        imgElement.addEventListener('load',filterImage);
+         
+
+        }
+  });
+}
 function modeToString(val){
   switch (val) {
     case TRIGGER_CONT:
@@ -2021,6 +2141,24 @@ function activateMenuShort() {
           }
         }
       };
+      cuitem['filtering'] = {
+        "name":"Filtering", icon:"fa-picture-o",
+        "items":{
+        'equalize': {
+          name: "Equalize", cu: name,
+          callback: function (itemKey, opt, e) {
+            performFilter(name,domid,"equalize");
+          }
+        },
+        'contour':{
+        name: "Contour", cu: name,
+          callback: function (itemKey, opt, e) {
+            performFilter(name,domid,"circle");
+
+          }
+        }
+        }
+      }
       if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.hasOwnProperty('ctx_width') && selection.h && selection.w) {
 
         cuitem['transforms']['items']['zoom-in'] = {

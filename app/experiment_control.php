@@ -27,7 +27,7 @@ $curr_page = "Experiment Control";
             <div class="col-md-12">
                 <div class="row">
                     <div class="statbox purple col-sm-3">
-                        <h3>ZONE</h3>
+                        <h3>Experiment ZONE</h3>
                         <select id="zones" size="auto">
                         </select>
                     </div>
@@ -123,6 +123,9 @@ $curr_page = "Experiment Control";
 </div>
                             <div class="row manual_control invisible">
                                 <div class="col-sm-5 box">
+                                <h3>ZONE</h3>
+                                <select id="zones_filter" size="auto">
+                                </select>
                                     <div class="card list-group">
                                         <div id="elements_h" class="card-header">
                                             Elements
@@ -201,12 +204,25 @@ $curr_page = "Experiment Control";
             var current_acquisitions=1;
             var progressive_id = 0;
             var tagname = "";
-            var parent_tag="";
+            function updateWidget(ds){
+
+                var name =ds.ndk_uid;
+                var cuname = jchaos.encodeName(name);
+
+                if (ds.dpck_ds_type == 7) {
+                    jchaos.print(jchaos.log2txt(ds));
+                    
+
+                } 
+            }
             if(dashboard_settings && dashboard_settings.hasOwnProperty('lastProgressive')){
                 progressive_id=dashboard_settings['lastProgressive'];
                 $("#progressive_id").val(progressive_id);
             }
             jqccs.busyWindow(false);
+            jchaos.options['io_onmessage'] = updateWidget;
+
+            
 
             function refresh_hier(search,start,end){
                 var jsree_data = [];
@@ -354,17 +370,18 @@ $curr_page = "Experiment Control";
             }
             function onfailure(code){
                 jqccs.busyWindow(false);
-                if(parent_tag!=""){
-                    refresh_hier(parent_tag,0,new Date().getTime());
+                if(tagname!=""){
+                    refresh_hier(tagname,0,new Date().getTime());
                 }
-                alert("Script "+ current_script.script_name+" failed error:"+code);
+            
+                alert("Failed "+ tagname+" failed error:"+code);
 
             }
             function onsuccess(code){
                 jqccs.busyWindow(false);
                 
-                if(parent_tag!=""){
-                    refresh_hier(parent_tag,0,new Date().getTime());
+                if(tagname!=""){
+                    refresh_hier(tagname,0,new Date().getTime());
                 }
 
                 if(typeof progressive_id === "number"){
@@ -375,10 +392,13 @@ $curr_page = "Experiment Control";
                         localStorage['experiment_control_settings'] = JSON.stringify(dashboard_settings);
 
                     }
-                    updateTag();
+                } else {
+                    $("#progressive_id").val(progressive_id);
+  
                 }
-                
-                jqccs.instantMessage("OK ", current_script.script_name, 5000, true);
+                updateTag();
+
+                jqccs.instantMessage("OK ", tagname, 5000, true);
 
             }
             function updateTag() {
@@ -388,7 +408,12 @@ $curr_page = "Experiment Control";
                     sn = yourDate.toISOString().split('T')[0]
 
                 }
-                tagname = current_experiment.zone + "/" + current_experiment.group + "/" + current_experiment.experiment + "/" + sn + "/" + progressive_id;
+                var pi=$("#progressive_id").val();
+                if(current_experiment.hasOwnProperty("zone")&&current_experiment.hasOwnProperty("group")&&current_experiment.hasOwnProperty("experiment")){
+                    tagname = current_experiment.zone + "/" + current_experiment.group + "/" + current_experiment.experiment + "/" + sn + "/" + progressive_id;
+                } else {
+                    tagname=sn + "/" + progressive_id;
+                }
                 $("#tag_id").html(tagname);
             }
 
@@ -403,7 +428,15 @@ $curr_page = "Experiment Control";
 
                     experiment_sel = {}
                     if(Object.keys(exp).length==0){
-                        alert("not experiments found, please contact administrator");
+                       // alert("not experiments found, please contact administrator");
+                       $(".manual_control").removeClass("invisible");
+                        $("#control_view").removeClass("invisible");
+                        $(".script_selection").addClass("invisible");
+                        $("#enable_manual").remove();
+                        jchaos.search("", "zone", true, (zon) => {
+                            jqccs.element_sel('#zones_filter', zon, 1);
+
+                    });
                         return;
                     }
                     for (var k in exp) {
@@ -442,12 +475,37 @@ $curr_page = "Experiment Control";
                         jqccs.element_sel('#experiments', experiments, 0);
                     }
                 },(bad)=>{
-                    alert("cannot retrieve any experiment "+bad);
+                   // alert("cannot retrieve any experiment "+bad);
+                    $(".manual_control").removeClass("invisible");
+                    $("#control_view").removeClass("invisible");
+                    $(".script_selection").addClass("invisible");
+                    jchaos.search("", "zone", true, (zon) => {
+                        jqccs.element_sel('#zones_filter', zon, 1);
+
+                    });
                 });
 
             }
             resetSearch(null, null);
+            $("#zones_filter").change(function() {
+                var selzone = $("#zones_filter option:selected").val();
 
+                if (selzone == "--Select--" || selzone == "ALL")  {
+                    selzone = "";
+                }
+                     
+                jchaos.search(selzone, "cu", true, (cu) => {
+                    jqccs.refreshCheckList("elements",cu,(checked)=>{
+                            jchaos.addVector(selected_cu,checked);
+                        },(unchecked)=>{
+                            selected_cu=jchaos.removeVector(selected_cu,unchecked);
+                        });
+
+                });
+                
+                
+
+            });
             $("#zones").change(function() {
                 var selzone = $("#zones option:selected").val();
 
@@ -463,10 +521,10 @@ $curr_page = "Experiment Control";
             $("#refresh-folder").on("click",()=>{
                 jqccs.busyWindow(true);
 
-                if(parent_tag!=""){
-                    refresh_hier(parent_tag,0,new Date().getTime());
+                if(tagname!=""){
+                    refresh_hier(tagname,0,new Date().getTime());
                 } else {
-                    parent_tag=current_experiment.zone+"/"+current_experiment.group+"/"+current_experiment.experiment;
+                    updateTag();
 
                 }
                 jqccs.busyWindow(false);
@@ -478,7 +536,10 @@ $curr_page = "Experiment Control";
                     $(".manual_control").removeClass("invisible");
                     $("#control_view").removeClass("invisible");
                     $(".script_selection").addClass("invisible");
+                    jchaos.search("", "zone", true, (zon) => {
+                        jqccs.element_sel('#zones_filter', zon, 1);
 
+                    });
 
                 } else {
                     $(".manual_control").addClass("invisible");
@@ -498,10 +559,12 @@ $curr_page = "Experiment Control";
             $("#progressive_id").change(function() {
                 var id = $("#progressive_id").val();
                 if (id == "") {
-                    progressive_id = Math.trunc(new Date().getTime() / 1000);
+                    //progressive_id = Math.trunc(new Date().getTime() / 1000);
+                    progressive_id = new Date().toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1");
+
                 } else {
                     let n = parseInt(id);
-                    if (n == "NaN") {
+                    if (isNaN(n)) {
                         progressive_id = id;
                     } else {
                         progressive_id = n;
@@ -526,6 +589,7 @@ $curr_page = "Experiment Control";
                 updateTag()
                 var cmd="jchaos.tag(\""+tagname+"\","+ JSON.stringify(current_tagged_cu)+", 1,"+current_acquisitions+",\""+$("#tagnote").val()+"\")";
                 console.log("executing "+cmd);
+
                 $('#script_view').terminal().exec(cmd,false);
 
 
@@ -546,12 +610,26 @@ $curr_page = "Experiment Control";
                 } else {
                     $("#run-tag").prop('disabled', true);
 
-                } 
+                }
+
+                if((jchaos.socket != null) && (jchaos.socket.connected)){
+                    console.log("subscribe "+JSON.stringify(current_tagged_cu));
+
+                    jchaos.iosubscribeCU(current_tagged_cu, true);
+   
+
+                }
+
             });
             $("#b-untag").on("click",function(){
                 selected_tagged_cu.forEach(ele=>{
                     current_tagged_cu=jchaos.removeVector(current_tagged_cu,ele);
                 });
+                if((jchaos.socket != null) && (jchaos.socket.connected)){
+                    console.log("unsubscribe "+JSON.stringify(selected_tagged_cu));
+                    jchaos.iosubscribeCU(selected_tagged_cu, false);
+
+                }
                 selected_tagged_cu=[];
                 jqccs.refreshCheckList("tagged",current_tagged_cu,(check)=>{
                         jchaos.addVector(selected_tagged_cu,check);
@@ -565,6 +643,7 @@ $curr_page = "Experiment Control";
                         $("#run-tag").prop('disabled', true);
     
                     }
+
             });
 
             $("#edit-params").on("click",function(){
@@ -669,12 +748,16 @@ $curr_page = "Experiment Control";
                     $('#desc_view').find('a.json-toggle').click();
                     jqccs.element_sel('#script_select', current_experiment.scripts, 0);
                     updateTag()
-                    parent_tag=current_experiment.zone+"/"+current_experiment.group+"/"+current_experiment.experiment;
-                    refresh_hier(parent_tag,0,new Date().getTime());
-                    var methods = Object.getOwnPropertyNames(jchaos).filter(function(property) {
+                    refresh_hier(tagname,0,new Date().getTime());
+                   
+                   
+
+                }
+            });
+            var methods = Object.getOwnPropertyNames(jchaos).filter(function(property) {
                         return typeof jchaos[property] == 'function';
                     });
-                    var methods_full = [];
+            var methods_full = [];
                     methods.forEach(function(elem) {
                         methods_full.push("jchaos." + elem);
                     });
@@ -684,7 +767,8 @@ $curr_page = "Experiment Control";
                     methods.forEach(function(elem) {
                         methods_full.push("jqccs." + elem);
                     });
-                    $('#script_view').terminal(function(command) {
+                    
+            $('#script_view').terminal(function(command) {
                         if (command !== '') {
                             try {
                                 if (command == "help") {
@@ -745,9 +829,6 @@ $curr_page = "Experiment Control";
                     },onsuccess,onfailure);
                     jchaos.setOptions({"console_log":$('#script_view').terminal().echo,"console_err":$('#script_view').terminal().error});
 
-                }
-            });
-
     function listDev(tree,node,arr,tags,st,obj){
         if(typeof obj !== "object"){
             obj={index:0,start:-1};
@@ -801,8 +882,8 @@ $curr_page = "Experiment Control";
                 label: "Refresh",
 				action: function () {
                     jqccs.busyWindow(false);
-                        if(parent_tag!=""){
-                            refresh_hier(parent_tag,0,new Date().getTime());
+                        if(tagname!=""){
+                            refresh_hier(tagname,0,new Date().getTime());
                         }
 				    }
 				
