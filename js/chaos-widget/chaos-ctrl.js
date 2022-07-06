@@ -10953,7 +10953,35 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         items['mask-alarms'] = { name: "Mask alarms Dataset" };
        
         if (tmpObj.node_multi_selected.length == 1) {
+            items['edit']={
+                    name: "Edit..",icon:"fa-edit",
+                    callback: function(itemKey, opt, e) {
 
+                        jchaos.node(currsel, "get", "cu", function (data) {
+                            if (data != null) {
+                                //editorFn = cuSave;
+                                //jsonEdit(templ, data);
+                                //!! TODO: check why?
+                                if (!data.hasOwnProperty("ndk_type")) {
+                                    data['ndk_type'] = type;
+                                }
+                                cu2editor(data, (edit_templ, editobj) => {
+                                    jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (ok) {
+                                        
+                                        jqccs.instantMessage("CU/EU saved " + currsel, " OK", 2000, true);
+
+                                    }, function (bad) {
+                                        jqccs.instantMessage("Error saving CU/EU " + currsel, JSON.stringify(bad), 2000, false);
+
+                                    });
+
+                                });
+
+                            }
+                        });
+                        return;
+                    }
+            };
             items['savenode'] = {
                 "name": "Save",icon: "fa-save",
                 "items": {
@@ -11074,6 +11102,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             items['fold3'] = {
                 "name": "Show",icon:"fa-eye",
                 "items": {
+
                     'show-dataset': {
                         name: "Show/Set/Plot Dataset",icon:"fa-list",
                         callback: function(itemKey, opt, e) {
