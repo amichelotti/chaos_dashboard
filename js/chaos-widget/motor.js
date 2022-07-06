@@ -406,7 +406,7 @@ function getWidget(options) {
 
             jchaos.sendCUCmd(cuname,"mov_abs",param, function (d) {
               
-              jqccs.instantMessage(cuname, "Move to:"+poiv , 1000, true)
+             // jqccs.instantMessage(cuname, "Move to:"+poiv , 1000, true)
             }, function (d) {
               jqccs.instantMessage(cuname, "ERROR OCCURRED:" + d, 2000, 350, 400, false);
       

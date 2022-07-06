@@ -3586,7 +3586,7 @@
                 } else {
                     pp = cmdparam;
                 }
-                instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" Attributes:"+JSON.stringify(cmdparam)+"  sent", 1500, true)
+                instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" Attributes:"+JSON.stringify(cmdparam)+"  sent", 500, true)
             }, function(d) {
                 instantMessage(cuselection, "ERROR OCCURRED:" + d+ "\" Attributes:"+JSON.stringify(cmdparam), 5000, 350, 400, false);
 
