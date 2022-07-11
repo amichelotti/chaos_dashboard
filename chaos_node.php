@@ -801,43 +801,84 @@
 								"separator_after": false,
 								label: "Start Node(Launch)",
 								action: function () {
-									jchaos.node(node.data.ndk_uid, "start", "us", function () {
+									jchaos.node(node.data.ndk_uid, "stop", "us", function () {
 
-										jqccs.instantMessage(node.data.ndk_uid, "Starting on  " + node.data.ndk_parent, 2000, true);
+										jchaos.node(node.data.ndk_uid, "start", "us", function () {
 
-										jchaos.node(node.data.ndk_parent, "desc", "agent", function (data) {
-											console.log("->" + JSON.stringify(data));
-											var server = "";
-											if (data.ndk_ip_addr !== undefined) {
-												server = data.ndk_ip_addr;
-											} else if (data.ndk_host_name !== undefined) {
-												server = data.ndk_host_name;
-											} else if (data.ndk_rpc_addr !== undefined) {
-												server = data.ndk_rpc_addr;
-												server.replace(/:\d+/g, '');
-											}
-											var uid = "";
-											var enconsole = false;
-											data.andk_node_associated.forEach(ele => {
-												if (ele.ndk_uid == node.data.ndk_uid) {
-													uid = ele.association_uid;
-													enconsole = ele.node_log_on_console;
+											jqccs.instantMessage(node.data.ndk_uid, "Starting on  " + node.data.ndk_parent, 2000, true);
+
+											jchaos.node(node.data.ndk_parent, "desc", "agent", function (data) {
+												console.log("->" + JSON.stringify(data));
+												var server = "";
+												if (data.ndk_ip_addr !== undefined) {
+													server = data.ndk_ip_addr;
+												} else if (data.ndk_host_name !== undefined) {
+													server = data.ndk_host_name;
+												} else if (data.ndk_rpc_addr !== undefined) {
+													server = data.ndk_rpc_addr;
+													server.replace(/:\d+/g, '');
+												}
+												var uid = "";
+												var enconsole = false;
+												data.andk_node_associated.forEach(ele => {
+													if (ele.ndk_uid == node.data.ndk_uid) {
+														uid = ele.association_uid;
+														enconsole = ele.node_log_on_console;
+													}
+												});
+												if (enconsole) {
+													if (uid != "") {
+														jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
+													} else {
+														jqccs.instantMessage(node.data.ndk_uid, "Cannot open console, uid not found for " + node.data.ndk_uid, 4000, false);
+
+													}
 												}
 											});
-											if (enconsole) {
-												if (uid != "") {
-													jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
-												} else {
-													jqccs.instantMessage(node.data.ndk_uid, "Cannot open console, uid not found for " + node.data.ndk_uid, 4000, false);
 
-												}
-											}
+
+										}, function (bad) {
+											jqccs.instantMessage(node.data.ndk_uid, "Error Starting on " + node.data.ndk_parent + " error: " + JSON.stringify(bad), 4000, false);
 										});
+								},function () {
+									jchaos.node(node.data.ndk_uid, "start", "us", function () {
+
+jqccs.instantMessage(node.data.ndk_uid, "Starting on  " + node.data.ndk_parent, 2000, true);
+
+jchaos.node(node.data.ndk_parent, "desc", "agent", function (data) {
+	console.log("->" + JSON.stringify(data));
+	var server = "";
+	if (data.ndk_ip_addr !== undefined) {
+		server = data.ndk_ip_addr;
+	} else if (data.ndk_host_name !== undefined) {
+		server = data.ndk_host_name;
+	} else if (data.ndk_rpc_addr !== undefined) {
+		server = data.ndk_rpc_addr;
+		server.replace(/:\d+/g, '');
+	}
+	var uid = "";
+	var enconsole = false;
+	data.andk_node_associated.forEach(ele => {
+		if (ele.ndk_uid == node.data.ndk_uid) {
+			uid = ele.association_uid;
+			enconsole = ele.node_log_on_console;
+		}
+	});
+	if (enconsole) {
+		if (uid != "") {
+			jqccs.getConsole(node.data.ndk_uid + " on " + server, uid, server + ":" + data.ndk_rest_port, 2, 1, 1000);
+		} else {
+			jqccs.instantMessage(node.data.ndk_uid, "Cannot open console, uid not found for " + node.data.ndk_uid, 4000, false);
+
+		}
+	}
+});
 
 
-									}, function (bad) {
-										jqccs.instantMessage(node.data.ndk_uid, "Error Starting on " + node.data.ndk_parent + " error: " + JSON.stringify(bad), 4000, false);
-									});
+}, function (bad) {
+jqccs.instantMessage(node.data.ndk_uid, "Error Starting on " + node.data.ndk_parent + " error: " + JSON.stringify(bad), 4000, false);
+});
+								});
 
 								}
 							};
