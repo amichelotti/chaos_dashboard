@@ -10841,7 +10841,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         var node_multi_selected = tmpObj.node_multi_selected;
         var currsel = tmpObj.node_multi_selected[0];
         var stat = jchaos.getChannel(currsel, 255);
-        
+        var now = (new Date()).getTime();
         var cu =stat[0];
         if(tmpObj.hasOwnProperty("tableMenuItem")){
             for(var k in tmpObj.tableMenuItem){
@@ -10853,6 +10853,13 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         }
         if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) { //if el health
             var status = cu.health.nh_status;
+            var live=false;
+            
+            if(cu.health.hasOwnProperty("dpck_ats")){
+                if(now-cu.health.dpck_ats<15000){
+                    live=true;
+                }
+            }
             items['setstate'] = {
                 "name": "Set State...",
                 "items": {
@@ -10864,11 +10871,21 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
     
                             });
                         
-                    } }
+                    } },
+                    'kill':{ name: "Unload(kill)",icon: "fa-window-close",callback:function () {
+                        jchaos.node(currsel, "stop", "cu", function(data) {
+                            jchaos.node(currsel, "deinit", "cu", function(data) {
+                                jchaos.loadUnload(currsel, false, function(data) {
+                                })
+                            });
+                        });
 
+                    }},
+                    'sep1': "------"
                 }
             };
-            if ((tmpObj.off_line[cu.health.ndk_uid] == 0)) {
+
+            if (live) {
                
 
                 if (status == 'Start') {
@@ -10889,7 +10906,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                     items['setstate'].items['init'] = { name: "Init", icon: "init" };
                     items['sep1'] = "---------";
                 } else if (status == 'Recoverable Error') {
-                    items['recover'] = { name: "Recover", icon: "recover" };
+                    items['setstate'].items['recover'] = { name: "Recover", icon: "recover" };
                     items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
                     items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
                     items['setstate']. items['stop'] = { name: "Stop", icon: "fa-stop" };
@@ -10902,7 +10919,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                     items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
                     items['sep1'] = "---------";
                 } else if (status == "Unload") {
-                    items['load'] = { name: "Load", icon: "load" };
+                    items['setstate'].items['load'] = { name: "Load", icon: "load" };
                     items['sep1'] = "---------";
                 } else if (status == "Load") {
                     items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
