@@ -1,22 +1,22 @@
 
 var selectedCams = [];
 var stateObj = {};
-var streamaddr={}
-var streamaddr_cap={}
+var streamaddr = {}
+var streamaddr_cap = {}
 
 var cameraDriverDesc = {};
 var cameraLayoutSettings = {};
 var mouseX = 0, mouseY = 0;
 var currzoomm = 1.0;
 var opt = {};
-var pullInterval = null;
-var pullIntervalsec = null;
-var pullIntervalHealth = null;
-var last_output_time=null
+var pullInterval = {};
+var pullIntervalsec = {};
+var pullIntervalHealth = {};
+var last_output_time = null
 const TRIGGER_CONT = 0;
 const TRIGGER_PULSE = 1;
 
-const TRIGGER_SOFT= 2;
+const TRIGGER_SOFT = 2;
 const TRIGGER_NOACQUIRE = 5;
 const TRIGGER_LOHI = 3;
 const TRIGGER_HILO = 4;
@@ -38,7 +38,7 @@ var selection_resizableY = 0;
 var selection_grabbable = false;
 
 var selection_ellipse = {};
-function inputCameraRefresh(update_ms,opt){
+/*function inputCameraRefresh(update_ms,opt){
   var diff=0;
   var pullIntervalsec=setInterval(() => {
     jchaos.getChannel(cameralist, 1, (vds,req) => {
@@ -105,13 +105,354 @@ function outputCameraRefresh(update_ms,opt){
   }
   }, update_ms);
   return pullInterval;
+}*/
+function performFilter(msghead, imgsrc, options) {
+  var update;
+  var data;
+  var stop_update = false;
+  let width = $("#cameraImage-" + imgsrc).width();
+  let height = $("#cameraImage-" + imgsrc).height();
+  if (typeof channel === "undefined") {
+    channel = 0;
+  }
+  var output=new Date().getTime()+"-"+imgsrc;
+
+  function filterImage() {
+    let imgElement = document.getElementById("cameraImage-" + imgsrc);
+    let src = cv.imread(imgElement);
+
+    if (options == "equalize") {
+      let dst = new cv.Mat();
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+      cv.equalizeHist(src, dst);
+      cv.imshow(output, dst);
+      dst.delete();
+
+    } else if (options == "equalize2") {
+      let equalDst = new cv.Mat();
+      let claheDst = new cv.Mat();
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+      cv.equalizeHist(src, equalDst);
+      let tileGridSize = new cv.Size(8, 8);
+      // You can try more different parameters
+      let clahe = new cv.CLAHE(40, tileGridSize);
+      clahe.apply(src, claheDst);
+      cv.imshow(output, equalDst);
+      cv.imshow(output, claheDst);
+
+      src.delete(); equalDst.delete(); claheDst.delete(); clahe.delete();
+
+    } else if (options == "dft") {
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+
+      // get optimal size of DFT
+      let optimalRows = cv.getOptimalDFTSize(src.rows);
+      let optimalCols = cv.getOptimalDFTSize(src.cols);
+      let s0 = cv.Scalar.all(0);
+      let padded = new cv.Mat();
+      cv.copyMakeBorder(src, padded, 0, optimalRows - src.rows, 0,
+        optimalCols - src.cols, cv.BORDER_CONSTANT, s0);
+
+      // use cv.MatVector to distribute space for real part and imaginary part
+      let plane0 = new cv.Mat();
+      padded.convertTo(plane0, cv.CV_32F);
+      let planes = new cv.MatVector();
+      let complexI = new cv.Mat();
+      let plane1 = new cv.Mat.zeros(padded.rows, padded.cols, cv.CV_32F);
+      planes.push_back(plane0);
+      planes.push_back(plane1);
+      cv.merge(planes, complexI);
+
+      // in-place dft transform
+      cv.dft(complexI, complexI);
+
+      // compute log(1 + sqrt(Re(DFT(img))**2 + Im(DFT(img))**2))
+      cv.split(complexI, planes);
+      cv.magnitude(planes.get(0), planes.get(1), planes.get(0));
+      let mag = planes.get(0);
+      let m1 = new cv.Mat.ones(mag.rows, mag.cols, mag.type());
+      cv.add(mag, m1, mag);
+      cv.log(mag, mag);
+
+      // crop the spectrum, if it has an odd number of rows or columns
+      let rect = new cv.Rect(0, 0, mag.cols & -2, mag.rows & -2);
+      mag = mag.roi(rect);
+
+      // rearrange the quadrants of Fourier image
+      // so that the origin is at the image center
+      let cx = mag.cols / 2;
+      let cy = mag.rows / 2;
+      let tmp = new cv.Mat();
+
+      let rect0 = new cv.Rect(0, 0, cx, cy);
+      let rect1 = new cv.Rect(cx, 0, cx, cy);
+      let rect2 = new cv.Rect(0, cy, cx, cy);
+      let rect3 = new cv.Rect(cx, cy, cx, cy);
+
+      let q0 = mag.roi(rect0);
+      let q1 = mag.roi(rect1);
+      let q2 = mag.roi(rect2);
+      let q3 = mag.roi(rect3);
+
+      // exchange 1 and 4 quadrants
+      q0.copyTo(tmp);
+      q3.copyTo(q0);
+      tmp.copyTo(q3);
+
+      // exchange 2 and 3 quadrants
+      q1.copyTo(tmp);
+      q2.copyTo(q1);
+      tmp.copyTo(q2);
+
+      // The pixel value of cv.CV_32S type image ranges from 0 to 1.
+      cv.normalize(mag, mag, 0, 1, cv.NORM_MINMAX);
+
+      cv.imshow(output, mag);
+      src.delete(); padded.delete(); planes.delete(); complexI.delete(); m1.delete(); tmp.delete();
+
+
+    } else if (options == "threshold") {
+      let dst = new cv.Mat();
+      let gray = new cv.Mat();
+
+      // gray and threshold image
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+      cv.threshold(gray, gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
+
+      cv.imshow(output, gray);
+      src.delete(); dst.delete(); gray.delete();
+    } else if (options == "watershed") {
+      let dst = new cv.Mat();
+      let gray = new cv.Mat();
+      let opening = new cv.Mat();
+      let coinsBg = new cv.Mat();
+      let coinsFg = new cv.Mat();
+      let distTrans = new cv.Mat();
+      let unknown = new cv.Mat();
+      let markers = new cv.Mat();
+      // gray and threshold image
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+      cv.threshold(gray, gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
+      // get background
+      let M = cv.Mat.ones(3, 3, cv.CV_8U);
+      cv.erode(gray, gray, M);
+      cv.dilate(gray, opening, M);
+      cv.dilate(opening, coinsBg, M, new cv.Point(-1, -1), 3);
+      // distance transform
+      cv.distanceTransform(opening, distTrans, cv.DIST_L2, 5);
+      cv.normalize(distTrans, distTrans, 1, 0, cv.NORM_INF);
+      // get foreground
+      cv.threshold(distTrans, coinsFg, 0.7 * 1, 255, cv.THRESH_BINARY);
+      coinsFg.convertTo(coinsFg, cv.CV_8U, 1, 0);
+      cv.subtract(coinsBg, coinsFg, unknown);
+      // get connected components markers
+      cv.connectedComponents(coinsFg, markers);
+      for (let i = 0; i < markers.rows; i++) {
+        for (let j = 0; j < markers.cols; j++) {
+          markers.intPtr(i, j)[0] = markers.ucharPtr(i, j)[0] + 1;
+          if (unknown.ucharPtr(i, j)[0] == 255) {
+            markers.intPtr(i, j)[0] = 0;
+          }
+        }
+      }
+      cv.cvtColor(src, src, cv.COLOR_RGBA2RGB, 0);
+      cv.watershed(src, markers);
+      // draw barriers
+      for (let i = 0; i < markers.rows; i++) {
+        for (let j = 0; j < markers.cols; j++) {
+          if (markers.intPtr(i, j)[0] == -1) {
+            src.ucharPtr(i, j)[0] = 255; // R
+            src.ucharPtr(i, j)[1] = 0; // G
+            src.ucharPtr(i, j)[2] = 0; // B
+          }
+        }
+      }
+      cv.imshow(output, src);
+
+      src.delete(); dst.delete(); gray.delete(); opening.delete(); coinsBg.delete();
+      coinsFg.delete(); distTrans.delete(); unknown.delete(); markers.delete(); M.delete();
+
+    } else if (options == "distance") {
+      let dst = new cv.Mat();
+      let gray = new cv.Mat();
+      let opening = new cv.Mat();
+      let coinsBg = new cv.Mat();
+      let coinsFg = new cv.Mat();
+      let distTrans = new cv.Mat();
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+      cv.threshold(gray, gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
+      let M = cv.Mat.ones(3, 3, cv.CV_8U);
+      cv.erode(gray, gray, M);
+      cv.dilate(gray, opening, M);
+      cv.dilate(opening, coinsBg, M, new cv.Point(-1, -1), 3);
+
+      // distance transform
+      cv.distanceTransform(opening, distTrans, cv.DIST_L2, 5);
+      cv.normalize(distTrans, distTrans, 1, 0, cv.NORM_INF);
+      cv.imshow(output, distTrans);
+
+      src.delete(); dst.delete(); gray.delete(); opening.delete();
+      coinsBg.delete(); coinsFg.delete(); distTrans.delete(); M.delete();
+
+    }
+    else if (options == "background") {
+      let dst = new cv.Mat();
+      let gray = new cv.Mat();
+      let opening = new cv.Mat();
+      let coinsBg = new cv.Mat();
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+      cv.threshold(gray, gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
+
+      // get background
+      let M = cv.Mat.ones(3, 3, cv.CV_8U);
+      cv.erode(gray, gray, M);
+      cv.dilate(gray, opening, M);
+      cv.dilate(opening, coinsBg, M, new cv.Point(-1, -1), 3);
+      cv.imshow(output, coinsBg);
+
+      src.delete(); dst.delete(); gray.delete(); opening.delete(); coinsBg.delete(); M.delete();
+
+    } else if (options == "histo") {
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+      let srcVec = new cv.MatVector();
+      srcVec.push_back(src);
+      let accumulate = false;
+      let channels = [0];
+      let histSize = [256];
+      let ranges = [0, 255];
+      let hist = new cv.Mat();
+      let mask = new cv.Mat();
+      let color = new cv.Scalar(255, 255, 255);
+      let scale = 2;
+      // You can try more different parameters
+      cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
+      let result = cv.minMaxLoc(hist, mask);
+      let max = result.maxVal;
+      let dst = new cv.Mat.zeros(src.rows, histSize[0] * scale,
+        cv.CV_8UC3);
+      // draw histogram
+      for (let i = 0; i < histSize[0]; i++) {
+        let binVal = hist.data32F[i] * src.rows / max;
+        let point1 = new cv.Point(i * scale, src.rows - 1);
+        let point2 = new cv.Point((i + 1) * scale - 1, src.rows - binVal);
+        cv.rectangle(dst, point1, point2, color, cv.FILLED);
+      }
+      cv.imshow(output, dst);
+      src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
+
+    } else if (options == "contour") {
+      let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+      cv.threshold(src, src, 2, 255, cv.THRESH_BINARY);
+      let contours = new cv.MatVector();
+      let hierarchy = new cv.Mat();
+      let hull = new cv.MatVector();
+      cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+      // approximates each contour to convex hull
+      for (let i = 0; i < contours.size(); ++i) {
+          let tmp = new cv.Mat();
+          let cnt = contours.get(i);
+          // You can try more different parameters
+          cv.convexHull(cnt, tmp, false, true);
+          hull.push_back(tmp);
+          cnt.delete(); tmp.delete();
+      }
+      // draw contours with random Scalar
+      for (let i = 0; i < contours.size(); ++i) {
+          let colorHull = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
+                                        Math.round(Math.random() * 255));
+          cv.drawContours(dst, hull, i, colorHull, 1, 8, hierarchy, 0);
+      }
+      cv.imshow(output, dst);
+      src.delete(); dst.delete(); hierarchy.delete(); contours.delete(); hull.delete();
+      
+
+    } else if (options == "contour") {
+      let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8U);
+      let circles = new cv.Mat();
+      let color = new cv.Scalar(255, 0, 0);
+      cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+      // You can try more different parameters
+      cv.HoughCircles(src, circles, cv.HOUGH_GRADIENT,
+        1, 45, 75, 40, 0, 0);
+      // draw circles
+      for (let i = 0; i < circles.cols; ++i) {
+        let x = circles.data32F[i * 3];
+        let y = circles.data32F[i * 3 + 1];
+        let radius = circles.data32F[i * 3 + 2];
+        let center = new cv.Point(x, y);
+        cv.circle(dst, center, radius, color);
+      }
+      cv.imshow(output, dst);
+      src.delete(); dst.delete(); circles.delete();
+
+    }
+
+
+  }
+  var instant = $('<div><canvas id="' + output + '"></canvas></div>').dialog({
+    width: width,
+    height: height,
+    title: options +" " +msghead,
+    position: "center",
+    resizable: true,
+    fontSize: 10,
+    dialogClass: 'no-close',
+    buttons: [{
+      text: "save",
+      click: function (e) {
+        var canvas = document.getElementById(output);
+        var image = canvas.toDataURL();
+        var binary_string = image;
+        canvas.toBlob((blob) => {
+          saveAs(blob, options +"_"+jchaos.encodeName(msghead)+".png");
+        });
+
+      }
+    },
+    {
+      text: "update",
+      id: 'pict-update-' + name,
+      click: function (e) {
+        // var interval=$(this).attr("refresh_time");
+        stop_update = !stop_update;
+
+      }
+    },
+    {
+      text: "close",
+      click: function (e) {
+        // var interval=$(this).attr("refresh_time");
+        let imgElement = document.getElementById("cameraImage-" + imgsrc);
+        imgElement.removeEventListener('load', filterImage);
+        // $(instant).dialog("close");
+        $(this).remove();
+      }
+    }
+
+
+    ],
+    close: function (event, ui) {
+      let imgElement = document.getElementById("cameraImage-" + imgsrc);
+      imgElement.removeEventListener('load', filterImage);
+      // $(instant).dialog("close");
+      $(this).remove();
+    },
+    open: function () {
+
+      let imgElement = document.getElementById("cameraImage-" + imgsrc);
+      imgElement.addEventListener('load', filterImage);
+
+
+    }
+  });
 }
-function modeToString(val){
+function modeToString(val) {
   switch (val) {
     case TRIGGER_CONT:
       return "Continuous";
     case TRIGGER_SOFT:
-        return "Software";
+      return "Software";
     case TRIGGER_PULSE:
       return "Pulse";
     case TRIGGER_NOACQUIRE:
@@ -124,12 +465,15 @@ function modeToString(val){
       return "--";
   }
 }
-function subscribeCU(culist){
-  var subscribed=[]
-  culist.forEach(ele=>{
-    if(!streamaddr.hasOwnProperty(ele)){
-      console.log("Subscribe " +ele)
-      jchaos.iosubscribeCU(ele, true);
+function subscribeCU(culist) {
+  var subscribed = []
+  culist.forEach(ele => {
+    if (!streamaddr.hasOwnProperty(ele)) {
+      console.log("Subscribe " + ele)
+      var topt = {};
+
+      topt[ele.replaceAll('/', '.')] = { 'update': opt.camera.cameraRefresh };
+      jchaos.iosubscribeCU(ele, true, topt);
       subscribed.push(ele)
     }
   });
@@ -149,7 +493,7 @@ function moveOval(id) {
   selection_ctx.strokeStyle = 'green';
 
   // fix 3/4 width
-  let h=selection_ellipse[id]['w'] * 0.75;
+  let h = selection_ellipse[id]['w'] * 0.75;
   selection_ctx.strokeRect(selection_ellipse[id]['x'] - selection_ellipse[id]['w'], selection_ellipse[id]['y'] - h, selection_ellipse[id]['w'] * 2, h * 2);
 
 }
@@ -182,7 +526,7 @@ function handleMouseDown(e) {
   }
   let vid = e.currentTarget.id.split('-');
   let id = vid[1];
-  if(!mapcamera.hasOwnProperty(id)){
+  if (!mapcamera.hasOwnProperty(id)) {
     $("#" + e.currentTarget.id).css("cursor", "default");
     selection_isGrab = false;
     selection_isResize = false;
@@ -191,7 +535,7 @@ function handleMouseDown(e) {
     selection_grabbable = false;
     return;
   }
-  if(cameraLayoutSettings&&cameraLayoutSettings.hasOwnProperty(id)&&cameraLayoutSettings[id].hasOwnProperty('rot')&&cameraLayoutSettings[id].rot){
+  if (cameraLayoutSettings && cameraLayoutSettings.hasOwnProperty(id) && cameraLayoutSettings[id].hasOwnProperty('rot') && cameraLayoutSettings[id].rot) {
     // no selection on image rotated
     $("#" + e.currentTarget.id).css("cursor", "no-drop");
 
@@ -210,7 +554,7 @@ function handleMouseDown(e) {
   selection_startY = parseInt(e.pageY - selection_offsetY);
   //let ww = $("#" + e.currentTarget.id).width();
   //let hh = $("#" + e.currentTarget.id).height();
- 
+
   let ww = $("#cameraImage-" + id).prop('naturalWidth');
   let hh = $("#cameraImage-" + id).prop('naturalHeight');
 
@@ -224,7 +568,7 @@ function handleMouseDown(e) {
     return;
   }
   if (selection_isDown == false) {
-    
+
     console.log("start:" + selection_startX + "," + selection_startY);
     selection_ellipse[id] = {
       x: 0,
@@ -283,7 +627,7 @@ function handleMouseMove(e) {
   let vid = e.currentTarget.id.split('-');
   let id = vid[1];
 
-  if(!mapcamera.hasOwnProperty(id)){
+  if (!mapcamera.hasOwnProperty(id)) {
     $("#" + e.currentTarget.id).css("cursor", "default");
     selection_isGrab = false;
     selection_isResize = false;
@@ -292,7 +636,7 @@ function handleMouseMove(e) {
     selection_grabbable = false;
     return;
   }
-  if(cameraLayoutSettings&&cameraLayoutSettings.hasOwnProperty(id)&&cameraLayoutSettings[id].hasOwnProperty('rot')&&cameraLayoutSettings[id].rot){
+  if (cameraLayoutSettings && cameraLayoutSettings.hasOwnProperty(id) && cameraLayoutSettings[id].hasOwnProperty('rot') && cameraLayoutSettings[id].rot) {
     // no selection on image rotated
     $("#" + e.currentTarget.id).css("cursor", "no-drop");
 
@@ -374,25 +718,25 @@ function handleMouseMove(e) {
             selection_grabbable = true;
             return;//
           }
-        
 
-        //check border vertical
-        if (
-          (((mouseX >= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] + 5))) ||
-            (mouseX >= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] + 5)))) {
-          $("#" + e.currentTarget.id).css("cursor", "ew-resize");
-          selection_resizableX = mouseX;
-          return;
-          //check horizontal
-        } else if (((mouseY >= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] + 5))) ||
-          (mouseY >= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] + 5))) {
-          $("#" + e.currentTarget.id).css("cursor", "ns-resize");
-          selection_resizableY = mouseY;
 
-          return;
+          //check border vertical
+          if (
+            (((mouseX >= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] + selection_ellipse[id]['w'] + 5))) ||
+              (mouseX >= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] - 5)) && (mouseX <= (selection_ellipse[id]['x'] - selection_ellipse[id]['w'] + 5)))) {
+            $("#" + e.currentTarget.id).css("cursor", "ew-resize");
+            selection_resizableX = mouseX;
+            return;
+            //check horizontal
+          } else if (((mouseY >= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] + selection_ellipse[id]['h'] + 5))) ||
+            (mouseY >= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] - 5)) && (mouseY <= (selection_ellipse[id]['y'] - selection_ellipse[id]['h'] + 5))) {
+            $("#" + e.currentTarget.id).css("cursor", "ns-resize");
+            selection_resizableY = mouseY;
 
+            return;
+
+          }
         }
-      }
 
       }
     }
@@ -429,7 +773,7 @@ function checkRedrawReference(camid, domid, x, y, sx, sy, r, rt) {
 
   });
 }
-function zoomResize(domid, x, y, sx, sy, r, rot,w,h){
+function zoomResize(domid, x, y, sx, sy, r, rot, w, h) {
   const canvas = document.getElementById("cameraImageCanv-" + domid);
   const canvasSel = document.getElementById("selectionCanv-" + domid);
   const ctx = canvas.getContext('2d');
@@ -438,8 +782,8 @@ function zoomResize(domid, x, y, sx, sy, r, rot,w,h){
   if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
     currzoom = cameraLayoutSettings[domid]["zoom"];
   }
- 
-  if(currzoom!=1.0){
+
+  if (currzoom != 1.0) {
     $("#zoom_enable-" + domid).html('<i class="fa fa-check-square-o" aria-hidden="true"></i>');
   } else {
     $("#zoom_enable-" + domid).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
@@ -447,17 +791,17 @@ function zoomResize(domid, x, y, sx, sy, r, rot,w,h){
   }
   let width = $("#cameraImage-" + domid).width();
   let height = $("#cameraImage-" + domid).height();
-  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
+  let natwidth = w || $("#cameraImage-" + domid).prop('naturalWidth');
   let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
   if (canvasSel != null) {
     canvasSel.width = width * currzoom;
     canvasSel.height = height * currzoom;
   }
 
-  
+
   canvas.width = width * currzoom;
   canvas.height = height * currzoom;
-  
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (sx > 0 && sy > 0) {
@@ -473,7 +817,7 @@ function zoomResize(domid, x, y, sx, sy, r, rot,w,h){
       ctx.translate(-canvas.width / 2, -canvas.height / 2); // set canvas context to center
 
     }
-    */ 
+    */
    /*let r=rot%360
     if (r != 0) {
       ctx.translate(canvas.width / 2, canvas.height / 2); // set canvas context to center
@@ -489,8 +833,8 @@ function zoomResize(domid, x, y, sx, sy, r, rot,w,h){
     } else*/ {
       x = x * ratiox, y = y * ratioy, sx = sx * ratiox, sy = sy * ratioy;
     }
-    
-    console.log("rot:"+r+" ellipse:("+x+","+y+") sx:"+sx+" sy:"+sy);
+
+    console.log("rot:" + r + " ellipse:(" + x + "," + y + ") sx:" + sx + " sy:" + sy);
 
     ctx.beginPath();
     ctx.lineWidth = 1;
@@ -525,37 +869,37 @@ function zoomResize(domid, x, y, sx, sy, r, rot,w,h){
   }
 
 }
-function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
+function redrawReference(domid, x, y, sx, sy, r, rot, w, h) {
   let currzoom = 1.0;
   if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
     currzoom = cameraLayoutSettings[domid]["zoom"];
   }
-  let curr_size={
-    'REFX':x,
-    'REFY':y,
-    'REFSX':sx,
-    'REFSY':sy,
-    'REFRHO':r,
-    'ROT':rot,
-    'WIDTH':w,
-    'HEIGHT':h,
-    'ZOOM':currzoom
+  let curr_size = {
+    'REFX': x,
+    'REFY': y,
+    'REFSX': sx,
+    'REFSY': sy,
+    'REFRHO': r,
+    'ROT': rot,
+    'WIDTH': w,
+    'HEIGHT': h,
+    'ZOOM': currzoom
   };
-  if(!old_size.hasOwnProperty(domid)){
-    old_size[domid]={};
-  } else if(JSON.stringify(old_size[domid])==JSON.stringify(curr_size)){
+  if (!old_size.hasOwnProperty(domid)) {
+    old_size[domid] = {};
+  } else if (JSON.stringify(old_size[domid]) == JSON.stringify(curr_size)) {
     return;
   }
-  old_size[domid]=curr_size;
+  old_size[domid] = curr_size;
 
   const canvas = document.getElementById("cameraImageCanv-" + domid);
   const canvasSel = document.getElementById("selectionCanv-" + domid);
- 
 
-  if ((canvas == null)||($("#cameraImage-" + domid).length == 0)) {
+
+  if ((canvas == null) || ($("#cameraImage-" + domid).length == 0)) {
     return;
   }
-  let natwidth = w|| $("#cameraImage-" + domid).prop('naturalWidth');
+  let natwidth = w || $("#cameraImage-" + domid).prop('naturalWidth');
   let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
   if (natwidth > natheight) {
     $("#cameraImage-" + domid).removeClass("chaos_image_v");
@@ -568,17 +912,17 @@ function redrawReference(domid, x, y, sx, sy, r, rot,w,h) {
     $("#cameraImage-" + domid).removeClass("chaos_image_h");
     $("#cameraImage-" + domid).addClass("chaos_image_v");
   }
-  zoomResize(domid, x, y, sx, sy, r, rot,w,h);
+  zoomResize(domid, x, y, sx, sy, r, rot, w, h);
 
   $("#cameraImage-" + domid).on('load', function () {
-  $("#cameraImage-" + domid).off('load');
-  
-    zoomResize(domid, x, y, sx, sy, r, rot,w,h);
-  
+    $("#cameraImage-" + domid).off('load');
+
+    zoomResize(domid, x, y, sx, sy, r, rot, w, h);
+
   });
 
 }
-function getCameraProps(ele,domid) {
+function getCameraProps(ele, domid) {
   var pub = {};
 
   for (k in ele) {
@@ -588,18 +932,18 @@ function getCameraProps(ele,domid) {
       var html = "NA:NA";
       if (ele[k].pubname == "SHUTTER") {
         if (ele[k].max != undefined) {
-          $("#"+domid+"_SHUTTER_MAX").html(ele[k].max.toFixed(2));
+          $("#" + domid + "_SHUTTER_MAX").html(ele[k].max.toFixed(2));
         }
         if (ele[k].min != undefined) {
-          $("#"+domid+"_SHUTTER_MIN").html(ele[k].min.toFixed(2));
+          $("#" + domid + "_SHUTTER_MIN").html(ele[k].min.toFixed(2));
         }
       }
       if (ele[k].pubname == "GAIN") {
         if (ele[k].max != undefined) {
-          $("#"+domid+"_GAIN_MAX").html(ele[k].max.toFixed(2));
+          $("#" + domid + "_GAIN_MAX").html(ele[k].max.toFixed(2));
         }
         if (ele[k].min != undefined) {
-          $("#"+domid+"_GAIN_MIN").html(ele[k].min.toFixed(2));
+          $("#" + domid + "_GAIN_MIN").html(ele[k].min.toFixed(2));
         }
       }
 
@@ -611,40 +955,40 @@ function getCameraProps(ele,domid) {
         console.log("Serial:" + ele[k].VAL);
 
       }
-     // cameraDriverDesc[cul[cnt]] = pub;
+      // cameraDriverDesc[cul[cnt]] = pub;
 
     }
   }
 };
 
-function getCameraDesc(cul,domid) {
-  if(opt.camera.hasOwnProperty('cameraStream') && opt.camera.cameraStream){
-    jchaos.getChannel(cul,2,(clist)=>{
-      clist.forEach(ele=>{
-        if(ele.hasOwnProperty("stream")&&ele.stream.length){
-          streamaddr[ele.ndk_uid]=ele['stream'];
-          streamaddr_cap[ele.ndk_uid]=ele['stream'];
+function getCameraDesc(cul, domid) {
+  if (opt.camera.hasOwnProperty('cameraStream') && opt.camera.cameraStream) {
+    jchaos.getChannel(cul, 2, (clist) => {
+      clist.forEach(ele => {
+        if (ele.hasOwnProperty("stream") && ele.stream.length) {
+          streamaddr[ele.ndk_uid] = ele['stream'];
+          streamaddr_cap[ele.ndk_uid] = ele['stream'];
 
-          console.log("STREAM "+ele.ndk_uid+ " link:"+ele['stream']);
+          console.log("STREAM " + ele.ndk_uid + " link:" + ele['stream']);
           jchaos.iosubscribeCU(ele.ndk_uid, false);
 
         }
       });
     });
-}
+  }
   jchaos.command(cul, { "act_name": "cu_prop_drv_get" }, data => {
-    if (data instanceof Array){
+    if (data instanceof Array) {
       data.forEach((ele, cnt) => {
         getCameraProps(ele);
-        
+
         // console.log(cul[cnt]+" ->"+JSON.stringify(pub));
-  
+
       });
     } else {
-      getCameraProps(data,domid);
+      getCameraProps(data, domid);
 
-    } 
-    
+    }
+
   });
 }
 function buildSelected(list, sel) {
@@ -668,8 +1012,8 @@ function buildCameraArray(id, opt) {
   var col = opt.camera['cameraPerRow'] || 2;
   var row = opt.camera['maxCameraRow'] || 2;
   var tmpObj = {
-    cameraPerRow: col ,
-    maxCameraRow: row ,
+    cameraPerRow: col,
+    maxCameraRow: row,
     displayRatio: opt.camera['displayRatio'] || "4/3"
   };
   // var html = '<table class="table" id="' + tablename + '">';
@@ -678,9 +1022,9 @@ function buildCameraArray(id, opt) {
   var hostHeight = $(window).height();
   var maxwidth = Math.round((hostWidth - (50 * tmpObj.cameraPerRow)) / tmpObj.cameraPerRow);
   console.log("Camera Array:" + row + "x" + col + " maxwidth:" + maxwidth, "  ratio:" + tmpObj.displayRatio);
-  var search="";
-  if(opt.hasOwnProperty("search")){
-    search=opt['search'];
+  var search = "";
+  if (opt.hasOwnProperty("search")) {
+    search = opt['search'];
   }
   var list_cu = jchaos.search(search, "ceu", true, { 'interface': "camera" });
   var cnt = 0;
@@ -700,14 +1044,14 @@ function buildCameraArray(id, opt) {
       html += '<canvas class="coveringCanvas selectionCanv" id="selectionCanv-' + encoden + '"/></canvas>';
 
       html += '</div>';
-      
+
       html += '<div class="row infocam">';
       html += '<div class="col-sm-6">';
       html += '<select class="camselect" id="select-' + encoden + '" vid="' + encoden + '">';
       html += buildSelected(list_cu, cnt);
       html += '</select>';
       html += '</div>';
-    //  html += '<div class="col-sm"><label>Size:</label><span id="size-' + encoden + '" class="minmax">0</span></div>';
+      //  html += '<div class="col-sm"><label>Size:</label><span id="size-' + encoden + '" class="minmax">0</span></div>';
       html += '<div class="col-sm"><label>Freq:</label><span id="freq-' + encoden + '" class="minmax">0</span></div>';
       html += '<div class="col-sm"><label>Lat:</label><span id="lat-' + encoden + '" class="minmax">0</span></div>';
       html += '</div>'; //row
@@ -728,9 +1072,9 @@ function buildCameraArray(id, opt) {
       html += '</div>';
 
       html += '<div class="row infocam">';
-      html += '<div class="col-sm-2">Shutter</div>';      
+      html += '<div class="col-sm-2">Shutter</div>';
       html += '<div class="col-sm-3 maxmin" id="' + encoden + 'SHUTTER"></div>';
-      
+
       html += '<div class="input-group col-sm-7">';
       html += '<span class="maxmin infocam"  id="' + encoden + '_SHUTTER_MIN">0</span>';
       html += '<input class="cucmdattr form-control form-control-sm" id="' + encoden + '_SHUTTER" name="' + encoden + '/input/SHUTTER"></input>';
@@ -738,11 +1082,11 @@ function buildCameraArray(id, opt) {
       html += '</div>';
       html += '</div>';
 
-     
+
       html += '<div class="row infocam">';
-      html += '<div class="col-sm-2">Gain</div>';      
+      html += '<div class="col-sm-2">Gain</div>';
       html += '<div class="col-sm-3 maxmin" id="' + encoden + 'GAIN"></div>';
-      
+
       html += '<div class="input-group col-sm-7">';
       html += '<span class="maxmin infocam"  id="' + encoden + '_GAIN_MIN">0</span>';
       html += '<input class="cucmdattr form-control form-control-sm" id="' + encoden + '_GAIN" name="' + encoden + '/input/GAIN"></input>';
@@ -751,22 +1095,22 @@ function buildCameraArray(id, opt) {
       html += '</div>'; //row
 
 
-      
-    /*  html += '<div class="row">'; 
-    
-      html += '<div class="col-sm border" id="' + encoden + '_output_TRIGGER_MODE"></div>';
-      html += '<div class="col-sm" id="' + encoden + '"><select class="select_camera_mode form-control form-control-sm" id="' + encoden + '_select_camera_mode" name="' + encoden + '"><option value="0">Continuous</option><option value="3">TriggeredLOHI</option><option value="4">TriggeredHILO</option><option value="2">Pulse</option><option value="5">No Acquire</option></select></div>';
-      html += '</div>';
 
-      html += '<div class="row">';      
-      html += '<div class="col-sm border" id="' + encoden + '"_output_SHUTTER"></div>';
-      html += '<div class="col-sm" id="' + encoden + '"><input class="cucmdattr form-control form-control-sm" id="' + encoden + '_SHUTTER" name="' + encoden + '/input/SHUTTER></input><span id="' + encoden + '_SHUTTER_INFO"></span></div>';
-      html += '</div>'; //row
-      html += '<div class="row">';      
-      html += '<div class="col-sm border" id="' + encoden + '_output_GAIN"></div>';
-      html += '<div class="col-sm" id="' + encoden + '"><input class="cucmdattr form-control form-control-sm" id="' + encoden + '_GAIN" name="' + encoden + '/input/GAIN"></input><span id="' + encoden + '_GAIN_INFO"></span></div>';
-      html += '</div>'; //row
-      */
+      /*  html += '<div class="row">'; 
+      
+        html += '<div class="col-sm border" id="' + encoden + '_output_TRIGGER_MODE"></div>';
+        html += '<div class="col-sm" id="' + encoden + '"><select class="select_camera_mode form-control form-control-sm" id="' + encoden + '_select_camera_mode" name="' + encoden + '"><option value="0">Continuous</option><option value="3">TriggeredLOHI</option><option value="4">TriggeredHILO</option><option value="2">Pulse</option><option value="5">No Acquire</option></select></div>';
+        html += '</div>';
+  
+        html += '<div class="row">';      
+        html += '<div class="col-sm border" id="' + encoden + '"_output_SHUTTER"></div>';
+        html += '<div class="col-sm" id="' + encoden + '"><input class="cucmdattr form-control form-control-sm" id="' + encoden + '_SHUTTER" name="' + encoden + '/input/SHUTTER></input><span id="' + encoden + '_SHUTTER_INFO"></span></div>';
+        html += '</div>'; //row
+        html += '<div class="row">';      
+        html += '<div class="col-sm border" id="' + encoden + '_output_GAIN"></div>';
+        html += '<div class="col-sm" id="' + encoden + '"><input class="cucmdattr form-control form-control-sm" id="' + encoden + '_GAIN" name="' + encoden + '/input/GAIN"></input><span id="' + encoden + '_GAIN_INFO"></span></div>';
+        html += '</div>'; //row
+        */
       html += '</div>'; // column (camera)
 
     }
@@ -780,165 +1124,168 @@ function buildCameraArray(id, opt) {
 }
 
 var cameralist = [], cameralistold = [];
-var old_tim = {}, counter = {}, tcum = {},tlat={};
-var old_size={};
+var old_tim = {}, counter = {}, tcum = {}, tlat = {};
+var old_size = {};
 function updateCamera(ds) {
   if (ds.dpck_ds_type == 0) {
     // output
-    let freq, start, lat=0;
+    let freq, start, lat = 0;
     let id = mappedcamera[ds.ndk_uid];
     let debug = opt.camera.debug;
     let debug_html = "";
     start = Date.now();
-    
-    tlat[id] += start - Math.trunc(ds.dpck_hr_ats/1000);
+
+    tlat[id] += start - Math.trunc(ds.dpck_hr_ats / 1000);
     counter[id]++;
-    if(start-old_tim[id]>1000){
-      lat = tlat[id]/counter[id]
-      counter[id]=0
-      tlat[id]=0;
-      old_tim[id]=start
+    if (start - old_tim[id] > 1000) {
+      lat = tlat[id] / counter[id]
+      counter[id] = 0
+      tlat[id] = 0;
+      old_tim[id] = start
       $("#lat-" + id).html(Math.trunc(lat));
 
     }
 
 
-    if(!streamaddr.hasOwnProperty(ds.ndk_uid)){
+    if (!streamaddr.hasOwnProperty(ds.ndk_uid)) {
       if (ds.FRAMEBUFFER.hasOwnProperty("$binary")) {
-        $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER.$binary.base64);
+        $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT + ";base64," + ds.FRAMEBUFFER.$binary.base64);
       } else {
-        $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT+";base64," + ds.FRAMEBUFFER);
+        $("#cameraImage-" + id).attr("src", "data:image/" + ds.FMT + ";base64," + ds.FRAMEBUFFER);
       }
-  }
+    }
 
     /*if (ds.WIDTH !== undefined) {
       $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
     }*/
     $("#seq-" + id).html(ds.dpck_seq_id);
-    $("#"+id+"SHUTTER").html(ds.SHUTTER);
-    $("#"+id+"GAIN").html(ds.GAIN);
-    $("#"+id+"TRIGGER_MODE").html(modeToString(ds.TRIGGER_MODE));
-   /* if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
-      redrawReference(id, old_size[id].REFX, old_size[id].REFY, old_size[id].REFSX, old_size[id].REFSY, old_size[id].REFRHO, -old_size[id].ROT,ds.WIDTH,ds.HEIGHT);
-    }*/
+    $("#" + id + "SHUTTER").html(ds.SHUTTER);
+    $("#" + id + "GAIN").html(ds.GAIN);
+    $("#" + id + "TRIGGER_MODE").html(modeToString(ds.TRIGGER_MODE));
+    /* if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
+       redrawReference(id, old_size[id].REFX, old_size[id].REFY, old_size[id].REFSX, old_size[id].REFSY, old_size[id].REFRHO, -old_size[id].ROT,ds.WIDTH,ds.HEIGHT);
+     }*/
 
   } else if (ds.dpck_ds_type == 1) {
-  //  console.log("INPUT :" + JSON.stringify(ds));
+    //  console.log("INPUT :" + JSON.stringify(ds));
     let id = mappedcamera[ds.ndk_uid];
-    if(selection_ellipse.hasOwnProperty(id)){
+    if (selection_ellipse.hasOwnProperty(id)) {
       console.log("editing.. input update skipped")
       return;
     }
-      if(ds.hasOwnProperty("ROT")&&(ds.ROT%360)){
-        $("#rot_enable-" + id).html('<i class="fa fa-check-square-o" aria-hidden="true"></i>');
-      } else {
-        $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
-    
-      }
-      
-      redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT,ds.WIDTH,ds.HEIGHT);
-    
-        
-      
-      jqccs.updateSingleNode({input:ds});
+    if (ds.hasOwnProperty("ROT") && (ds.ROT % 360)) {
+      $("#rot_enable-" + id).html('<i class="fa fa-check-square-o" aria-hidden="true"></i>');
+    } else {
+      $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
+
+    }
+
+    redrawReference(id, ds.REFX, ds.REFY, ds.REFSX, ds.REFSY, ds.REFRHO, -ds.ROT, ds.WIDTH, ds.HEIGHT);
+
+
+
+    jqccs.updateSingleNode({ input: ds });
 
   } else if (ds.dpck_ds_type == 4) {
-    var obj={};
+    var obj = {};
 
     //HEALTH
     let id = mappedcamera[ds.ndk_uid];
     $("#freq-" + id).html(ds.cuh_dso_prate.toFixed(1));
-    var band =  Number(ds.cuh_dso_size) / (1024*1024);
+    var band = Number(ds.cuh_dso_size) / (1024 * 1024);
 
     $("#mbs-" + id).html(band.toFixed(2));
     //jqccs.updateGenericTableDataset(tmpObj);
 
-   let status=ds.nh_status;
-   var mode="";
-   if(!old_size.hasOwnProperty(id)){
-     old_size[id]=ds;
-   }
-   jqccs.updateSingleNode({health:ds});
-   jqccs.updateGenericControl(null, {health:ds});
+    let status = ds.nh_status;
+    var mode = "";
+    if (!old_size.hasOwnProperty(id)) {
+      old_size[id] = ds;
+    }
+    jqccs.updateSingleNode({ health: ds });
+    jqccs.updateGenericControl(null, { health: ds });
 
-  if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("TRIGGER_MODE")){
-    switch (old_size[id].TRIGGER_MODE) {
-      case TRIGGER_CONT:
-        mode= '<i class="fa fa-video-camera"  title="Continuous" aria-hidden="true"></i>';
-        break;
-      case TRIGGER_PULSE:
-        mode = '<i class="fa fa-hand-rock-o" title="Trigger Manual (pulse)" aria-hidden="true"></i>';
-        break;
-      case TRIGGER_SOFT:
+    if (old_size.hasOwnProperty(id) && old_size[id].hasOwnProperty("TRIGGER_MODE")) {
+      switch (old_size[id].TRIGGER_MODE) {
+        case TRIGGER_CONT:
+          mode = '<i class="fa fa-video-camera"  title="Continuous" aria-hidden="true"></i>';
+          break;
+        case TRIGGER_PULSE:
+          mode = '<i class="fa fa-hand-rock-o" title="Trigger Manual (pulse)" aria-hidden="true"></i>';
+          break;
+        case TRIGGER_SOFT:
           mode = '<i class="fa fa-band" title="Trigger Software" aria-hidden="true"></i>';
-        break;
-      case TRIGGER_NOACQUIRE:
-        mode = '<i class="fa fa-pause" title="No Acquire" aria-hidden="true"></i>';
-        break;
-      case TRIGGER_LOHI:
-        mode = '<i class="fa fa-level-up" title="Trigger low high"  aria-hidden="true"></i>';
-        break;
-      case TRIGGER_HILO:
-        mode = '<i class="fa fa-level-down" title="Trigger high low" aria-hidden="true"></i>';
-        break;
-      default:
-        mode = '<i class="fa fa-question" title="Trigger Uknown" aria-hidden="true"></i>';
-        break;
-  }
-}
-  if(ds.cuh_alarm_lvl){
-    
-    jchaos.getChannel(ds.ndk_uid,255, function (selected) {
-      jqccs.updateSingleNode(selected[0]);
-      jqccs.updateGenericControl(null, selected[0]);
-    
-    }, function (str) {
-      console.log(str);
-    });
-
-    if(ds.cuh_alarm_lvl==1){
-      mode += '<i class="fa fa-exclamation fa-lg all-alarm" title="Warning" style="color:orange"</i>';
-
-    } else {
-      mode += '<i class="fa fa-exclamation-triangle fa-lg all-alarm" title="Error" style="color:red"</i>';
-
+          break;
+        case TRIGGER_NOACQUIRE:
+          mode = '<i class="fa fa-pause" title="No Acquire" aria-hidden="true"></i>';
+          break;
+        case TRIGGER_LOHI:
+          mode = '<i class="fa fa-level-up" title="Trigger low high"  aria-hidden="true"></i>';
+          break;
+        case TRIGGER_HILO:
+          mode = '<i class="fa fa-level-down" title="Trigger high low" aria-hidden="true"></i>';
+          break;
+        default:
+          mode = '<i class="fa fa-question" title="Trigger Uknown" aria-hidden="true"></i>';
+          break;
+      }
     }
-  }
+    if (ds.cuh_alarm_lvl) {
 
-  if (status == 'Start') {
-    if((old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty('dpck_ats'))&&(( ds.dpck_ats-  old_size[id]['dpck_ats'])>10000)){
-      $("#state-" + id).html('<i class="fa fa-play" style="color:red" title="CU is Started" style="color:green"></i>'+mode);
+      jqccs.decodeAlarms();
 
-    } else {
-      $("#state-" + id).html('<i class="fa fa-play" style="color:green" title="CU is Started" style="color:green"></i>'+mode);
-    }
-  } else if (status == 'Stop') {
-      $("#state-" + id).html('<i class="fa fa-stop" title="CU is Stopped" style="color:orange"></i>');
-  } else if (status == 'Calibrating') {
-      $("#state-" + id).html('<i class="material-icons" title="CU is Calibrating" style="color:green">assessment</i>');
-  } else if (status == 'Init') {
-    $("#state-" + id).html('<i class="material-icons" title="CU is initialized" style="color:yellow">trending_up</i>');
-
-  } else if (status == 'Deinit') {
-    $("#state-" + id).html('<i class="material-icons"  title="CU is de-initialized" style="color:red">trending_down</i>');
-
-  } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
-    $("#state-" + id).html('<a id="Error-' + id + '" cuname="' + ds.ndk_uid + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
-    $("#state-" + id).attr('title', "Device status:'" + status + "' " + ds.nh_lem);
-
-  } else if (status == "Unload") {
-    $("#state-" + id).html('<i class="fa fa-power-off" style="color:red" aria-hidden="true"></i>');
-
-
-  } else if (status == "Load") {
-    $("#state-" + id).html('<i class="fa fa-power-off" style="color:green" aria-hidden="true"></i>');
-
-  }
-  old_size[id]['dpck_ats']=ds.dpck_ats;
+      /*
+      jchaos.getChannel(ds.ndk_uid,255, function (selected) {
+        jqccs.updateSingleNode(selected[0]);
+        jqccs.updateGenericControl(null, selected[0]);
+      
+      }, function (str) {
+        console.log(str);
+      });
   
+      if(ds.cuh_alarm_lvl==1){
+        mode += '<i class="fa fa-exclamation fa-lg all-alarm" title="Warning" style="color:orange"</i>';
+  
+      } else {
+        mode += '<i class="fa fa-exclamation-triangle fa-lg all-alarm" title="Error" style="color:red"</i>';
+  
+      }*/
+    }
+
+    if (status == 'Start') {
+      if ((old_size.hasOwnProperty(id) && old_size[id].hasOwnProperty('dpck_ats')) && ((ds.dpck_ats - old_size[id]['dpck_ats']) > 10000)) {
+        $("#state-" + id).html('<i class="fa fa-play" style="color:red" title="CU is Started" style="color:green"></i>' + mode);
+
+      } else {
+        $("#state-" + id).html('<i class="fa fa-play" style="color:green" title="CU is Started" style="color:green"></i>' + mode);
+      }
+    } else if (status == 'Stop') {
+      $("#state-" + id).html('<i class="fa fa-stop" title="CU is Stopped" style="color:orange"></i>');
+    } else if (status == 'Calibrating') {
+      $("#state-" + id).html('<i class="material-icons" title="CU is Calibrating" style="color:green">assessment</i>');
+    } else if (status == 'Init') {
+      $("#state-" + id).html('<i class="material-icons" title="CU is initialized" style="color:yellow">trending_up</i>');
+
+    } else if (status == 'Deinit') {
+      $("#state-" + id).html('<i class="material-icons"  title="CU is de-initialized" style="color:red">trending_down</i>');
+
+    } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
+      $("#state-" + id).html('<a id="Error-' + id + '" cuname="' + ds.ndk_uid + '" role="button" class="cu-alarm" ><i class="material-icons" style="color:red">cancel</i></a>');
+      $("#state-" + id).attr('title', "Device status:'" + status + "' " + ds.nh_lem);
+
+    } else if (status == "Unload") {
+      $("#state-" + id).html('<i class="fa fa-power-off" style="color:red" aria-hidden="true"></i>');
+
+
+    } else if (status == "Load") {
+      $("#state-" + id).html('<i class="fa fa-power-off" style="color:green" aria-hidden="true"></i>');
+
+    }
+    old_size[id]['dpck_ats'] = ds.dpck_ats;
+
   } else {
-    var obj={};
-    obj[jchaos.channelToString(ds.dpck_ds_type)]=ds;
+    var obj = {};
+    obj[jchaos.channelToString(ds.dpck_ds_type)] = ds;
     jqccs.updateSingleNode(obj);
     jqccs.updateGenericControl(null, obj);
 
@@ -947,39 +1294,39 @@ function updateCamera(ds) {
 
 }
 $.fn.save_config = function () {
-  
-  var obj={
+
+  var obj = {
     col: opt.camera['cameraPerRow'] || 2,
     row: opt.camera['maxCameraRow'] || 2,
     w2cam: mappedcamera
   }
   jqccs.getEntryWindow("Save current configuration", "Name", "noname", "Save", function (name) {
-    jchaos.variable("camera_view","get",(d)=>{
-      if(typeof d !== "undefined"){
-        d[name]=obj;
-        jchaos.variable("camera_view","set",d,(g)=>{
-          console.log("Saving "+name+" "+JSON.stringify(d[name]));
+    jchaos.variable("camera_view", "get", (d) => {
+      if (typeof d !== "undefined") {
+        d[name] = obj;
+        jchaos.variable("camera_view", "set", d, (g) => {
+          console.log("Saving " + name + " " + JSON.stringify(d[name]));
           jqccs.instantMessage("Configuration " + name, "Saved", 2000, true);
 
-        },(error)=>{
+        }, (error) => {
           jqccs.instantMessage("ERROR Saving Configuration:" + name, "Error:" + JSON.stringify(error), 5000, false);
 
         });
       }
-    },(error)=>{
+    }, (error) => {
       jqccs.instantMessage("ERROR Retriving configuration", "Error:" + JSON.stringify(error), 5000, false);
 
     });
   }, "Cancel");
 }
-function mapAssociation(vid,cam){
+function mapAssociation(vid, cam) {
   $("#cameraImage-" + vid).attr("src", "/../img/chaos_wait_big.gif");
   $("#cameraImage-" + vid).removeClass("chaos_image_v");
   $("#cameraImage-" + vid).removeClass("chaos_image_h");
   $("#cameraImage-" + vid).addClass("chaos_image");
   const canvas = document.getElementById("cameraImageCanv-" + vid);
-  if(canvas==null){
-    console.error("canvas null "+vid+ " cam:"+cam);
+  if (canvas == null) {
+    console.error("canvas null " + vid + " cam:" + cam);
     return;
   }
   const ctx = canvas.getContext('2d');
@@ -987,11 +1334,11 @@ function mapAssociation(vid,cam){
   const ctxSel = canvasSel.getContext('2d');
   ctxSel.clearRect(0, 0, canvasSel.width, canvasSel.height);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if(selection_ellipse.hasOwnProperty(vid)){
+  if (selection_ellipse.hasOwnProperty(vid)) {
     delete selection_ellipse[vid];
   }
   if (cam == "NOCAMERA") {
-    let id=vid;
+    let id = vid;
     delete mappedcamera[mapcamera[id]];
     delete mapcamera[id];
     $("#state-" + id).html('<i class="fa fa-question" aria-hidden="true"></i>');
@@ -1000,10 +1347,10 @@ function mapAssociation(vid,cam){
     $("#lat-" + id).html(0);
     $("#freq-" + id).html(0);
     $("#size-" + id).html('');
-    $("#"+id+"_SHUTTER_MAX").html(0);
-    $("#"+id+"_SHUTTER_MIN").html(0);
-    $("#"+id+"_GAIN_MAX").html(0);
-    $("#"+id+"_GAIN_MIN").html(0);
+    $("#" + id + "_SHUTTER_MAX").html(0);
+    $("#" + id + "_SHUTTER_MIN").html(0);
+    $("#" + id + "_GAIN_MAX").html(0);
+    $("#" + id + "_GAIN_MIN").html(0);
 
     $("#zoom_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
     $("#rot_enable-" + id).html('<i class="fa fa-square-o" aria-hidden="true"></i>');
@@ -1012,26 +1359,26 @@ function mapAssociation(vid,cam){
 
   } else {
     mapcamera[vid] = cam;
-    if(opt.camera.hasOwnProperty('cameraStream') && opt.camera.cameraStream){
+    if (opt.camera.hasOwnProperty('cameraStream') && opt.camera.cameraStream) {
 
-    jchaos.getChannel(cam,2,(clist)=>{
-      if(clist[0].hasOwnProperty('stream')&&clist[0].stream.length){
-        streamaddr[clist[0].ndk_uid]=clist[0]['stream'];
-        $("#cameraImage-" + vid).attr("src", clist[0]['stream']);
-        $("#lat-" + vid).html("-");
-        $("#seq-" + vid).html("-");
-        console.log("setting stream of "+vid+ " to:"+clist[0]['stream']);
-      }
+      jchaos.getChannel(cam, 2, (clist) => {
+        if (clist[0].hasOwnProperty('stream') && clist[0].stream.length) {
+          streamaddr[clist[0].ndk_uid] = clist[0]['stream'];
+          $("#cameraImage-" + vid).attr("src", clist[0]['stream']);
+          $("#lat-" + vid).html("-");
+          $("#seq-" + vid).html("-");
+          console.log("setting stream of " + vid + " to:" + clist[0]['stream']);
+        }
 
-    })
-  }
+      })
+    }
     for (var k in mappedcamera) {
       if (mappedcamera[k] == vid) {
         delete mappedcamera[k];
       }
     }
     mappedcamera[cam] = vid;
-    getCameraDesc(cam,vid);
+    getCameraDesc(cam, vid);
     //  mappedcamera[ev.currentTarget.value]['refresh'] = true;
     $("#cameraImage-" + vid).on('load', function () {
       let s = $("#cameraImage-" + vid).attr('src');
@@ -1072,7 +1419,7 @@ function mapAssociation(vid,cam){
 
   }
 }
-function activateCameraFetch(){
+function activateCameraFetch() {
   cameralist = [];
   for (var k in mappedcamera) {
     var id = mappedcamera[k];
@@ -1081,64 +1428,83 @@ function activateCameraFetch(){
     old_tim[id] = 0;
     counter[id] = 0;
     tcum[id] = 0;
-    tlat[id] =0;
+    tlat[id] = 0;
     counter[jchaos.encodeName(k)] = 0;
 
   }
+  if (pullInterval.hasOwnProperty('interval')) {
+    clearInterval(pullInterval.interval);
+  }
+  if (pullIntervalsec.hasOwnProperty('interval')) {
+    clearInterval(pullIntervalsec.interval);
+  }
+
   if (cameralist.length) {
 
     if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
       if (cameralistold.length) {
-        var tounsub=[]
-        cameralistold.forEach(ele=>{
+        var tounsub = []
+        cameralistold.forEach(ele => {
 
-           let sel = cameralist.filter((e) => { return (e != ele) })
-           if (sel.length == 0) {
-             // not present in new list
-             tounsub.push(ele);
-           }
+          let sel = cameralist.filter((e) => { return (e != ele) })
+          if (sel.length == 0) {
+            // not present in new list
+            tounsub.push(ele);
+          }
 
         });
-        if(tounsub.length){
+        if (tounsub.length) {
           console.log("Unsubscribe " + JSON.stringify(tounsub));
           jchaos.iosubscribeCU(tounsub, false);
         }
       }
-      cameralistold =subscribeCU(cameralist);
+      cameralistold = subscribeCU(cameralist);
       jchaos.options['io_onconnect'] = (s) => {
         console.log("resubscribe ..")
-        cameralistold =subscribeCU(cameralist);
+        cameralistold = subscribeCU(cameralist);
       }
 
       jchaos.options['io_onmessage'] = updateCamera;
 
     } else {
-      if (pullInterval != null) {
-        clearInterval(pullInterval);
-      }
-      if (pullIntervalsec != null) {
-        clearInterval(pullIntervalsec);
-      }
-      if (pullIntervalHealth != null) {
-        clearInterval(pullIntervalHealth);
-      }
-      
-      pullInterval=outputCameraRefresh(opt.camera.cameraRefresh,opt);
 
-      pullIntervalsec = inputCameraRefresh(1000,opt);
-      pullIntervalHealth = setInterval(() => {
-        jchaos.getChannel(cameralist, 255, (vds) => {
-          vds.forEach(ele => {
-            updateCamera(ele.health)
-            jqccs.updateSingleNode(ele);
-            jqccs.updateGenericControl(null, ele);
-          });
 
-        });
-        if((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))){
-          clearInterval(pullIntervalHealth);
+      // pullInterval=outputCameraRefresh(opt.camera.cameraRefresh,opt);
+      var clist = [];
+
+      cameralist.forEach((e) => {
+        if (!streamaddr.hasOwnProperty(e)) {
+          clist.push(e);
         }
-      }, 5000);
+      });
+      pullInterval['channel'] = 0;
+      pullInterval['devs'] = clist;
+
+      jqccs.rescheduleTask(opt.camera.cameraRefresh, pullInterval, (vds, req, op) => {
+        vds.forEach(ele => {
+          updateCamera(ele);
+        });
+
+        if ((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))) {
+          clearInterval(op['interval']);
+
+        }
+      });
+      pullIntervalsec['channel'] = 1;
+      pullIntervalsec['devs'] = cameralist;
+
+
+
+      jqccs.rescheduleTask(1000, pullIntervalsec, (vds, req, op) => {
+        vds.forEach(ele => {
+          updateCamera(ele);
+        });
+
+        if ((opt.push && (jchaos.socket != null) && (jchaos.socket.connected))) {
+          clearInterval(op['interval']);
+
+        }
+      });
     }
   }
 }
@@ -1146,17 +1512,17 @@ $.fn.buildCameraArray = function (op) {
   opt = op;
   this.html(buildCameraArray("table-" + this.attr('id'), opt));
 
-  if(opt.hasOwnProperty("map")){
-    console.log("map:"+JSON.stringify(opt['map']));
-    mappedcamera={};
-    mapcamera={};
-    var cnt=0;
-    for(var k in opt['map']){
+  if (opt.hasOwnProperty("map")) {
+    console.log("map:" + JSON.stringify(opt['map']));
+    mappedcamera = {};
+    mapcamera = {};
+    var cnt = 0;
+    for (var k in opt['map']) {
       cnt++;
-     
-      mapAssociation(opt['map'][k],k);
-      $('#select-'+opt['map'][k]+' option[value="'+k+'"]').attr("selected",true);
-    
+
+      mapAssociation(opt['map'][k], k);
+      $('#select-' + opt['map'][k] + ' option[value="' + k + '"]').attr("selected", true);
+
 
     }
     activateCameraFetch();
@@ -1165,9 +1531,9 @@ $.fn.buildCameraArray = function (op) {
   $(".camselect").on("change", (ev) => {
     var vid = ev.currentTarget.id.split('-');
     console.log("change " + vid[1] + " :" + ev.currentTarget.value);
-    mapAssociation(vid[1],ev.currentTarget.value);
-    
-    
+    mapAssociation(vid[1], ev.currentTarget.value);
+
+
     activateCameraFetch();
   });
   $(".selectionCanv").mousedown(function (e) {
@@ -1191,38 +1557,38 @@ $.fn.buildCameraArray = function (op) {
   $(".selectionCanv").mouseout(function (e) {
     handleMouseOut(e);
   });
-  $(".cucmdattr").on("keypress", function(e) {
+  $(".cucmdattr").on("keypress", function (e) {
     if (e.keyCode == 13) {
-        var value = e.target.value;
-        var attrname = e.target.name;
-        var desc = jchaos.decodeCUPath(attrname);
-        let cu=mapcamera[desc.cu];
-        jchaos.setAttribute(cu, desc.var, value, function() {
-            jqccs.instantMessage(cu + " Attribute " + desc.dir, "\"" + desc.var+"\"=\"" + value + "\" sent", 1000, null, null, true)
+      var value = e.target.value;
+      var attrname = e.target.name;
+      var desc = jchaos.decodeCUPath(attrname);
+      let cu = mapcamera[desc.cu];
+      jchaos.setAttribute(cu, desc.var, value, function () {
+        jqccs.instantMessage(cu + " Attribute " + desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, true)
 
-        }, function() {
-          jqccs.instantMessage(cu + " Attribute Error " + desc.dir, "\"" + desc.var+"\"=\"" + value + "\" sent", 1000, null, null, false)
+      }, function () {
+        jqccs.instantMessage(cu + " Attribute Error " + desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
-        });
+      });
 
-        return false;
+      return false;
     }
     //var tt =prompt('type value');
     return this;
-});
-$(".select_camera_mode").change(function (e) {
-  var value = e.currentTarget.value;
-  let cu=mapcamera[e.currentTarget.name];
+  });
+  $(".select_camera_mode").change(function (e) {
+    var value = e.currentTarget.value;
+    let cu = mapcamera[e.currentTarget.name];
 
-  console.log("name=" +cu + " value=" + value);
-  jchaos.setAttribute(cu, "TRIGGER_MODE", value, function () {
-    jqccs.instantMessage("SET MODE " + cu, value, 3000, true);
+    console.log("name=" + cu + " value=" + value);
+    jchaos.setAttribute(cu, "TRIGGER_MODE", value, function () {
+      jqccs.instantMessage("SET MODE " + cu, value, 3000, true);
 
-  },(bad)=>{
-    jqccs.instantMessage("Error SETTING MODE " + cu+" err:"+bad, value, 4000, false);
+    }, (bad) => {
+      jqccs.instantMessage("Error SETTING MODE " + cu + " err:" + bad, value, 4000, false);
 
+    })
   })
-})
 }
 
 function showHisto(msghead, cuname, refresh, channel) {
@@ -1255,7 +1621,7 @@ function showHisto(msghead, cuname, refresh, channel) {
          }
          var blob = new Blob([bytes], { type: "image/png" });
         */
-        jqccs.saveAsBinary(binary_string, name + "."+data.FMT);
+        jqccs.saveAsBinary(binary_string, name + "." + data.FMT);
 
       }
     },
@@ -1629,84 +1995,84 @@ function activateMenuShort() {
       var el = ele[0];
       var selection = selection_ellipse[domid];
       // redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
-      cuitem['save-image']= {
+      cuitem['save-image'] = {
         name: "Save Image", cu: name, icon: "fa-save",
         callback: function (itemKey, o, e) {
-          jchaos.getChannel(name,0,(ds)=>{
+          jchaos.getChannel(name, 0, (ds) => {
             var binary_string = atob(ds[0].FRAMEBUFFER.$binary.base64);
             var encoden = jchaos.encodeName(name);
 
-            jqccs.saveAsBinary(binary_string, encoden + "_"+ds[0].dpck_seq_id+ "_"+ds[0].dpck_ats+"."+ds[0].FMT);
+            jqccs.saveAsBinary(binary_string, encoden + "_" + ds[0].dpck_seq_id + "_" + ds[0].dpck_ats + "." + ds[0].FMT);
           });
-          
+
 
         }
       }
-      cuitem['save-mimage']= {
+      cuitem['save-mimage'] = {
         name: "Save Multi..", cu: name, icon: "fa-save",
         callback: function (itemKey, o, e) {
           jqccs.getEntryWindow("Save Multiple", "Samples", 1, "Save", function (cnt) {
-          var last_ser=0;
-          var nimage=1;
-          var zipf = new JSZip();
-          var zipname=name.replaceAll("/", "_");
-          jqccs.busyWindow(true);
-          var refresh=dashboard_settings['camera']['multiShotRefresh']||200;
-          var pullshot=setInterval(() => {
-            if(cnt>0){
-              jchaos.getChannel(name,0,(im)=>{
-                var img=im[0];
-                if(img.dpck_seq_id!=last_ser){
-                  var fname=zipname+"_"+nimage+"_"+img.dpck_seq_id+"."+img.FMT;
-                  zipf.file(fname, img.FRAMEBUFFER.$binary.base64, { base64: true });
-                  last_ser=img.dpck_seq_id;
-                  console.log(nimage+"] "+fname);
-                  nimage++;
-                  cnt--;
-                }
-                if(cnt==0){
-                  clearInterval(pullshot);
-                  jqccs.busyWindow(false);
-  
-                  zipf.generateAsync({ type: "blob" }).then(function (content) {
-                    saveAs(content, zipname);
+            var last_ser = 0;
+            var nimage = 1;
+            var zipf = new JSZip();
+            var zipname = name.replaceAll("/", "_");
+            jqccs.busyWindow(true);
+            var refresh = dashboard_settings['camera']['multiShotRefresh'] || 200;
+            var pullshot = setInterval(() => {
+              if (cnt > 0) {
+                jchaos.getChannel(name, 0, (im) => {
+                  var img = im[0];
+                  if (img.dpck_seq_id != last_ser) {
+                    var fname = zipname + "_" + nimage + "_" + img.dpck_seq_id + "." + img.FMT;
+                    zipf.file(fname, img.FRAMEBUFFER.$binary.base64, { base64: true });
+                    last_ser = img.dpck_seq_id;
+                    console.log(nimage + "] " + fname);
+                    nimage++;
+                    cnt--;
+                  }
+                  if (cnt == 0) {
+                    clearInterval(pullshot);
+                    jqccs.busyWindow(false);
+
+                    zipf.generateAsync({ type: "blob" }).then(function (content) {
+                      saveAs(content, zipname);
+                    });
+                  }
                 });
-                }
-              });
-          }
-          },refresh);
-          
-  
-        });
-  
+              }
+            }, refresh);
+
+
+          });
+
+        }
       }
-    }
-      if(streamaddr.hasOwnProperty(name)){
-        cuitem['stream-stop']= {
+      if (streamaddr.hasOwnProperty(name)) {
+        cuitem['stream-stop'] = {
           name: "Stream Stop", cu: name, icon: "fa-camera",
           callback: function (itemKey, o, e) {
             delete streamaddr[name];
             if (opt.push && (jchaos.socket != null) && (jchaos.socket.connected)) {
-                jchaos.iosubscribeCU(name, true);
-                jchaos.getChannel(name,1,(ds)=>{
-                  updateCamera(ds[0]);
-                });
+              jchaos.iosubscribeCU(name, true);
+              jchaos.getChannel(name, 1, (ds) => {
+                updateCamera(ds[0]);
+              });
             }
 
           }
         }
       } else {
-        if(streamaddr_cap.hasOwnProperty(name)){
-          cuitem['stream-start']= {
+        if (streamaddr_cap.hasOwnProperty(name)) {
+          cuitem['stream-start'] = {
             name: "Stream Start", cu: name, icon: "fa-film",
             callback: function (itemKey, o, e) {
-              streamaddr[name]=streamaddr_cap[name];
+              streamaddr[name] = streamaddr_cap[name];
               jchaos.iosubscribeCU(name, false);
               $("#cameraImage-" + mappedcamera[name]).attr("src", streamaddr[name]);
               $("#lat-" + mappedcamera[name]).html("-");
               $("#seq-" + mappedcamera[name]).html("-");
 
-  
+
             }
           }
         }
@@ -1762,95 +2128,102 @@ function activateMenuShort() {
               })
             }
           }
-          
+
 
         }
       };
       cuitem['encoding'] = {
-        "name":"Encodings", icon:"fa-picture-o",
-        "items":{
-        'lolat': {
-          name: "JPEG max quality", cu: name,
-          callback: function (itemKey, opt, e) {
-            jchaos.setAttribute(name, "FMT",".jpg", function () {
-              jchaos.setCUProperty(name,{"compression_factor":90},function () {
-                jqccs.instantMessage("JPEG max quality", name, 3000, true);
-              },function () {
-                jqccs.instantMessage("Failed JPEG max quality", name, 3000, false);
-              });})
-          }
-        },
-        'hq':{
-        name: "JPEG half quality", cu: name,
-          callback: function (itemKey, opt, e) {
-            jchaos.setAttribute(name, "FMT","jpg", function () {
-              jchaos.setCUProperty(name,{"compression_factor":40},function () {
-                jqccs.instantMessage("JPEG half quality", name, 3000, true);
-              },function () {
-                jqccs.instantMessage("Failed JPEG half quality", name, 3000, false);
-              });})
-          }
-        },
-        'pnglatmin': {
-          name: "PNG min compression", cu: name,
-          callback: function (itemKey, opt, e) {
-            jchaos.setAttribute(name, "FMT","png", function () {
-              jchaos.setCUProperty(name,{"compression_factor":1},function () {
-                jqccs.instantMessage("PNG min compression", name, 3000, true);
-              },function () {
-                jqccs.instantMessage("Failed min compression", name, 3000, false);
-              });})
-          }
-        },
-        'pnglatmax': {
-          name: "PNG max compression", cu: name,
-          callback: function (itemKey, opt, e) {
-            jchaos.setAttribute(name, "FMT","png", function () {
-              jchaos.setCUProperty(name,{"compression_factor":9},function () {
-                jqccs.instantMessage("PNG max compression", name, 3000, true);
-              },function () {
-                jqccs.instantMessage("Failed PNG max compression", name, 3000, false);
-              });})
-          }
-        },
-        'bmp': {
-          name: "BMP", cu: name,
-          callback: function (itemKey, opt, e) {
-            jchaos.setAttribute(name, "FMT","bmp", function () {
+        "name": "Encodings", icon: "fa-picture-o",
+        "items": {
+          'lolat': {
+            name: "JPEG max quality", cu: name,
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "FMT", ".jpg", function () {
+                jchaos.setCUProperty(name, { "compression_factor": 90 }, function () {
+                  jqccs.instantMessage("JPEG max quality", name, 3000, true);
+                }, function () {
+                  jqccs.instantMessage("Failed JPEG max quality", name, 3000, false);
+                });
               })
-          }
-        },
-        'tiff': {
-          name: "Tiff", cu: name,
-          callback: function (itemKey, opt, e) {
-            jchaos.setAttribute(name, "FMT","tiff", function () {
+            }
+          },
+          'hq': {
+            name: "JPEG half quality", cu: name,
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "FMT", "jpg", function () {
+                jchaos.setCUProperty(name, { "compression_factor": 40 }, function () {
+                  jqccs.instantMessage("JPEG half quality", name, 3000, true);
+                }, function () {
+                  jqccs.instantMessage("Failed JPEG half quality", name, 3000, false);
+                });
               })
-          }
-        },
-        'weblatmax': {
-          name: "WEBP max quality", cu: name,
-          callback: function (itemKey, opt, e) {
-            jchaos.setAttribute(name, "FMT","webp", function () {
-              jchaos.setCUProperty(name,{"compression_factor":100},function () {
-                jqccs.instantMessage("WEBP max quality", name, 3000, true);
-              },function () {
-                jqccs.instantMessage("Failed WEBP max quality", name, 3000, false);
-              });})
-          }
-        },
-        'weblatlooseless': {
-          name: "WEBP looseless", cu: name,
-          callback: function (itemKey, opt, e) {
-            jchaos.setAttribute(name, "FMT","webp", function () {
-              jchaos.setCUProperty(name,{"compression_factor":101},function () {
-                jqccs.instantMessage("WEBP looseless quality", name, 3000, true);
-              },function () {
-                jqccs.instantMessage("Failed WEBP looseless quality", name, 3000, false);
-              });})
+            }
+          },
+          'pnglatmin': {
+            name: "PNG min compression", cu: name,
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "FMT", "png", function () {
+                jchaos.setCUProperty(name, { "compression_factor": 1 }, function () {
+                  jqccs.instantMessage("PNG min compression", name, 3000, true);
+                }, function () {
+                  jqccs.instantMessage("Failed min compression", name, 3000, false);
+                });
+              })
+            }
+          },
+          'pnglatmax': {
+            name: "PNG max compression", cu: name,
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "FMT", "png", function () {
+                jchaos.setCUProperty(name, { "compression_factor": 9 }, function () {
+                  jqccs.instantMessage("PNG max compression", name, 3000, true);
+                }, function () {
+                  jqccs.instantMessage("Failed PNG max compression", name, 3000, false);
+                });
+              })
+            }
+          },
+          'bmp': {
+            name: "BMP", cu: name,
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "FMT", "bmp", function () {
+              })
+            }
+          },
+          'tiff': {
+            name: "Tiff", cu: name,
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "FMT", "tiff", function () {
+              })
+            }
+          },
+          'weblatmax': {
+            name: "WEBP max quality", cu: name,
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "FMT", "webp", function () {
+                jchaos.setCUProperty(name, { "compression_factor": 100 }, function () {
+                  jqccs.instantMessage("WEBP max quality", name, 3000, true);
+                }, function () {
+                  jqccs.instantMessage("Failed WEBP max quality", name, 3000, false);
+                });
+              })
+            }
+          },
+          'weblatlooseless': {
+            name: "WEBP looseless", cu: name,
+            callback: function (itemKey, opt, e) {
+              jchaos.setAttribute(name, "FMT", "webp", function () {
+                jchaos.setCUProperty(name, { "compression_factor": 101 }, function () {
+                  jqccs.instantMessage("WEBP looseless quality", name, 3000, true);
+                }, function () {
+                  jqccs.instantMessage("Failed WEBP looseless quality", name, 3000, false);
+                });
+              })
+            }
           }
         }
-      }}
-      
+      }
+
 
       cuitem['operation'] = {
         "name": "Operations", icon: "fa-cog",
@@ -1860,132 +2233,138 @@ function activateMenuShort() {
             callback: function (itemKey, opt, e) {
               jqccs.getEntryWindow("Calibration", "Samples", 10, "Calibrate", function (th) {
 
-              jchaos.command(name, { "act_name": "calibrateNodeUnit","act_msg": {"samples":th}}, function(data) {
-                jqccs.instantMessage("Calibration of:" + name, "using "+th+" images", 1000, true);
-            }, function(data) {
-                jqccs.instantMessage("ERROR Calibrating:" + name, "Error :" + JSON.stringify(data), 5000, false);
+                jchaos.command(name, { "act_name": "calibrateNodeUnit", "act_msg": { "samples": th } }, function (data) {
+                  jqccs.instantMessage("Calibration of:" + name, "using " + th + " images", 1000, true);
+                }, function (data) {
+                  jqccs.instantMessage("ERROR Calibrating:" + name, "Error :" + JSON.stringify(data), 5000, false);
 
-            });
-            })
-              
+                });
+              })
+
             }
           },
           'calibration-on': {
             name: "Calibration ON", cu: name, icon: "fa-camera-retro",
             callback: function (itemKey, opt, e) {
-          var msg = {
-            "act_msg": {"apply_calib":true,"performCalib":false},
-            "act_name": "ndk_set_prop"
-        };
-        jchaos.command(name, msg, function(data) {
-            jqccs.instantMessage("Enabling calibration", "OK", 5000, true);
+              var msg = {
+                "act_msg": { "apply_calib": true, "performCalib": false },
+                "act_name": "ndk_set_prop"
+              };
+              jchaos.command(name, msg, function (data) {
+                jqccs.instantMessage("Enabling calibration", "OK", 5000, true);
 
-        }, (bad) => {
-            jqccs.instantMessage("Error Enabling calibration" , "Error: " + JSON.stringify(bad), 5000, false);
+              }, (bad) => {
+                jqccs.instantMessage("Error Enabling calibration", "Error: " + JSON.stringify(bad), 5000, false);
 
-        });
-      }},
+              });
+            }
+          },
           'calibration-off': {
             name: "Calibration OFF", cu: name, icon: "fa-camera",
             callback: function (itemKey, opt, e) {
-          var msg = {
-            "act_msg": {"apply_calib":false,"performCalib":false},
-            "act_name": "ndk_set_prop"
-        };
-        jchaos.command(name, msg, function(data) {
-            jqccs.instantMessage("Disabling calibration", "OK", 5000, true);
+              var msg = {
+                "act_msg": { "apply_calib": false, "performCalib": false },
+                "act_name": "ndk_set_prop"
+              };
+              jchaos.command(name, msg, function (data) {
+                jqccs.instantMessage("Disabling calibration", "OK", 5000, true);
 
-        }, (bad) => {
-            jqccs.instantMessage("Error Disabling calibration" , "Error: " + JSON.stringify(bad), 5000, false);
+              }, (bad) => {
+                jqccs.instantMessage("Error Disabling calibration", "Error: " + JSON.stringify(bad), 5000, false);
 
-        });
-      }},
+              });
+            }
+          },
           'restart': {
             name: "Restart", cu: name, icon: "fa-refresh",
             callback: function (itemKey, opt, e) {
-              jchaos.restart(name, function(data) {
+              jchaos.restart(name, function (data) {
                 jqccs.instantMessage("Restarting :" + name, "OK", 1000, true);
-            }, function(data) {
-              jqccs.instantMessage("ERROR Restarting:" + name, "Error :" + JSON.stringify(data), 5000, false);
+              }, function (data) {
+                jqccs.instantMessage("ERROR Restarting:" + name, "Error :" + JSON.stringify(data), 5000, false);
 
-            });
-              
+              });
+
             }
           }
-          
-          }
+
+        }
       };
       cuitem['transforms'] = {
         "name": "Trasforms..", icon: "fa-cog",
         "items": {
-          'rotate_image':{
-            "name":"Rotate Image", icon: "fa-picture-o",
-            "items":{
-                'rotateimagep90': {
-            name: "Rotate Image 90", cu: name, icon: "fa-undo",
-            callback: function (itemKey, opt, e) {
-              //rotateCamera(name, 90);
-              if((!cameraLayoutSettings.hasOwnProperty(domid))||!cameraLayoutSettings[domid].hasOwnProperty('rot')){
-                cameraLayoutSettings[domid]={rot:-90};
-              } else {
-                cameraLayoutSettings[domid]['rot']=(cameraLayoutSettings[domid]['rot']-90)%360;;
-              }
+          'rotate_image': {
+            "name": "Rotate Image", icon: "fa-picture-o",
+            "items": {
+              'rotateimagep90': {
+                name: "Rotate Image 90", cu: name, icon: "fa-undo",
+                callback: function (itemKey, opt, e) {
+                  //rotateCamera(name, 90);
+                  if ((!cameraLayoutSettings.hasOwnProperty(domid)) || !cameraLayoutSettings[domid].hasOwnProperty('rot')) {
+                    cameraLayoutSettings[domid] = { rot: -90 };
+                  } else {
+                    cameraLayoutSettings[domid]['rot'] = (cameraLayoutSettings[domid]['rot'] - 90) % 360;;
+                  }
 
-              zoomInOut(domid,1.0);
-              
+                  zoomInOut(domid, 1.0);
+
+                }
+              },
+              'rotateimagem90': {
+                name: "Rotate Image -90", cu: name, icon: "fa-repeat",
+                callback: function (itemKey, opt, e) {
+                  //rotateCamera(name, 90);
+                  if ((!cameraLayoutSettings.hasOwnProperty(domid)) || !cameraLayoutSettings[domid].hasOwnProperty('rot')) {
+                    cameraLayoutSettings[domid] = { rot: 90 };
+                  } else {
+                    cameraLayoutSettings[domid]['rot'] = (cameraLayoutSettings[domid]['rot'] + 90) % 360;
+                  }
+
+                  zoomInOut(domid, 1.0);
+
+                }
+              }, 'rotateimagereset': {
+                name: "Rotate Image Reset", cu: name, icon: "fa-window-restore",
+                callback: function (itemKey, opt, e) {
+                  //rotateCamera(name, 90);
+                  if ((!cameraLayoutSettings.hasOwnProperty(domid)) || !cameraLayoutSettings[domid].hasOwnProperty('rot')) {
+                    cameraLayoutSettings[domid] = { rot: 0 };
+                  } else {
+                    cameraLayoutSettings[domid]['rot'] = 0;
+                  }
+
+                  zoomInOut(domid, 1.0);
+
+                }
+              }
             }
           },
-          'rotateimagem90': {
-            name: "Rotate Image -90", cu: name, icon: "fa-repeat",
-            callback: function (itemKey, opt, e) {
-              //rotateCamera(name, 90);
-              if((!cameraLayoutSettings.hasOwnProperty(domid))||!cameraLayoutSettings[domid].hasOwnProperty('rot')){
-                cameraLayoutSettings[domid]={rot:90};
-              } else {
-                cameraLayoutSettings[domid]['rot']=(cameraLayoutSettings[domid]['rot']+90)%360;
+          'rotate_camera': {
+            "name": "Rotate Camera", icon: "fa-camera",
+            "items": {
+              'rotatep90': {
+                name: "Rotate Camera +90", cu: name, icon: "fa-undo",
+                callback: function (itemKey, opt, e) {
+                  var name = opt.items.transforms.items["rotate_camera"].items["rotatep90"].cu;
+                  rotateCamera(name, 90);
+                }
+              },
+              'rotatem90': {
+                name: "Rotate Camera -90", cu: name, icon: "fa-repeat",
+                callback: function (itemKey, opt, e) {
+                  var name = opt.items.transforms.items["rotate_camera"].items["rotatem90"].cu;
+                  rotateCamera(name, -90);
+                }
+              },
+              'rotateReset': {
+                name: "Rotate Camera reset", cu: name, icon: "fa-window-restore",
+                callback: function (itemKey, opt, e) {
+                  var name = opt.items.transforms.items["rotate_camera"].items['rotateReset'].cu;
+                  rotateCamera(name, 0);
+                }
               }
-
-              zoomInOut(domid,1.0);
-              
-            }
-          },'rotateimagereset': {
-            name: "Rotate Image Reset", cu: name, icon: "fa-window-restore",
-            callback: function (itemKey, opt, e) {
-              //rotateCamera(name, 90);
-              if((!cameraLayoutSettings.hasOwnProperty(domid))||!cameraLayoutSettings[domid].hasOwnProperty('rot')){
-                cameraLayoutSettings[domid]={rot:0};
-              } else {
-                cameraLayoutSettings[domid]['rot']=0;
-              }
-
-              zoomInOut(domid,1.0);
-              
-            }
-          }}},
-          'rotate_camera':{
-            "name":"Rotate Camera", icon: "fa-camera",
-            "items":{
-          'rotatep90': {
-            name: "Rotate Camera +90", cu: name, icon: "fa-undo",
-            callback: function (itemKey, opt, e) {
-              var name = opt.items.transforms.items["rotate_camera"].items["rotatep90"].cu;
-              rotateCamera(name, 90);
             }
           },
-          'rotatem90': {
-            name: "Rotate Camera -90", cu: name, icon: "fa-repeat",
-            callback: function (itemKey, opt, e) {
-              var name = opt.items.transforms.items["rotate_camera"].items["rotatem90"].cu;
-              rotateCamera(name, -90);
-            }
-          },
-          'rotateReset': {
-            name: "Rotate Camera reset", cu: name, icon: "fa-window-restore",
-            callback: function (itemKey, opt, e) {
-              var name = opt.items.transforms.items["rotate_camera"].items['rotateReset'].cu;
-              rotateCamera(name, 0);
-            }
-          }}},
           'zoom-reset': {
             name: "Zoom Reset", cu: name, icon: "fa-arrows",
             callback: function (itemKey, opt, e) {
@@ -1996,6 +2375,69 @@ function activateMenuShort() {
           }
         }
       };
+      
+      cuitem['filtering'] = {
+        "name": "Filtering", icon: "fa-picture-o",
+        "items": {
+          'equalize': {
+            name: "Equalize", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "equalize");
+            }
+          },
+          'equalize2': {
+            name: "Equalize clahe", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "equalize2");
+            }
+          },
+          'dft': {
+            name: "DFT", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "dft");
+            }
+          },
+          'threshold': {
+            name: "Threshold", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "threshold");
+            }
+          },
+          'background': {
+            name: "Background", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "background");
+            }
+          },
+          'water': {
+            name: "WaterShed", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "watershed");
+            }
+          },
+          'distance': {
+            name: "Distance", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "distance");
+            }
+          },
+          'contour': {
+            name: "Contour", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "contour");
+
+            }
+          },
+          'histo': {
+            name: "Histogram", cu: name,
+            callback: function (itemKey, opt, e) {
+              performFilter(name, domid, "histo");
+
+            }
+          }
+
+        }
+      }
       if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.hasOwnProperty('ctx_width') && selection.h && selection.w) {
 
         cuitem['transforms']['items']['zoom-in'] = {
@@ -2013,15 +2455,15 @@ function activateMenuShort() {
         cuitem['transforms']['items']['zoom-out'] = {
           name: "Zoom Out ", cu: name, icon: "fa-search-minus",
           callback: function (itemKey, opt, e) {
-           /* if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom_incr']&&(cameraLayoutSettings[domid]['zoom_incr']>0)){
-              zoomInOut(domid, 1/cameraLayoutSettings[domid]['zoom_incr']);
-
-            } else if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
-              zoomInOut(domid, (cameraLayoutSettings[domid]['zoom']-1)/cameraLayoutSettings[domid]['zoom']);
-            } else {
-              zoomInOut(domid, selection.w/selection.ctx_width);
-
-            }*/
+            /* if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom_incr']&&(cameraLayoutSettings[domid]['zoom_incr']>0)){
+               zoomInOut(domid, 1/cameraLayoutSettings[domid]['zoom_incr']);
+ 
+             } else if(cameraLayoutSettings.hasOwnProperty(domid)&&cameraLayoutSettings[domid]['zoom']&&(cameraLayoutSettings[domid]['zoom']>1.0)){
+               zoomInOut(domid, (cameraLayoutSettings[domid]['zoom']-1)/cameraLayoutSettings[domid]['zoom']);
+             } else {
+               zoomInOut(domid, selection.w/selection.ctx_width);
+ 
+             }*/
             zoomInOut(domid, 0.5);
 
             redrawReference(domid, ele[0].REFX, ele[0].REFY, ele[0].REFSX, ele[0].REFSY, ele[0].REFRHO, ele[0].ROT);
@@ -2032,18 +2474,19 @@ function activateMenuShort() {
         name: "Set Auto Reference ", cu: name, icon: "fa-magic",
         callback: function (itemKey, opt, e) {
 
-        jqccs.getEntryWindow("Threashold", "Threashold", 10, "Perform Reference", function (th) {
-          jchaos.command(name, { "act_name": "calibrateNodeUnit", "act_msg": { "autoreference": true, "threshold": parseInt(th) } }, function (data) {
-            jqccs.instantMessage("Performing autoreference:" + name, "Sent", 2000, true);
+          jqccs.getEntryWindow("Threashold", "Threashold", 10, "Perform Reference", function (th) {
+            jchaos.command(name, { "act_name": "calibrateNodeUnit", "act_msg": { "autoreference": true, "threshold": parseInt(th) } }, function (data) {
+              jqccs.instantMessage("Performing autoreference:" + name, "Sent", 2000, true);
 
-          }, function (data) {
-            jqccs.instantMessage("ERROR Performing autoreference:" + name, "Error:" + JSON.stringify(data), 5000, false);
+            }, function (data) {
+              jqccs.instantMessage("ERROR Performing autoreference:" + name, "Error:" + JSON.stringify(data), 5000, false);
 
-          });
+            });
 
 
-        }, "Cancel");
-      }}
+          }, "Cancel");
+        }
+      }
       if (selection && selection.hasOwnProperty('w') && selection.hasOwnProperty('h') && selection.h && selection.w) {
         cuitem['transforms']['items']['set-reference'] = {
           name: "Set Reference ", cu: name, icon: "fa-dot-circle-o",
@@ -2069,30 +2512,30 @@ function activateMenuShort() {
 
           }
         }
-        
 
-          cuitem['transforms']['items']['set-roi'] = {
-            name: "Set ROI ", cu: name, icon: "fa-scissors",
-            callback: function (itemKey, opt, e) {
-              let x = selection['x'] - selection['w'];
-              let y = selection['y'] - selection['h'];
-              let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
-              let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
-              let width = $("#cameraImage-" + domid).width();
-              let height = $("#cameraImage-" + domid).height();
-              console.log(" ROI (" + natwidth + "," + natheight + ")=>(" + width + "," + height + ")");
-              let ratiox = natwidth / width;
-              let ratioy = natheight / height;
-              let currzoom = 1.0;
-              if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
-                currzoom = cameraLayoutSettings[domid]["zoom"];
-              }
-              ratiox = ratiox / currzoom;
-              ratioy = ratioy / currzoom;
-              setRoi(name, selection['w'] * 2 * ratiox, selection['w'] * 1.5 * ratioy, x * ratiox, y * ratioy, () => { });
-              delete selection_ellipse[domid];
+
+        cuitem['transforms']['items']['set-roi'] = {
+          name: "Set ROI ", cu: name, icon: "fa-scissors",
+          callback: function (itemKey, opt, e) {
+            let x = selection['x'] - selection['w'];
+            let y = selection['y'] - selection['h'];
+            let natwidth = $("#cameraImage-" + domid).prop('naturalWidth');
+            let natheight = $("#cameraImage-" + domid).prop('naturalHeight');
+            let width = $("#cameraImage-" + domid).width();
+            let height = $("#cameraImage-" + domid).height();
+            console.log(" ROI (" + natwidth + "," + natheight + ")=>(" + width + "," + height + ")");
+            let ratiox = natwidth / width;
+            let ratioy = natheight / height;
+            let currzoom = 1.0;
+            if (cameraLayoutSettings.hasOwnProperty(domid) && cameraLayoutSettings[domid].hasOwnProperty("zoom")) {
+              currzoom = cameraLayoutSettings[domid]["zoom"];
             }
+            ratiox = ratiox / currzoom;
+            ratioy = ratioy / currzoom;
+            setRoi(name, selection['w'] * 2 * ratiox, selection['w'] * 1.5 * ratioy, x * ratiox, y * ratioy, () => { });
+            delete selection_ellipse[domid];
           }
+        }
 
       }
       cuitem['transforms']['items']['reset-reference'] = {
@@ -2112,161 +2555,161 @@ function activateMenuShort() {
       cuitem['savenode'] = {
         "name": "Save/Restore", icon: "fa-save",
         "items": {
-            'save-default': {
-                name: "Save Setpoint as Default",icon:"fa-sign-in",
-                callback: function(itemKey, opt, e) {
-                    jchaos.saveSetPointAsDefault(name, 1, (ok) => {
-                        jqccs.instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
-                    }, (bad) => {
-                        jqccs.instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false);
-
-                    });
-                }
-            },
-            'restore-default': {
-              name: "Restore Default",icon:"fa-sign-out",
-              callback: function(itemKey, opt, e) {
-                jchaos.saveDefaultAsSetpoint(name, (ok) => {
-                  jqccs.instantMessage("Default setpoint restored successfully", "", 2000, true);
+          'save-default': {
+            name: "Save Setpoint as Default", icon: "fa-sign-in",
+            callback: function (itemKey, opt, e) {
+              jchaos.saveSetPointAsDefault(name, 1, (ok) => {
+                jqccs.instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
               }, (bad) => {
-                  jqccs.instantMessage("Error restoring setpoint:", JSON.stringify(bad), 4000, false);
+                jqccs.instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false);
 
               });
-              }
+            }
+          },
+          'restore-default': {
+            name: "Restore Default", icon: "fa-sign-out",
+            callback: function (itemKey, opt, e) {
+              jchaos.saveDefaultAsSetpoint(name, (ok) => {
+                jqccs.instantMessage("Default setpoint restored successfully", "", 2000, true);
+              }, (bad) => {
+                jqccs.instantMessage("Error restoring setpoint:", JSON.stringify(bad), 4000, false);
+
+              });
+            }
           }
-            /*,
-            'save-readout-default': {
-                name: "Save ReadOut as Default",icon:"fa-sign-out",
-                callback: function(itemKey, opt, e) {
-                    jchaos.saveSetPointAsDefault(name, 0, (ok) => {
-                        instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
-                    }, (bad) => {
-                        instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false);
+          /*,
+          'save-readout-default': {
+              name: "Save ReadOut as Default",icon:"fa-sign-out",
+              callback: function(itemKey, opt, e) {
+                  jchaos.saveSetPointAsDefault(name, 0, (ok) => {
+                      instantMessage("New default setpoint saved successfully, will be applied next Initialization", JSON.stringify(ok['attribute_value_descriptions']), 2000, true);
+                  }, (bad) => {
+                      instantMessage("Error setting setpoint:", JSON.stringify(bad), 4000, false);
 
-                    });
-                }
-            },
-            'driver-prop-save': {
-                name: "Save Driver properties as Default",icon:"fa-usb",
-                callback: function(itemKey, opt, e) {
-                    jchaos.command(name, { "act_name": "cu_prop_drv_get" }, function(data) {
+                  });
+              }
+          },
+          'driver-prop-save': {
+              name: "Save Driver properties as Default",icon:"fa-usb",
+              callback: function(itemKey, opt, e) {
+                  jchaos.command(name, { "act_name": "cu_prop_drv_get" }, function(data) {
 
-                        jqccs.editJSON("Save Driver Prop " + name, data, (json, fupdate) => {
+                      jqccs.editJSON("Save Driver Prop " + name, data, (json, fupdate) => {
 
-                            var props = [];
-                            for (var key in json) {
-                                props.push({ name: key, value: json[key].value });
-                            }
-                            jchaos.node(name, "get", "cu", function(data) {
-                                if (data != null) {
-                                    if (data.hasOwnProperty('cudk_driver_description')) {
-                                        data['cudk_driver_description'][0]['cudk_driver_prop'] = props;
-                                        jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data, (okk) => {
-                                            instantMessage("Saved driver prop:" + tmpObj.node_multi_selected, "OK", 5000, true);
+                          var props = [];
+                          for (var key in json) {
+                              props.push({ name: key, value: json[key].value });
+                          }
+                          jchaos.node(name, "get", "cu", function(data) {
+                              if (data != null) {
+                                  if (data.hasOwnProperty('cudk_driver_description')) {
+                                      data['cudk_driver_description'][0]['cudk_driver_prop'] = props;
+                                      jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data, (okk) => {
+                                          instantMessage("Saved driver prop:" + tmpObj.node_multi_selected, "OK", 5000, true);
 
-                                        }, (bad) => {
-                                            instantMessage("Saved driver prop:" + tmpObj.node_multi_selected, "Error:" + JSON.stringify(bad), 5000, false);
+                                      }, (bad) => {
+                                          instantMessage("Saved driver prop:" + tmpObj.node_multi_selected, "Error:" + JSON.stringify(bad), 5000, false);
 
-                                        });
+                                      });
 
-                                    }
-                                }
-                            })
+                                  }
+                              }
+                          })
 
-                        });
+                      });
 
-                    }, function(data) {
-                        instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
-                        //   $('.context-menu-list').trigger('contextmenu:hide')
+                  }, function(data) {
+                      instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" :" + JSON.stringify(data), 5000, false);
+                      //   $('.context-menu-list').trigger('contextmenu:hide')
 
-                    });
-                }
-            },
-            'node-prop-save': {
-                name: "Save CU/EU properties as Default",icon:"fa-wrench",
-                callback: function(itemKey, opt, e) {
-                    jchaos.command(name, { "act_name": "ndk_get_prop" }, function(data) {
+                  });
+              }
+          },
+          'node-prop-save': {
+              name: "Save CU/EU properties as Default",icon:"fa-wrench",
+              callback: function(itemKey, opt, e) {
+                  jchaos.command(name, { "act_name": "ndk_get_prop" }, function(data) {
 
-                        jqccs.editJSON("Save CU/EU Properties " + name, data, (json, fupdate) => {
+                      jqccs.editJSON("Save CU/EU Properties " + name, data, (json, fupdate) => {
 
-                            var props = [];
-                            for (var key in json) {
-                                props.push({ name: key, value: json[key].value });
-                            }
-                            jchaos.node(name, "get", "cu", function(data) {
-                                if (data != null) {
-                                    data['cudk_prop'] = props;
-                                    jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data, (okk) => {
-                                        instantMessage("Saved CU/EU properties:" + tmpObj.node_multi_selected, "OK", 5000, true);
+                          var props = [];
+                          for (var key in json) {
+                              props.push({ name: key, value: json[key].value });
+                          }
+                          jchaos.node(name, "get", "cu", function(data) {
+                              if (data != null) {
+                                  data['cudk_prop'] = props;
+                                  jchaos.node(data.ndk_uid, "set", "cu", data.ndk_parent, data, (okk) => {
+                                      instantMessage("Saved CU/EU properties:" + tmpObj.node_multi_selected, "OK", 5000, true);
 
-                                    }, (bad) => {
-                                        instantMessage("Saving CU/EU properties:" + tmpObj.node_multi_selected, "Error:" + JSON.stringify(bad), 5000, false);
+                                  }, (bad) => {
+                                      instantMessage("Saving CU/EU properties:" + tmpObj.node_multi_selected, "Error:" + JSON.stringify(bad), 5000, false);
 
-                                    });
+                                  });
 
 
-                                }
-                            })
+                              }
+                          })
 
-                        });
+                      });
 
-                    }, function(data) {
-                        instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Error :" + JSON.stringify(data), 5000, false);
-                        //   $('.context-menu-list').trigger('contextmenu:hide')
+                  }, function(data) {
+                      instantMessage("Getting driver prop:" + tmpObj.node_multi_selected, "Error :" + JSON.stringify(data), 5000, false);
+                      //   $('.context-menu-list').trigger('contextmenu:hide')
 
-                    });
-                }
-            }*/
+                  });
+              }
+          }*/
         }
 
-    };
-    cuitem['show'] = {
-      "name": "Show",icon:"fa-eye",
-      "items": {
+      };
+      cuitem['show'] = {
+        "name": "Show", icon: "fa-eye",
+        "items": {
           'show-dataset': {
-              name: "Show/Set/Plot Dataset",icon:"fa-list",
-              callback: function(itemKey, opt, e) {
-                  var dashboard_settings = jqccs.initSettings();
+            name: "Show/Set/Plot Dataset", icon: "fa-list",
+            callback: function (itemKey, opt, e) {
+              var dashboard_settings = jqccs.initSettings();
 
-                  jqccs.showDataset(name, name, dashboard_settings['generalRefresh']);
-              }
+              jqccs.showDataset(name, name, dashboard_settings['generalRefresh']);
+            }
           },
           'show-desc': {
-              name: "Show Description",icon:"fa-database",
-              callback: function(itemKey, opt, e) {
-                  jchaos.node(name, "desc", "all", function(data) {
+            name: "Show Description", icon: "fa-database",
+            callback: function (itemKey, opt, e) {
+              jchaos.node(name, "desc", "all", function (data) {
 
-                    jqccs.showJson("Description " + name, data);
-                  });
-              }
+                jqccs.showJson("Description " + name, data);
+              });
+            }
           },
           'show-tags': {
-              name: "Show Tags info",icon:"fa-tags",
-              callback: function(itemKey, opt, e) {
-                  jchaos.variable("tags", "get", null, function(tags) {
-                      var names = [];
-                      for (var key in tags) {
-                          var elems = tags[key].tag_elements;
-                          elems.forEach(function(elem) {
-                              if (elem == name) {
-                                  names.push(tags[key]);
-                              }
-                          });
-                      }
-                      if (names.length) {
-                          jqccs.showJson("Tags of " + name, names);
-                      } else {
-                          alert("No tag associated to " + name);
-                      }
-
+            name: "Show Tags info", icon: "fa-tags",
+            callback: function (itemKey, opt, e) {
+              jchaos.variable("tags", "get", null, function (tags) {
+                var names = [];
+                for (var key in tags) {
+                  var elems = tags[key].tag_elements;
+                  elems.forEach(function (elem) {
+                    if (elem == name) {
+                      names.push(tags[key]);
+                    }
                   });
+                }
+                if (names.length) {
+                  jqccs.showJson("Tags of " + name, names);
+                } else {
+                  alert("No tag associated to " + name);
+                }
 
-              }
+              });
+
+            }
           }
-         
-      }
 
-  };
+        }
+
+      };
       /*cuitem['save']= {
         name: "Save Default", cu: name, icon: "fa-save",
         callback: function (itemKey, opt, e) {
@@ -2277,7 +2720,7 @@ function activateMenuShort() {
       cuitem['sep2'] = "---------";
       var scuitem = {};
       for (var k in el) {
-        if ((!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk")))&&(k.startsWith("REF")||k.startsWith("ROT")||k.startsWith("WIDTH")||k.startsWith("HEIGHT")||k.startsWith("OFFSET"))) {
+        if ((!(k.startsWith("dpck") || k.startsWith("ndk") || k.startsWith("cudk"))) && (k.startsWith("REF") || k.startsWith("ROT") || k.startsWith("WIDTH") || k.startsWith("HEIGHT") || k.startsWith("OFFSET"))) {
           var val = el[k];
           if (typeof el[k] === "object") {
             val = JSON.stringify(el[k]);
@@ -2397,12 +2840,12 @@ function zoomInOut(name, incr) {
     currzoom *= incr;
 
   }
-  currzoom=Math.round(currzoom);
-  if(currzoom==0){
-    currzoom=1;
+  currzoom = Math.round(currzoom);
+  if (currzoom == 0) {
+    currzoom = 1;
   }
   cameraLayoutSettings[name]["zoom"] = currzoom;
-  if(incr>1){
+  if (incr > 1) {
     cameraLayoutSettings[name]["zoom_incr"] = incr;
   } else {
     cameraLayoutSettings[name]["zoom_incr"] = 0;
@@ -2420,20 +2863,20 @@ function zoomInOut(name, incr) {
   if ((currzoom != 1.0)) {
     const mirinosize = 100;
 
-    var scaleorx; 
-    var scaleory; 
-    if(incr>1){
+    var scaleorx;
+    var scaleory;
+    if (incr > 1) {
       //zoom in
-      scaleorx= selection_ellipse[name]['x'];
+      scaleorx = selection_ellipse[name]['x'];
       scaleory = selection_ellipse[name]['y'];
-     
+
     } else {
-      scaleorx= cameraLayoutSettings[name]["orx"];
+      scaleorx = cameraLayoutSettings[name]["orx"];
       scaleory = cameraLayoutSettings[name]["ory"];
     }
 
-    cameraLayoutSettings[name]["orx"] = scaleorx*incr;
-    cameraLayoutSettings[name]["ory"] =  scaleory*incr;
+    cameraLayoutSettings[name]["orx"] = scaleorx * incr;
+    cameraLayoutSettings[name]["ory"] = scaleory * incr;
 
     // var or=x + "px " +y+"px";
     let left = $("#cameraImage-" + encoden).offset().left;
@@ -2445,20 +2888,20 @@ function zoomInOut(name, incr) {
     // let h=$("#cameraImage-" + encoden).prop('naturalHeight');
     //var scaleor = cameraLayoutSettings[name]["orx"] + "px " + cameraLayoutSettings[name]["ory"] + "px";
     //var scaleor = (w/2-left) + "px " + (h/2-top) + "px";
-   // var scaleor = "0% 0%";
-    
+    // var scaleor = "0% 0%";
+
     if (currzoom != 1.0) {
       prop["transform"] = "scale(" + currzoom + "," + currzoom + ")";
 
     }
-    if(cameraLayoutSettings[name].hasOwnProperty('rot')&&(cameraLayoutSettings[name].rot)){
+    if (cameraLayoutSettings[name].hasOwnProperty('rot') && (cameraLayoutSettings[name].rot)) {
       prop["transform"] = prop["transform"] + " rotate(" + cameraLayoutSettings[name]['rot'] + "deg)";
-      $("#cameraImageCanv-" + encoden).css("transform","rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
-      $("#selectionCanv-" + encoden).css("transform","rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
+      $("#cameraImageCanv-" + encoden).css("transform", "rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
+      $("#selectionCanv-" + encoden).css("transform", "rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
 
-    } else{
-      $("#cameraImageCanv-" + encoden).css("transform","");
-      $("#selectionCanv-" + encoden).css("transform","");
+    } else {
+      $("#cameraImageCanv-" + encoden).css("transform", "");
+      $("#selectionCanv-" + encoden).css("transform", "");
 
     }
     /* if (currrot != 0) {
@@ -2475,10 +2918,10 @@ function zoomInOut(name, incr) {
 
     $("#cameraImage-" + encoden).css(prop);
     //$("#cameraImageCanv-" + encoden).css(prop);
-    let scrollx=(((scaleorx) * incr)- w / 2)//+left;
-    let scrolly=(((scaleory) * incr)- h / 2)//+top;
+    let scrollx = (((scaleorx) * incr) - w / 2)//+left;
+    let scrolly = (((scaleory) * incr) - h / 2)//+top;
 
-    $("#insideWrapper-" + encoden).scrollLeft(scrollx );
+    $("#insideWrapper-" + encoden).scrollLeft(scrollx);
     $("#insideWrapper-" + encoden).scrollTop(scrolly);
     w = $("#cameraImage-" + encoden).width();
     h = $("#cameraImage-" + encoden).height();
@@ -2493,25 +2936,25 @@ function zoomInOut(name, incr) {
      $("#selectionCanv-" + encoden).width(w*currzoom);
      $("#selectionCanv-" + encoden).height(h*currzoom);
  */
-    console.log(name + "origin:("+scaleorx+","+scaleory+")=>("+((scaleorx) * incr)+","+((scaleory) * incr)+") incr:"+incr+" offset:("+left+","+top+") Zoom:" + currzoom  + " width:" + w + " height:" + h + " calc scroll:("+scrollx+","+scrolly+") scroll:(" + $("#insideWrapper-" + encoden).scrollLeft() + ","+ $("#insideWrapper-" + encoden).scrollTop()+") CSS:" + JSON.stringify(prop));
+    console.log(name + "origin:(" + scaleorx + "," + scaleory + ")=>(" + ((scaleorx) * incr) + "," + ((scaleory) * incr) + ") incr:" + incr + " offset:(" + left + "," + top + ") Zoom:" + currzoom + " width:" + w + " height:" + h + " calc scroll:(" + scrollx + "," + scrolly + ") scroll:(" + $("#insideWrapper-" + encoden).scrollLeft() + "," + $("#insideWrapper-" + encoden).scrollTop() + ") CSS:" + JSON.stringify(prop));
     cameraLayoutSettings[name]["css"] = prop;
 
   } else {
-    if(cameraLayoutSettings[name].hasOwnProperty('rot')&&cameraLayoutSettings[name].rot){
+    if (cameraLayoutSettings[name].hasOwnProperty('rot') && cameraLayoutSettings[name].rot) {
       prop["transform"] = prop["transform"] + " rotate(" + cameraLayoutSettings[name]['rot'] + "deg)";
-      $("#cameraImageCanv-" + encoden).css("transform","rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
-      $("#selectionCanv-" + encoden).css("transform","rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
+      $("#cameraImageCanv-" + encoden).css("transform", "rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
+      $("#selectionCanv-" + encoden).css("transform", "rotate(" + cameraLayoutSettings[name]['rot'] + "deg");
 
-    }else{
-      $("#cameraImageCanv-" + encoden).css("transform","");
-      $("#selectionCanv-" + encoden).css("transform","");
+    } else {
+      $("#cameraImageCanv-" + encoden).css("transform", "");
+      $("#selectionCanv-" + encoden).css("transform", "");
 
 
     }
-  
+
     $("#cameraImage-" + encoden).css(prop);
 
-  //  $("#cameraImage-" + encoden).css("transform", "scale(" + currzoom + ")");
+    //  $("#cameraImage-" + encoden).css("transform", "scale(" + currzoom + ")");
     //$("#cameraImageCanv-" + encoden).css("transform", "scale(" + currzoom + ")");
     console.log(name + " Zoom:" + currzoom);
     $("#insideWrapper-" + encoden).scrollLeft(0);
@@ -2792,27 +3235,27 @@ function activateMenu(tmpObj) {
 
 
 }
-function rebuildCam(tmpObj){
+function rebuildCam(tmpObj) {
   var col = opt.camera['cameraPerRow'] || 2;
   var row = opt.camera['maxCameraRow'] || 2;
-  var m={};
-  var siz=0;
+  var m = {};
+  var siz = 0;
   if (selectedCams instanceof Array) {
-  
-  for(var r=0;r<row;r++){
-    for(var c=0;c<col;c++){
-      if(siz<selectedCams.length){
-        var id=r+"_"+c;
-        m[selectedCams[siz]]=id;
-        siz++;
+
+    for (var r = 0; r < row; r++) {
+      for (var c = 0; c < col; c++) {
+        if (siz < selectedCams.length) {
+          var id = r + "_" + c;
+          m[selectedCams[siz]] = id;
+          siz++;
+        }
       }
     }
+    mappedcamera = {};
+    mapcamera = {};
+    opt['map'] = m;
+    $("#cameraTable").buildCameraArray(opt);
   }
-  mappedcamera={};
-  mapcamera={};
-  opt['map']=m;
-  $("#cameraTable").buildCameraArray(opt);
-}
 
 }
 /*function rebuildCam(tmpObj) {
@@ -3117,7 +3560,7 @@ function getWidget(options) {
       output: {
         TRIGGER_MODE: function (val) {
           return modeToString(val);
-          
+
 
         }
       }
@@ -3126,30 +3569,30 @@ function getWidget(options) {
       //  rebuildCam(tmpObj);
       console.log("Table click");
       var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
-      if(!tmpObj.hasOwnProperty("data")){
-        tmpObj['data']={};
+      if (!tmpObj.hasOwnProperty("data")) {
+        tmpObj['data'] = {};
       } else {
-        if(tmpObj.data instanceof Array)
+        if (tmpObj.data instanceof Array)
           jqccs.updateGenericControl(tmpObj, tmpObj.data[cindex]);
 
       }
 
-    
-     // jqccs.updateGenericControl(tmpObj, );
 
-    //  jqccs.updateGenericTableDataset(tmpObj);
+      // jqccs.updateGenericControl(tmpObj, );
 
-    /*  jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
-        var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
-        if(!tmpObj.hasOwnProperty("data")){
-          tmpObj['data']={};
-        }
-        tmpObj.data[cindex] = cu[0];
-        jqccs.updateGenericTableDataset(tmpObj);
+      //  jqccs.updateGenericTableDataset(tmpObj);
 
-        jqccs.updateGenericControl(tmpObj, cu[0]);
-      })
-*/
+      /*  jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
+          var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+          if(!tmpObj.hasOwnProperty("data")){
+            tmpObj['data']={};
+          }
+          tmpObj.data[cindex] = cu[0];
+          jqccs.updateGenericTableDataset(tmpObj);
+  
+          jqccs.updateGenericControl(tmpObj, cu[0]);
+        })
+  */
     },
     updateInterfaceFn: function (tmpObj) {
       console.log("UpdateInterfaceFn ");
@@ -3176,89 +3619,41 @@ function getWidget(options) {
     },
     updateFn: function (tmpObj) {
       jqccs.updateGenericTableDataset(tmpObj);
+      if (pullInterval.hasOwnProperty('interval')) {
+        clearInterval(pullInterval.interval);
+      }
+      if (pullIntervalsec.hasOwnProperty('interval')) {
+        clearInterval(pullIntervalsec.interval);
+      }
+      if (pullIntervalHealth.hasOwnProperty('interval')) {
+        clearInterval(pullIntervalHealth.interval);
+      }
+
+      pullIntervalHealth['channel'] = 255;
+      pullIntervalHealth['devs'] = tmpObj.elems;
+
+      jqccs.rescheduleTask(5000, pullIntervalHealth, (vds, req, op) => {
+        vds.forEach(ele => {
+          updateCamera(ele.health);
+          jqccs.updateGenericControl(null, ele);
+
+        });
+
+        jqccs.stateOutput(op['currRefresh']);
+
+      });
+
 
       return;
-      var cu = [];
-
-      if (tmpObj['elems'] instanceof Array) {
-        cu = tmpObj.elems;
-      }
-/*
-      if ((opt.push == false) || (jchaos.socket == null) || (jchaos.socket.connected == false)) {
-
-        if (tmpObj.node_multi_selected instanceof Array) {
-
-          var cnt = 0;
-          tmpObj.node_multi_selected.forEach(function (elem) {
-            tmpObj.skip_fetch++;
-            jchaos.getChannel(elem, -1, function (d) {
-              if (tmpObj.skip_fetch > 0)
-                tmpObj.skip_fetch--;
-              var selected = d[0];
-              //    var selected = tmpObj.data[tmpObj.index];
-              if (selected != null && selected.hasOwnProperty("output")) {
-                // $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
-                if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
-                  var bin = selected.output.FRAMEBUFFER.$binary.base64;
-                  var fmt = selected.output.FMT;
-                  
-                  //$('#triggerType').val(selected.output.TRIGGER_MODE)
-                  var id = jchaos.encodeName(elem);
-                  let now=Date.now() 
-                  let latd = now- Math.trunc(selected.output.dpck_hr_ats/1000);
-                  //let latc = now- selected.output.dpck_ats;
-                  if(counter[id]%100==0){
-                    tlat[id]=0;
-                    counter[id]=0;
-                  }
-                  tlat[id]+=latd
-                  counter[id]++
-                  latd=latd/counter[id]
-                  // $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
-                  $("#cameraImage-" + id).attr("src", "data:image/" + fmt + ";base64," + bin);
-                  $("#lat-" + id).html(latd);
-
-                }
-              }
-              var cindex = tmpObj.node_name_to_index[elem];
-
-              tmpObj.data[cindex] = d[0];
-              if (++cnt == tmpObj.node_multi_selected.length) {
-
-                jqccs.updateGenericTableDataset(tmpObj);
-              }
-              redrawReference(id, selected.input.REFX, selected.input.REFY, selected.input.REFSX, selected.input.REFSY, selected.input.REFRHO, selected.input.ROT,selected.output.WIDTH,selected.output.HEIGHT);
-
-            }, function (d) {
-              if (tmpObj.skip_fetch > 0)
-                tmpObj.skip_fetch--;
-
-              tmpObj.updateErrors++;
-              // $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
-            });
-
-          });
-        }
-        jchaos.getChannel(tmpObj['elems'], 255, function (selected) {
-          tmpObj.data = selected;
-
-          jqccs.updateGenericTableDataset(tmpObj);
-        }, function (str) {
-          console.log(str);
-        });
-      }
-      */
-
-
 
 
     },
     tableFn: function (tmpObj) {
       console.log("TableFn ");
       var html = '<div class="row" id="cameraTable"></div>';
-      html+=jqccs.generateGenericTable(tmpObj,true);
+      html += jqccs.generateGenericTable(tmpObj, true);
       return html;
-    
+
     },
     cmdFn: function (tmpObj) {
       console.log("CmdFn ");
