@@ -79,15 +79,22 @@
         }
         return buf.buffer;
     }
-    jqccs.convertBinaryToArrays = function(obj) {
-        return convertBinaryToArrays(obj);
+    jqccs.convertBinaryToArrays = function(obj,forcetype) {
+        return convertBinaryToArrays(obj,forcetype);
     }
 
-    function convertBinaryToArrays(obj) {
-
+    function convertBinaryToArrays(obj,forcetype) {
+        if(forcetype&&(typeof obj === "string")){
+           return convertBinaryToArrays({"$binary":{"base64":obj,"subType":forcetype}});
+        }
         if (obj.hasOwnProperty("$binary")) {
             var objtmp;
-            var type = obj.$binary.subType;
+            var type; 
+            if(forcetype)
+                type=forcetype;
+            else
+                type = obj.$binary.subType;
+
             if (type == "84") {
                 // integers
                 var binary_string = atob(obj.$binary.base64);
@@ -111,11 +118,11 @@
                 objtmp = obj;
             }
             return objtmp;
-        }
+        } 
 
         for (var k in obj) {
             if (obj[k] instanceof Object) {
-                obj[k] = convertBinaryToArrays(obj[k]);
+                obj[k] = convertBinaryToArrays(obj[k],forcetype);
             }
 
         }
@@ -1125,7 +1132,7 @@
                     } else if (typeof execHandler === "function") {
                         $('#console-' + pid).terminal().exec(execHandler(), false);
                     }
-                }, 500);
+                }, 1000);
                 jchaos.exit = function(str) {
                     console.log("pausing: " + str);
                     $('#console-' + pid).terminal().logout();
@@ -1155,7 +1162,7 @@
                            server = dd.ndk_host_name + ":" + dd.ndk_rest_port;   
                         }
                         if (data.node_log_on_console) {
-                            getConsole(msghead, data.association_uid, server, 2, 1, 1000);
+                            getConsole(msghead, data.association_uid, server, 2, 1, 2000);
                         } else {
                             instantMessage("Remote Console log disabled ", "Please enable on agent association:" + d.ndk_parent, 4000, null, null, false);
 
@@ -1281,7 +1288,7 @@
                     }
                     if (!stop_update) {
 
-                        jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function(r) {
+                        jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function(r,par) {
                             if (r.data !== undefined) {
                                 if (r.data.process.last_log_time != last_log_time) {
                                     //  var str = decodeURIComponent(escape(atob(r.data.console)));
@@ -1295,8 +1302,10 @@
                                 $('#console-' + pid).terminal().error(str);
 
                             }
-                        }, function(bad) {
-                            console.log("Some error getting console occur:" + JSON.stringify(bad));
+                        }, function(bad,par) {
+                            var str="error getting console, err:"+ JSON.stringify(bad)+" request:"+JSON.stringify(par);
+                            $('#console-' + pid).terminal().error(str);
+
                         });
 
                     }
@@ -2815,6 +2824,27 @@
                     // }
                 } else {
                     //if (portarray == "0") {
+                    cuitem['save-data'] = {
+                        name:"Save Data...",
+                        icon:"fa-save",
+                        callback: function(key, opt) {
+                            var portdata = $(e.currentTarget).attr("portdata");
+                            if(portname.includes("base64")){
+                                try{
+                                    var binary_string = atob(portdata);
+                                    saveAsBinary(binary_string, portname+ ".bin");
+                                } catch(e){
+                                    var blob = new Blob([JSON.stringify(portdata)], { type: "json;charset=utf-8" });
+                                    saveAs(blob, portname + ".txt");
+                                }
+                            } else {
+                                var blob = new Blob([JSON.stringify(portdata)], { type: "json;charset=utf-8" });
+                                saveAs(blob, portname + ".txt");
+                            }
+
+                        }
+
+                    }
                     cuitem['new-plot-y'] = {
                             name: "New Plot " + portname + "  ",
                             callback: function(key, opt) {
@@ -3468,6 +3498,16 @@
             var parvalue = $(this).attr("cucmdvalue");
             var mult = $(this).attr("cucmdvalueMult");
             var template = $(this).attr("cutemplate");
+            
+            var cmdattr = {}
+            if( $(this).attr("cucmdattr")){
+                try{
+                    cmdattr=JSON.parse($(this).attr("cucmdattr"));
+                }catch(e){
+                    console.error("Invalid JSON attribute:"+$(this).attr("cucmdattr"))
+                }
+            }
+
             var complete_command = false;
             var cmdparam = {};
             var cuselection;
@@ -3535,7 +3575,10 @@
 
                 cmdparam = buildCmdParams(arglist);
             }
-
+            for(var k in cmdattr){
+                cmdparam[k]=cmdattr[k];
+            }
+            
             jchaos.sendCUCmd(cuselection, alias, cmdparam, function(d) {
                 var pp;
                 if ((cmdparam != null) && (cmdparam instanceof Object)) {
@@ -3543,9 +3586,9 @@
                 } else {
                     pp = cmdparam;
                 }
-                instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" sent", 1000, true)
+                instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" Attributes:"+JSON.stringify(cmdparam)+"  sent", 500, true)
             }, function(d) {
-                instantMessage(cuselection, "ERROR OCCURRED:" + d, 2000, 350, 400, false);
+                instantMessage(cuselection, "ERROR OCCURRED:" + d+ "\" Attributes:"+JSON.stringify(cmdparam), 5000, 350, 400, false);
 
             });
 
@@ -4483,7 +4526,10 @@
         });
 
     }
+    jqccs.stateOutput=function(refresh){
+        stateOutput('<b><font color="white"><p>Update:' + refresh + ' Latency:' + jchaos['latency'] + ' LatencyAvg:' + jchaos['latency_avg'].toFixed(2) + ' OpsOk:' + jchaos['numok'] + ' Errors:' + jchaos['errors'] + 'Timeouts:' + jchaos['timeouts'] + '</p></font></b>', false);
 
+    }
     function stateOutput(v, isError) {
         if (typeof errorCount === "undefined") {
             errorCount = 0;
@@ -4650,7 +4696,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                 tmpObj.updateRefresh = now - tmpObj.lastUpdate;
 
                 tmpObj.lastUpdate = now;
-            }, tmpObj.refresh_rate, tmpObj.updateTableFn);
+            }, ((tmpObj.upd_chan==255)?tmpObj.statusRefresh:tmpObj.refresh_rate), tmpObj.updateTableFn);
         }
     }
 
@@ -4670,6 +4716,12 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             tmpObj['refresh_rate'] = dashboard_settings.generalRefresh;
         } else {
             tmpObj['refresh_rate'] = 1000;
+
+        }
+        if (dashboard_settings !== null && dashboard_settings.hasOwnProperty("statusRefresh")) {
+            tmpObj['statusRefresh'] = dashboard_settings.statusRefresh;
+        } else {
+            tmpObj['statusRefresh'] = 1000;
 
         }
         tmpObj['updateInterfaceFn'] = updateInterfaceCU;
@@ -4704,11 +4756,19 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                 var w = getWidget(dashboard_settings);
                 tmpObj['htmlFn'] = w.dsFn;
                 tmpObj['generateTableFn'] = w.tableFn;
+                if(tmpObj.hasOwnProperty('interval')){
+                    clearInterval(tmpObj['interval']);
+                    delete tmpObj['interval'];
+                }
                 if (w.hasOwnProperty('cmdFn')) {
                     tmpObj['generateCmdFn'] = w.cmdFn;
                 }
                 if (w.hasOwnProperty('updateFn')) {
                     tmpObj['updateFn'] = w.updateFn;
+                    tmpObj.upd_chan = -4;
+                }
+                if (w.hasOwnProperty('refreshFn')) {
+                    tmpObj['refresh_rate'] = w.refreshFn;
                 }
                 if (w.hasOwnProperty('tableMenuItem')) {
                     tmpObj['tableMenuItem'] = w.tableMenuItem;
@@ -5418,7 +5478,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
 
                 jchaos.node(agentn, "get", "agent", node_selected, null, function(data) {
                     console.log("->" + JSON.stringify(data));
-                    getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 1000);
+                    getConsole(server + ":" + node_selected, data.association_uid, server, 2, 1, 2000);
                 });
 
 
@@ -5977,7 +6037,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                                         jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function(r) {
                                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
+                                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 2000);
 
                                         }, function(bad) {
                                             console.log("Some error getting loading script:" + bad);
@@ -5995,7 +6055,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                                     jchaos.rmtCreateProcess(server, name, cmd_line, "exec", "", function(r) {
                                         console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                         instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                        getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000);
+                                        getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 2000);
 
                                     }, function(bad) {
                                         console.log("Some error getting loading script:" + bad);
@@ -6100,7 +6160,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                                 console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                                 var node_selected = tmpObj.node_selected;
                                 instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000, language);
+                                getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 2000, language);
                             }, function(bad) {
                                 console.log("Some error getting loading script:" + bad);
                                 instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -6112,7 +6172,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                             var node_selected = tmpObj.node_selected;
                             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 1000), language;
+                            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server, 2, 1, 2000), language;
                         }, function(bad) {
                             console.log("Some error getting loading script:" + bad);
                             instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -6670,7 +6730,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                                 node_workdir: "",
                                 node_auto_start: true,
                                 node_keep_alive: false,
-                                node_log_on_console: true
+                                node_log_on_console: false
                             };
                             var script_type = "";
                             getEntryWindow(tmpObj.node_selected + " arguments ", tmpObj.node_selected, "()", "Continue", function(fargs) {
@@ -7055,7 +7115,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                 jchaos.search(zone_selected, "class", alive, function(ll) {
                     element_sel('#elements', ll, 1);
                 });
-                updateNodeEvent();
+   //             updateNodeEvent();
 
             } else {
                 jchaos.search("", "class", alive, function(ll) {
@@ -7562,6 +7622,30 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         return updateGenericTableDataset(tmpObj);
     }
 
+    jqccs.decodeAlarms=function(){
+        $(".all-alarm").off();
+        $(".all-alarm").click(function(e) {
+
+      //      var node=tmpObj.node_selected;
+            var node = $(this).attr("cuname");
+            jchaos.getChannel(node,255,(a)=>{
+            let alarm=a[0];
+            var obj = {};
+
+            if (alarm != null && alarm.hasOwnProperty("cu_alarms")) {
+                if (alarm.health.nh_lem != "") {
+                    obj = Object.assign({ 'message': alarm.health.nh_lem, 'domain': alarm.health.nh_led }, alarm.cu_alarms);
+                } else {
+                    obj = Object.assign({}, alarm.cu_alarms);
+
+                }          
+            }
+            if (alarm != null && alarm.hasOwnProperty("device_alarms")) {
+                obj = Object.assign(obj, alarm.cu_alarms);     
+            }
+            jqccs.decodeDeviceAlarm(obj, false);
+        });});
+    }
     function updateGenericTableDataset(tmpObj) {
 
         if (typeof updateGenericTableDataset.count === "undefined") {
@@ -7645,14 +7729,16 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         });
         return ret;
     }
-    jqccs.updateSingleNode = function(el) {
-        return updateSingleNode(el);
+    jqccs.updateSingleNode = function(el,op) {
+        return updateSingleNode(el,op);
     }
 
     function updateSingleNode(el, options) {
         try {
             var name_device_db, name_id;
             var status;
+            var now=new Date().getTime();
+
             if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid"))) { //if el health
                 name_device_db = el.health.ndk_uid;
                 name_id = jchaos.encodeName(name_device_db);
@@ -7674,23 +7760,13 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                 if (el.health.hasOwnProperty("dpck_ts_diff")) {
                     $("#" + name_id + "_health_lat").html(el.health.dpck_ts_diff);
                 }
-                /*
-                if (tmpObj.off_line === undefined) {
-                    tmpObj['off_line'] = {};
-                    tmpObj['off_line'][name_device_db] = 0;
-                }
-                if ((status != "Unload") && (status != "Fatal Error")) {
-                    switch (tmpObj.off_line[name_device_db]) {
-                        case 1:
-                            status = "Dead";
-                            break;
-                        case 2:
-                            status = "Checking";
-                            break;
+                if((now-el.tmStamp)<10000){
+                    $("#" + name_id).find('td').css('color', 'green');
+                } else {
+                    $("#" + name_id).find('td').css('color', 'black');
 
-                    }
                 }
-*/
+               
                 $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
 
 
@@ -7699,10 +7775,16 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                     if(el.health.cuh_alarm_lvl){
                         if(el.health.cuh_alarm_lvl==1){
                           mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation fa-lg all-alarm" title="Warning" style="color:orange"</i>';
-                    
+                          $("#" + name_id + "_system_cu_alarm").attr('title', "Warning");
+                          //$("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm"  role="button" ><i class="fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i></a>');
+                          $("#" + name_id + "_system_cu_alarm").html('<i cuname="' + name_device_db + '" class="all-alarm fa fa-exclamation fa-lg" title="Warning" style="color:orange"</i>');
+                          
                         } else {
                           mode += '<i cuname="' + name_device_db + '" class="fa fa-exclamation-triangle fa-lg all-alarm" title="Error" style="color:red"</i>';
-                    
+                          $("#" + name_id + "_system_cu_alarm").attr('title', "Error");
+                          //$("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" role="button"><i class="fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i></a>');
+                          $("#" + name_id + "_system_cu_alarm").html('<i cuname="' + name_device_db + '" class="all-alarm fa fa-exclamation-triangle fa-lg" title="Error" style="color:red"</i>');
+       
                         }
                       } else {
                         $("#" + name_id + "_system_cu_alarm").html('');
@@ -7867,7 +7949,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                 if (el.hasOwnProperty(dstype) && (el[dstype].hasOwnProperty("ndk_uid"))) {
                     name_device_db = el[dstype].ndk_uid;
                     name_id = jchaos.encodeName(name_device_db);
-
+                    
                     for (var key in el[dstype]) {
                         var val = el[dstype][key];
                         var val_saved;
@@ -7946,8 +8028,63 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
 
         }
     }
+    /***
+     * update a given channel and call a given handler
+     * dynamically adapt update 
+     * @param opt {@object} opt.channel (channel 0=output, 1 input...) opt.devs = devices
+     */
+    jqccs.rescheduleTask=function(update_ms,opt,task){
+        if(!opt.hasOwnProperty("refresh")){
+            opt['refresh']=update_ms;
+        }
+        if(opt.hasOwnProperty('interval')){
+            clearInterval(opt['interval']);
+            delete opt['interval'];
+        }
+        opt['currRefresh']=update_ms;
+        if(opt.hasOwnProperty('interval')){
+            clearInterval(opt['interval']);
+            delete opt['interval'];
+        }
+        if(!opt.hasOwnProperty('diff')){
+            opt['diff']=0
+        }
+        var pullIntervalsec=setInterval(() => {
+        //console.log(pullIntervalsec+"- performing task at "+update_ms)
+        jchaos.getChannel(opt.devs, opt.channel, (vds,req) => {
+            task(vds,req,opt)
+            opt['diff']=new Date().getTime()-req['jchaos_ts'];
+
+        },(err,req)=>{
+            opt['diff']=new Date().getTime()-req['jchaos_ts'];
+
+        });
 
 
+        if(opt['diff']>0){
+            var resched=0
+            if(opt['diff']>update_ms){
+                resched=opt['diff']+Math.trunc(opt['diff']/10);
+                console.log(pullIntervalsec+"- refresh "+update_ms+" rescheduled DOWN to:"+resched+" ms because operation took "+opt['diff']+" ms");
+                clearInterval(pullIntervalsec)
+                jqccs.rescheduleTask(resched,opt,task);
+            } else if((update_ms>opt['refresh'])&&(opt['diff']<(update_ms-Math.trunc(opt['diff']/5)))){
+                resched=update_ms-Math.trunc(opt['diff']/5);
+                if(resched<opt['refresh']){
+                    resched=opt['refresh'];
+                }
+                clearInterval(pullIntervalsec)
+
+                console.log(pullIntervalsec+"- refresh "+update_ms+" rescheduled UP to:"+resched+" ms");
+                jqccs.rescheduleTask(resched,opt,task);
+            }
+        }
+    }, update_ms);
+    opt['interval']=pullIntervalsec;
+    
+    return pullIntervalsec;
+
+    }
     function generateGraphList() {
         var html = '<div class="modal hide fade" id="mdl-graph-list">';
 
@@ -10178,7 +10315,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                             keyclass = "json-key";
                         }
 
-                        var keyRepr = '<span class="' + keyclass + '" portname="' + id + '" portarray="' + portarray + '">"' + key + '"</span>';
+                        var keyRepr = '<span class="' + keyclass + '" portname="' + id + '" portarray="' + portarray + '" portdata="' + json[key]+'">"' + key + '"</span>';
 
                         /*  var keyRepr = options.withQuotes ?
                           '<span class="' + keyclass + '" id=' + enc+ ' portname="' + id + '" portarray="' + portarray + '">"' + key + '"</span>' : key;
@@ -10704,7 +10841,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         var node_multi_selected = tmpObj.node_multi_selected;
         var currsel = tmpObj.node_multi_selected[0];
         var stat = jchaos.getChannel(currsel, 255);
-        
+        var now = (new Date()).getTime();
         var cu =stat[0];
         if(tmpObj.hasOwnProperty("tableMenuItem")){
             for(var k in tmpObj.tableMenuItem){
@@ -10716,6 +10853,13 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         }
         if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) { //if el health
             var status = cu.health.nh_status;
+            var live=false;
+            
+            if(cu.health.hasOwnProperty("dpck_ats")){
+                if(now-cu.health.dpck_ats<15000){
+                    live=true;
+                }
+            }
             items['setstate'] = {
                 "name": "Set State...",
                 "items": {
@@ -10727,11 +10871,21 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
     
                             });
                         
-                    } }
+                    } },
+                    'kill':{ name: "Unload(kill)",icon: "fa-window-close",callback:function () {
+                        jchaos.node(currsel, "stop", "cu", function(data) {
+                            jchaos.node(currsel, "deinit", "cu", function(data) {
+                                jchaos.loadUnload(currsel, false, function(data) {
+                                })
+                            });
+                        });
 
+                    }},
+                    'sep1': "------"
                 }
             };
-            if ((tmpObj.off_line[cu.health.ndk_uid] == 0)) {
+
+            if (live) {
                
 
                 if (status == 'Start') {
@@ -10752,7 +10906,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                     items['setstate'].items['init'] = { name: "Init", icon: "init" };
                     items['sep1'] = "---------";
                 } else if (status == 'Recoverable Error') {
-                    items['recover'] = { name: "Recover", icon: "recover" };
+                    items['setstate'].items['recover'] = { name: "Recover", icon: "recover" };
                     items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
                     items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
                     items['setstate']. items['stop'] = { name: "Stop", icon: "fa-stop" };
@@ -10765,7 +10919,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                     items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
                     items['sep1'] = "---------";
                 } else if (status == "Unload") {
-                    items['load'] = { name: "Load", icon: "load" };
+                    items['setstate'].items['load'] = { name: "Load", icon: "load" };
                     items['sep1'] = "---------";
                 } else if (status == "Load") {
                     items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
@@ -10816,7 +10970,35 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         items['mask-alarms'] = { name: "Mask alarms Dataset" };
        
         if (tmpObj.node_multi_selected.length == 1) {
+            items['edit']={
+                    name: "Edit..",icon:"fa-edit",
+                    callback: function(itemKey, opt, e) {
 
+                        jchaos.node(currsel, "get", "cu", function (data) {
+                            if (data != null) {
+                                //editorFn = cuSave;
+                                //jsonEdit(templ, data);
+                                //!! TODO: check why?
+                                if (!data.hasOwnProperty("ndk_type")) {
+                                    data['ndk_type'] = type;
+                                }
+                                cu2editor(data, (edit_templ, editobj) => {
+                                    jqccs.jsonEditWindow("CU/EU Editor", edit_templ, editobj, jchaos.cuSave, null, function (ok) {
+                                        
+                                        jqccs.instantMessage("CU/EU saved " + currsel, " OK", 2000, true);
+
+                                    }, function (bad) {
+                                        jqccs.instantMessage("Error saving CU/EU " + currsel, JSON.stringify(bad), 2000, false);
+
+                                    });
+
+                                });
+
+                            }
+                        });
+                        return;
+                    }
+            };
             items['savenode'] = {
                 "name": "Save",icon: "fa-save",
                 "items": {
@@ -10937,6 +11119,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             items['fold3'] = {
                 "name": "Show",icon:"fa-eye",
                 "items": {
+
                     'show-dataset': {
                         name: "Show/Set/Plot Dataset",icon:"fa-list",
                         callback: function(itemKey, opt, e) {
