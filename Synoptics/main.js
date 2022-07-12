@@ -27,7 +27,7 @@ function MakeSinoptic()
 {
 
 //Reading from DB
-jchaos.setOptions({"uri":"chaost-hawebui.lnf.infn.it"+":8081","socketio":"chaost-hawebui.lnf.infn.it"+":4000"});
+jchaos.setOptions({"uri":"http://chaost-hawebui.lnf.infn.it"+":8081","socketio":"http://chaost-hawebui.lnf.infn.it"+":4000"});
 var syn=jchaos.variable("WindowsSynoptics","get").synopticList[3];
 //Setting useful variables
 var Iheight=syn.description.imageHeight;
