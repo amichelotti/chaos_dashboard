@@ -204,6 +204,8 @@ $curr_page = "Experiment Control";
             var current_acquisitions=1;
             var progressive_id = 0;
             var tagname = "";
+            var parent_tagname = "";
+
             function updateWidget(ds){
 
                 var name =ds.ndk_uid;
@@ -411,8 +413,11 @@ $curr_page = "Experiment Control";
                 var pi=$("#progressive_id").val();
                 if(current_experiment.hasOwnProperty("zone")&&current_experiment.hasOwnProperty("group")&&current_experiment.hasOwnProperty("experiment")){
                     tagname = current_experiment.zone + "/" + current_experiment.group + "/" + current_experiment.experiment + "/" + sn + "/" + progressive_id;
+                    parent_tagname=current_experiment.zone + "/" + current_experiment.group + "/" + current_experiment.experiment + "/" + sn;
+
                 } else {
                     tagname=sn + "/" + progressive_id;
+                    parent_tagname=sn;
                 }
                 $("#tag_id").html(tagname);
             }
@@ -521,8 +526,8 @@ $curr_page = "Experiment Control";
             $("#refresh-folder").on("click",()=>{
                 jqccs.busyWindow(true);
 
-                if(tagname!=""){
-                    refresh_hier(tagname,0,new Date().getTime());
+                if(parent_tagname!=""){
+                    refresh_hier(parent_tagname,0,new Date().getTime());
                 } else {
                     updateTag();
 
