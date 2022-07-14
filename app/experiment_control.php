@@ -93,6 +93,14 @@ $curr_page = "Experiment Control";
                                     </div>
                                     
                                 </div>
+                                <div class="col">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="enable_cycle">
+                                        <label class="custom-control-label" for="enable_cycle">Cycle/Time(ms)</label>
+                                    </div>
+
+                                </div>
+
                             </div>
                             <div class="row">
                             <div class="col">
@@ -136,7 +144,7 @@ $curr_page = "Experiment Control";
                                 </div>
                                 <div class="col-sm-2 align-self-center">
                                     <div class="row form-group">
-                                        <label for="acquisitions"><strong>Acquire cycles</strong></label>
+                                        <label for="acquisitions"><strong id="acquire_mode">Acquire cycles</strong></label>
                                         <input type="number" min="1" value="1" class="form-control" id="acquisitions">
                                     </div>
                                     <div class="row justify-content-cente">
@@ -205,6 +213,7 @@ $curr_page = "Experiment Control";
             var progressive_id = 0;
             var tagname = "";
             var parent_tagname = "";
+            var acquire_mode=1;
 
             function updateWidget(ds){
 
@@ -552,6 +561,19 @@ $curr_page = "Experiment Control";
 
                 }
             });
+            $("#enable_cycle").change(function(){
+                if($(this).is(':checked')){
+                    $("#acquire_mode").html("Acquire Time (ms)");
+                    acquire_mode=2;
+                    
+
+                } else {
+                    $("#acquire_mode").html("Acquire Cycles");
+                    acquire_mode=1;
+
+
+                }
+            });
             $("#classes").change(function() {
                 var selzone = $("#zones option:selected").val();
                 var selclass = $("#classes option:selected").val();
@@ -592,7 +614,7 @@ $curr_page = "Experiment Control";
                 jqccs.busyWindow(true);
 
                 updateTag()
-                var cmd="jchaos.tag(\""+tagname+"\","+ JSON.stringify(current_tagged_cu)+", 1,"+current_acquisitions+",\""+$("#tagnote").val()+"\")";
+                var cmd="jchaos.tag(\""+tagname+"\","+ JSON.stringify(current_tagged_cu)+", "+acquire_mode+","+current_acquisitions+",\""+$("#tagnote").val()+"\")";
                 console.log("executing "+cmd);
 
                 $('#script_view').terminal().exec(cmd,false);
