@@ -390,9 +390,12 @@ function getWidget(options) {
 
           if(poiconfig.hasOwnProperty("poi")&&(Object.keys(poiconfig.poi).length)){
             $("#"+name).removeClass("invisible");
+            $("#"+name).find("option").remove();
+
+            $("#"+name).append("<option value='' title='Select Poi'>Select Poi..</option>");
 
             for(var i in poiconfig.poi){
-              $("#"+name).append("<option value='"+poiconfig.poi[i]+" title='"+poiconfig.poi[i]+"'>"+i+"</option>");
+              $("#"+name).append("<option value='"+poiconfig.poi[i]+"' title='"+poiconfig.poi[i]+"'>"+i+"</option>");
 
             }
         }
@@ -400,16 +403,20 @@ function getWidget(options) {
 
             var cuname = $(this).attr('name');
             var poiv = $(this).find("option:selected").text();
+            if(poiv==""){
+              return;
+            }
             var param={
               poi:poiv
             }
 
             jchaos.sendCUCmd(cuname,"mov_abs",param, function (d) {
-              
-             // jqccs.instantMessage(cuname, "Move to:"+poiv , 1000, true)
+              s.currentTarget.value="";
+               jqccs.instantMessage(cuname, "Move to:"+poiv , 400, true)
             }, function (d) {
               jqccs.instantMessage(cuname, "ERROR OCCURRED:" + d, 2000, 350, 400, false);
-      
+              s.currentTarget.value="";
+
             });
           })
           

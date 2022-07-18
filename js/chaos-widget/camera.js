@@ -1068,7 +1068,7 @@ function buildCameraArray(id, opt) {
       html += '<div class="row infocam">';
       html += '<div class="col-sm-2">Trigger Mode</div>';
       html += '<div class="col-sm-3 maxmin" id="' + encoden + 'TRIGGER_MODE"></div>';
-      html += '<div class="col-sm-7" id="' + encoden + '"><select class="select_camera_mode form-control form-control-sm" id="' + encoden + '_select_camera_mode" name="' + encoden + '"><option value="0">Continuous</option><option value="3">TriggeredLOHI</option><option value="4">TriggeredHILO</option><option value="1">Pulse</option><option value="5">No Acquire</option><option value="2">Software</option></select></div>';
+      html += '<div class="col-sm-7" id="' + encoden + '"><select class="select_camera_mode form-control form-control-sm" id="' + encoden + '_select_camera_mode" name="' + encoden + '"><option value="-1">Select Trigger..</option><option value="0">Continuous</option><option value="3">TriggeredLOHI</option><option value="4">TriggeredHILO</option><option value="1">Pulse</option><option value="5">No Acquire</option><option value="2">Software</option></select></div>';
       html += '</div>';
 
       html += '<div class="row infocam">';
@@ -1579,16 +1579,24 @@ $.fn.buildCameraArray = function (op) {
   $(".select_camera_mode").change(function (e) {
     var value = e.currentTarget.value;
     let cu = mapcamera[e.currentTarget.name];
-
+    if(value=="-1"){
+      return;
+    }
     console.log("name=" + cu + " value=" + value);
     jchaos.setAttribute(cu, "TRIGGER_MODE", value, function () {
       jqccs.instantMessage("SET MODE " + cu, value, 3000, true);
+      e.currentTarget.value="-1";
+
 
     }, (bad) => {
       jqccs.instantMessage("Error SETTING MODE " + cu + " err:" + bad, value, 4000, false);
+      e.currentTarget.value="-1";
+
 
     })
   })
+  
+
 }
 
 function showHisto(msghead, cuname, refresh, channel) {
