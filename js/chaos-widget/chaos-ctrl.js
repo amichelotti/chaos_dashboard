@@ -6924,7 +6924,16 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         var alive = $("input[type=radio][name=search-alive]:checked").val()
         var interface = $("#classe option:selected").val();
         var element_selected = $("#elements option:selected").val();
-        var zone_selected = $("#zones option:selected").val();
+        var zone_selected ="";
+        
+        if($("#zones option:selected").val()){
+            zone_selected=$("#zones option:selected").val();
+        } else {
+            setDefaultsQuery();
+            zone_selected=$("#zones option:selected").val();
+
+        }
+
         // var zone_selected = $("#zones").val();
         var state = $("#errorState option:selected").val();
         dashboard_settings['last_alive'] = alive;
@@ -6943,7 +6952,9 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         if ((typeof GetURLParameter('ALIVE') === "string") && (GetURLParameter('ALIVE') != "")) {
             alive = GetURLParameter('ALIVE');
         }
-
+        if(!zone_selected){
+            setDefaultsQuery(); 
+        }
         if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
             search_string = zone_selected;
         }
@@ -7641,7 +7652,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                 }          
             }
             if (alarm != null && alarm.hasOwnProperty("device_alarms")) {
-                obj = Object.assign(obj, alarm.cu_alarms);     
+                obj = Object.assign(obj, alarm.device_alarms);     
             }
             jqccs.decodeDeviceAlarm(obj, false);
         });});

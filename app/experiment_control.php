@@ -93,6 +93,14 @@ $curr_page = "Experiment Control";
                                     </div>
                                     
                                 </div>
+                                <div class="col">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="enable_cycle">
+                                        <label class="custom-control-label" for="enable_cycle">Cycle/Time(ms)</label>
+                                    </div>
+
+                                </div>
+
                             </div>
                             <div class="row">
                             <div class="col">
@@ -136,7 +144,7 @@ $curr_page = "Experiment Control";
                                 </div>
                                 <div class="col-sm-2 align-self-center">
                                     <div class="row form-group">
-                                        <label for="acquisitions"><strong>Acquire cycles</strong></label>
+                                        <label for="acquisitions"><strong id="acquire_mode">Acquire cycles</strong></label>
                                         <input type="number" min="1" value="1" class="form-control" id="acquisitions">
                                     </div>
                                     <div class="row justify-content-cente">
@@ -204,6 +212,9 @@ $curr_page = "Experiment Control";
             var current_acquisitions=1;
             var progressive_id = 0;
             var tagname = "";
+            var parent_tagname = "";
+            var acquire_mode=1;
+
             function updateWidget(ds){
 
                 var name =ds.ndk_uid;
@@ -411,8 +422,11 @@ $curr_page = "Experiment Control";
                 var pi=$("#progressive_id").val();
                 if(current_experiment.hasOwnProperty("zone")&&current_experiment.hasOwnProperty("group")&&current_experiment.hasOwnProperty("experiment")){
                     tagname = current_experiment.zone + "/" + current_experiment.group + "/" + current_experiment.experiment + "/" + sn + "/" + progressive_id;
+                    parent_tagname=current_experiment.zone + "/" + current_experiment.group + "/" + current_experiment.experiment + "/" + sn;
+
                 } else {
                     tagname=sn + "/" + progressive_id;
+                    parent_tagname=sn;
                 }
                 $("#tag_id").html(tagname);
             }
@@ -521,8 +535,8 @@ $curr_page = "Experiment Control";
             $("#refresh-folder").on("click",()=>{
                 jqccs.busyWindow(true);
 
-                if(tagname!=""){
-                    refresh_hier(tagname,0,new Date().getTime());
+                if(parent_tagname!=""){
+                    refresh_hier(parent_tagname,0,new Date().getTime());
                 } else {
                     updateTag();
 
@@ -544,6 +558,19 @@ $curr_page = "Experiment Control";
                 } else {
                     $(".manual_control").addClass("invisible");
                     $(".script_selection").removeClass("invisible");
+
+                }
+            });
+            $("#enable_cycle").change(function(){
+                if($(this).is(':checked')){
+                    $("#acquire_mode").html("Acquire Time (ms)");
+                    acquire_mode=2;
+                    
+
+                } else {
+                    $("#acquire_mode").html("Acquire Cycles");
+                    acquire_mode=1;
+
 
                 }
             });
@@ -587,7 +614,7 @@ $curr_page = "Experiment Control";
                 jqccs.busyWindow(true);
 
                 updateTag()
-                var cmd="jchaos.tag(\""+tagname+"\","+ JSON.stringify(current_tagged_cu)+", 1,"+current_acquisitions+",\""+$("#tagnote").val()+"\")";
+                var cmd="jchaos.tag(\""+tagname+"\","+ JSON.stringify(current_tagged_cu)+", "+acquire_mode+","+current_acquisitions+",\""+$("#tagnote").val()+"\")";
                 console.log("executing "+cmd);
 
                 $('#script_view').terminal().exec(cmd,false);
