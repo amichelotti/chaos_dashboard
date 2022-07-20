@@ -375,12 +375,25 @@
 							}
 							var objcu = Object.assign({}, cu);
 							objcu['control_unit_implementation'] = cu_catalog_by_interface[c][typ].info.impl;
-							objcu['cudk_desc'] = cu_catalog_by_interface[c][typ].info.desc;
+							if(cu_catalog_by_interface[c][typ].info.desc){
+								objcu['cudk_desc'] = cu_catalog_by_interface[c][typ].info.desc;
+							}
+							if(cu_catalog_by_interface[c][typ].info.hasOwnProperty("load")){
+								objcu["cudk_load_param"]=cu_catalog_by_interface[c][typ].info.load;
+							}
+							if(cu_catalog_by_interface[c][typ].attrs&& (typeof cu_catalog_by_interface[c][typ].attrs === "object")){
+								var attrv=[]
+								for(var k in cu_catalog_by_interface[c][typ].attrs ){
+									attrv.push(cu_catalog_by_interface[c][typ].attrs[k])
+								}
+								objcu['attribute_value_descriptions']=attrv;
+
+							}
 							for (var d in cu_catalog_by_interface[c][typ].drivers) {
 								var objcud = Object.assign({}, objcu);
 
 								objcud['cudk_driver_description'] = [cu_catalog_by_interface[c][typ].drivers[d]];
-
+								
 								subDriver['new-' + c + "-" + typ + "-" + d] = {
 									"separator_before": false,
 									"separator_after": false,
