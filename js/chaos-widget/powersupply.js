@@ -131,9 +131,9 @@ function getWidget(options) {
           html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
           html += "<td class='td_element td_name'>" + cu[i] + "</td>";
           html += "<td id='" + cuname + "_health_status'></td>";
-          html += "<td title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
-          html += "<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
-          html += "<td class='td_element' title='Restore setpoint current'  id='" + cuname + "_input_saved_current'></td>";
+          html += "<td digits=4 title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
+          html += "<td digits=4 class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
+          html += "<td digits=4 class='td_element' title='Restore setpoint current'  id='" + cuname + "_input_saved_current'></td>";
           html += "<td class='td_element' title='Restore Stanby/Operational' id='" + cuname + "_input_saved_stby'></td>";
           html += "<td class='td_element' title='Restore setpoint polarity' id='" + cuname + "_input_saved_polarity'></td>";
           html += "<td class='td_element' id='" + cuname + "_output_stby'></td>";
