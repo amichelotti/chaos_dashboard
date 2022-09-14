@@ -4639,6 +4639,30 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
 
         $("#specific-table-" + tmpObj.template).html(htmlt);
         $("#specific-control-" + tmpObj.template).html(htmlc);
+        jchaos.node(tmpObj.elems, "desc", "all",(descs)=>{
+            descs.forEach(ele=>{
+              var cuname = jchaos.encodeName(ele.ndk_uid);
+              var str="";
+              if(ele.ndk_host_name){
+                str+="Host:"+ele.ndk_host_name;
+              }
+              tmpObj['descs']={};
+              tmpObj['descs'][cuname]=ele;
+              if(ele.hasOwnProperty("instance_description")){
+                if(ele.instance_description.cudk_desc){
+                  str+="\nDesc:"+ele.instance_description.cudk_desc;
+                }
+                if(ele.instance_description.ndk_parent){
+                  str+="\nParent:"+ele.instance_description.ndk_parent;
+                }
+            }
+              
+              
+              console.log("ele "+ele.ndk_uid+" :"+str);
+              $("#"+cuname).attr('title',str);
+  
+            });
+          });
         tmpObj.updateInterfaceFn(tmpObj);
         if (tmpObj.hasOwnProperty('update-server-interval')) {
             clearInterval('update-server-interval');

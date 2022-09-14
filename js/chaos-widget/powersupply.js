@@ -3,6 +3,7 @@ var widget_options={}
 var widget_state={}
 var device_subscribed=[]
 var pullInterval = null;
+var cu_descs={}
 function updateWidget(ds) {
 
   if (ds.dpck_ds_type == 0) {
@@ -148,7 +149,6 @@ function getWidget(options) {
         html += '</div>';
         html += '</div>';
         html += '</div>';
-    
         return html;
     },
     cmdFn:function(tmpObj) {
