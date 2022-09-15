@@ -8013,7 +8013,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                         if (options !== undefined && options.hasOwnProperty('htmlFn')) {
                             if (options.htmlFn.hasOwnProperty(dstype) &&
                                 options.htmlFn[dstype].hasOwnProperty(key) && (typeof options.htmlFn[dstype][key] === "function")) {
-                                html = options.htmlFn[dstype][key](val,$(selector));
+                                html = options.htmlFn[dstype][key](val,$(selector),el[dstype]);
                                 if ((val_saved != null)) {
                                     html_save = options.htmlFn[dstype][key](val_saved,$(selector));
 

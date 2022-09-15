@@ -63,16 +63,21 @@ function getWidget(options) {
               }
               return "NA";
             },
-            stby:function(val){
-              if(val==false){
-                return '<i class="material-icons" style="color:green">trending_down</i>';
+            stby:function(val,ele,ds){
+              if(ds.hasOwnProperty("off")&&ds.off){
+                return '<i title="OFF" class="material-icons" style="color:red">trending_down</i>';
+
               } else {
-                return '<i class="material-icons" style="color:red">pause_circle_outline</i>';
-              }
+                if(val==false){
+                  return '<i title="Operational" class="material-icons" style="color:green">trending_up</i>';
+                } else {
+                  return '<i title="Standby" class="material-icons" style="color:red">pause_circle_outline</i>';
+                }
+            }
             },
             local:function(val){
             if (val == true) {
-              return '<i class="material-icons" style="color:red">vpn_key</i>';
+              return '<i title="Locale" class="material-icons" style="color:red">vpn_key</i>';
             } else {
               return '';
             }
@@ -123,7 +128,12 @@ function getWidget(options) {
         html += '<th>Readout [A]</th>';
         html += '<th>Setting [A]</th>';
         html += '<th colspan="3">Saved</th>';
-        html += '<th colspan="7">Flags</th>';
+        html += '<th>State</th>';
+        html += '<th>Polarity</th>';
+        html += '<th>Bypass</th>';
+        html += '<th colspan="4">Flags</th>';
+
+
         html += '</tr>';
         html += '</thead>';
     
