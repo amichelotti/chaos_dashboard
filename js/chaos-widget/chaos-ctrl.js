@@ -137,24 +137,7 @@
         }
         return null;
     }
-    /*
-    function progressBar(msg,id,lab){
-      var instant = $('<div id='+id+'></div>').progressbar({
-        value:false,
-        open: function () {
-       
-        },
-        complete: function() {
-         // $(this).dialog("close");
-        }
-  
-     }).dialog({ 
-        title: msg,
-        position: "top",
-        
-
-      })
-    }*/
+   
     jqccs.saveAsBinary=function(binary_string, name){
         return saveAsBinary(binary_string, name);
     }
@@ -180,10 +163,7 @@
                 var progressLabel = $(".progress-label");
                 progressbar.progressbar({
                     value: false,
-                    /*    change: function () {
-                          var val = progressbar.progressbar("value");
-                          progressLabel.text(val + "%");
-                        },*/
+                    
                     complete: function() {
                         $(this).parent().dialog("close");
                     }
@@ -289,26 +269,18 @@
 
                 ],
                 close: function(event, ui) {
-                    //var last_interval = setInterval(function () { }, 100000);
-                    /*for (var i = nintervals; i <= last_interval; i++) {
-                      clearInterval(i);
-                    }*/
+                    
                     if ((newObj.node_list_interval != null)) {
                         console.log(name + " CLOSING interval:" + newObj.node_list_interval);
 
                         clearInterval(newObj.node_list_interval);
                     }
                     $(this).remove();
-                    /*        var interface = $("#classe option:selected").val();
-                            console.log("restoring view :" + interface);
-        
-                            buildCUPage(tmpObj, implementation_map[interface], "cu");
-                            */
+                   
                 },
                 open: function() {
                     nintervals = setInterval(function() {}, 100000); // Get a reference to the last
-                    // interval +1
-                    // orginal_list = node_list;
+                    
                     console.log(name + " OPEN control interval:" + nintervals);
                     newObj.elems = newObj.node_multi_selected;
                     newObj.node_list_interval = null;
@@ -469,39 +441,7 @@
         createCustomDialog(opt);
 
     }
-    /*   var instant = $('<div id=dataset-' + name + '></div>').dialog({
-           minWidth: hostWidth / 4,
-           minHeight: hostHeight / 4,
-           closeOnEscape: true,
-           title: msghead,
-           resizable: true,
-           buttons: [ 
-           {
-               text: "save",
-               click: function (e) {
-                   var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
-                   saveAs(blob, name + ".json");
-               }
-           },
-           {
-               text: "close",
-               click: function (e) {
-                   // var interval=$(this).attr("refresh_time");
-                   $("#dataset-" + name).dialog('close');
-
-               }
-           }
-
-
-           ],
-           close: function (event, ui) {
-
-               $(this).remove();
-           },
-         
-           
-       });
-   }*/
+    
     function updateDataSetFormat(cuname, path, last_dataset, showformat, tmpObj) {
         let options = { collapsed: false };
         let name = jchaos.encodeName(cuname);
@@ -561,17 +501,13 @@
                     text: "Update",
                     id: 'dataset-update-' + name,
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
                         stop_update = !stop_update;
                         if (stop_update) {
-                            // $('#dataset-update-' + name).text("Update");
                             $(e.target).text("Update");
                         } else {
-                            // $('#dataset-update-' + name).text("Not Update");
                             $(e.target).text("Not Update");
 
                         }
-                        // $(instant).dialog("close");
                         jsonSetup($(this), tmpObj);
 
                     }
@@ -579,7 +515,6 @@
                     text: "Dataset",
                     id: 'dataset-type-' + name,
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
                         showdataset++;
                         showformat = 0;
                         $("#dataset-radix-" + name).text("Dec(s)");
@@ -655,14 +590,12 @@
                         }, function(err) {
                             console.log(err);
                         });
-                        // $(instant).dialog("close");
                     }
                 },
                 {
                     text: "Format",
                     id: 'dataset-radix-' + name,
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
                         showformat++;
                         switch (showformat) {
                             case 0:
@@ -694,7 +627,6 @@
                         }, function(err) {
                             console.log(err);
                         });
-                        // $(instant).dialog("close");
                     }
                 }, {
                     text: "save",
@@ -707,7 +639,6 @@
                 {
                     text: "close",
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
                         $("#dataset-" + name).dialog('close');
 
                     }
@@ -751,8 +682,6 @@
                         if (started == 0) {
                             started = 1;
                             stop_update = true;
-                            //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
-                            //target.toggle();
                             $(".json-toggle").trigger("click");
                         }
                     }
@@ -784,7 +713,6 @@
                 text: "Format",
                 id: 'dataset-radix-' + name,
                 click: function(e) {
-                    // var interval=$(this).attr("refresh_time");
                     showformat++;
                     switch (showformat) {
                         case 0:
@@ -817,7 +745,6 @@
                     var jsonhtml = json2html(converted, options, "");
                     $("#dataset-" + name).html(jsonhtml);
 
-                    // $(instant).dialog("close");
                 }
             },
             {
@@ -842,7 +769,6 @@
             {
                 text: "close",
                 click: function(e) {
-                    // var interval=$(this).attr("refresh_time");
                     $("#dataset-" + name).dialog('close');
                     $(this).remove();
 
@@ -981,8 +907,6 @@
                     text: "refresh",
                     id: 'refresh-' + pid,
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        //    $('#console-' + pid).terminal().exit();
                         nodeFn(pid);
                     }
 
@@ -999,7 +923,6 @@
                 }
             ],
             close: function(event, ui) {
-                //    $('#console-' + pid).terminal().exit();
                 $(this).remove();
 
             },
@@ -1032,7 +955,6 @@
                     id: 'console-download-' + pid,
                     click: function(e) {
                         var name = jchaos.encodeName(msghead) + pid;
-                        // var interval=$(this).attr("refresh_time");
                         var output = $('#console-' + pid).terminal().get_output();
                         var blob = new Blob([output], { type: "json;charset=utf-8" });
                         saveAs(blob, name + ".log");
@@ -1053,7 +975,6 @@
                     text: "resume",
                     id: 'console-resume-' + pid,
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
                         $('#console-' + pid).terminal().resume();
 
                     }
@@ -1062,8 +983,7 @@
                     text: "close",
                     id: 'console-close-' + pid,
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-                        //    $('#console-' + pid).terminal().exit();
+                        
                         $(this).dialog("close");
                         $(this).remove();
                     }
@@ -1071,7 +991,6 @@
                 }
             ],
             close: function(event, ui) {
-                //    $('#console-' + pid).terminal().exit();
                 $(this).dialog("close");
                 jchaos.exit = function(str) {
                     alert(str);
@@ -1197,7 +1116,6 @@
                     text: "download",
                     id: 'console-download-' + pid,
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
                         jchaos.rmtGetConsole(server, pid, 0, -1, function(r) {
                             var str = decodeURIComponent(escape(atob(r.data.console)));
                             var name = pid + "_" + r.data.process.last_log_time;
@@ -1231,8 +1149,6 @@
 
             ],
             close: function(event, ui) {
-                //  var interval=$(this).attr("refresh_time");
-
                 clearInterval(update);
                 // $(instant).dialog("close");
                 $(this).remove();
@@ -1354,13 +1270,6 @@
                     text: "save",
                     click: function(e) {
                         var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
-                        /* var len = binary_string.length;
-                         var bytes = new Uint8Array(len);
-                         for (var i = 0; i < len; i++) {
-                           bytes[i] = binary_string.charCodeAt(i);
-                         }
-                         var blob = new Blob([bytes], { type: "image/png" });
-                        */
                         saveAsBinary(binary_string, name + ".png");
 
                     }
@@ -1369,7 +1278,6 @@
                     text: "update",
                     id: 'pict-update-' + name,
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
                         stop_update = !stop_update;
 
                     }
@@ -1377,8 +1285,6 @@
                 {
                     text: "close",
                     click: function(e) {
-                        // var interval=$(this).attr("refresh_time");
-
                         clearInterval(update);
                         // $(instant).dialog("close");
                         $(this).remove();
@@ -2444,7 +2350,6 @@
     
     function element_sel(field, arr, add_all,def) {
         $(field).empty();
-        //$(field).append("<option value='ALL'>ALL</option>");
         $(field).append("<option>--Select--</option>");
 
         if (add_all == 1) {
@@ -2497,7 +2402,6 @@
         });
 
         $("#mdl-log").resizable().draggable();
-        // $("#mdl-log").dialog({width: hostWidth / 2,height: hostHeight / 4,resizable:true,draggable:true});
 
     }
 
@@ -2536,16 +2440,7 @@
 
 
             }
-            /*if (node_multi_selected.length > 1) {
-                jchaos.snapshot(value, "create", node_multi_selected, null, function() {});
-
-            } else {
-                jchaos.snapshot(value, "create", node_selected, null, function() {
-                    updateSnapshotTable(tmpObj);
-
-                });
-            }*/
-            //var snap_table = $(this).find('a.show_snapshot');
+            
         });
 
         $("#snap-close").on('click', function() {
@@ -2619,24 +2514,7 @@
         $("#description-close").on('click', function() {
             $("#mdl-description").modal("hide");
         });
-        /*
-        $("a.show_description").click(function () {
-          jchaos.getDesc(node_selected, function(dataset){
-            node_name_to_desc[node_selected]=dataset[0];
-            var jsonhtml = json2html(dataset[0], options, node_selected);
-            save_obj = {
-              obj: dataset[0],
-              fname: "description_" + jchaos.encodeName(node_selected),
-              fext: "json"
-            };
-            if (jchaos.isCollapsable(dataset)) {
-              jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
-            }
-            $("#desc_text").html("Description of " + node_selected);
-            $("#cu-description").html(jsonhtml);
-          });
-        });
-        */
+       
     }
 
     function jsonEnableScriptContext(dom, scripts) {
@@ -2793,17 +2671,7 @@
 
                                 });
 
-                                /* var tr={
-                                     "name":portname,
-                                     "x":"timestamp",
-                                     "y":portname
-                                 }
-                                 var graph={};
-                                 graph['name']=portname;
-                                 graph['traces']=[];
-                                 graph['traces'].push(tr);
-     
-                                 jqccs.createEditGraph(graph);*/
+                              
 
                             }
                         };
@@ -2811,17 +2679,9 @@
                     }
                 }
                 if (cnt > 0) {
-                    // if (portarray == "0") {
-                    // cuitem['add-plot-x'] = { name: "Plot " + portname + " on X","items":subitem };
+                    
                     cuitem['add-plot-y'] = { name: "Plot " + portname + " on ", "items": subitem };
-                    //     cuitem['add-plot-histo'] = { name: "Histogram " + portname,"items":subitem  };
-
-                    // } else {
-                    //  cuitem['add-plot-x'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on X","items":subitem  };
-                    //     cuitem['add-plot-y'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on Y","items":subitem  };
-                    //     cuitem['add-plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portname + "[] on X","items":subitem  };
-
-                    // }
+                   
                 } else {
                     //if (portarray == "0") {
                     cuitem['save-data'] = {
@@ -2861,17 +2721,10 @@
                                     jqccs.createEditGraph(graph);
 
                                 }
-                                // };
-                                //   cuitem['new-plot-y'] = { name: "Plot " + portname + " on Y" };
-                                //   cuitem['new-plot-histo'] = { name: "Histogram " + portname,"items":subitem  };
+                                
 
                         }
-                        /*else {
-                                               cuitem['new-plot-y'] = { name: "New Plot Array(" + portarray + ") " + portname + "[]  ",callback: function(key, opt){ alert("plotting:"+JSON.stringify(opt));} };
-                                             //  cuitem['new-plot-y'] = { name: "Plot Array(" + portarray + ") " + portname + "[] on Y","items":subitem  };
-                                            //   cuitem['new-plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portname + "[] on X","items":subitem  };
-                           
-                                           }*/
+                       
                 }
 
 
@@ -4004,30 +3857,7 @@
             }
 
 
-        } else if (cmd == "show-dataset") {
-            /*jchaos.getChannel(currsel, -1, function (imdata) {
-
-            jqccs.editJSON("Dataset Prop " + currsel, imdata, (json, fupdate) => {
-
-                var changed = {};
-                for (var key in json) {
-
-                    if (JSON.stringify(json[key]) !== JSON.stringify(origin_json[key])) {
-                        changed[key] = json[key];
-
-                    }
-                }
-                console.log("sending changed:" + JSON.stringify(changed));
-
-                }, (bad) => {
-                    instantMessage("Error Setting Dataset prop:" + tmpObj.node_multi_selected, "Command:\"" + cmd + "\" sent err: " + JSON.stringify(bad), 5000, false);
-
-                });
-
-            });*/
-
-
-        } else if (cmd == "mask-alarms") {
+        }  else if (cmd == "mask-alarms") {
             jchaos.getChannel(node_multi_selected[0], 255, function(run_info) {
                 var obj = Object.assign({}, run_info[0].cu_alarms, run_info[0].device_alarms);
                 tmp = {
@@ -4658,7 +4488,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             }
               
               
-              console.log("ele "+ele.ndk_uid+" :"+str);
+             // console.log("ele "+ele.ndk_uid+" :"+str);
               $("#"+cuname).attr('title',str);
   
             });
@@ -6308,26 +6138,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
 
             $("#" + encoden + "_parent").html(parent_str);
         }
-        /*   if (tmpObj.hasOwnProperty("server_charts")) {
-               var now = (new Date()).getTime();
-               for (var server in tmpObj['agents']) {
-                   var infoServer = tmpObj.agents[server];
-                   var enc = jchaos.encodeName(server);
-                   var chart = tmpObj['server_charts'][enc];
-                   if ((chart != null) && chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
-                       chart.series[0].addPoint([now, infoServer.idle], false, false);
-                       chart.series[1].addPoint([now, infoServer.user], false, false);
-                       chart.series[2].addPoint([now, infoServer.sys], false, false);
-                       chart.series[3].addPoint([now, infoServer.io], false, false);
-                       chart.series[4].addPoint([now, infoServer.pmem], false, false);
-   
-                       chart.redraw();
-                   }
-               }
-   
-   
-           }
-           */
+       
 
     }
 
@@ -6481,112 +6292,18 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         var hostHeight = $(window).height();
         $("#" + tablename).find("tr:gt(0)").remove();
 
-        /*  if (typeof tmpObj['agents'] === "undefined") {
-              var ag_list = {};
-              var obj = {
-                  idle: 100,
-                  io: 0,
-                  pmem: 0,
-                  sys: 0,
-                  ts: 0,
-                  user: 0
-              }
-              var list = jchaos.search("", "agent", true, false);
-              list.forEach(function (ele) {
-                  ag_list[ele] = obj;
-              })
-              tmpObj['agents'] = ag_list;
-  
-          }*/
+       
         if ((typeof tmpObj['agents'] === "undefined"))
             return;
         if ((typeof tmpObj['agent_list'] === "undefined") || (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list']) || (typeof tmpObj['old_agent_list'] === "undefined"))) {
             tmpObj['old_agent_list'] = tmpObj['agent_list'];
 
-            /*     var chart_options = {
-                     chart: {
-                         height: (1 / (num_chart) * 100) + '%',
-                         width: (hostWidth / (num_chart + 1))
-     
-                     },
-                     title: {
-                         text: ''
-                     },
-     
-                     xAxis: {
-                         type: "datetime",
-                         title: {
-                             text: 'Time'
-                         }
-                     },
-                     yAxis: {
-                         title: {
-                             text: '%'
-                         },
-                         max: 100
-                     },
-                     legend: {
-                         layout: 'vertical',
-                         align: 'right',
-                         verticalAlign: 'middle'
-                     },
-     
-                     plotOptions: {
-                         series: {
-                             label: {
-                                 connectorAllowed: false
-                             },
-                         }
-                     },
-                     series: [{
-                         name: 'idle',
-                         data: []
-                     }, {
-                         name: 'cpu',
-                         data: []
-                     }, {
-                         name: 'sys',
-                         data: []
-                     }, {
-                         name: 'iow',
-                         data: []
-                     }, {
-                         name: 'mem',
-                         data: []
-                     }]
-                 };
-                 $("#" + graph_table).find("tr:gt(0)").remove();
-     */
+        
             var serverlist = tmpObj['agents'];
             var html = "";
             var server_charts = {};
 
-            /*    for (var key in serverlist) {
-                    var encoden = jchaos.encodeName(key);
-                    if ((cnt % num_chart) == 0) {
-                        if (cnt > 0) {
-                            html += "</tr>"
-                        }
-                        html += '<tr class="row_element" id=graph-row"' + cnt + '">';
-                    }
-                    html += '<td class="td_element processMenu" id="graph-' + encoden + '" agent-name="' + key + '"></td>';
-    
-                    cnt++;
-                };
-                if (cnt > 0) {
-                    html += "</tr>";
-                    $("#" + graph_table).append(html);
-                    for (var key in serverlist) {
-                        var encoden = jchaos.encodeName(key);
-                        chart_options.title.text = "Agent on " + key;
-    
-                        server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
-    
-                    }
-                    tmpObj['server_charts'] = server_charts;
-    
-                }
-            }*/
+         
             var ordered = [];
             for (var p in tmpObj.data) {
                 if (tmpObj.data.hasOwnProperty(p)) {
@@ -6953,8 +6670,8 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         if($("#zones option:selected").val()){
             zone_selected=$("#zones option:selected").val();
         } else {
-            setDefaultsQuery();
-            zone_selected=$("#zones option:selected").val();
+            def=setDefaultsQuery();
+            zone_selected=def.zone;
 
         }
 
@@ -7105,28 +6822,21 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             // $("#zones").val(defzone);
             console.log("Default Zone:" + defzone);
         }
-        if (defgroup != "") {
-            console.log("Default Group:" + defgroup);
-            $("#elements option[value=\"" + defgroup + "\"]").attr('selected', true);
-            $("#elements").val(defgroup);
-
-            /* jchaos.search((defzone == "ALL") ? "" : defzone, "class", true, (cl) => {
-
-                 element_sel('#elements', cl, 1);
-
-             });*/
-        }
+      
         if (definterface != "") {
             $("#classe option[value=\"" + definterface + "\"]").attr('selected', true);
             // $("#classe").val(definterface);
             console.log("Default Interface:" + definterface);
 
         }
-
-        if (defzone != "" || defgroup != "" || definterface != "") {
-            return true;
+        if (defzone == "ALL" || defzone == "--Select--") {
+            defzone = "";
         }
-        return false;
+        if (defgroup == "ALL" || defgroup == "--Select--") {
+            defgroup = "";
+        }
+       
+        return {'zone':defzone,'group':defgroup,'interface':definterface};
     }
 
     function mainCU(tmpObj) {
@@ -7141,22 +6851,11 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
             dashboard_settings.current_page = 0;
 
             element_sel('#zones', zon, 1);
-
-            if (setDefaultsQuery()) {
-                var zone_selected = $("#zones option:selected").val();
-                if (zone_selected == "ALL" || zone_selected == "--Select--") {
-                    zone_selected = "";
-                }
-                jchaos.search(zone_selected, "class", alive, function(ll) {
-                    element_sel('#elements', ll, 1);
-                });
-   //             updateNodeEvent();
-
-            } else {
-                jchaos.search("", "class", alive, function(ll) {
-                    element_sel('#elements', ll, 1);
-                });
-            }
+            def=setDefaultsQuery();
+            jchaos.search(def.zone, "class", alive, function(ll) {
+                element_sel('#elements', ll, 1);
+            });
+            
         });
 
 
