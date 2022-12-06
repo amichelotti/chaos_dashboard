@@ -10664,6 +10664,9 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                     items['setstate'].items['init'] = { name: "Init", icon: "init" };
                     items['setstate'].items['unload'] = { name: "Unload", icon: "unload" };
                     items['setstate'].items['deinit'] = { name: "Deinit", icon: "deinit" };
+                    items['setstate'].items['stop'] = { name: "Stop", icon: "fa-stop" };
+                    items['setstate'].items['start'] = { name: "Start", icon: "fa-play" };
+
                     items['sep1'] = "---------";
 
                 }
