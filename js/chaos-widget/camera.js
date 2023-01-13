@@ -3543,7 +3543,8 @@ function resetRoi(cu, func) {
       refy = input["REFY"] + input["OFFSETY"];
     }
   }
-  jchaos.setAttribute(cu, "OFFSETX", "0", function () {
+  setRoi(cu,100000,100000,0,0,func);
+  /*jchaos.setAttribute(cu, "OFFSETX", "0", function () {
     if (refx >= 0) {
       jchaos.setAttribute(cu, "REFX", String(refx), function () {
         console.log("setting moving refx:" + refx);
@@ -3578,7 +3579,7 @@ function resetRoi(cu, func) {
         }, 20);
       });
     }, 20);
-  });
+  });*/
 
 
 
@@ -3615,6 +3616,16 @@ function setRoi(cu, width, height, x, y, func) {
     }
   }
 
+  jchaos.setAttribute(cu, "_ROI_", JSON.stringify(roi_obj), function (data) {
+    jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
+    func();
+
+
+},(bad)=>{
+  jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
+
+});
+
   /*console.log("sending ROI:"+JSON.stringify(roi_obj));
   jchaos.command(cu,msg, function (data) {
       jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
@@ -3625,6 +3636,7 @@ function setRoi(cu, width, height, x, y, func) {
     jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
   
   });*/
+  /*
   jchaos.setAttribute(cu, "OFFSETX", "0", function () {
     setTimeout(() => {
       jchaos.setAttribute(cu, "OFFSETY", "0", function () {
@@ -3671,7 +3683,7 @@ function setRoi(cu, width, height, x, y, func) {
       });
     }, 20);
   }
-  );
+  );*/
 }
 
 function setReference(cu, x, y, width, height) {
