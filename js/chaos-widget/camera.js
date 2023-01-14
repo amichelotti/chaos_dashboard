@@ -3543,8 +3543,8 @@ function resetRoi(cu, func) {
       refy = input["REFY"] + input["OFFSETY"];
     }
   }
-  setRoi(cu,100000,100000,0,0,func);
-  /*jchaos.setAttribute(cu, "OFFSETX", "0", function () {
+ // setRoi(cu,100000,100000,0,0,func);
+  jchaos.setAttribute(cu, "OFFSETX", "0", function () {
     if (refx >= 0) {
       jchaos.setAttribute(cu, "REFX", String(refx), function () {
         console.log("setting moving refx:" + refx);
@@ -3579,7 +3579,7 @@ function resetRoi(cu, func) {
         }, 20);
       });
     }, 20);
-  });*/
+  });
 
 
 
@@ -3597,6 +3597,18 @@ function setRoi(cu, width, height, x, y, func) {
     "act_msg": roi_obj,
     "act_name": "cu_prop_drv_set"
   };
+  if(width){
+    width = width - (width%2);
+  }
+  if(height){
+    height = height - (height%2);
+  }
+  if(x){
+    x = x - (x%2);
+  }
+  if(y){
+   y  = y - (y%2);
+  }
   var input = jchaos.getChannel(cu, 1)[0];
 
   var refx = -1, refy = -1, offx = parseInt(x), offy = parseInt(y);
@@ -3616,7 +3628,7 @@ function setRoi(cu, width, height, x, y, func) {
     }
   }
 
-  jchaos.setAttribute(cu, "_ROI_", JSON.stringify(roi_obj), function (data) {
+ /* jchaos.setAttribute(cu, "_ROI_", JSON.stringify(roi_obj), function (data) {
     jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
     func();
 
@@ -3624,19 +3636,10 @@ function setRoi(cu, width, height, x, y, func) {
 },(bad)=>{
   jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
 
-});
+});*/
 
-  /*console.log("sending ROI:"+JSON.stringify(roi_obj));
-  jchaos.command(cu,msg, function (data) {
-      jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
-      func();
   
   
-  },(bad)=>{
-    jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
-  
-  });*/
-  /*
   jchaos.setAttribute(cu, "OFFSETX", "0", function () {
     setTimeout(() => {
       jchaos.setAttribute(cu, "OFFSETY", "0", function () {
@@ -3683,7 +3686,7 @@ function setRoi(cu, width, height, x, y, func) {
       });
     }, 20);
   }
-  );*/
+  );
 }
 
 function setReference(cu, x, y, width, height) {
