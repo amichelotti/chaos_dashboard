@@ -7795,7 +7795,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
         });
 
 
-        if((opt['diff']>0 )&&(update_ms>opt['refresh'])){
+        if(opt['diff']>(opt['refresh'] +opt['refresh']/10)){
             var resched=0
             if(opt['diff']>(update_ms+opt['diff']/10)){
                 resched=opt['diff']+Math.trunc(opt['diff']/10);
@@ -7803,7 +7803,7 @@ jqccs.refreshCheckList= function(dom,l,checkFn,uncheckFn,opt) {
                 clearInterval(pullIntervalsec)
                 jqccs.rescheduleTask(resched,opt,task);
             } else if((opt['diff']<(update_ms-Math.trunc(opt['diff']/10)))){
-                resched=update_ms-Math.trunc(opt['diff']/10);
+                resched=opt['diff'];
                 if(resched<opt['refresh']){
                     resched=opt['refresh'];
                 }

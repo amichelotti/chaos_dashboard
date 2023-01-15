@@ -908,8 +908,8 @@ function zoomResize(domid, x, y, sx, sy, r, rot, w, h) {
   }
   let width = $("#cameraImage-" + domid).width();
   let height = $("#cameraImage-" + domid).height();
-  let natwidth = w || $("#cameraImage-" + domid).prop('naturalWidth');
-  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
+  let natwidth = /*w ||*/ $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = /*h ||*/ $("#cameraImage-" + domid).prop('naturalHeight');
   if (canvasSel != null) {
     canvasSel.width = width * currzoom;
     canvasSel.height = height * currzoom;
