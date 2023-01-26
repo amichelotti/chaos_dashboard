@@ -50,7 +50,7 @@ DEFINES.SCSOURCEDEFAULTINCLUDES = "#include <boost/format.hpp>\n#include <boost/
 DEFINES.SCSOURCEDEFAULTNAMESPACES = "using namespace chaos;\nusing namespace chaos::common::data;\nusing namespace chaos::common::batch_command;\nusing namespace chaos::cu::control_manager::slow_command;\nusing namespace chaos::cu::driver_manager::driver;\nusing namespace chaos::cu::control_manager;";
 DEFINES.INTDEFAULTINCLUDES = "#include <iostream>\n#include <chaos/cu_toolkit/driver_manager/driver/DriverTypes.h>\n#include <chaos/cu_toolkit/driver_manager/driver/DriverAccessor.h>\n#include <common/debug/core/debug.h>\n#include <stdint.h>";
 DEFINES.ABSTDEFAULTINCLUDES = "#include <inttypes.h>\n#include <string>";
-DEFINES.DD_DEFAULTINCLUDES = "#include <string>\n#include <boost/regex.hpp>\n#include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>";
+DEFINES.DD_DEFAULTINCLUDES = "#include <string>\n#include <regex>\n#include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>";
 
 
 module.exports = DEFINES;
