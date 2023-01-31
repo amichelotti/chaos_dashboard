@@ -69,11 +69,24 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/camera.js"></script>';
 	  var config=jchaos.variable("camera_view","get");
 	  if(Object.keys(config).length){
 		var configs={};
+		var configs_delete={};
 		for(var k in config){
 			configs[k]={
 				name: k,
-				callback:function(){
-					load_config(config[k]);
+				callback:function(itemKey, o, e){
+					load_config(config[itemKey]);
+				}
+			}
+			configs_delete[k]={
+				name: k,
+				callback:function(itemKey, o, e){
+					if(configs.hasOwnProperty(itemKey)){
+						delete config[itemKey];
+						jchaos.variable("camera_view","set",config,()=>{
+							jqccs.instantMessage("Removed " +itemKey, JSON.stringify(config), 3000, true);
+
+						});
+					}
 				}
 			}
 		}
@@ -81,6 +94,11 @@ echo '<script src="'.$main_dir.'/../js/chaos-widget/camera.js"></script>';
 		name: "Load Config",
 		icon:"fa-sign-in",
        	 items: configs
+	  }
+	  cuitem['delete']={
+		name: "Delete Config",
+		icon:"fa-scissors",
+		items: configs_delete
 	  }
 	  }
 	  cuitem['save-config'] = {
