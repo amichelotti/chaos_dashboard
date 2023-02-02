@@ -208,9 +208,14 @@
 									//	}
 
 									} else if (elem['lives']) {
-										if (healt.nh_status != 'Start') {
+										if (healt.nh_status == 'Stop') {
+											setTextClasses(iname, "text-primary");
+										} else if (healt.nh_status == 'Init') {
+											setTextClasses(iname, "text-info");
+										} else if (healt.nh_status == 'Unload') {
+											setTextClasses(iname, "text-light bg-dark");
+										}  else if (healt.nh_status != 'Start') {
 											setTextClasses(iname, "text-warning");
-
 										}
 									}
 									$("#" + iname).attr('title', title);
@@ -2223,6 +2228,10 @@ jqccs.instantMessage(node.data.ndk_uid, "Error Starting on " + node.data.ndk_par
 			$("#" + iname).removeClass("text-danger");
 			$("#" + iname).removeClass("text-muted");
 			$("#" + iname).removeClass("text-warning");
+			$("#" + iname).removeClass("text-primary");
+			$("#" + iname).removeClass("text-light bg-dark");
+
+
 
 		}
 		function setTextClasses(iname, classname) {

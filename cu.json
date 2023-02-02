@@ -83,13 +83,18 @@
             "description": "Time in Seconds before the data will be wiped out (0=disabled)"
 
         },
+        "dsndk_storage_log_time": {
+            "type": "integer",
+            "default": 1000,
+            "required": true,
+            "description": "the time in us that need to pass before store another datapack into the log system"
+        },
         "dsndk_storage_history_time": {
             "type": "integer",
             "default": 0,
-            "description": "Max history period in ms (store another after the given ms)"
-
+            "required": true,
+            "description": "the time in us that need to pass before store another datapack into the history system"
         },
-        
         "dsndk_storage_live_time": {
             "type": "integer",
             "default": 0,

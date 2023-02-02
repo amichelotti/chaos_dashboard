@@ -161,6 +161,24 @@
             "required": true,
             "description": "the time in us that need to pass before store another datapack into the live system"
         },
+        "dsndk_storage_history_time": {
+            "type": "integer",
+            "default": 0,
+            "required": true,
+            "description": "the time in us that need to pass before store another datapack into the history system"
+        },
+        "dsndk_storage_log_time": {
+            "type": "integer",
+            "default": 1000000,
+            "required": true,
+            "description": "the time in us that need to pass before store another datapack into the log system"
+        },
+        "cudk_log_max_ms": {
+            "type": "integer",
+            "default": 1000,
+            "description": "don't log warning/error that change less than specified ms"
+
+        },
         "cudk_driver_description": {
             "type": "array",
             "format": "tab",

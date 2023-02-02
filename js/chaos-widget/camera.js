@@ -13,13 +13,13 @@ var pullInterval = {};
 var pullIntervalsec = {};
 var pullIntervalHealth = {};
 var last_output_time = null
-const TRIGGER_CONT = 0;
-const TRIGGER_PULSE = 1;
+var TRIGGER_CONT = 0;
+var TRIGGER_PULSE = 1;
 
-const TRIGGER_SOFT = 2;
-const TRIGGER_NOACQUIRE = 5;
-const TRIGGER_LOHI = 3;
-const TRIGGER_HILO = 4;
+var TRIGGER_SOFT = 2;
+var TRIGGER_NOACQUIRE = 5;
+var TRIGGER_LOHI = 3;
+var TRIGGER_HILO = 4;
 
 
 
@@ -38,6 +38,123 @@ var selection_resizableY = 0;
 var selection_grabbable = false;
 
 var selection_ellipse = {};
+
+function getWidget(options) {
+  console.log("camera widget");
+
+  if (options) {
+    opt = options;
+  }
+  var chaos =
+  {
+    dsFn: {
+      output: {
+        TRIGGER_MODE: function (val) {
+          return modeToString(val);
+
+
+        }
+      }
+    },
+    tableClickFn: function (tmpObj, e) {
+      //  rebuildCam(tmpObj);
+      console.log("Table click");
+      var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+      if (!tmpObj.hasOwnProperty("data")) {
+        tmpObj['data'] = {};
+      } else {
+        if (tmpObj.data instanceof Array)
+          jqccs.updateGenericControl(tmpObj, tmpObj.data[cindex]);
+
+      }
+
+
+      // jqccs.updateGenericControl(tmpObj, );
+
+      //  jqccs.updateGenericTableDataset(tmpObj);
+
+      /*  jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
+          var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
+          if(!tmpObj.hasOwnProperty("data")){
+            tmpObj['data']={};
+          }
+          tmpObj.data[cindex] = cu[0];
+          jqccs.updateGenericTableDataset(tmpObj);
+  
+          jqccs.updateGenericControl(tmpObj, cu[0]);
+        })
+  */
+    },
+    updateInterfaceFn: function (tmpObj) {
+      console.log("UpdateInterfaceFn ");
+      getCameraDesc(tmpObj.elems);
+
+      stateObj = tmpObj;
+      jqccs.updateInterfaceCU(tmpObj);
+      /* jchaos.getChannel(tmpObj['elems'], -1, function (selected) {
+         tmpObj.data = selected;
+ 
+         jqccs.updateGenericTableDataset(tmpObj);
+       }, function (str) {
+         console.log(str);
+       });
+ */
+      $(".select_camera_mode").change(function (e) {
+        var value = e.currentTarget.value;
+        console.log("name=" + e.currentTarget.name + " value=" + value);
+        jchaos.setAttribute(e.currentTarget.name, "TRIGGER_MODE", value, function () {
+          jqccs.instantMessage("SET MODE " + e.currentTarget.name, value, 3000, true);
+
+        })
+      })
+    },
+    updateFn: function (tmpObj) {
+      jqccs.updateGenericTableDataset(tmpObj);
+      if (pullInterval.hasOwnProperty('interval')) {
+        clearInterval(pullInterval.interval);
+      }
+      if (pullIntervalsec.hasOwnProperty('interval')) {
+        clearInterval(pullIntervalsec.interval);
+      }
+      if (pullIntervalHealth.hasOwnProperty('interval')) {
+        clearInterval(pullIntervalHealth.interval);
+      }
+
+      pullIntervalHealth['channel'] = 255;
+      pullIntervalHealth['devs'] = tmpObj.elems;
+
+      jqccs.rescheduleTask(5000, pullIntervalHealth, (vds, req, op) => {
+        vds.forEach(ele => {
+          updateCamera(ele.health);
+          jqccs.updateGenericControl(null, ele);
+
+        });
+
+        jqccs.stateOutput(op['currRefresh']);
+
+      });
+
+
+      return;
+
+
+    },
+    tableFn: function (tmpObj) {
+      console.log("TableFn ");
+      var html = '<div class="row" id="cameraTable"></div>';
+      html += jqccs.generateGenericTable(tmpObj, true);
+      return html;
+
+    },
+    cmdFn: function (tmpObj) {
+      console.log("CmdFn ");
+
+      return jqccs.generateGenericControl(tmpObj);
+
+    }
+  }
+  return chaos;
+}
 /*function inputCameraRefresh(update_ms,opt){
   var diff=0;
   var pullIntervalsec=setInterval(() => {
@@ -791,8 +908,8 @@ function zoomResize(domid, x, y, sx, sy, r, rot, w, h) {
   }
   let width = $("#cameraImage-" + domid).width();
   let height = $("#cameraImage-" + domid).height();
-  let natwidth = w || $("#cameraImage-" + domid).prop('naturalWidth');
-  let natheight = h || $("#cameraImage-" + domid).prop('naturalHeight');
+  let natwidth = /*w ||*/ $("#cameraImage-" + domid).prop('naturalWidth');
+  let natheight = /*h ||*/ $("#cameraImage-" + domid).prop('naturalHeight');
   if (canvasSel != null) {
     canvasSel.width = width * currzoom;
     canvasSel.height = height * currzoom;
@@ -3426,6 +3543,33 @@ function resetRoi(cu, func) {
       refy = input["REFY"] + input["OFFSETY"];
     }
   }
+ /* var roi_obj = {
+    "WIDTH": "10000",
+    "HEIGHT": "10000",
+    "OFFSETX": "0",
+    "OFFSETY": "0"
+  };
+  jchaos.setAttribute(cu, "_ROI_", JSON.stringify(roi_obj), function (data) {
+    jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
+    func();
+    if (refx >= 0) {
+      jchaos.setAttribute(cu, "REFX", String(refx), function () {
+        console.log("setting moving refx:" + refx);
+
+      });
+    }
+    if (refy >= 0) {
+      jchaos.setAttribute(cu, "REFY", String(refy), function () {
+        console.log("setting moving refy:" + refy);
+
+      });
+
+    }
+
+},(bad)=>{
+  jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
+
+});*/
   jchaos.setAttribute(cu, "OFFSETX", "0", function () {
     if (refx >= 0) {
       jchaos.setAttribute(cu, "REFX", String(refx), function () {
@@ -3469,15 +3613,28 @@ function resetRoi(cu, func) {
 function setRoi(cu, width, height, x, y, func) {
 
 
+  
+  var msg = {
+    "act_msg": roi_obj,
+    "act_name": "cu_prop_drv_set"
+  };
+  if(width){
+    width = width - (width%2);
+  }
+  if(height){
+    height = height - (height%2);
+  }
+  if(x){
+    x = x - (x%2);
+  }
+  if(y){
+   y  = y - (y%2);
+  }
   var roi_obj = {
     "WIDTH": parseInt(width),
     "HEIGHT": parseInt(height),
     "OFFSETX": parseInt(x),
     "OFFSETY": parseInt(y)
-  };
-  var msg = {
-    "act_msg": roi_obj,
-    "act_name": "cu_prop_drv_set"
   };
   var input = jchaos.getChannel(cu, 1)[0];
 
@@ -3497,17 +3654,31 @@ function setRoi(cu, width, height, x, y, func) {
       refy = input["REFY"] - y;
     }
   }
+/*
+  jchaos.setAttribute(cu, "_ROI_", JSON.stringify(roi_obj), function (data) {
+    jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
+    func();
+    if (refx >= 0) {
+      jchaos.setAttribute(cu, "REFX", String(refx), function () {
+        console.log("setting moving refx:" + refx);
 
-  /*console.log("sending ROI:"+JSON.stringify(roi_obj));
-  jchaos.command(cu,msg, function (data) {
-      jqccs.instantMessage("Setting roi:"+cu, " "+JSON.stringify(roi_obj), 2000, true);
-      func();
+      });
+    }
+    if (refy >= 0) {
+      jchaos.setAttribute(cu, "REFY", String(refy), function () {
+        console.log("setting moving refy:" + refy);
+
+      });
+
+    }
+
+},(bad)=>{
+  jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
+
+});
+*/
   
   
-  },(bad)=>{
-    jqccs.instantMessage("Error Setting ROI:"+cu, " "+JSON.stringify(roi_obj)+" sent err: "+JSON.stringify(bad), 5000, false);
-  
-  });*/
   jchaos.setAttribute(cu, "OFFSETX", "0", function () {
     setTimeout(() => {
       jchaos.setAttribute(cu, "OFFSETY", "0", function () {
@@ -3556,122 +3727,7 @@ function setRoi(cu, width, height, x, y, func) {
   }
   );
 }
-function getWidget(options) {
-  console.log("camera widget");
 
-  if (options) {
-    opt = options;
-  }
-  var chaos =
-  {
-    dsFn: {
-      output: {
-        TRIGGER_MODE: function (val) {
-          return modeToString(val);
-
-
-        }
-      }
-    },
-    tableClickFn: function (tmpObj, e) {
-      //  rebuildCam(tmpObj);
-      console.log("Table click");
-      var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
-      if (!tmpObj.hasOwnProperty("data")) {
-        tmpObj['data'] = {};
-      } else {
-        if (tmpObj.data instanceof Array)
-          jqccs.updateGenericControl(tmpObj, tmpObj.data[cindex]);
-
-      }
-
-
-      // jqccs.updateGenericControl(tmpObj, );
-
-      //  jqccs.updateGenericTableDataset(tmpObj);
-
-      /*  jchaos.getChannel(tmpObj.node_selected, -1, function (cu) {
-          var cindex = tmpObj.node_name_to_index[tmpObj.node_selected];
-          if(!tmpObj.hasOwnProperty("data")){
-            tmpObj['data']={};
-          }
-          tmpObj.data[cindex] = cu[0];
-          jqccs.updateGenericTableDataset(tmpObj);
-  
-          jqccs.updateGenericControl(tmpObj, cu[0]);
-        })
-  */
-    },
-    updateInterfaceFn: function (tmpObj) {
-      console.log("UpdateInterfaceFn ");
-      getCameraDesc(tmpObj.elems);
-
-      stateObj = tmpObj;
-      jqccs.updateInterfaceCU(tmpObj);
-      /* jchaos.getChannel(tmpObj['elems'], -1, function (selected) {
-         tmpObj.data = selected;
- 
-         jqccs.updateGenericTableDataset(tmpObj);
-       }, function (str) {
-         console.log(str);
-       });
- */
-      $(".select_camera_mode").change(function (e) {
-        var value = e.currentTarget.value;
-        console.log("name=" + e.currentTarget.name + " value=" + value);
-        jchaos.setAttribute(e.currentTarget.name, "TRIGGER_MODE", value, function () {
-          jqccs.instantMessage("SET MODE " + e.currentTarget.name, value, 3000, true);
-
-        })
-      })
-    },
-    updateFn: function (tmpObj) {
-      jqccs.updateGenericTableDataset(tmpObj);
-      if (pullInterval.hasOwnProperty('interval')) {
-        clearInterval(pullInterval.interval);
-      }
-      if (pullIntervalsec.hasOwnProperty('interval')) {
-        clearInterval(pullIntervalsec.interval);
-      }
-      if (pullIntervalHealth.hasOwnProperty('interval')) {
-        clearInterval(pullIntervalHealth.interval);
-      }
-
-      pullIntervalHealth['channel'] = 255;
-      pullIntervalHealth['devs'] = tmpObj.elems;
-
-      jqccs.rescheduleTask(5000, pullIntervalHealth, (vds, req, op) => {
-        vds.forEach(ele => {
-          updateCamera(ele.health);
-          jqccs.updateGenericControl(null, ele);
-
-        });
-
-        jqccs.stateOutput(op['currRefresh']);
-
-      });
-
-
-      return;
-
-
-    },
-    tableFn: function (tmpObj) {
-      console.log("TableFn ");
-      var html = '<div class="row" id="cameraTable"></div>';
-      html += jqccs.generateGenericTable(tmpObj, true);
-      return html;
-
-    },
-    cmdFn: function (tmpObj) {
-      console.log("CmdFn ");
-
-      return jqccs.generateGenericControl(tmpObj);
-
-    }
-  }
-  return chaos;
-}
 function setReference(cu, x, y, width, height) {
 
   /*var currzoomm=1.0;
