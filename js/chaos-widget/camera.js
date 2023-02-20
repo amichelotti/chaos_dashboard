@@ -1049,10 +1049,12 @@ function getCameraProps(ele, domid) {
       var html = "NA:NA";
       if (ele[k].pubname == "SHUTTER") {
         if (ele[k].max != undefined) {
-          $("#" + domid + "_SHUTTER_MAX").html(ele[k].max.toFixed(2));
+          //$("#" + domid + "_SHUTTER_MAX").html((ele[k].max/1000.0).toFixed(2));
+          $("#" + domid + "_SHUTTER_MAX").html((ele[k].max).toFixed(2));
         }
         if (ele[k].min != undefined) {
-          $("#" + domid + "_SHUTTER_MIN").html(ele[k].min.toFixed(2));
+          //$("#" + domid + "_SHUTTER_MIN").html((ele[k].min/1000.0).toFixed(2));
+          $("#" + domid + "_SHUTTER_MIN").html((ele[k].min).toFixed(2));
         }
       }
       if (ele[k].pubname == "GAIN") {
@@ -1272,16 +1274,13 @@ function updateCamera(ds) {
       }
     }
 
-    /*if (ds.WIDTH !== undefined) {
-      $("#size-" + id).html(ds.WIDTH + "x" + ds.HEIGHT );
-    }*/
+    
     $("#seq-" + id).html(ds.dpck_seq_id);
+    //$("#" + id + "SHUTTER").html(ds.SHUTTER/1000.0);
     $("#" + id + "SHUTTER").html(ds.SHUTTER);
     $("#" + id + "GAIN").html(ds.GAIN);
     $("#" + id + "TRIGGER_MODE").html(modeToString(ds.TRIGGER_MODE));
-    /* if(old_size.hasOwnProperty(id)&&old_size[id].hasOwnProperty("WIDTH")){
-       redrawReference(id, old_size[id].REFX, old_size[id].REFY, old_size[id].REFSX, old_size[id].REFSY, old_size[id].REFRHO, -old_size[id].ROT,ds.WIDTH,ds.HEIGHT);
-     }*/
+   
 
   } else if (ds.dpck_ds_type == 1) {
     //  console.log("INPUT :" + JSON.stringify(ds));
@@ -1680,6 +1679,10 @@ $.fn.buildCameraArray = function (op) {
       var attrname = e.target.name;
       var desc = jchaos.decodeCUPath(attrname);
       let cu = mapcamera[desc.cu];
+     /* if(desc.var=="SHUTTER"){
+        console.log("SHUTTER value "+value+" ms ");
+        value=(parseFloat(value)*1000).toString();
+      }*/
       jchaos.setAttribute(cu, desc.var, value, function () {
         jqccs.instantMessage(cu + " Attribute " + desc.dir, "\"" + desc.var + "\"=\"" + value + "\" sent", 1000, null, null, true)
 

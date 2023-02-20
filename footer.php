@@ -107,6 +107,10 @@
   <div class="footer-copyright text-center py-3">© 2020 !CHAOS group:
     <a href="https://confluence.infn.it/display/chd" alt="logo-!CHAOS"> !CHAOS </a>
   </div>
+  <!-- Requires jQuery! -->
+  <script src="https://issues.infn.it/jira/plugins/servlet/issueCollectorBootstrap.js?collectorId=d8d5910b&locale=en_UK"></script>
+
+
   <!-- Copyright -->
   <div id="refresh_rate_update"></div>
 
