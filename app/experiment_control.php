@@ -534,12 +534,10 @@ $curr_page = "Experiment Control";
             });
             $("#refresh-folder").on("click",()=>{
                 jqccs.busyWindow(true);
+                refresh_hier("",0,new Date().getTime());
 
-                if(parent_tagname!=""){
-                    refresh_hier(parent_tagname,0,new Date().getTime());
-                } else {
+                if(parent_tagname==""){
                     updateTag();
-
                 }
                 jqccs.busyWindow(false);
 
