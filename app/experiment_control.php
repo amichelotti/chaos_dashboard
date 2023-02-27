@@ -993,6 +993,8 @@ $curr_page = "Experiment Control";
 		
 		return items;
 	}
+    refresh_hier("",0,new Date().getTime());
+
         </script>
 
 
