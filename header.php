@@ -754,7 +754,42 @@
 		var tree = $('#hier-' + pid).jstree(true);
 		var ID = $(node).attr('id');
 
-		if (node.hasOwnProperty("data")) {
+		if (node.data || node.id) {
+			items['delete-log'] = {
+			"separator_before": false,
+			"separator_after": false,
+			label: "Delete Log",
+			action: function () {
+				if(node.data && node.data.hasOwnProperty('mdsndk_nl_sid')){
+					if(node.data.mdsndk_nl_lts){
+						jqccs.confirm("Delete Logs", "Do you want delete logs of '" + node.data.mdsndk_nl_sid + "' before " + jchaos.getDateTime(node.data.mdsndk_nl_lts)+" ?","Ok", function () {
+							jchaos.log(node.data.mdsndk_nl_sid, "delete", node.data.mdsndk_nl_l_ld, node.data.mdsndk_nl_lts,0, function (data) {
+								jqccs.instantMessage("Deleted", node.data.mdsndk_nl_sid, 2000, true);
+
+
+						})}, "Cancel");
+					} else {
+						jqccs.confirm("Delete Logs", "Do you want delete ALL '"+ node.data.mdsndk_nl_l_ld+ "' of '" + node.data.mdsndk_nl_sid+"' ?","Ok", function () {
+							jchaos.log(node.data.mdsndk_nl_sid, "delete", node.data.mdsndk_nl_l_ld, 0,0, function (data) {
+								jqccs.instantMessage("Deleted", node.data.mdsndk_nl_sid, 2000, true);
+						})
+						}, "Cancel");
+					}
+
+
+				} else if(node.hasOwnProperty('id')){
+					jqccs.confirm("Delete Logs", "Do you want delete logs of type '" + node.id+"' ?", "Ok", function () {
+						jchaos.log("", "delete", node.id, 0,0, function (data) {
+								jqccs.instantMessage("Deleted", node.data.id, 2000, true);
+						})
+					}, "Cancel");
+
+
+				}
+
+
+			}
+		}
 		}
 		return items;
 	}
@@ -819,7 +854,7 @@
 
 							var dat = jchaos.getDateTime(item.mdsndk_nl_lts);
 
-							item.mdsndk_nl_lts = dat;
+							item['date'] = dat;
 							var msg = item.mdsndk_nl_e_em;
 							var type = item.mdsndk_nl_ld;
 							if ((item.mdsndk_nl_l_ld !== undefined) && (item.mdsndk_nl_l_ld == "Error")) {
@@ -846,16 +881,19 @@
 							var group = "";
 							var compname = "";
 							var parent = "";
-
+							var parent_name="";
 							dirs.forEach((ele, index) => {
 								var node_group;
 								compname = ele;
 								if (index == 0) {
 									group = type + "/" + ele;
 									parent = type;
+									parent_name=ele;
+
 								} else {
 									parent = group;
 									group = group + "/" + ele;
+									parent_name=parent_name+ "/" + ele;
 
 								}
 
@@ -865,8 +903,12 @@
 									"parent": jchaos.encodeName(parent),
 									"text": ele
 								};
+								
 								node_group['data'] = { "group": group }
+								node_group['data']['mdsndk_nl_l_ld']=item.mdsndk_nl_ld;
+								node_group['data']['mdsndk_nl_sid']=parent_name;
 
+								
 								if (!node_created.hasOwnProperty(egroup)) {
 									node_created[egroup] = node_group['parent'];
 									jsree_data.push(node_group);
